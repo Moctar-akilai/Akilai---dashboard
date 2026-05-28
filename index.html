@@ -819,6 +819,93 @@
     .msg-read { color: #25D366; font-size: 11px; }
 
     /* ============================================================
+       5A — CONFIGURATION VOIX & IA
+    ============================================================ */
+    .config-layout {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 20px;
+      align-items: start;
+    }
+
+    /* Cards radio stylisées (tonalité / personnalité) */
+    .radio-cards { display: grid; gap: 8px; }
+    .radio-cards.cols-2 { grid-template-columns: 1fr 1fr; }
+    .radio-card input { display: none; }
+    .radio-card label {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .radio-card label:hover { background: rgba(255,255,255,0.03); border-color: var(--border-hover); }
+    .radio-card input:checked + label {
+      border-color: var(--accent-border);
+      background: var(--accent-dim);
+    }
+    .radio-card-icon {
+      font-size: 20px; flex-shrink: 0; line-height: 1;
+      margin-top: 1px;
+    }
+    .radio-card-title { font-size: 13px; font-weight: 600; color: var(--text); }
+    .radio-card-desc  { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    /* Slider */
+    .slider-wrap { display: flex; align-items: center; gap: 12px; }
+    .slider-val {
+      min-width: 38px; text-align: center;
+      font-size: 13px; font-weight: 700; color: var(--accent);
+      background: var(--accent-dim); border-radius: 6px; padding: 3px 6px;
+    }
+    input[type="range"] {
+      flex: 1; accent-color: var(--accent);
+      height: 4px; cursor: pointer;
+    }
+
+    /* Toggle inline */
+    .inline-toggle {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 0;
+    }
+    .inline-toggle-label { font-size: 13px; color: var(--text); }
+    .inline-toggle-sub   { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    /* 5B — Aperçu live */
+    .preview-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      position: sticky; top: calc(var(--header-h) + 20px);
+    }
+    .preview-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-faint); margin-bottom: 14px; }
+    .preview-avatar {
+      width: 60px; height: 60px; border-radius: 50%;
+      background: var(--accent-dim); border: 2px solid var(--accent-border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; margin: 0 auto 14px;
+    }
+    .preview-name { font-size: 20px; font-weight: 700; color: var(--text); text-align: center; margin-bottom: 4px; }
+    .preview-meta { font-size: 12px; color: var(--text-muted); text-align: center; margin-bottom: 16px; }
+    .preview-tags { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-bottom: 16px; }
+    .preview-tag {
+      font-size: 11px; font-weight: 600;
+      padding: 3px 9px; border-radius: 20px;
+      background: rgba(255,255,255,0.06); color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+    .preview-tag.accent { background: var(--accent-dim); color: var(--accent); border-color: var(--accent-border); }
+    .preview-summary {
+      background: rgba(255,255,255,0.03);
+      border-radius: var(--radius-sm); padding: 12px;
+      font-size: 12px; color: var(--text-muted); line-height: 1.7;
+      border: 1px solid var(--border);
+    }
+    .preview-summary span { color: var(--text); font-weight: 600; }
+
+    /* ============================================================
        RESPONSIVE — grilles
     ============================================================ */
     @media (max-width: 1100px) {
@@ -826,6 +913,7 @@
       .charts-grid  { grid-template-columns: 1fr; }
       .charts-grid-3{ grid-template-columns: 1fr; }
       .reco-grid    { grid-template-columns: 1fr; }
+      .config-layout{ grid-template-columns: 1fr; }
     }
     @media (max-width: 768px) {
       .kpi-grid { grid-template-columns: 1fr 1fr; }
@@ -1414,22 +1502,208 @@
           <div>
             <div class="breadcrumb">Configuration <span>/ Voix &amp; IA</span></div>
             <h1 class="page-title">Voix &amp; IA</h1>
-            <p class="page-subtitle">Personnalisez votre assistant vocal.</p>
+            <p class="page-subtitle">Personnalisez votre assistant vocal — configuration sauvegardée automatiquement.</p>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" onclick="resetVoixConfig()">Réinitialiser</button>
+            <button class="btn btn-primary" onclick="saveVoixConfig()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              Sauvegarder
+            </button>
           </div>
         </div>
-        <div class="card">
-          <div class="placeholder-content">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/>
-              <line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/>
-              <line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/>
-              <line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/>
-              <line x1="17" y1="16" x2="23" y2="16"/>
-            </svg>
-            <h3>Séquence 5 à venir</h3>
-            <p>Configuration voix, tonalité, prompt système et aperçu live.</p>
-          </div>
-        </div>
+
+        <div class="config-layout">
+
+          <!-- ── Colonne formulaire ── -->
+          <div style="display:flex;flex-direction:column;gap:16px">
+
+            <!-- Nom de l'assistant -->
+            <div class="card">
+              <div class="form-label" style="margin-bottom:10px">Nom de l'assistant</div>
+              <input class="form-input" id="cfgNom" type="text" placeholder="Ex : Sophie" oninput="updatePreview()" />
+            </div>
+
+            <!-- Voix ElevenLabs -->
+            <div class="card">
+              <div class="form-label" style="margin-bottom:10px">Voix ElevenLabs</div>
+              <select class="form-select" id="cfgVoix" onchange="updatePreview()">
+                <option value="chloe">Chloé — FR · Féminin · Douce</option>
+                <option value="thomas">Thomas — FR · Masculin · Posé</option>
+                <option value="sofia">Sofia — ES · Féminin · Chaleureuse</option>
+                <option value="james">James — EN · Masculin · Professionnel</option>
+                <option value="amina">Amina — FR · Féminin · Dynamique</option>
+              </select>
+            </div>
+
+            <!-- Tonalité -->
+            <div class="card">
+              <div class="form-label" style="margin-bottom:10px">Tonalité</div>
+              <div class="radio-cards cols-2" id="cfgTonalite">
+                <div class="radio-card">
+                  <input type="radio" name="tonalite" id="ton-formel" value="formel" onchange="updatePreview()">
+                  <label for="ton-formel">
+                    <div class="radio-card-icon">🏛️</div>
+                    <div><div class="radio-card-title">Formel</div><div class="radio-card-desc">Bureau, contrats, médical</div></div>
+                  </label>
+                </div>
+                <div class="radio-card">
+                  <input type="radio" name="tonalite" id="ton-chaleureux" value="chaleureux" onchange="updatePreview()">
+                  <label for="ton-chaleureux">
+                    <div class="radio-card-icon">☀️</div>
+                    <div><div class="radio-card-title">Chaleureux</div><div class="radio-card-desc">Restauration, concierge, retail</div></div>
+                  </label>
+                </div>
+                <div class="radio-card">
+                  <input type="radio" name="tonalite" id="ton-neutre" value="neutre" onchange="updatePreview()">
+                  <label for="ton-neutre">
+                    <div class="radio-card-icon">⚖️</div>
+                    <div><div class="radio-card-title">Neutre</div><div class="radio-card-desc">Standard polyvalent</div></div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Personnalité -->
+            <div class="card">
+              <div class="form-label" style="margin-bottom:10px">Personnalité de l'assistant</div>
+              <div class="radio-cards cols-2" id="cfgPersonnalite">
+                <div class="radio-card">
+                  <input type="radio" name="personnalite" id="pers-efficace" value="efficace" onchange="updatePreview()">
+                  <label for="pers-efficace">
+                    <div class="radio-card-icon">⚡</div>
+                    <div><div class="radio-card-title">Efficace</div><div class="radio-card-desc">Répond vite, va à l'essentiel</div></div>
+                  </label>
+                </div>
+                <div class="radio-card">
+                  <input type="radio" name="personnalite" id="pers-empathique" value="empathique" onchange="updatePreview()">
+                  <label for="pers-empathique">
+                    <div class="radio-card-icon">💙</div>
+                    <div><div class="radio-card-title">Empathique</div><div class="radio-card-desc">Écoute, rassure, reformule</div></div>
+                  </label>
+                </div>
+                <div class="radio-card">
+                  <input type="radio" name="personnalite" id="pers-proactif" value="proactif" onchange="updatePreview()">
+                  <label for="pers-proactif">
+                    <div class="radio-card-icon">🚀</div>
+                    <div><div class="radio-card-title">Proactif</div><div class="radio-card-desc">Suggère, anticipe les besoins</div></div>
+                  </label>
+                </div>
+                <div class="radio-card">
+                  <input type="radio" name="personnalite" id="pers-sobre" value="sobre" onchange="updatePreview()">
+                  <label for="pers-sobre">
+                    <div class="radio-card-icon">🎯</div>
+                    <div><div class="radio-card-title">Sobre</div><div class="radio-card-desc">Minimal, factuel</div></div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Langues -->
+            <div class="card">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+                <div>
+                  <div class="form-label" style="margin-bottom:8px">Langue principale</div>
+                  <select class="form-select" id="cfgLangPrimaire" onchange="updatePreview()">
+                    <option value="fr">🇫🇷 Français</option>
+                    <option value="en">🇬🇧 Anglais</option>
+                    <option value="es">🇪🇸 Espagnol</option>
+                    <option value="ar">🇸🇦 Arabe</option>
+                    <option value="pt">🇧🇷 Portugais</option>
+                  </select>
+                </div>
+                <div>
+                  <div class="form-label" style="margin-bottom:8px">Langue de secours</div>
+                  <select class="form-select" id="cfgLangSecours" onchange="updatePreview()">
+                    <option value="none">Aucune</option>
+                    <option value="fr">🇫🇷 Français</option>
+                    <option value="en">🇬🇧 Anglais</option>
+                    <option value="es">🇪🇸 Espagnol</option>
+                    <option value="ar">🇸🇦 Arabe</option>
+                    <option value="pt">🇧🇷 Portugais</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sliders -->
+            <div class="card">
+              <div class="form-group">
+                <div class="form-label">Vitesse de parole</div>
+                <div class="slider-wrap">
+                  <span style="font-size:11px;color:var(--text-faint)">0.5×</span>
+                  <input type="range" id="cfgVitesse" min="0.5" max="2.0" step="0.1" value="1.0" oninput="updateSliderVal('cfgVitesse','vitesseVal','×'); updatePreview()" />
+                  <span style="font-size:11px;color:var(--text-faint)">2.0×</span>
+                  <span class="slider-val" id="vitesseVal">1.0×</span>
+                </div>
+              </div>
+              <div class="form-group" style="margin-bottom:0">
+                <div class="form-label">Silence max avant raccrochage</div>
+                <div class="slider-wrap">
+                  <span style="font-size:11px;color:var(--text-faint)">3s</span>
+                  <input type="range" id="cfgSilence" min="3" max="20" step="1" value="8" oninput="updateSliderVal('cfgSilence','silenceVal','s'); updatePreview()" />
+                  <span style="font-size:11px;color:var(--text-faint)">20s</span>
+                  <span class="slider-val" id="silenceVal">8s</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Toggle interruptions -->
+            <div class="card">
+              <div class="inline-toggle">
+                <div>
+                  <div class="inline-toggle-label">Interruptions utilisateur</div>
+                  <div class="inline-toggle-sub">L'utilisateur peut couper l'assistant pendant qu'il parle</div>
+                </div>
+                <label class="toggle" style="width:44px;height:24px">
+                  <input type="checkbox" id="cfgInterruptions" checked onchange="updatePreview()">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Prompt système -->
+            <div class="card">
+              <div class="form-label" style="margin-bottom:10px">Prompt système</div>
+              <textarea class="form-input form-textarea" id="cfgPrompt" rows="8"
+                style="resize:vertical;min-height:160px;line-height:1.6"
+                placeholder="Tu es Sophie, l'assistante vocale du Cabinet Dr. Moreau. Tu réponds toujours en français, avec un ton professionnel et chaleureux. Ton rôle est de gérer les prises de rendez-vous, les annulations, et de répondre aux questions courantes des patients. Tu ne donnes jamais de conseils médicaux. En cas de demande urgente, tu orientes immédiatement vers le médecin."></textarea>
+              <div style="font-size:11px;color:var(--text-faint);margin-top:6px">
+                Le prompt système définit le comportement et le contexte de votre assistant.
+              </div>
+            </div>
+
+          </div><!-- /colonne formulaire -->
+
+          <!-- ── 5B Aperçu live ── -->
+          <div class="preview-card">
+            <div class="preview-title">⚡ Aperçu live</div>
+            <div class="preview-avatar" id="previewAvatar">🤖</div>
+            <div class="preview-name" id="previewName">Sophie</div>
+            <div class="preview-meta" id="previewMeta">Voix Chloé · Français</div>
+            <div class="preview-tags" id="previewTags">
+              <span class="preview-tag accent">Chaleureux</span>
+              <span class="preview-tag">Empathique</span>
+              <span class="preview-tag">1.0×</span>
+              <span class="preview-tag">Silence 8s</span>
+            </div>
+            <div class="preview-summary" id="previewSummary">
+              <span id="ps-nom">Sophie</span> utilise la voix <span id="ps-voix">Chloé</span>,
+              langue <span id="ps-lang">Français</span>, ton <span id="ps-ton">chaleureux</span>,
+              personnalité <span id="ps-pers">empathique</span>.
+              Vitesse <span id="ps-vit">1.0×</span>, silence max <span id="ps-sil">8s</span>.
+              Interruptions : <span id="ps-int">activées</span>.
+            </div>
+
+            <hr style="margin:16px 0" />
+
+            <div style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px">Simulation</div>
+            <div style="background:rgba(112,178,222,0.07);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text-muted);line-height:1.6;font-style:italic" id="previewSimulation">
+              "Cabinet Dr. Moreau, bonjour ! Sophie à votre service, comment puis-je vous aider ?"
+            </div>
+          </div><!-- /preview -->
+
+        </div><!-- /config-layout -->
       </div>
 
       <!-- ===== PROGRAMMATION ===== -->
@@ -2073,6 +2347,7 @@ document.addEventListener('DOMContentLoaded', () => {
   buildCalendar();
   buildAppelsTable(appels);
   buildWaTable(conversations_wa);
+  loadVoixConfig();
 });
 
 /* ============================================================
@@ -2339,6 +2614,144 @@ function filterWa() {
     !q || c.nom.toLowerCase().includes(q) || c.numero.includes(q)
   );
   buildWaTable(filtered);
+}
+
+/* ============================================================
+   5A/5B — CONFIGURATION VOIX & IA
+============================================================ */
+
+const VOIX_CONFIG_DEFAULT = {
+  nom: "Sophie",
+  voix: "chloe",
+  tonalite: "chaleureux",
+  personnalite: "empathique",
+  langPrimaire: "fr",
+  langSecours: "none",
+  vitesse: "1.0",
+  silence: "8",
+  interruptions: true,
+  prompt: "Tu es Sophie, l'assistante vocale du Cabinet Dr. Moreau. Tu réponds toujours en français, avec un ton professionnel et chaleureux. Ton rôle est de gérer les prises de rendez-vous, les annulations, et de répondre aux questions courantes des patients. Tu ne donnes jamais de conseils médicaux. En cas de demande urgente, tu orientes immédiatement vers le médecin."
+};
+
+const VOIX_LABELS = {
+  chloe:"Chloé", thomas:"Thomas", sofia:"Sofia", james:"James", amina:"Amina",
+  fr:"Français", en:"Anglais", es:"Espagnol", ar:"Arabe", pt:"Portugais", none:"—"
+};
+
+const SIMULATION_BY_TON = {
+  formel:     "\"Bonjour, cabinet du Dr. Moreau. Comment puis-je vous assister ?\"",
+  chaleureux: "\"Cabinet Dr. Moreau, bonjour ! Sophie à votre service, comment puis-je vous aider ?\"",
+  neutre:     "\"Cabinet Dr. Moreau. Que puis-je faire pour vous ?\""
+};
+
+function updateSliderVal(inputId, displayId, suffix) {
+  const val = document.getElementById(inputId).value;
+  document.getElementById(displayId).textContent = val + suffix;
+}
+
+function getVoixFormValues() {
+  return {
+    nom:          document.getElementById("cfgNom").value.trim() || "Assistant",
+    voix:         document.getElementById("cfgVoix").value,
+    tonalite:     document.querySelector("input[name='tonalite']:checked")?.value || "neutre",
+    personnalite: document.querySelector("input[name='personnalite']:checked")?.value || "efficace",
+    langPrimaire: document.getElementById("cfgLangPrimaire").value,
+    langSecours:  document.getElementById("cfgLangSecours").value,
+    vitesse:      document.getElementById("cfgVitesse").value,
+    silence:      document.getElementById("cfgSilence").value,
+    interruptions:document.getElementById("cfgInterruptions").checked,
+    prompt:       document.getElementById("cfgPrompt").value
+  };
+}
+
+function updatePreview() {
+  const v = getVoixFormValues();
+  const nom = v.nom || "Assistant";
+
+  /* Avatar emoji selon voix */
+  const avatarMap = { chloe:"💁", thomas:"🧑‍💼", sofia:"💃", james:"👨‍💼", amina:"🙋" };
+  document.getElementById("previewAvatar").textContent   = avatarMap[v.voix] || "🤖";
+  document.getElementById("previewName").textContent     = nom;
+  document.getElementById("previewMeta").textContent     = `Voix ${VOIX_LABELS[v.voix]} · ${VOIX_LABELS[v.langPrimaire]}`;
+
+  /* Tags */
+  const tags = [
+    { label: v.tonalite ? v.tonalite.charAt(0).toUpperCase() + v.tonalite.slice(1) : "—", accent: true },
+    { label: v.personnalite ? v.personnalite.charAt(0).toUpperCase() + v.personnalite.slice(1) : "—" },
+    { label: v.vitesse + "×" },
+    { label: "Silence " + v.silence + "s" },
+  ];
+  document.getElementById("previewTags").innerHTML = tags.map(t =>
+    `<span class="preview-tag${t.accent ? " accent" : ""}">${t.label}</span>`
+  ).join("");
+
+  /* Résumé texte */
+  document.getElementById("ps-nom").textContent  = nom;
+  document.getElementById("ps-voix").textContent = VOIX_LABELS[v.voix] || v.voix;
+  document.getElementById("ps-lang").textContent = VOIX_LABELS[v.langPrimaire] || v.langPrimaire;
+  document.getElementById("ps-ton").textContent  = v.tonalite || "—";
+  document.getElementById("ps-pers").textContent = v.personnalite || "—";
+  document.getElementById("ps-vit").textContent  = v.vitesse + "×";
+  document.getElementById("ps-sil").textContent  = v.silence + "s";
+  document.getElementById("ps-int").textContent  = v.interruptions ? "activées" : "désactivées";
+
+  /* Simulation */
+  const sim = SIMULATION_BY_TON[v.tonalite] || SIMULATION_BY_TON.neutre;
+  document.getElementById("previewSimulation").textContent = sim.replace("Sophie", nom);
+}
+
+function loadVoixConfig() {
+  const stored = localStorage.getItem("voixConfig");
+  const cfg = stored ? JSON.parse(stored) : VOIX_CONFIG_DEFAULT;
+
+  document.getElementById("cfgNom").value         = cfg.nom;
+  document.getElementById("cfgVoix").value        = cfg.voix;
+  document.getElementById("cfgLangPrimaire").value= cfg.langPrimaire;
+  document.getElementById("cfgLangSecours").value = cfg.langSecours;
+  document.getElementById("cfgVitesse").value     = cfg.vitesse;
+  document.getElementById("cfgSilence").value     = cfg.silence;
+  document.getElementById("cfgInterruptions").checked = cfg.interruptions;
+  document.getElementById("cfgPrompt").value      = cfg.prompt;
+
+  /* Sliders display */
+  document.getElementById("vitesseVal").textContent = cfg.vitesse + "×";
+  document.getElementById("silenceVal").textContent = cfg.silence + "s";
+
+  /* Radio buttons */
+  const tonEl = document.getElementById("ton-" + cfg.tonalite);
+  if (tonEl) tonEl.checked = true;
+  const persEl = document.getElementById("pers-" + cfg.personnalite);
+  if (persEl) persEl.checked = true;
+
+  updatePreview();
+}
+
+function saveVoixConfig() {
+  const cfg = getVoixFormValues();
+  localStorage.setItem("voixConfig", JSON.stringify(cfg));
+  showToast("Configuration sauvegardée ✓", "success");
+}
+
+function resetVoixConfig() {
+  localStorage.removeItem("voixConfig");
+  /* Recharge les valeurs par défaut */
+  const cfg = VOIX_CONFIG_DEFAULT;
+  document.getElementById("cfgNom").value          = cfg.nom;
+  document.getElementById("cfgVoix").value         = cfg.voix;
+  document.getElementById("cfgLangPrimaire").value = cfg.langPrimaire;
+  document.getElementById("cfgLangSecours").value  = cfg.langSecours;
+  document.getElementById("cfgVitesse").value      = cfg.vitesse;
+  document.getElementById("cfgSilence").value      = cfg.silence;
+  document.getElementById("cfgInterruptions").checked = cfg.interruptions;
+  document.getElementById("cfgPrompt").value       = cfg.prompt;
+  document.getElementById("vitesseVal").textContent= cfg.vitesse + "×";
+  document.getElementById("silenceVal").textContent= cfg.silence + "s";
+  const tonEl = document.getElementById("ton-" + cfg.tonalite);
+  if (tonEl) tonEl.checked = true;
+  const persEl = document.getElementById("pers-" + cfg.personnalite);
+  if (persEl) persEl.checked = true;
+  updatePreview();
+  showToast("Configuration réinitialisée", "info");
 }
 
 /* ============================================================
