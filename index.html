@@ -456,6 +456,240 @@
     .reco-desc  { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
 
     /* ============================================================
+       3A — TABLEAU AUTOMATIONS
+    ============================================================ */
+    .auto-table-wrap { overflow-x: auto; }
+    .auto-table {
+      width: 100%; border-collapse: collapse;
+      font-size: 13px;
+    }
+    .auto-table th {
+      text-align: left;
+      padding: 10px 14px;
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.06em; color: var(--text-faint);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .auto-table td {
+      padding: 13px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+      color: var(--text-muted);
+    }
+    .auto-table tr:last-child td { border-bottom: none; }
+    .auto-table tbody tr { transition: background 0.12s; }
+    .auto-table tbody tr:hover > td { background: rgba(255,255,255,0.025); }
+    .auto-table .cell-name { font-weight: 600; color: var(--text); }
+    .auto-table .cell-time { font-size: 12px; font-family: monospace; }
+
+    /* Toggle switch CSS */
+    .toggle-wrap { display: flex; align-items: center; gap: 8px; }
+    .toggle {
+      position: relative; width: 36px; height: 20px;
+      cursor: pointer; flex-shrink: 0;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .toggle-slider {
+      position: absolute; inset: 0;
+      background: rgba(255,255,255,0.12);
+      border-radius: 20px;
+      transition: background 0.2s;
+    }
+    .toggle-slider::before {
+      content: "";
+      position: absolute;
+      width: 14px; height: 14px;
+      left: 3px; top: 3px;
+      border-radius: 50%;
+      background: #888;
+      transition: transform 0.2s, background 0.2s;
+    }
+    .toggle input:checked + .toggle-slider { background: rgba(34,197,94,0.25); }
+    .toggle input:checked + .toggle-slider::before {
+      transform: translateX(16px);
+      background: var(--success);
+    }
+
+    /* Type badge */
+    .type-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 11px; font-weight: 500;
+      padding: 2px 8px; border-radius: 6px;
+      background: rgba(255,255,255,0.05);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+
+    /* Accordion logs */
+    .logs-row td { padding: 0; }
+    .logs-content {
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height 0.3s ease, padding 0.2s;
+    }
+    .logs-content.open { max-height: 400px; }
+    .logs-inner {
+      padding: 16px 20px;
+      background: rgba(255,255,255,0.02);
+      border-top: 1px solid var(--border);
+    }
+    .log-entry {
+      display: flex; align-items: center; gap: 10px;
+      padding: 6px 0;
+      font-size: 12px; color: var(--text-muted);
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .log-entry:last-child { border-bottom: none; }
+    .log-dot {
+      width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+    }
+    .log-dot.ok  { background: var(--success); }
+    .log-dot.err { background: var(--danger); }
+
+    /* ============================================================
+       3B — MODAL PROGRAMMATION
+    ============================================================ */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.65);
+      z-index: 200;
+      align-items: center; justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: #161616;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      width: 480px; max-width: calc(100vw - 32px);
+      padding: 28px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+      animation: modalIn 0.2s ease;
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.96) translateY(8px); }
+      to   { opacity: 1; transform: scale(1)    translateY(0); }
+    }
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 22px;
+    }
+    .modal-title { font-size: 16px; font-weight: 700; color: var(--text); }
+    .modal-close {
+      width: 30px; height: 30px; border-radius: 8px;
+      background: none; border: 1px solid var(--border);
+      color: var(--text-muted); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; line-height: 1;
+      transition: background 0.15s, color 0.15s;
+    }
+    .modal-close:hover { background: rgba(255,255,255,0.08); color: var(--text); }
+
+    .form-group { margin-bottom: 18px; }
+    .form-label {
+      display: block;
+      font-size: 12px; font-weight: 600; color: var(--text-muted);
+      margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: var(--font); font-size: 13px;
+      padding: 9px 12px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--accent-border);
+    }
+    .form-select option { background: #1a1a1a; }
+
+    /* Checkboxes jours stylisées */
+    .days-grid { display: flex; gap: 6px; flex-wrap: wrap; }
+    .day-chip input { display: none; }
+    .day-chip label {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 36px; height: 32px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 12px; font-weight: 600; color: var(--text-muted);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      user-select: none;
+    }
+    .day-chip input:checked + label {
+      background: var(--accent-dim);
+      border-color: var(--accent-border);
+      color: var(--accent);
+    }
+    .day-chip label:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+
+    /* ============================================================
+       3C — VUE CALENDRIER
+    ============================================================ */
+    .cal-nav {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 16px;
+    }
+    .cal-week-label { font-size: 14px; font-weight: 600; color: var(--text); flex: 1; text-align: center; }
+    .cal-grid {
+      display: grid;
+      grid-template-columns: 60px repeat(7, 1fr);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      font-size: 12px;
+    }
+    .cal-header-cell {
+      background: rgba(255,255,255,0.03);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 6px;
+      text-align: center;
+      font-size: 11px; font-weight: 600;
+      color: var(--text-muted);
+    }
+    .cal-header-cell.today { color: var(--accent); }
+    .cal-time-cell {
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      padding: 0 8px;
+      display: flex; align-items: center; justify-content: flex-end;
+      font-size: 10px; color: var(--text-faint);
+      min-height: 44px;
+      background: rgba(255,255,255,0.01);
+    }
+    .cal-cell {
+      border-left: 1px solid rgba(255,255,255,0.03);
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      min-height: 44px;
+      padding: 3px;
+      position: relative;
+      vertical-align: top;
+    }
+    .cal-cell:nth-child(7n+2) { border-left: 1px solid var(--border); }
+    .cal-block {
+      background: var(--accent-dim);
+      border: 1px solid var(--accent-border);
+      border-radius: 6px;
+      padding: 4px 7px;
+      font-size: 11px; font-weight: 600; color: var(--accent);
+      cursor: pointer;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      transition: background 0.15s;
+    }
+    .cal-block:hover { background: rgba(112,178,222,0.22); }
+    .cal-block.err {
+      background: rgba(239,68,68,0.12);
+      border-color: rgba(239,68,68,0.3);
+      color: var(--danger);
+    }
+
+    /* ============================================================
        RESPONSIVE — grilles
     ============================================================ */
     @media (max-width: 1100px) {
@@ -899,20 +1133,36 @@
           <div>
             <div class="breadcrumb">Général <span>/ Automations</span></div>
             <h1 class="page-title">Automations</h1>
-            <p class="page-subtitle">Gérez et planifiez vos automations IA.</p>
+            <p class="page-subtitle">Gérez et planifiez vos <span id="autoActiveCount">7</span> automations actives.</p>
           </div>
-          <button class="btn btn-primary">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Nouvelle automation
-          </button>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-secondary btn-sm" onclick="navigate('programmation')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              Vue calendrier
+            </button>
+            <button class="btn btn-primary btn-sm" onclick="openScheduleModal(null)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Nouvelle automation
+            </button>
+          </div>
         </div>
-        <div class="card">
-          <div class="placeholder-content">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-            </svg>
-            <h3>Séquence 3 à venir</h3>
-            <p>Tableau des automations, toggles et planification.</p>
+
+        <div class="card" style="padding:0;overflow:hidden">
+          <div class="auto-table-wrap">
+            <table class="auto-table">
+              <thead>
+                <tr>
+                  <th style="width:32px"></th>
+                  <th>Nom</th>
+                  <th>Type</th>
+                  <th>Statut</th>
+                  <th>Dernière exéc.</th>
+                  <th>Prochaine exéc.</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="autoTableBody"></tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -1012,19 +1262,23 @@
           <div>
             <div class="breadcrumb">Configuration <span>/ Programmation</span></div>
             <h1 class="page-title">Programmation</h1>
-            <p class="page-subtitle">Vue calendrier de vos automations planifiées.</p>
+            <p class="page-subtitle">Vue calendrier hebdomadaire de vos automations.</p>
           </div>
+          <button class="btn btn-primary btn-sm" onclick="openScheduleModal(null)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nouvelle programmation
+          </button>
         </div>
-        <div class="card">
-          <div class="placeholder-content">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-              <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
-              <line x1="3" y1="10" x2="21" y2="10"/>
-            </svg>
-            <h3>Séquence 3 à venir</h3>
-            <p>Vue calendrier hebdomadaire avec créneaux horaires.</p>
-          </div>
+
+        <!-- Navigation semaine -->
+        <div class="cal-nav">
+          <button class="btn btn-secondary btn-sm" onclick="changeWeek(-1)">← Préc.</button>
+          <div class="cal-week-label" id="calWeekLabel"></div>
+          <button class="btn btn-secondary btn-sm" onclick="changeWeek(1)">Suiv. →</button>
+        </div>
+
+        <div class="card" style="padding:0;overflow:hidden">
+          <div id="calendarGrid"></div>
         </div>
       </div>
 
@@ -1078,6 +1332,64 @@
     </div><!-- /content -->
   </div><!-- /main -->
 </div><!-- /app -->
+
+<!-- ============================================================
+     3B — MODAL PROGRAMMATION
+============================================================ -->
+<div class="modal-overlay" id="scheduleModal" onclick="closeScheduleModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="scheduleModalTitle">Programmer une automation</div>
+      <button class="modal-close" onclick="closeScheduleModal()">&times;</button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Automation</label>
+      <select class="form-select" id="scheduleAutoSelect">
+        <option value="">— Choisir une automation —</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Jours d'exécution</label>
+      <div class="days-grid" id="scheduleDaysGrid">
+        <div class="day-chip"><input type="checkbox" id="d1" value="1"><label for="d1">Lun</label></div>
+        <div class="day-chip"><input type="checkbox" id="d2" value="2"><label for="d2">Mar</label></div>
+        <div class="day-chip"><input type="checkbox" id="d3" value="3"><label for="d3">Mer</label></div>
+        <div class="day-chip"><input type="checkbox" id="d4" value="4"><label for="d4">Jeu</label></div>
+        <div class="day-chip"><input type="checkbox" id="d5" value="5"><label for="d5">Ven</label></div>
+        <div class="day-chip"><input type="checkbox" id="d6" value="6"><label for="d6">Sam</label></div>
+        <div class="day-chip"><input type="checkbox" id="d7" value="7"><label for="d7">Dim</label></div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Heure</label>
+        <input type="time" class="form-input" id="scheduleTime" value="08:00" />
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Récurrence</label>
+        <select class="form-select" id="scheduleRecurrence">
+          <option value="quotidien">Quotidien</option>
+          <option value="hebdo">Hebdomadaire</option>
+          <option value="mensuel">Mensuel</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:24px;justify-content:flex-end">
+      <button class="btn btn-ghost btn-sm" onclick="closeScheduleModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveSchedule()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Sauvegarder
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div id="toastContainer" style="position:fixed;bottom:24px;right:24px;z-index:999;display:flex;flex-direction:column;gap:8px"></div>
 
 <!-- ============================================================
      JAVASCRIPT — 1D DONNÉES MOCKÉES + NAVIGATION
@@ -1579,9 +1891,295 @@ window.addEventListener('resize', handleResize);
 document.addEventListener('DOMContentLoaded', () => {
   handleResize();
   navigate('overview');
-  /* Léger délai pour que Chart.js soit prêt après le rendu DOM */
   setTimeout(initOverview, 50);
+  buildAutoTable();
+  populateScheduleSelect();
+  buildCalendar();
 });
+
+/* ============================================================
+   TOAST — système global
+============================================================ */
+function showToast(msg, type = "success") {
+  const colors = {
+    success: { bg:"rgba(34,197,94,0.15)",  border:"rgba(34,197,94,0.35)",  color:"#22c55e" },
+    error:   { bg:"rgba(239,68,68,0.15)",  border:"rgba(239,68,68,0.35)",  color:"#ef4444" },
+    info:    { bg:"rgba(112,178,222,0.15)",border:"rgba(112,178,222,0.35)",color:"#70B2DE" },
+    warning: { bg:"rgba(245,158,11,0.15)", border:"rgba(245,158,11,0.35)", color:"#f59e0b" }
+  };
+  const c = colors[type] || colors.info;
+  const t = document.createElement("div");
+  t.style.cssText = `
+    background:${c.bg};border:1px solid ${c.border};color:${c.color};
+    padding:12px 18px;border-radius:10px;font-size:13px;font-weight:600;
+    font-family:var(--font);box-shadow:0 8px 24px rgba(0,0,0,0.4);
+    animation:slideInToast 0.25s ease;max-width:320px;
+  `;
+  t.textContent = msg;
+  document.getElementById("toastContainer").appendChild(t);
+  setTimeout(() => { t.style.opacity = "0"; t.style.transition = "opacity 0.3s"; setTimeout(() => t.remove(), 300); }, 3000);
+}
+const styleToast = document.createElement("style");
+styleToast.textContent = `@keyframes slideInToast { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }`;
+document.head.appendChild(styleToast);
+
+/* ============================================================
+   3A — TABLEAU AUTOMATIONS
+============================================================ */
+/* État local des statuts (pour les toggles) */
+const autoState = {};
+automations.forEach(a => { autoState[a.id] = a.statut; });
+
+function statusBadgeHtml(statut) {
+  const map = {
+    "Actif":   "badge badge-success",
+    "Erreur":  "badge badge-danger",
+    "Inactif": "badge badge-muted"
+  };
+  const dot = statut === "Actif" ? "●" : statut === "Erreur" ? "●" : "○";
+  return `<span class="${map[statut] || 'badge badge-muted'}">${dot} ${statut}</span>`;
+}
+
+function typeChipHtml(type) {
+  const colors = { Voix:"#70B2DE", WhatsApp:"#25D366", Relance:"#f59e0b", Email:"#a855f7", Système:"#888" };
+  const c = colors[type] || "#888";
+  return `<span class="type-chip" style="border-color:${c}22;color:${c}">${type}</span>`;
+}
+
+const MOCK_LOGS = [
+  { time:"Aujourd'hui 14:22", status:"ok",  msg:"Exécution réussie — 1 tâche traitée" },
+  { time:"Hier 08:00",        status:"ok",  msg:"Exécution réussie — 3 tâches traitées" },
+  { time:"Avant-hier 08:00",  status:"err", msg:"Timeout API — relance échouée" },
+  { time:"Il y a 3 jours",    status:"ok",  msg:"Exécution réussie — 2 tâches traitées" },
+  { time:"Il y a 4 jours",    status:"ok",  msg:"Exécution réussie — 1 tâche traitée" }
+];
+
+function buildAutoTable() {
+  const tbody = document.getElementById("autoTableBody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+
+  automations.forEach(a => {
+    const isActive  = autoState[a.id] === "Actif";
+    const isErr     = autoState[a.id] === "Erreur";
+    const checked   = isActive ? "checked" : "";
+    const client    = clients.find(c => c.id === a.client_id);
+
+    /* Ligne principale */
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>
+        <label class="toggle" title="${isActive ? 'Désactiver' : 'Activer'}">
+          <input type="checkbox" ${checked} onchange="toggleAuto(${a.id}, this)">
+          <span class="toggle-slider"></span>
+        </label>
+      </td>
+      <td>
+        <div class="cell-name">${a.nom}</div>
+        <div style="font-size:11px;color:var(--text-faint);margin-top:2px">${client ? client.nom : "—"}</div>
+      </td>
+      <td>${typeChipHtml(a.type)}</td>
+      <td id="badge-${a.id}">${statusBadgeHtml(autoState[a.id])}</td>
+      <td class="cell-time">${a.derniere_exec || "—"}</td>
+      <td class="cell-time">${a.prochaine_exec || '<span style="color:var(--danger)">Non planifiée</span>'}</td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-ghost btn-sm" onclick="openScheduleModal(${a.id})" title="Programmer">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Programmer
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="toggleLogs(${a.id})" title="Voir logs">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            Logs
+          </button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+
+    /* Ligne accordion logs */
+    const logsHtml = MOCK_LOGS.map(l => `
+      <div class="log-entry">
+        <span class="log-dot ${l.status}"></span>
+        <span style="color:var(--text-faint);min-width:130px">${l.time}</span>
+        <span>${l.msg}</span>
+      </div>
+    `).join("");
+
+    const trLogs = document.createElement("tr");
+    trLogs.className = "logs-row";
+    trLogs.innerHTML = `<td colspan="7"><div class="logs-content" id="logs-${a.id}"><div class="logs-inner">${logsHtml}</div></div></td>`;
+    tbody.appendChild(trLogs);
+  });
+
+  updateAutoCount();
+}
+
+function toggleAuto(id, checkbox) {
+  const newStatut = checkbox.checked ? "Actif" : "Inactif";
+  autoState[id] = newStatut;
+  document.getElementById("badge-" + id).innerHTML = statusBadgeHtml(newStatut);
+  showToast(`Automation ${newStatut === "Actif" ? "activée ✓" : "désactivée"}`, newStatut === "Actif" ? "success" : "info");
+  updateAutoCount();
+}
+
+function toggleLogs(id) {
+  const el = document.getElementById("logs-" + id);
+  el.classList.toggle("open");
+}
+
+function updateAutoCount() {
+  const actifs = Object.values(autoState).filter(s => s === "Actif").length;
+  const el = document.getElementById("autoActiveCount");
+  if (el) el.textContent = actifs;
+}
+
+/* ============================================================
+   3B — MODAL PROGRAMMATION
+============================================================ */
+let scheduleTargetId = null;
+
+function populateScheduleSelect() {
+  const sel = document.getElementById("scheduleAutoSelect");
+  if (!sel) return;
+  automations.forEach(a => {
+    const opt = document.createElement("option");
+    opt.value = a.id;
+    opt.textContent = a.nom;
+    sel.appendChild(opt);
+  });
+}
+
+function openScheduleModal(autoId) {
+  scheduleTargetId = autoId;
+  const modal = document.getElementById("scheduleModal");
+
+  /* Pré-remplir si automation connue */
+  if (autoId) {
+    const a = automations.find(x => x.id === autoId);
+    if (a) {
+      document.getElementById("scheduleModalTitle").textContent = `Programmer : ${a.nom}`;
+      document.getElementById("scheduleAutoSelect").value = autoId;
+      document.getElementById("scheduleTime").value = a.schedule.heure;
+      document.getElementById("scheduleRecurrence").value = a.schedule.recurrence;
+      /* Cocher les jours */
+      document.querySelectorAll("#scheduleDaysGrid input").forEach(cb => {
+        cb.checked = a.schedule.jours.includes(parseInt(cb.value));
+      });
+    }
+  } else {
+    document.getElementById("scheduleModalTitle").textContent = "Programmer une automation";
+    document.getElementById("scheduleAutoSelect").value = "";
+    document.getElementById("scheduleTime").value = "08:00";
+    document.getElementById("scheduleRecurrence").value = "quotidien";
+    document.querySelectorAll("#scheduleDaysGrid input").forEach(cb => { cb.checked = false; });
+  }
+
+  modal.classList.add("open");
+  document.addEventListener("keydown", escCloseModal);
+}
+
+function closeScheduleModal(e) {
+  if (e && e.target !== document.getElementById("scheduleModal")) return;
+  document.getElementById("scheduleModal").classList.remove("open");
+  document.removeEventListener("keydown", escCloseModal);
+}
+
+function escCloseModal(e) {
+  if (e.key === "Escape") closeScheduleModal();
+}
+
+function saveSchedule() {
+  const autoId = parseInt(document.getElementById("scheduleAutoSelect").value);
+  const heure  = document.getElementById("scheduleTime").value;
+  const recurrence = document.getElementById("scheduleRecurrence").value;
+  const jours  = Array.from(document.querySelectorAll("#scheduleDaysGrid input:checked")).map(cb => parseInt(cb.value));
+
+  if (!autoId)           { showToast("Choisissez une automation", "warning"); return; }
+  if (jours.length === 0){ showToast("Sélectionnez au moins un jour", "warning"); return; }
+
+  /* Mise à jour des données mockées */
+  const a = automations.find(x => x.id === autoId);
+  if (a) { a.schedule.jours = jours; a.schedule.heure = heure; a.schedule.recurrence = recurrence; }
+
+  document.getElementById("scheduleModal").classList.remove("open");
+  showToast("Programmation sauvegardée ✓", "success");
+  buildCalendar();
+}
+
+/* ============================================================
+   3C — VUE CALENDRIER
+============================================================ */
+let calWeekOffset = 0;
+
+const JOURS_LABELS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+const HOURS = Array.from({ length: 15 }, (_, i) => `${i + 8}:00`); /* 8h–22h */
+
+function getMonday(offset = 0) {
+  const d = new Date();
+  const day = d.getDay() || 7;
+  d.setDate(d.getDate() - day + 1 + offset * 7);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function fmt(date) {
+  return date.toLocaleDateString("fr-FR", { day:"numeric", month:"short" });
+}
+
+function changeWeek(dir) {
+  calWeekOffset += dir;
+  buildCalendar();
+}
+
+function buildCalendar() {
+  const grid = document.getElementById("calendarGrid");
+  if (!grid) return;
+
+  const monday = getMonday(calWeekOffset);
+  const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6);
+
+  /* Label semaine */
+  const label = document.getElementById("calWeekLabel");
+  if (label) label.textContent = `Semaine du ${fmt(monday)} au ${fmt(sunday)}`;
+
+  /* Construire HTML */
+  let html = `<div class="cal-grid" style="grid-template-rows: auto ${HOURS.map(() => "44px").join(" ")}">`;
+
+  /* En-tête */
+  html += `<div class="cal-header-cell"></div>`;
+  JOURS_LABELS.forEach((j, i) => {
+    const d = new Date(monday); d.setDate(monday.getDate() + i);
+    const isToday = d.toDateString() === new Date().toDateString();
+    html += `<div class="cal-header-cell ${isToday ? "today" : ""}">${j}<br><span style="font-size:13px;font-weight:700">${d.getDate()}</span></div>`;
+  });
+
+  /* Lignes horaires */
+  HOURS.forEach(h => {
+    const hNum = parseInt(h);
+    html += `<div class="cal-time-cell">${h}</div>`;
+
+    for (let col = 0; col < 7; col++) {
+      const dayNum = col + 1; /* 1=lun … 7=dim */
+      /* Chercher automations planifiées ce jour + cette heure */
+      const matches = automations.filter(a => {
+        if (autoState[a.id] === "Inactif") return false;
+        if (!a.schedule.jours.includes(dayNum)) return false;
+        return parseInt(a.schedule.heure) === hNum;
+      });
+
+      let cellContent = matches.map(a => {
+        const isErr = autoState[a.id] === "Erreur";
+        return `<div class="cal-block${isErr ? " err" : ""}" title="${a.nom} — ${a.schedule.heure} (${a.schedule.recurrence})" onclick="openScheduleModal(${a.id})">${a.nom.split("–")[0].trim()}</div>`;
+      }).join("");
+
+      html += `<div class="cal-cell">${cellContent}</div>`;
+    }
+  });
+
+  html += "</div>";
+  grid.innerHTML = html;
+}
 
 </script>
 </body>
