@@ -690,6 +690,135 @@
     }
 
     /* ============================================================
+       4A/4B — HISTORIQUE APPELS & WHATSAPP
+    ============================================================ */
+
+    /* Barre filtre */
+    .history-toolbar {
+      display: flex; align-items: center; gap: 10px;
+      flex-wrap: wrap; margin-bottom: 16px;
+    }
+    .search-input-wrap {
+      position: relative; flex: 1; min-width: 180px;
+    }
+    .search-input-wrap svg {
+      position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+      pointer-events: none; color: var(--text-faint);
+    }
+    .search-input {
+      width: 100%; padding: 8px 12px 8px 34px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); color: var(--text);
+      font-family: var(--font); font-size: 13px; outline: none;
+      transition: border-color 0.15s;
+    }
+    .search-input:focus { border-color: var(--accent-border); }
+    .search-input::placeholder { color: var(--text-faint); }
+
+    /* Tableau historique */
+    .hist-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .hist-table th {
+      text-align: left; padding: 10px 14px;
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.06em; color: var(--text-faint);
+      border-bottom: 1px solid var(--border); white-space: nowrap;
+    }
+    .hist-table td {
+      padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,0.04);
+      color: var(--text-muted); vertical-align: middle;
+    }
+    .hist-table tbody tr.main-row { cursor: pointer; transition: background 0.12s; }
+    .hist-table tbody tr.main-row:hover > td { background: rgba(255,255,255,0.025); }
+    .hist-table .cell-name { font-weight: 600; color: var(--text); }
+    .hist-table .cell-mono { font-size: 12px; font-family: monospace; }
+
+    /* Accordion détail appel */
+    .detail-row td { padding: 0; border-bottom: 1px solid var(--border); }
+    .detail-content {
+      max-height: 0; overflow: hidden;
+      transition: max-height 0.35s ease;
+    }
+    .detail-content.open { max-height: 900px; }
+    .detail-inner { padding: 20px; background: rgba(255,255,255,0.015); }
+
+    /* Résumé IA */
+    .ai-summary {
+      background: rgba(112,178,222,0.07);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      padding: 10px 14px;
+      font-size: 13px; color: var(--text-muted);
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+    .ai-summary strong { color: var(--accent); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 4px; }
+
+    /* Bulles de transcription */
+    .transcript-wrap {
+      display: flex; flex-direction: column; gap: 8px;
+      max-height: 280px; overflow-y: auto;
+      padding-right: 4px;
+      scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+      margin-bottom: 16px;
+    }
+    .bubble {
+      display: flex; gap: 8px; align-items: flex-start;
+      max-width: 80%;
+    }
+    .bubble.assistant { align-self: flex-start; }
+    .bubble.user      { align-self: flex-end; flex-direction: row-reverse; }
+    .bubble-avatar {
+      width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700;
+    }
+    .bubble.assistant .bubble-avatar { background: var(--accent-dim); color: var(--accent); }
+    .bubble.user      .bubble-avatar { background: rgba(255,255,255,0.08); color: var(--text-muted); }
+    .bubble-text {
+      padding: 8px 12px; border-radius: 12px; font-size: 13px; line-height: 1.5;
+    }
+    .bubble.assistant .bubble-text { background: rgba(255,255,255,0.05); color: var(--text); border-radius: 4px 12px 12px 12px; }
+    .bubble.user      .bubble-text { background: var(--accent-dim); color: var(--text); border-radius: 12px 4px 12px 12px; }
+
+    /* Lecteur audio stylisé */
+    .audio-player {
+      display: flex; align-items: center; gap: 12px;
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+      border-radius: 10px; padding: 10px 14px;
+    }
+    .play-btn {
+      width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+      background: var(--accent); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: #0a0a0a; transition: background 0.15s;
+    }
+    .play-btn:hover { background: #8ec4e8; }
+    .progress-bar-wrap {
+      flex: 1; height: 4px; background: rgba(255,255,255,0.1);
+      border-radius: 4px; cursor: pointer; position: relative;
+    }
+    .progress-bar-fill {
+      height: 100%; background: var(--accent); border-radius: 4px;
+      width: 0%; transition: width 0.1s linear;
+    }
+    .audio-time { font-size: 11px; color: var(--text-faint); white-space: nowrap; font-family: monospace; }
+
+    /* 4B — WhatsApp chat bubbles */
+    .wa-canal {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 11px; font-weight: 600; color: #25D366;
+    }
+    .wa-bubble { background: rgba(37,211,102,0.08); border-radius: 12px 4px 12px 12px; }
+    .wa-audio-msg {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+      border-radius: 10px; padding: 6px 12px;
+      font-size: 12px; color: var(--text-muted);
+    }
+    .msg-time { font-size: 10px; color: var(--text-faint); margin-top: 2px; text-align: right; }
+    .msg-read { color: #25D366; font-size: 11px; }
+
+    /* ============================================================
        RESPONSIVE — grilles
     ============================================================ */
     @media (max-width: 1100px) {
@@ -1201,13 +1330,39 @@
             <p class="page-subtitle">Historique des appels traités par Sophie.</p>
           </div>
         </div>
-        <div class="card">
-          <div class="placeholder-content">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4a2 2 0 0 1 1.99-2.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.08 6.08l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
-            </svg>
-            <h3>Séquence 4 à venir</h3>
-            <p>Tableau des appels avec transcriptions et lecteur audio.</p>
+
+        <div class="history-toolbar">
+          <div class="search-input-wrap">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input class="search-input" id="appelSearch" placeholder="Rechercher par nom ou numéro…" oninput="filterAppels()" />
+          </div>
+          <select class="form-select" id="appelPeriod" onchange="filterAppels()" style="width:auto;padding:8px 12px">
+            <option value="all">Toutes les dates</option>
+            <option value="today">Aujourd'hui</option>
+            <option value="week">Cette semaine</option>
+          </select>
+          <select class="form-select" id="appelStatut" onchange="filterAppels()" style="width:auto;padding:8px 12px">
+            <option value="all">Tous les statuts</option>
+            <option value="Traité">Traité</option>
+            <option value="Manqué">Manqué</option>
+          </select>
+        </div>
+
+        <div class="card" style="padding:0;overflow:hidden">
+          <div style="overflow-x:auto">
+            <table class="hist-table">
+              <thead>
+                <tr>
+                  <th>Appelant</th>
+                  <th>Numéro</th>
+                  <th>Date &amp; heure</th>
+                  <th>Durée</th>
+                  <th>Statut</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="appelsTableBody"></tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -1221,13 +1376,34 @@
             <p class="page-subtitle">Messagerie automatisée via WhatsApp GPT.</p>
           </div>
         </div>
-        <div class="card">
-          <div class="placeholder-content">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-            </svg>
-            <h3>Séquence 4 à venir</h3>
-            <p>Historique WhatsApp avec bulles de chat et messages vocaux.</p>
+
+        <div class="history-toolbar">
+          <div class="search-input-wrap">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input class="search-input" id="waSearch" placeholder="Rechercher par nom ou numéro…" oninput="filterWa()" />
+          </div>
+          <select class="form-select" id="waPeriod" onchange="filterWa()" style="width:auto;padding:8px 12px">
+            <option value="all">Toutes les dates</option>
+            <option value="today">Aujourd'hui</option>
+            <option value="week">Cette semaine</option>
+          </select>
+        </div>
+
+        <div class="card" style="padding:0;overflow:hidden">
+          <div style="overflow-x:auto">
+            <table class="hist-table">
+              <thead>
+                <tr>
+                  <th>Contact</th>
+                  <th>Numéro</th>
+                  <th>Canal</th>
+                  <th>Date</th>
+                  <th>Messages</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="waTableBody"></tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -1895,7 +2071,275 @@ document.addEventListener('DOMContentLoaded', () => {
   buildAutoTable();
   populateScheduleSelect();
   buildCalendar();
+  buildAppelsTable(appels);
+  buildWaTable(conversations_wa);
 });
+
+/* ============================================================
+   4A — PAGE APPELS VOCAUX
+============================================================ */
+
+/* État lecture audio simulé par appel */
+const audioState = {};
+
+function buildAppelsTable(data) {
+  const tbody = document.getElementById("appelsTableBody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+
+  if (data.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-faint)">Aucun appel trouvé</td></tr>`;
+    return;
+  }
+
+  data.forEach(appel => {
+    const isTraite = appel.statut === "Traité";
+
+    /* Ligne principale */
+    const tr = document.createElement("tr");
+    tr.className = "main-row";
+    tr.onclick = () => toggleAppelDetail(appel.id);
+    tr.innerHTML = `
+      <td>
+        <div class="cell-name">${appel.nom}</div>
+      </td>
+      <td class="cell-mono">${appel.numero}</td>
+      <td>${appel.date} · ${appel.heure}</td>
+      <td>${appel.duree}</td>
+      <td>
+        <span class="badge ${isTraite ? 'badge-success' : 'badge-danger'}">
+          ${isTraite ? '● Traité' : '● Manqué'}
+        </span>
+      </td>
+      <td>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             style="color:var(--text-faint);transition:transform 0.2s" id="chevron-appel-${appel.id}">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </td>
+    `;
+    tbody.appendChild(tr);
+
+    /* Ligne détail accordion */
+    const trDetail = document.createElement("tr");
+    trDetail.className = "detail-row";
+
+    let transcriptHtml = "";
+    if (appel.transcription && appel.transcription.length > 0) {
+      transcriptHtml = appel.transcription.map(msg => `
+        <div class="bubble ${msg.role}">
+          <div class="bubble-avatar">${msg.role === "assistant" ? "AI" : "U"}</div>
+          <div class="bubble-text">${msg.text}</div>
+        </div>
+      `).join("");
+    } else {
+      transcriptHtml = `<p style="color:var(--text-faint);font-size:13px;font-style:italic">Aucune transcription disponible.</p>`;
+    }
+
+    /* Lecteur audio */
+    const audioHtml = `
+      <div class="audio-player" style="margin-top:4px">
+        <button class="play-btn" id="playBtn-${appel.id}" onclick="togglePlay(${appel.id}, '${appel.duree}', event)" title="Lecture">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" id="playIcon-${appel.id}"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </button>
+        <div class="progress-bar-wrap" onclick="seekAudio(${appel.id}, event)">
+          <div class="progress-bar-fill" id="progress-${appel.id}"></div>
+        </div>
+        <span class="audio-time" id="audioTime-${appel.id}">0:00 / ${appel.duree}</span>
+      </div>
+    `;
+
+    trDetail.innerHTML = `
+      <td colspan="6">
+        <div class="detail-content" id="detail-appel-${appel.id}">
+          <div class="detail-inner">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:16px">
+              <div>
+                <div class="ai-summary">
+                  <strong>🤖 Résumé IA</strong>
+                  ${appel.resume}
+                </div>
+                ${audioHtml}
+              </div>
+              <div>
+                <div style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px">Transcription</div>
+                <div class="transcript-wrap">${transcriptHtml}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(trDetail);
+  });
+}
+
+function toggleAppelDetail(id) {
+  const detail  = document.getElementById("detail-appel-" + id);
+  const chevron = document.getElementById("chevron-appel-" + id);
+  const isOpen  = detail.classList.toggle("open");
+  if (chevron) chevron.style.transform = isOpen ? "rotate(180deg)" : "";
+}
+
+/* Lecteur audio simulé (src vide géré proprement) */
+function togglePlay(id, dureeStr, e) {
+  e.stopPropagation();
+  const state = audioState[id] || { playing: false, elapsed: 0, total: parseDuration(dureeStr) };
+  audioState[id] = state;
+
+  if (state.playing) {
+    clearInterval(state.interval);
+    state.playing = false;
+    document.getElementById("playIcon-" + id).innerHTML = `<polygon points="5 3 19 12 5 21 5 3"/>`;
+  } else {
+    if (state.elapsed >= state.total) state.elapsed = 0;
+    state.playing = true;
+    document.getElementById("playIcon-" + id).innerHTML = `<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>`;
+    state.interval = setInterval(() => {
+      state.elapsed++;
+      if (state.elapsed >= state.total) {
+        clearInterval(state.interval);
+        state.playing = false;
+        state.elapsed = state.total;
+        document.getElementById("playIcon-" + id).innerHTML = `<polygon points="5 3 19 12 5 21 5 3"/>`;
+      }
+      const pct = (state.elapsed / state.total * 100).toFixed(1);
+      const prog = document.getElementById("progress-" + id);
+      const timeEl = document.getElementById("audioTime-" + id);
+      if (prog) prog.style.width = pct + "%";
+      if (timeEl) timeEl.textContent = fmtSec(state.elapsed) + " / " + dureeStr;
+    }, 1000);
+  }
+}
+
+function seekAudio(id, e) {
+  e.stopPropagation();
+  const bar = e.currentTarget;
+  const ratio = e.offsetX / bar.offsetWidth;
+  const state = audioState[id];
+  if (!state) return;
+  state.elapsed = Math.round(ratio * state.total);
+  document.getElementById("progress-" + id).style.width = (ratio * 100).toFixed(1) + "%";
+  document.getElementById("audioTime-" + id).textContent = fmtSec(state.elapsed) + " / " + fmtSec(state.total);
+}
+
+function parseDuration(str) {
+  const parts = str.split(":").map(Number);
+  return parts[0] * 60 + (parts[1] || 0);
+}
+function fmtSec(s) {
+  return Math.floor(s/60) + ":" + String(s % 60).padStart(2, "0");
+}
+
+/* Filtres appels */
+function filterAppels() {
+  const q  = (document.getElementById("appelSearch").value || "").toLowerCase();
+  const st = document.getElementById("appelStatut").value;
+  const filtered = appels.filter(a => {
+    const matchQ  = !q || a.nom.toLowerCase().includes(q) || a.numero.includes(q);
+    const matchSt = st === "all" || a.statut === st;
+    return matchQ && matchSt;
+  });
+  buildAppelsTable(filtered);
+}
+
+/* ============================================================
+   4B — PAGE CONVERSATIONS WHATSAPP
+============================================================ */
+
+function buildWaTable(data) {
+  const tbody = document.getElementById("waTableBody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+
+  if (data.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-faint)">Aucune conversation trouvée</td></tr>`;
+    return;
+  }
+
+  data.forEach(conv => {
+    /* Ligne principale */
+    const tr = document.createElement("tr");
+    tr.className = "main-row";
+    tr.onclick = () => toggleWaDetail(conv.id);
+    tr.innerHTML = `
+      <td><div class="cell-name">${conv.nom}</div></td>
+      <td class="cell-mono">${conv.numero}</td>
+      <td>
+        <span class="wa-canal">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.999 2.007a9.993 9.993 0 0 0-8.522 15.216L2 22l4.878-1.435A9.994 9.994 0 1 0 12 2.007z"/></svg>
+          WhatsApp
+        </span>
+      </td>
+      <td>${conv.date}</td>
+      <td><span class="badge badge-accent">${conv.nb_messages} msgs</span></td>
+      <td>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             style="color:var(--text-faint);transition:transform 0.2s" id="chevron-wa-${conv.id}">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </td>
+    `;
+    tbody.appendChild(tr);
+
+    /* Ligne détail accordion */
+    const trDetail = document.createElement("tr");
+    trDetail.className = "detail-row";
+
+    const chatHtml = conv.messages.map((msg, i) => {
+      const isUser = msg.role === "user";
+      const isAudio = msg.type === "audio";
+
+      let contentHtml;
+      if (isAudio) {
+        contentHtml = `<div class="wa-audio-msg"><span>🎤</span><span>Message vocal — ${msg.duree}</span></div>`;
+      } else {
+        contentHtml = `<div class="bubble-text ${isUser ? 'wa-bubble' : ''}">${msg.text}</div>`;
+      }
+
+      const readTick = (!isUser && i === conv.messages.length - 1) ? `<span class="msg-read">✓✓</span>` : "";
+
+      return `
+        <div class="bubble ${isUser ? 'user' : 'assistant'}">
+          <div class="bubble-avatar">${isUser ? msg.nom ? msg.nom[0] : "U" : "AI"}</div>
+          <div>
+            ${contentHtml}
+            <div class="msg-time">${msg.heure} ${readTick}</div>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    trDetail.innerHTML = `
+      <td colspan="6">
+        <div class="detail-content" id="detail-wa-${conv.id}">
+          <div class="detail-inner">
+            <div style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px">
+              Conversation avec ${conv.nom} · ${conv.numero}
+            </div>
+            <div class="transcript-wrap" style="max-height:320px">${chatHtml}</div>
+          </div>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(trDetail);
+  });
+}
+
+function toggleWaDetail(id) {
+  const detail  = document.getElementById("detail-wa-" + id);
+  const chevron = document.getElementById("chevron-wa-" + id);
+  const isOpen  = detail.classList.toggle("open");
+  if (chevron) chevron.style.transform = isOpen ? "rotate(180deg)" : "";
+}
+
+function filterWa() {
+  const q = (document.getElementById("waSearch").value || "").toLowerCase();
+  const filtered = conversations_wa.filter(c =>
+    !q || c.nom.toLowerCase().includes(q) || c.numero.includes(q)
+  );
+  buildWaTable(filtered);
+}
 
 /* ============================================================
    TOAST — système global
