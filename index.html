@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 
   <style>
     /* ============================================================
@@ -308,6 +309,166 @@
     hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
 
     /* ============================================================
+       2A/2B — KPI CARDS
+    ============================================================ */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: border-color 0.15s;
+    }
+    .kpi-card:hover { border-color: var(--border-hover); }
+    .kpi-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .kpi-icon {
+      width: 36px; height: 36px;
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .kpi-icon.accent  { background: var(--accent-dim); }
+    .kpi-icon.success { background: rgba(34,197,94,0.12); }
+    .kpi-icon.warning { background: rgba(245,158,11,0.12); }
+    .kpi-icon.danger  { background: rgba(239,68,68,0.12); }
+    .kpi-icon.purple  { background: rgba(168,85,247,0.12); }
+
+    .kpi-delta {
+      font-size: 11px; font-weight: 600;
+      padding: 3px 7px; border-radius: 20px;
+    }
+    .kpi-delta.pos { background: rgba(34,197,94,0.12);  color: var(--success); }
+    .kpi-delta.neg { background: rgba(239,68,68,0.12);  color: var(--danger); }
+    .kpi-delta.neu { background: rgba(255,255,255,0.06); color: var(--text-muted); }
+
+    .kpi-value {
+      font-size: 26px; font-weight: 700;
+      color: var(--text); letter-spacing: -0.5px;
+      line-height: 1.1;
+    }
+    .kpi-label { font-size: 12px; color: var(--text-muted); }
+
+    .kpi-stars { color: var(--warning); font-size: 13px; letter-spacing: 1px; }
+
+    /* ============================================================
+       2A — PÉRIODE FILTER
+    ============================================================ */
+    .period-filter {
+      display: flex; align-items: center; gap: 4px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 3px;
+    }
+    .period-btn {
+      padding: 5px 14px;
+      border-radius: 6px;
+      font-size: 12px; font-weight: 600;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      font-family: var(--font);
+      transition: background 0.15s, color 0.15s;
+    }
+    .period-btn.active { background: var(--accent); color: #0a0a0a; }
+    .period-btn:not(.active):hover { background: rgba(255,255,255,0.06); color: var(--text); }
+
+    /* ============================================================
+       2C — GRAPHIQUES
+    ============================================================ */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .chart-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+    .chart-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .chart-title { font-size: 14px; font-weight: 600; color: var(--text); }
+    .chart-subtitle { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .chart-wrap { position: relative; height: 180px; }
+    .chart-wrap-sm { position: relative; height: 160px; }
+
+    /* Graphiques bottom row : 3 colonnes */
+    .charts-grid-3 {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    /* ============================================================
+       2D — RECOMMANDATIONS
+    ============================================================ */
+    .reco-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+    .reco-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: border-color 0.15s;
+    }
+    .reco-card:hover { border-color: var(--border-hover); }
+    .reco-card.danger-card  { border-left: 3px solid var(--danger); }
+    .reco-card.warning-card { border-left: 3px solid var(--warning); }
+    .reco-card.accent-card  { border-left: 3px solid var(--accent); }
+
+    .reco-icon {
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .reco-icon.danger  { background: rgba(239,68,68,0.12);  color: var(--danger); }
+    .reco-icon.warning { background: rgba(245,158,11,0.12); color: var(--warning); }
+    .reco-icon.accent  { background: var(--accent-dim);     color: var(--accent); }
+
+    .reco-top { display: flex; align-items: flex-start; gap: 12px; }
+    .reco-body { flex: 1; }
+    .reco-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+    .reco-desc  { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+    /* ============================================================
+       RESPONSIVE — grilles
+    ============================================================ */
+    @media (max-width: 1100px) {
+      .kpi-grid     { grid-template-columns: repeat(2, 1fr); }
+      .charts-grid  { grid-template-columns: 1fr; }
+      .charts-grid-3{ grid-template-columns: 1fr; }
+      .reco-grid    { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      .kpi-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* ============================================================
        RESPONSIVE
     ============================================================ */
     @media (max-width: 768px) {
@@ -499,23 +660,237 @@
 
       <!-- ===== VUE D'ENSEMBLE ===== -->
       <div class="page active" id="page-overview">
+
+        <!-- En-tête + filtre période -->
         <div class="page-header">
           <div>
             <div class="breadcrumb">Général <span>/ Vue d'ensemble</span></div>
             <h1 class="page-title">Vue d'ensemble</h1>
-            <p class="page-subtitle">Bienvenue, Moctar — voici l'état de vos automations.</p>
+            <p class="page-subtitle" id="overviewSubtitle">Bienvenue, Moctar — voici l'état de vos automations.</p>
+          </div>
+          <div class="period-filter">
+            <button class="period-btn active" data-period="7"  onclick="setPeriod(7,  this)">7j</button>
+            <button class="period-btn"        data-period="30" onclick="setPeriod(30, this)">30j</button>
+            <button class="period-btn"        data-period="90" onclick="setPeriod(90, this)">90j</button>
           </div>
         </div>
-        <div class="card">
-          <div class="placeholder-content">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-              <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
-            </svg>
-            <h3>Séquence 2 à venir</h3>
-            <p>KPIs, graphiques Chart.js et recommandations seront ajoutés ici.</p>
+
+        <!-- 2A — KPIs principaux -->
+        <div class="kpi-grid" id="kpiGrid1">
+          <div class="kpi-card">
+            <div class="kpi-card-top">
+              <div class="kpi-icon accent">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#70B2DE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4a2 2 0 0 1 1.99-2.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.08 6.08l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              </div>
+              <span class="kpi-delta pos" id="kpiCallsDelta">+12%</span>
+            </div>
+            <div class="kpi-value" id="kpiCallsVal">147</div>
+            <div class="kpi-label">Appels traités</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-card-top">
+              <div class="kpi-icon success">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              </div>
+              <span class="kpi-delta neu" id="kpiAutoDelta">—</span>
+            </div>
+            <div class="kpi-value" id="kpiAutoVal">7 / 9</div>
+            <div class="kpi-label">Automations actives</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-card-top">
+              <div class="kpi-icon warning">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><line x1="9" y1="12" x2="15" y2="12"/></svg>
+              </div>
+              <span class="kpi-delta neg" id="kpiTicketsDelta">3 urgents</span>
+            </div>
+            <div class="kpi-value" id="kpiTicketsVal">4</div>
+            <div class="kpi-label">Tickets ouverts</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-card-top">
+              <div class="kpi-icon" style="background:rgba(37,211,102,0.12)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#25D366" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              </div>
+              <span class="kpi-delta pos" id="kpiWaDelta">+8%</span>
+            </div>
+            <div class="kpi-value" id="kpiWaVal">391</div>
+            <div class="kpi-label">Messages WhatsApp</div>
           </div>
         </div>
+
+        <!-- 2B — KPIs avancés -->
+        <div class="kpi-grid" id="kpiGrid2" style="margin-bottom:20px">
+          <div class="kpi-card">
+            <div class="kpi-card-top">
+              <div class="kpi-icon accent">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#70B2DE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+              <span class="kpi-delta pos">-23%</span>
+            </div>
+            <div class="kpi-value">2m 34s</div>
+            <div class="kpi-label">Durée moyenne des appels</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-card-top">
+              <div class="kpi-icon danger">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+              </div>
+              <span class="kpi-delta neg" id="kpiEscaladeDelta">+2.1pts</span>
+            </div>
+            <div class="kpi-value" id="kpiEscaladeVal">8.3%</div>
+            <div class="kpi-label">Taux d'escalade</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-card-top">
+              <div class="kpi-icon warning">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              </div>
+              <span class="kpi-delta pos">+0.2</span>
+            </div>
+            <div class="kpi-value">
+              4.7
+              <span class="kpi-stars" style="font-size:16px;margin-left:4px">★★★★½</span>
+            </div>
+            <div class="kpi-label">Satisfaction client</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-card-top">
+              <div class="kpi-icon" style="background:rgba(168,85,247,0.12)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              </div>
+              <span class="kpi-delta pos" id="kpiRevDelta">+8%</span>
+            </div>
+            <div class="kpi-value" id="kpiRevVal">7 800 €</div>
+            <div class="kpi-label">Revenus ce mois</div>
+          </div>
+        </div>
+
+        <!-- 2C — Graphiques ligne 1 : barres appels + ligne WA -->
+        <div class="charts-grid" style="margin-bottom:14px">
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Volume d'appels</div>
+                <div class="chart-subtitle" id="chartCallsSubtitle">30 derniers jours</div>
+              </div>
+              <span class="badge badge-accent" id="chartCallsTotal">621 appels</span>
+            </div>
+            <div class="chart-wrap"><canvas id="chartCalls"></canvas></div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Messages WhatsApp</div>
+                <div class="chart-subtitle" id="chartWaSubtitle">30 derniers jours</div>
+              </div>
+              <span class="badge badge-success" id="chartWaTotal">1 847 messages</span>
+            </div>
+            <div class="chart-wrap"><canvas id="chartWa"></canvas></div>
+          </div>
+        </div>
+
+        <!-- 2C — Graphiques ligne 2 : revenus + donut statuts -->
+        <div class="charts-grid-3">
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Évolution des revenus</div>
+                <div class="chart-subtitle">12 derniers mois vs objectif</div>
+              </div>
+            </div>
+            <div class="chart-wrap"><canvas id="chartRevenues"></canvas></div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Statuts automations</div>
+                <div class="chart-subtitle">Répartition actuelle</div>
+              </div>
+            </div>
+            <div class="chart-wrap-sm" style="display:flex;align-items:center;justify-content:center">
+              <canvas id="chartDonut" style="max-width:160px;max-height:160px"></canvas>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;margin-top:12px" id="donutLegend"></div>
+          </div>
+
+          <div class="chart-card" style="display:flex;flex-direction:column;justify-content:space-between">
+            <div>
+              <div class="chart-title" style="margin-bottom:4px">Résumé période</div>
+              <div class="chart-subtitle" id="summaryPeriodLabel">30 derniers jours</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px;margin-top:16px" id="summaryStats">
+            </div>
+          </div>
+        </div>
+
+        <!-- 2D — Recommandations AkilAI -->
+        <div style="margin-bottom:16px">
+          <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:8px">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Recommandations AkilAI
+          </div>
+          <div class="reco-grid">
+
+            <div class="reco-card danger-card">
+              <div class="reco-top">
+                <div class="reco-icon danger">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                </div>
+                <div class="reco-body">
+                  <div class="reco-title">2 automations en erreur depuis 3j</div>
+                  <div class="reco-desc">Relance J-3 et Lead Qualif Calendly sont inactives — des clients ne reçoivent plus de relances.</div>
+                </div>
+              </div>
+              <button class="btn btn-sm btn-secondary" onclick="navigate('automations')">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                Voir automations
+              </button>
+            </div>
+
+            <div class="reco-card warning-card">
+              <div class="reco-top">
+                <div class="reco-icon warning">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                </div>
+                <div class="reco-body">
+                  <div class="reco-title">Taux d'escalade élevé (8.3%)</div>
+                  <div class="reco-desc">Cette semaine, 8.3% des appels ont été transférés à un humain — objectif cible : &lt; 5%.</div>
+                </div>
+              </div>
+              <button class="btn btn-sm btn-secondary" onclick="navigate('analytics')">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                Voir analytics
+              </button>
+            </div>
+
+            <div class="reco-card accent-card">
+              <div class="reco-top">
+                <div class="reco-icon accent">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                </div>
+                <div class="reco-body">
+                  <div class="reco-title">Relance J-3 non programmée</div>
+                  <div class="reco-desc">L'automation de relance à J-3 n'a pas de créneau planifié pour la semaine prochaine.</div>
+                </div>
+              </div>
+              <button class="btn btn-sm btn-secondary" onclick="navigate('programmation')">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Voir programmation
+              </button>
+            </div>
+
+          </div>
+        </div>
+
       </div>
 
       <!-- ===== AUTOMATIONS ===== -->
@@ -889,6 +1264,257 @@ const kpis = {
 };
 
 /* ============================================================
+   2A/2B/2C/2D — VUE D'ENSEMBLE : KPIs + GRAPHIQUES
+============================================================ */
+
+let currentPeriod = 30;
+let chartCalls    = null;
+let chartWa       = null;
+let chartRevenues = null;
+let chartDonut    = null;
+
+/* Données par période (slice des 30 pts) */
+function getDataForPeriod(arr, days) {
+  const n = Math.min(days, arr.length);
+  return arr.slice(arr.length - n);
+}
+
+/* Labels jours "J-N … Auj." */
+function makeDayLabels(n) {
+  return Array.from({ length: n }, (_, i) => {
+    const d = n - 1 - i;
+    return d === 0 ? "Auj." : "J-" + d;
+  });
+}
+
+/* Config commune Chart.js */
+const CHART_DEFAULTS = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      backgroundColor: "#1a1a1a",
+      titleColor: "#e5e5e5",
+      bodyColor: "#888",
+      borderColor: "rgba(255,255,255,0.1)",
+      borderWidth: 1,
+      padding: 10,
+      cornerRadius: 8
+    }
+  },
+  scales: {
+    x: {
+      grid: { color: "rgba(255,255,255,0.04)" },
+      ticks: { color: "#555", font: { family: "'Space Grotesk'", size: 10 }, maxTicksLimit: 8 }
+    },
+    y: {
+      grid: { color: "rgba(255,255,255,0.04)" },
+      ticks: { color: "#555", font: { family: "'Space Grotesk'", size: 10 } }
+    }
+  }
+};
+
+function buildCharts(days) {
+  const callData = getDataForPeriod(kpis.appels_par_jour,     days);
+  const waData   = getDataForPeriod(kpis.messages_wa_par_jour, days);
+  const labels   = makeDayLabels(callData.length);
+
+  /* Destroy anciens si existe */
+  [chartCalls, chartWa, chartRevenues, chartDonut].forEach(c => c && c.destroy());
+
+  /* --- Barres : appels --- */
+  chartCalls = new Chart(document.getElementById("chartCalls"), {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        data: callData,
+        backgroundColor: "rgba(112,178,222,0.65)",
+        borderColor: "#70B2DE",
+        borderWidth: 1,
+        borderRadius: 4
+      }]
+    },
+    options: {
+      ...CHART_DEFAULTS,
+      plugins: { ...CHART_DEFAULTS.plugins, tooltip: { ...CHART_DEFAULTS.plugins.tooltip, callbacks: { label: ctx => " " + ctx.parsed.y + " appels" } } }
+    }
+  });
+
+  /* --- Ligne : WhatsApp --- */
+  chartWa = new Chart(document.getElementById("chartWa"), {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        data: waData,
+        borderColor: "#22c55e",
+        backgroundColor: "rgba(34,197,94,0.08)",
+        borderWidth: 2,
+        tension: 0.4,
+        fill: true,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        pointHoverBackgroundColor: "#22c55e"
+      }]
+    },
+    options: {
+      ...CHART_DEFAULTS,
+      plugins: { ...CHART_DEFAULTS.plugins, tooltip: { ...CHART_DEFAULTS.plugins.tooltip, callbacks: { label: ctx => " " + ctx.parsed.y + " messages" } } }
+    }
+  });
+
+  /* --- Ligne double : revenus --- */
+  const months = ["Jan","Fév","Mar","Avr","Mai","Jun","Jul","Aoû","Sep","Oct","Nov","Déc"];
+  chartRevenues = new Chart(document.getElementById("chartRevenues"), {
+    type: "line",
+    data: {
+      labels: months,
+      datasets: [
+        {
+          label: "Revenus",
+          data: kpis.revenus_par_mois,
+          borderColor: "#70B2DE",
+          backgroundColor: "rgba(112,178,222,0.08)",
+          borderWidth: 2, tension: 0.4, fill: true,
+          pointRadius: 3, pointBackgroundColor: "#70B2DE"
+        },
+        {
+          label: "Objectif",
+          data: kpis.objectif_mensuel,
+          borderColor: "#555",
+          borderWidth: 1.5, borderDash: [5,4],
+          tension: 0.4, fill: false,
+          pointRadius: 0
+        }
+      ]
+    },
+    options: {
+      ...CHART_DEFAULTS,
+      plugins: {
+        legend: { display: true, position: "bottom", labels: { color: "#888", font: { size: 11, family: "'Space Grotesk'" }, boxWidth: 12, padding: 12 } },
+        tooltip: { ...CHART_DEFAULTS.plugins.tooltip, callbacks: { label: ctx => " " + ctx.dataset.label + " : " + ctx.parsed.y.toLocaleString("fr-FR") + " €" } }
+      }
+    }
+  });
+
+  /* --- Donut : statuts automations --- */
+  const actif   = automations.filter(a => a.statut === "Actif").length;
+  const erreur  = automations.filter(a => a.statut === "Erreur").length;
+  const inactif = automations.filter(a => a.statut === "Inactif").length;
+
+  chartDonut = new Chart(document.getElementById("chartDonut"), {
+    type: "doughnut",
+    data: {
+      labels: ["Actif", "Erreur", "Inactif"],
+      datasets: [{
+        data: [actif, erreur, inactif],
+        backgroundColor: ["rgba(34,197,94,0.8)", "rgba(239,68,68,0.8)", "rgba(100,100,100,0.6)"],
+        borderColor: ["#22c55e","#ef4444","#444"],
+        borderWidth: 1.5,
+        hoverOffset: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: "68%",
+      plugins: {
+        legend: { display: false },
+        tooltip: { ...CHART_DEFAULTS.plugins.tooltip }
+      }
+    }
+  });
+
+  /* Légende donut */
+  const donutLegend = document.getElementById("donutLegend");
+  const colors = ["#22c55e","#ef4444","#888"];
+  const counts = [actif, erreur, inactif];
+  const labels2 = ["Actif","Erreur","Inactif"];
+  donutLegend.innerHTML = labels2.map((l,i) => `
+    <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="width:8px;height:8px;border-radius:50%;background:${colors[i]};flex-shrink:0;display:inline-block"></span>
+        <span style="color:var(--text-muted)">${l}</span>
+      </div>
+      <span style="font-weight:600;color:var(--text)">${counts[i]}</span>
+    </div>
+  `).join("");
+
+  /* Résumé période */
+  updateSummary(days, callData, waData);
+}
+
+function updateSummary(days, callData, waData) {
+  const totalCalls = callData.reduce((a,b) => a+b, 0);
+  const totalWa    = waData.reduce((a,b) => a+b, 0);
+  const avgCalls   = Math.round(totalCalls / callData.length);
+
+  document.getElementById("summaryPeriodLabel").textContent = days + " derniers jours";
+  document.getElementById("summaryStats").innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:12px;color:var(--text-muted)">Total appels</span>
+      <span style="font-size:14px;font-weight:700;color:var(--text)">${totalCalls}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:12px;color:var(--text-muted)">Moy. appels/jour</span>
+      <span style="font-size:14px;font-weight:700;color:var(--text)">${avgCalls}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:12px;color:var(--text-muted)">Messages WhatsApp</span>
+      <span style="font-size:14px;font-weight:700;color:var(--text)">${totalWa.toLocaleString("fr-FR")}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0">
+      <span style="font-size:12px;color:var(--text-muted)">Taux d'escalade</span>
+      <span style="font-size:14px;font-weight:700;color:var(--danger)">${kpis.taux_escalade}%</span>
+    </div>
+  `;
+}
+
+function updateKPIs(days) {
+  const callData = getDataForPeriod(kpis.appels_par_jour,     days);
+  const waData   = getDataForPeriod(kpis.messages_wa_par_jour, days);
+  const totalCalls = callData.reduce((a,b) => a+b, 0);
+  const totalWa    = waData.reduce((a,b) => a+b, 0);
+
+  /* Calcul delta vs période précédente */
+  const prevCalls = getDataForPeriod(kpis.appels_par_jour, days * 2).slice(0, days);
+  const prevWa    = getDataForPeriod(kpis.messages_wa_par_jour, days * 2).slice(0, days);
+  const prevTotalCalls = prevCalls.reduce((a,b) => a+b, 0) || 1;
+  const prevTotalWa    = prevWa.reduce((a,b) => a+b, 0) || 1;
+  const deltaCallsPct  = Math.round((totalCalls - prevTotalCalls) / prevTotalCalls * 100);
+  const deltaWaPct     = Math.round((totalWa    - prevTotalWa)    / prevTotalWa    * 100);
+
+  document.getElementById("kpiCallsVal").textContent   = totalCalls;
+  document.getElementById("kpiWaVal").textContent       = totalWa.toLocaleString("fr-FR");
+  document.getElementById("kpiCallsDelta").textContent  = (deltaCallsPct >= 0 ? "+" : "") + deltaCallsPct + "%";
+  document.getElementById("kpiCallsDelta").className    = "kpi-delta " + (deltaCallsPct >= 0 ? "pos" : "neg");
+  document.getElementById("kpiWaDelta").textContent     = (deltaWaPct >= 0 ? "+" : "") + deltaWaPct + "%";
+  document.getElementById("kpiWaDelta").className       = "kpi-delta " + (deltaWaPct >= 0 ? "pos" : "neg");
+
+  /* Sous-titres graphiques */
+  const sub = days + " derniers jours";
+  document.getElementById("chartCallsSubtitle").textContent = sub;
+  document.getElementById("chartWaSubtitle").textContent    = sub;
+  document.getElementById("chartCallsTotal").textContent    = totalCalls + " appels";
+  document.getElementById("chartWaTotal").textContent       = totalWa.toLocaleString("fr-FR") + " messages";
+}
+
+function setPeriod(days, btn) {
+  currentPeriod = days;
+  document.querySelectorAll(".period-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  updateKPIs(days);
+  buildCharts(days);
+}
+
+function initOverview() {
+  updateKPIs(currentPeriod);
+  buildCharts(currentPeriod);
+}
+
+/* ============================================================
    NAVIGATION SPA
 ============================================================ */
 let currentSection   = 'overview';
@@ -953,6 +1579,8 @@ window.addEventListener('resize', handleResize);
 document.addEventListener('DOMContentLoaded', () => {
   handleResize();
   navigate('overview');
+  /* Léger délai pour que Chart.js soit prêt après le rendu DOM */
+  setTimeout(initOverview, 50);
 });
 
 </script>
