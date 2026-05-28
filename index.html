@@ -942,6 +942,303 @@
       }
       .sidebar-overlay.active { display: block; }
     }
+
+    /* ============================================================
+       CLIENTS — Séquence 6
+    ============================================================ */
+    .clients-toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .clients-toolbar .search-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0 12px;
+      height: 38px;
+      flex: 1;
+      min-width: 200px;
+    }
+    .clients-toolbar .search-box input {
+      background: none;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-size: 13px;
+      width: 100%;
+      font-family: inherit;
+    }
+    .clients-toolbar .search-box input::placeholder { color: var(--text-muted); }
+    .clients-toolbar select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0 12px;
+      height: 38px;
+      color: var(--text);
+      font-size: 13px;
+      font-family: inherit;
+      cursor: pointer;
+      outline: none;
+    }
+    .client-table-wrap { overflow-x: auto; }
+    .client-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .client-table th {
+      text-align: left;
+      padding: 10px 14px;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border);
+    }
+    .client-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      vertical-align: middle;
+    }
+    .client-table tr:last-child td { border-bottom: none; }
+    .client-table tbody tr:hover td { background: rgba(255,255,255,0.02); }
+    .client-avatar {
+      width: 34px; height: 34px;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      letter-spacing: 0.02em;
+    }
+    .client-name-cell { display: flex; align-items: center; gap: 10px; }
+    .client-name-cell strong { font-size: 13px; font-weight: 600; color: var(--text); }
+    .client-name-cell span  { font-size: 11px; color: var(--text-muted); }
+
+    .badge-plan {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-plan.starter  { background: rgba(100,116,139,0.2); color: #94a3b8; }
+    .badge-plan.business { background: rgba(112,178,222,0.15); color: var(--accent); }
+    .badge-plan.premium  { background: rgba(251,191,36,0.15); color: #fbbf24; }
+
+    .badge-statut {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-statut::before { content:''; width:6px; height:6px; border-radius:50%; }
+    .badge-statut.actif   { background: rgba(34,197,94,0.12); color: #22c55e; }
+    .badge-statut.actif::before   { background:#22c55e; }
+    .badge-statut.inactif { background: rgba(100,116,139,0.15); color: #64748b; }
+    .badge-statut.inactif::before { background:#64748b; }
+    .badge-statut.essai   { background: rgba(251,191,36,0.12); color: #fbbf24; }
+    .badge-statut.essai::before   { background:#fbbf24; }
+
+    .tbl-actions { display: flex; gap: 6px; }
+    .btn-icon-sm {
+      width: 28px; height: 28px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s, color 0.15s;
+    }
+    .btn-icon-sm:hover { background: rgba(255,255,255,0.06); color: var(--text); }
+    .btn-icon-sm.danger:hover { background: rgba(239,68,68,0.12); color: #ef4444; border-color: rgba(239,68,68,0.3); }
+
+    /* ---- CLIENT DETAIL ---- */
+    #page-client-detail .detail-header {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+    .client-avatar-lg {
+      width: 54px; height: 54px;
+      border-radius: 12px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .detail-header-info h2 { font-size: 20px; font-weight: 700; color: var(--text); }
+    .detail-header-info p  { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
+    .detail-header-badges  { display: flex; gap: 6px; margin-top: 8px; }
+    .detail-header-actions { margin-left: auto; display: flex; gap: 8px; }
+
+    .client-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .client-kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+    }
+    .client-kpi-card .ck-label { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+    .client-kpi-card .ck-value { font-size: 22px; font-weight: 700; color: var(--text); }
+
+    .client-tabs {
+      display: flex;
+      gap: 4px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+    .client-tab {
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: color 0.15s;
+      background: none;
+      border-top: none;
+      border-left: none;
+      border-right: none;
+      font-family: inherit;
+    }
+    .client-tab:hover { color: var(--text); }
+    .client-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    .client-tab-content { display: none; }
+    .client-tab-content.active { display: block; }
+
+    .contact-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .contact-row:last-child { border-bottom: none; }
+    .contact-row strong { color: var(--text); margin-right: 4px; }
+
+    .note-item {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      font-size: 13px;
+      color: var(--text);
+      position: relative;
+    }
+    .note-item .note-meta { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+    .note-input-row { display: flex; gap: 8px; margin-top: 12px; }
+    .note-input-row input {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0 12px;
+      height: 38px;
+      color: var(--text);
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+    }
+
+    .tag-list { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .tag-item {
+      display: flex; align-items: center; gap: 5px;
+      background: rgba(112,178,222,0.12);
+      color: var(--accent);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .tag-item button {
+      background: none; border: none;
+      color: var(--accent); cursor: pointer;
+      line-height: 1; padding: 0; font-size: 14px;
+    }
+    .tag-add-row { display: flex; gap: 8px; }
+    .tag-add-row input {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0 12px;
+      height: 36px;
+      color: var(--text);
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+    }
+
+    .alert-item {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+    .alert-item.warning { background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.2); color: #fbbf24; }
+    .alert-item.info    { background: rgba(112,178,222,0.08); border: 1px solid rgba(112,178,222,0.2); color: var(--accent); }
+    .alert-item.danger  { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); color: #ef4444; }
+
+    /* ---- NEW CLIENT MODAL ---- */
+    #newClientModal .modal-box { max-width: 520px; }
+    .form-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0 12px;
+      height: 38px;
+      color: var(--text);
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus { border-color: var(--accent); }
+    .form-group textarea { height: 80px; padding: 10px 12px; resize: vertical; }
+    .form-group.full { grid-column: 1 / -1; }
+    @media (max-width: 768px) {
+      .form-grid-2 { grid-template-columns: 1fr; }
+      .client-kpi-grid { grid-template-columns: repeat(2,1fr); }
+    }
   </style>
 </head>
 <body>
@@ -1392,19 +1689,109 @@
             <h1 class="page-title">Clients</h1>
             <p class="page-subtitle">Gérez vos clients et leurs configurations.</p>
           </div>
-          <button class="btn btn-primary">
+          <button class="btn btn-primary" onclick="openNewClientModal()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Nouveau client
           </button>
         </div>
+
         <div class="card">
-          <div class="placeholder-content">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-            </svg>
-            <h3>Séquence 6 à venir</h3>
-            <p>Liste clients, fiches détaillées, notes et tags.</p>
+          <div class="clients-toolbar">
+            <div class="search-box">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input id="clientSearch" type="text" placeholder="Rechercher un client…" oninput="buildClientsTable()">
+            </div>
+            <select id="filterStatut" onchange="buildClientsTable()">
+              <option value="">Tous les statuts</option>
+              <option value="Actif">Actif</option>
+              <option value="Inactif">Inactif</option>
+              <option value="Essai">Essai</option>
+            </select>
+            <select id="filterSecteur" onchange="buildClientsTable()">
+              <option value="">Tous les secteurs</option>
+              <option value="Médical">Médical</option>
+              <option value="Restauration">Restauration</option>
+              <option value="Immobilier">Immobilier</option>
+              <option value="Formation">Formation</option>
+            </select>
+          </div>
+          <div class="client-table-wrap">
+            <table class="client-table">
+              <thead>
+                <tr>
+                  <th>Client</th>
+                  <th>Secteur</th>
+                  <th>Plan</th>
+                  <th>Statut</th>
+                  <th>Revenus/mois</th>
+                  <th>Client depuis</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="clientsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== CLIENT DETAIL ===== -->
+      <div class="page" id="page-client-detail">
+        <div class="page-header">
+          <div>
+            <div class="breadcrumb" id="detailBreadcrumb">Général <span>/ Clients / —</span></div>
+            <button class="btn btn-ghost" style="margin-top:4px;font-size:13px;display:flex;align-items:center;gap:6px;padding:6px 10px;" onclick="navigate('clients')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+              Retour aux clients
+            </button>
+          </div>
+          <div class="detail-header-actions" id="detailHeaderActions"></div>
+        </div>
+
+        <div class="detail-header">
+          <div class="client-avatar-lg" id="detailAvatar"></div>
+          <div class="detail-header-info">
+            <h2 id="detailName"></h2>
+            <p id="detailSubtitle"></p>
+            <div class="detail-header-badges" id="detailBadges"></div>
+          </div>
+        </div>
+
+        <div class="client-kpi-grid" id="clientKPIGrid"></div>
+
+        <div class="card">
+          <div class="client-tabs">
+            <button class="client-tab active" onclick="switchClientTab('conversations', this)">Conversations</button>
+            <button class="client-tab" onclick="switchClientTab('notes', this)">Notes</button>
+            <button class="client-tab" onclick="switchClientTab('tags', this)">Tags</button>
+            <button class="client-tab" onclick="switchClientTab('alertes', this)">Alertes</button>
+          </div>
+
+          <!-- TAB: Conversations -->
+          <div class="client-tab-content active" id="ctab-conversations">
+            <div id="clientConversations"></div>
+          </div>
+
+          <!-- TAB: Notes -->
+          <div class="client-tab-content" id="ctab-notes">
+            <div id="clientNotesList"></div>
+            <div class="note-input-row">
+              <input id="newNoteInput" type="text" placeholder="Ajouter une note…">
+              <button class="btn btn-primary" style="height:38px;" onclick="addClientNote()">Ajouter</button>
+            </div>
+          </div>
+
+          <!-- TAB: Tags -->
+          <div class="client-tab-content" id="ctab-tags">
+            <div class="tag-list" id="clientTagList"></div>
+            <div class="tag-add-row">
+              <input id="newTagInput" type="text" placeholder="Nouveau tag…">
+              <button class="btn btn-primary" style="height:36px;" onclick="addClientTag()">+ Tag</button>
+            </div>
+          </div>
+
+          <!-- TAB: Alertes -->
+          <div class="client-tab-content" id="ctab-alertes">
+            <div id="clientAlertesList"></div>
           </div>
         </div>
       </div>
@@ -1840,6 +2227,67 @@
 
 <!-- Toast container -->
 <div id="toastContainer" style="position:fixed;bottom:24px;right:24px;z-index:999;display:flex;flex-direction:column;gap:8px"></div>
+
+<!-- ============================================================
+     6C — MODAL NOUVEAU CLIENT
+============================================================ -->
+<div class="modal-overlay" id="newClientModal" onclick="closeNewClientModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">Nouveau client</div>
+      <button class="modal-close" onclick="closeNewClientModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid-2">
+        <div class="form-group full">
+          <label>Nom de l'entreprise</label>
+          <input id="nc-nom" type="text" placeholder="ex: Cabinet Dr. Martin">
+        </div>
+        <div class="form-group">
+          <label>Secteur</label>
+          <select id="nc-secteur">
+            <option value="">— Choisir —</option>
+            <option>Médical</option>
+            <option>Restauration</option>
+            <option>Immobilier</option>
+            <option>Formation</option>
+            <option>Autre</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Plan</label>
+          <select id="nc-plan">
+            <option value="Starter">Starter</option>
+            <option value="Business">Business</option>
+            <option value="Premium">Premium</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input id="nc-email" type="email" placeholder="contact@entreprise.fr">
+        </div>
+        <div class="form-group">
+          <label>Téléphone</label>
+          <input id="nc-tel" type="text" placeholder="01 23 45 67 89">
+        </div>
+        <div class="form-group full">
+          <label>Tags (séparés par des virgules)</label>
+          <input id="nc-tags" type="text" placeholder="ex: VIP, Formation">
+        </div>
+        <div class="form-group full">
+          <label>Note initiale</label>
+          <textarea id="nc-note" placeholder="Contexte, informations importantes…"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeNewClientModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="createClient()">Créer le client</button>
+    </div>
+  </div>
+</div>
 
 <!-- ============================================================
      JAVASCRIPT — 1D DONNÉES MOCKÉES + NAVIGATION
@@ -2287,9 +2735,13 @@ function navigate(sectionId) {
   const target = document.getElementById('page-' + sectionId);
   if (target) target.classList.add('active');
 
+  /* Nav highlight — client-detail shares the "clients" nav item */
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  const navItem = document.querySelector('.nav-item[data-section="' + sectionId + '"]');
+  const navKey = sectionId === 'client-detail' ? 'clients' : sectionId;
+  const navItem = document.querySelector('.nav-item[data-section="' + navKey + '"]');
   if (navItem) navItem.classList.add('active');
+
+  if (sectionId === 'clients') buildClientsTable();
 
   currentSection = sectionId;
   closeMobileSidebar();
@@ -2348,6 +2800,7 @@ document.addEventListener('DOMContentLoaded', () => {
   buildAppelsTable(appels);
   buildWaTable(conversations_wa);
   loadVoixConfig();
+  buildClientsTable();
 });
 
 /* ============================================================
@@ -3037,6 +3490,280 @@ function buildCalendar() {
   html += "</div>";
   grid.innerHTML = html;
 }
+
+/* ============================================================
+   6 — GESTION CLIENTS
+============================================================ */
+let activeClientId = null;
+
+function initials(nom) {
+  return nom.split(" ").filter(w => /[A-Za-zÀ-ÿ]/.test(w)).slice(0, 2).map(w => w[0].toUpperCase()).join("");
+}
+
+function planBadge(plan) {
+  const cls = plan.toLowerCase();
+  return `<span class="badge-plan ${cls}">${plan}</span>`;
+}
+
+function statutBadge(statut) {
+  const cls = statut.toLowerCase();
+  return `<span class="badge-statut ${cls}">${statut}</span>`;
+}
+
+function formatDate(dateStr) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("fr-FR", { day:"numeric", month:"short", year:"numeric" });
+}
+
+function buildClientsTable() {
+  const q      = (document.getElementById("clientSearch")?.value || "").toLowerCase();
+  const statut = document.getElementById("filterStatut")?.value || "";
+  const secteur= document.getElementById("filterSecteur")?.value || "";
+
+  const filtered = clients.filter(c => {
+    if (q && !c.nom.toLowerCase().includes(q) && !c.secteur.toLowerCase().includes(q)) return false;
+    if (statut  && c.statut  !== statut)  return false;
+    if (secteur && c.secteur !== secteur) return false;
+    return true;
+  });
+
+  const tbody = document.getElementById("clientsTableBody");
+  if (!tbody) return;
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted);">Aucun client trouvé</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(c => `
+    <tr>
+      <td>
+        <div class="client-name-cell">
+          <div class="client-avatar">${initials(c.nom)}</div>
+          <div>
+            <strong>${c.nom}</strong><br>
+            <span>${c.email}</span>
+          </div>
+        </div>
+      </td>
+      <td>${c.secteur}</td>
+      <td>${planBadge(c.plan)}</td>
+      <td>${statutBadge(c.statut)}</td>
+      <td>${c.revenus_mensuels > 0 ? `${c.revenus_mensuels.toLocaleString("fr-FR")} €` : `<span style="color:var(--text-muted)">—</span>`}</td>
+      <td>${formatDate(c.date_debut)}</td>
+      <td>
+        <div class="tbl-actions">
+          <button class="btn-icon-sm" title="Voir la fiche" onclick="openClientDetail(${c.id})">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+          <button class="btn-icon-sm" title="Éditer" onclick="showToast('Édition à venir','info')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="btn-icon-sm danger" title="Archiver" onclick="archiveClient(${c.id})">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+          </button>
+        </div>
+      </td>
+    </tr>
+  `).join("");
+}
+
+function archiveClient(id) {
+  const c = clients.find(x => x.id === id);
+  if (!c) return;
+  c.statut = "Inactif";
+  buildClientsTable();
+  showToast(`${c.nom} archivé`, "warning");
+}
+
+function openClientDetail(id) {
+  const c = clients.find(x => x.id === id);
+  if (!c) return;
+  activeClientId = id;
+
+  document.getElementById("detailBreadcrumb").innerHTML = `Général <span>/ Clients / ${c.nom}</span>`;
+  document.getElementById("detailAvatar").textContent = initials(c.nom);
+  document.getElementById("detailName").textContent = c.nom;
+  document.getElementById("detailSubtitle").textContent = `${c.email} · ${c.telephone}`;
+  document.getElementById("detailBadges").innerHTML = planBadge(c.plan) + " " + statutBadge(c.statut);
+
+  /* KPIs client */
+  const clientAppels = appels.filter(a => a.client_id === id).length;
+  const clientWA     = conversations_wa.filter(w => w.client_id === id).length;
+  const clientTickets= tickets.filter(t => t.client_id === id && t.statut !== "Fermé").length;
+  const revenusCumul = Math.round(c.revenus_mensuels * ((new Date() - new Date(c.date_debut)) / (1000*60*60*24*30)));
+  document.getElementById("clientKPIGrid").innerHTML = [
+    { label:"Appels ce mois", value: clientAppels },
+    { label:"Messages WA",    value: clientWA },
+    { label:"Tickets ouverts",value: clientTickets },
+    { label:"Revenus cumulés",value: c.revenus_mensuels > 0 ? `${revenusCumul.toLocaleString("fr-FR")} €` : "—" }
+  ].map(k => `
+    <div class="client-kpi-card">
+      <div class="ck-label">${k.label}</div>
+      <div class="ck-value">${k.value}</div>
+    </div>
+  `).join("");
+
+  renderClientTabs(c);
+  navigate("client-detail");
+}
+
+function renderClientTabs(c) {
+  /* Conversations tab */
+  const convs = [
+    ...appels.filter(a => a.client_id === c.id).map(a => ({
+      icon: "📞", titre: a.nom, sous: `${a.date} ${a.heure} · ${a.duree}`, statut: a.statut
+    })),
+    ...conversations_wa.filter(w => w.client_id === c.id).map(w => {
+      const last = w.messages[w.messages.length - 1];
+      return { icon: "💬", titre: w.nom, sous: (last?.text || "").substring(0,60) + "…", statut: "WA" };
+    })
+  ];
+  document.getElementById("clientConversations").innerHTML = convs.length
+    ? convs.map(r => `
+      <div class="contact-row">
+        <span style="font-size:18px">${r.icon}</span>
+        <div style="flex:1"><strong>${r.titre}</strong> — <span style="font-size:12px;color:var(--text-muted)">${r.sous}</span></div>
+        ${statutBadge(r.statut)}
+      </div>`).join("")
+    : `<p style="color:var(--text-muted);font-size:13px">Aucune conversation.</p>`;
+
+  /* Notes tab */
+  renderNotes(c);
+
+  /* Tags tab */
+  renderTags(c);
+
+  /* Alertes tab */
+  const alertes = [];
+  if (c.statut === "Essai")   alertes.push({ type:"warning", text:"Période d'essai — décision à venir." });
+  if (c.statut === "Inactif") alertes.push({ type:"danger",  text:"Client inactif — aucune facturation en cours." });
+  if (c.revenus_mensuels === 0 && c.statut !== "Essai") alertes.push({ type:"danger", text:"Revenus nuls — vérifier la configuration du plan." });
+  const autoErrors = automations.filter(a => a.client_id === c.id && autoState[a.id] === "Erreur");
+  autoErrors.forEach(a => alertes.push({ type:"danger", text:`Automation en erreur : ${a.nom}` }));
+  if (alertes.length === 0) alertes.push({ type:"info", text:"Aucune alerte active pour ce client." });
+  document.getElementById("clientAlertesList").innerHTML = alertes.map(al =>
+    `<div class="alert-item ${al.type}">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      ${al.text}
+    </div>`
+  ).join("");
+}
+
+function renderNotes(c) {
+  const list = document.getElementById("clientNotesList");
+  if (!list) return;
+  list.innerHTML = c.notes.length
+    ? c.notes.map((n, i) => `
+      <div class="note-item">
+        ${n}
+        <button onclick="removeClientNote(${i})" style="position:absolute;top:10px;right:10px;background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;">×</button>
+      </div>`).join("")
+    : `<p style="color:var(--text-muted);font-size:13px;margin-bottom:12px">Aucune note pour ce client.</p>`;
+}
+
+function addClientNote() {
+  const inp = document.getElementById("newNoteInput");
+  const val = inp.value.trim();
+  if (!val) return;
+  const c = clients.find(x => x.id === activeClientId);
+  if (!c) return;
+  c.notes.push(val);
+  inp.value = "";
+  renderNotes(c);
+  showToast("Note ajoutée", "success");
+}
+
+function removeClientNote(idx) {
+  const c = clients.find(x => x.id === activeClientId);
+  if (!c) return;
+  c.notes.splice(idx, 1);
+  renderNotes(c);
+}
+
+function renderTags(c) {
+  const list = document.getElementById("clientTagList");
+  if (!list) return;
+  list.innerHTML = c.tags.map((t, i) => `
+    <div class="tag-item">${t} <button onclick="removeClientTag(${i})">×</button></div>
+  `).join("");
+}
+
+function addClientTag() {
+  const inp = document.getElementById("newTagInput");
+  const val = inp.value.trim();
+  if (!val) return;
+  const c = clients.find(x => x.id === activeClientId);
+  if (!c) return;
+  c.tags.push(val);
+  inp.value = "";
+  renderTags(c);
+  showToast("Tag ajouté", "success");
+}
+
+function removeClientTag(idx) {
+  const c = clients.find(x => x.id === activeClientId);
+  if (!c) return;
+  c.tags.splice(idx, 1);
+  renderTags(c);
+}
+
+function switchClientTab(name, btn) {
+  document.querySelectorAll(".client-tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".client-tab-content").forEach(t => t.classList.remove("active"));
+  btn.classList.add("active");
+  document.getElementById("ctab-" + name)?.classList.add("active");
+}
+
+/* ---- 6C Modal nouveau client ---- */
+function openNewClientModal() {
+  ["nc-nom","nc-secteur","nc-plan","nc-email","nc-tel","nc-tags","nc-note"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = el.tagName === "SELECT" ? el.options[0].value : "";
+  });
+  document.getElementById("newClientModal").classList.add("open");
+}
+
+function closeNewClientModal(e) {
+  if (e && e.target !== document.getElementById("newClientModal")) return;
+  document.getElementById("newClientModal").classList.remove("open");
+}
+
+function createClient() {
+  const nom     = document.getElementById("nc-nom").value.trim();
+  const secteur = document.getElementById("nc-secteur").value;
+  const plan    = document.getElementById("nc-plan").value;
+  const email   = document.getElementById("nc-email").value.trim();
+  const tel     = document.getElementById("nc-tel").value.trim();
+  const tagsRaw = document.getElementById("nc-tags").value;
+  const note    = document.getElementById("nc-note").value.trim();
+
+  if (!nom || !secteur) { showToast("Nom et secteur sont obligatoires", "error"); return; }
+
+  const newId = Math.max(...clients.map(c => c.id)) + 1;
+  clients.push({
+    id: newId,
+    nom, secteur, plan,
+    statut: "Essai",
+    date_debut: new Date().toISOString().split("T")[0],
+    revenus_mensuels: 0,
+    email: email || "—",
+    telephone: tel || "—",
+    tags: tagsRaw ? tagsRaw.split(",").map(t => t.trim()).filter(Boolean) : [],
+    notes: note ? [note] : []
+  });
+
+  document.getElementById("newClientModal").classList.remove("open");
+  buildClientsTable();
+  showToast(`Client « ${nom} » créé avec succès`, "success");
+}
+
+/* Hook ESC key for new client modal */
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") {
+    document.getElementById("newClientModal")?.classList.remove("open");
+  }
+});
 
 </script>
 </body>
