@@ -1732,6 +1732,11 @@
     </nav>
 
     <div class="sidebar-footer">
+      <!-- Badge connexion Airtable -->
+      <div id="connectionBadge" style="display:flex;align-items:center;gap:6px;padding:6px 10px;margin-bottom:4px;border-radius:8px;font-size:11px;color:var(--text-muted)">
+        <div id="connectionDot" style="width:6px;height:6px;border-radius:50%;background:#444;flex-shrink:0"></div>
+        <span id="connectionLabel">Vérification…</span>
+      </div>
       <div class="sidebar-user">
         <div class="avatar-sm">MA</div>
         <div class="sidebar-user-info">
@@ -3305,7 +3310,32 @@ document.addEventListener('DOMContentLoaded', () => {
   buildTicketsSummary();
   buildTicketsList();
   updateTicketsNavDot();
+  checkConnection();
 });
+
+/* ============================================================
+   CONNEXION AIRTABLE — ping au démarrage
+============================================================ */
+async function checkConnection() {
+  const dot   = document.getElementById("connectionDot");
+  const label = document.getElementById("connectionLabel");
+  try {
+    const res  = await fetch("/.netlify/functions/ping-airtable");
+    const data = await res.json();
+    if (data.ok) {
+      if (dot)   { dot.style.background = "#22c55e"; }
+      if (label) { label.textContent = "Connecté · Airtable"; label.style.color = "#22c55e"; }
+      window._airtableConnected = true;
+    } else {
+      throw new Error(data.error || "Erreur inconnue");
+    }
+  } catch (e) {
+    if (dot)   { dot.style.background = "#ef4444"; }
+    if (label) { label.textContent = "Mode démo"; label.style.color = "#ef4444"; }
+    window._airtableConnected = false;
+    console.warn("[AkilAI] Airtable non disponible — données mockées actives.", e.message);
+  }
+}
 
 function updateTicketsNavDot() {
   const dot = document.getElementById("ticketsNavDot");
