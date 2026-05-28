@@ -1456,6 +1456,171 @@
     @media (max-width: 768px) {
       .tickets-summary { grid-template-columns: repeat(2,1fr); }
     }
+
+    /* ============================================================
+       ANALYTICS — Séquence 8
+    ============================================================ */
+    .analytics-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .analytics-kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .akpi-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .akpi-info .akpi-val  { font-size: 22px; font-weight: 700; color: var(--text); }
+    .akpi-info .akpi-lbl  { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+    .akpi-info .akpi-chg  { font-size: 11px; font-weight: 600; margin-top: 2px; }
+    .akpi-chg.up   { color: #22c55e; }
+    .akpi-chg.down { color: #ef4444; }
+
+    .analytics-row-2 {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .analytics-row-2-equal {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .chart-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+    }
+    .chart-card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .chart-card-title span { font-size: 12px; font-weight: 400; color: var(--text-muted); }
+    .chart-wrap { position: relative; }
+
+    /* Top automations list */
+    .auto-perf-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .auto-perf-row:last-child { margin-bottom: 0; }
+    .auto-perf-name { font-size: 12px; color: var(--text); width: 160px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .auto-perf-bar-wrap { flex: 1; height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
+    .auto-perf-bar { height: 100%; border-radius: 3px; background: var(--accent); transition: width 0.6s ease; }
+    .auto-perf-val { font-size: 12px; color: var(--text-muted); width: 36px; text-align: right; flex-shrink: 0; }
+
+    /* Client donut legend */
+    .donut-legend { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+    .donut-legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text); }
+    .donut-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .donut-legend-pct { margin-left: auto; color: var(--text-muted); font-weight: 600; }
+
+    @media (max-width: 1100px) {
+      .analytics-kpi-grid  { grid-template-columns: repeat(2,1fr); }
+      .analytics-row-2     { grid-template-columns: 1fr; }
+      .analytics-row-2-equal { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      .analytics-kpi-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* ============================================================
+       POLISH GLOBAL — Séquence 8
+    ============================================================ */
+
+    /* Page fade-in */
+    @keyframes pageFadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .page.active { animation: pageFadeIn 0.22s ease; }
+
+    /* Sidebar user card enhanced */
+    .sidebar-footer { padding: 12px; border-top: 1px solid var(--border); }
+    .sidebar-user {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .sidebar-user:hover { background: rgba(255,255,255,0.05); }
+    .sidebar-user-actions {
+      margin-left: auto;
+      display: flex;
+      gap: 2px;
+    }
+    .sidebar-user-actions button {
+      background: none; border: none;
+      color: var(--text-muted); cursor: pointer;
+      padding: 4px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      transition: color 0.15s, background 0.15s;
+    }
+    .sidebar-user-actions button:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+
+    /* Notification dot on nav items */
+    .nav-item .notif-dot {
+      width: 6px; height: 6px;
+      background: #ef4444;
+      border-radius: 50%;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+
+    /* Better empty state */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 24px;
+      text-align: center;
+      color: var(--text-muted);
+    }
+    .empty-state svg { opacity: 0.2; margin-bottom: 16px; }
+    .empty-state h3  { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+    .empty-state p   { font-size: 13px; max-width: 260px; line-height: 1.5; }
+
+    /* Scrollbar styling */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
+
+    /* Smooth nav item */
+    .nav-item { transition: background 0.15s, color 0.15s; }
+
+    /* Card hover lift for stat cards */
+    .kpi-card { transition: transform 0.15s, box-shadow 0.15s; }
+    .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,0,0,0.25); }
+
+    /* Pulse animation for active dots */
+    @keyframes pulse { 0%,100%{ opacity:1; } 50%{ opacity:0.4; } }
+    .badge-statut.actif::before { animation: pulse 2.5s infinite; }
   </style>
 </head>
 <body>
@@ -1552,6 +1717,7 @@
           <line x1="9" y1="12" x2="15" y2="12"/>
         </svg>
         <span class="nav-label">Tickets</span>
+        <div class="notif-dot" id="ticketsNavDot" title="Tickets ouverts"></div>
       </div>
 
       <div class="nav-item" data-section="analytics" onclick="navigate('analytics')">
@@ -1571,6 +1737,14 @@
         <div class="sidebar-user-info">
           <div class="name">Moctar Akilai</div>
           <div class="role">Administrateur</div>
+        </div>
+        <div class="sidebar-user-actions">
+          <button title="Paramètres" onclick="showToast('Paramètres à venir','info')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </button>
+          <button title="Se déconnecter" onclick="showToast('Déconnexion…','warning')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          </button>
         </div>
       </div>
     </div>
@@ -2394,18 +2568,47 @@
           <div>
             <div class="breadcrumb">Support <span>/ Analytics</span></div>
             <h1 class="page-title">Analytics</h1>
-            <p class="page-subtitle">Analyse détaillée des performances.</p>
+            <p class="page-subtitle">Analyse détaillée des performances de vos automations.</p>
+          </div>
+          <div class="flex gap-2">
+            <button class="btn btn-ghost" onclick="exportAnalytics()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Exporter
+            </button>
           </div>
         </div>
-        <div class="card">
-          <div class="placeholder-content">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <line x1="18" y1="20" x2="18" y2="10"/>
-              <line x1="12" y1="20" x2="12" y2="4"/>
-              <line x1="6"  y1="20" x2="6"  y2="14"/>
-            </svg>
-            <h3>Séquence 2 à venir</h3>
-            <p>Graphiques avancés et métriques de performance.</p>
+
+        <!-- KPIs -->
+        <div class="analytics-kpi-grid" id="analyticsKPIs"></div>
+
+        <!-- Row 1: ligne + donut -->
+        <div class="analytics-row-2" style="margin-bottom:16px">
+          <div class="chart-card">
+            <div class="chart-card-title">Appels &amp; Messages WhatsApp <span>30 derniers jours</span></div>
+            <div class="chart-wrap" style="height:220px">
+              <canvas id="aChartLine"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-title">Répartition par client</div>
+            <div class="chart-wrap" style="height:160px">
+              <canvas id="aChartDonut"></canvas>
+            </div>
+            <div class="donut-legend" id="aDonutLegend"></div>
+          </div>
+        </div>
+
+        <!-- Row 2: barres revenus + perf automations -->
+        <div class="analytics-row-2-equal">
+          <div class="chart-card">
+            <div class="chart-card-title">Revenus mensuels <span>12 derniers mois</span></div>
+            <div class="chart-wrap" style="height:200px">
+              <canvas id="aChartBar"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-title">Performance automations <span>taux de succès</span></div>
+            <div id="autoPerfList" style="margin-top:8px"></div>
           </div>
         </div>
       </div>
@@ -3037,8 +3240,9 @@ function navigate(sectionId) {
   const navItem = document.querySelector('.nav-item[data-section="' + navKey + '"]');
   if (navItem) navItem.classList.add('active');
 
-  if (sectionId === 'clients') buildClientsTable();
-  if (sectionId === 'tickets') { buildTicketsSummary(); buildTicketsList(); }
+  if (sectionId === 'clients')   buildClientsTable();
+  if (sectionId === 'tickets')   { buildTicketsSummary(); buildTicketsList(); }
+  if (sectionId === 'analytics') setTimeout(initAnalytics, 50);
 
   currentSection = sectionId;
   closeMobileSidebar();
@@ -3100,7 +3304,15 @@ document.addEventListener('DOMContentLoaded', () => {
   buildClientsTable();
   buildTicketsSummary();
   buildTicketsList();
+  updateTicketsNavDot();
 });
+
+function updateTicketsNavDot() {
+  const dot = document.getElementById("ticketsNavDot");
+  if (!dot) return;
+  const open = tickets.filter(t => t.statut === "Ouvert" || t.statut === "En cours").length;
+  dot.style.display = open > 0 ? "block" : "none";
+}
 
 /* ============================================================
    4A — PAGE APPELS VOCAUX
@@ -4205,6 +4417,7 @@ function changeTicketStatus(id, newStatut) {
   t.statut = newStatut;
   buildTicketsSummary();
   buildTicketsList();
+  updateTicketsNavDot();
   showToast(`Statut mis à jour : ${newStatut}`, "info");
 }
 
@@ -4226,6 +4439,199 @@ function openNewTicketModal() {
 function closeNewTicketModal(e) {
   if (e && e.target !== document.getElementById("newTicketModal")) return;
   document.getElementById("newTicketModal").classList.remove("open");
+}
+
+/* ============================================================
+   8 — ANALYTICS
+============================================================ */
+let aChartLine   = null;
+let aChartDonut  = null;
+let aChartBar    = null;
+
+const MONTHS_FR = ["Jan","Fév","Mar","Avr","Mai","Juin","Juil","Aoû","Sep","Oct","Nov","Déc"];
+
+function initAnalytics() {
+  buildAnalyticsKPIs();
+  buildAnalyticsLine();
+  buildAnalyticsDonut();
+  buildAnalyticsBar();
+  buildAutoPerfList();
+}
+
+function buildAnalyticsKPIs() {
+  const el = document.getElementById("analyticsKPIs");
+  if (!el) return;
+  const totalAppels = kpis.appels_par_jour.reduce((a,b)=>a+b,0);
+  const totalWA     = kpis.messages_wa_par_jour.reduce((a,b)=>a+b,0);
+  const revMois     = kpis.revenus_par_mois[kpis.revenus_par_mois.length-1];
+  const revPrec     = kpis.revenus_par_mois[kpis.revenus_par_mois.length-2];
+  const chgRev      = Math.round((revMois - revPrec) / revPrec * 100);
+  const activeAutos = automations.filter(a => autoState[a.id] === "Actif").length;
+
+  const items = [
+    { icon:"📞", bg:"bg-blue-100",   val: totalAppels.toLocaleString("fr-FR"), lbl:"Appels (30j)",      chg:"+18%", up:true },
+    { icon:"💬", bg:"bg-purple-100", val: totalWA.toLocaleString("fr-FR"),     lbl:"Messages WA (30j)", chg:"+12%", up:true },
+    { icon:"💶", bg:"bg-green-100",  val: `${revMois.toLocaleString("fr-FR")} €`, lbl:"Revenus ce mois", chg:(chgRev>=0?"+":"")+chgRev+"%", up:chgRev>=0 },
+    { icon:"⚡", bg:"bg-yellow-100", val: `${activeAutos}/${automations.length}`, lbl:"Automations actives", chg:"+2 ce mois", up:true },
+  ];
+  el.innerHTML = items.map(k => `
+    <div class="analytics-kpi-card">
+      <div class="akpi-icon" style="background:rgba(112,178,222,0.12);font-size:20px">${k.icon}</div>
+      <div class="akpi-info">
+        <div class="akpi-val">${k.val}</div>
+        <div class="akpi-lbl">${k.lbl}</div>
+        <div class="akpi-chg ${k.up ? 'up':'down'}">${k.chg}</div>
+      </div>
+    </div>`).join("");
+}
+
+function buildAnalyticsLine() {
+  const ctx = document.getElementById("aChartLine");
+  if (!ctx) return;
+  if (aChartLine) { aChartLine.destroy(); }
+  const n = 30;
+  const labels = makeDayLabels(n);
+  aChartLine = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: "Appels",
+          data: getDataForPeriod(kpis.appels_par_jour, n),
+          borderColor: "#70B2DE",
+          backgroundColor: "rgba(112,178,222,0.08)",
+          borderWidth: 2,
+          pointRadius: 0,
+          fill: true,
+          tension: 0.4,
+        },
+        {
+          label: "Messages WA",
+          data: getDataForPeriod(kpis.messages_wa_par_jour, n),
+          borderColor: "#a78bfa",
+          backgroundColor: "rgba(167,139,250,0.06)",
+          borderWidth: 2,
+          pointRadius: 0,
+          fill: true,
+          tension: 0.4,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: true, labels: { color:"#888", font:{size:11}, boxWidth:10, padding:16 } },
+        tooltip: { backgroundColor:"#1a1a1a", titleColor:"#e5e5e5", bodyColor:"#aaa", borderColor:"#333", borderWidth:1 }
+      },
+      scales: {
+        x: { grid:{color:"rgba(255,255,255,0.04)"}, ticks:{color:"#555",font:{size:10}, maxTicksLimit:8} },
+        y: { grid:{color:"rgba(255,255,255,0.04)"}, ticks:{color:"#555",font:{size:10}} }
+      }
+    }
+  });
+}
+
+function buildAnalyticsDonut() {
+  const ctx = document.getElementById("aChartDonut");
+  const leg = document.getElementById("aDonutLegend");
+  if (!ctx) return;
+  if (aChartDonut) { aChartDonut.destroy(); }
+
+  const clientNames = clients.map(c => c.nom.split(" ").slice(0,2).join(" "));
+  const revData     = clients.map(c => Math.max(c.revenus_mensuels, 50)); // min 50 for visuals
+  const COLORS      = ["#70B2DE","#a78bfa","#34d399","#fbbf24","#f87171"];
+  const total       = revData.reduce((a,b)=>a+b,0);
+
+  aChartDonut = new Chart(ctx, {
+    type: "doughnut",
+    data: { labels: clientNames, datasets:[{ data: revData, backgroundColor: COLORS, borderWidth:0, hoverOffset:4 }] },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: "70%",
+      plugins: { legend:{display:false}, tooltip:{ backgroundColor:"#1a1a1a", titleColor:"#e5e5e5", bodyColor:"#aaa" } }
+    }
+  });
+
+  if (leg) {
+    leg.innerHTML = clients.map((c,i) => `
+      <div class="donut-legend-item">
+        <div class="donut-legend-dot" style="background:${COLORS[i]}"></div>
+        <span>${clientNames[i]}</span>
+        <span class="donut-legend-pct">${Math.round(revData[i]/total*100)}%</span>
+      </div>`).join("");
+  }
+}
+
+function buildAnalyticsBar() {
+  const ctx = document.getElementById("aChartBar");
+  if (!ctx) return;
+  if (aChartBar) { aChartBar.destroy(); }
+  const labels = MONTHS_FR;
+  aChartBar = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        {
+          label:"Revenus",
+          data: kpis.revenus_par_mois,
+          backgroundColor: "rgba(112,178,222,0.7)",
+          borderRadius: 5,
+          borderSkipped: false,
+        },
+        {
+          label:"Objectif",
+          data: kpis.objectif_mensuel,
+          backgroundColor: "rgba(255,255,255,0.05)",
+          borderRadius: 5,
+          borderSkipped: false,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display:true, labels:{color:"#888",font:{size:11},boxWidth:10,padding:16} },
+        tooltip: { backgroundColor:"#1a1a1a", titleColor:"#e5e5e5", bodyColor:"#aaa", borderColor:"#333", borderWidth:1,
+          callbacks: { label: ctx => ` ${ctx.parsed.y.toLocaleString("fr-FR")} €` }
+        }
+      },
+      scales: {
+        x: { grid:{display:false}, ticks:{color:"#555",font:{size:10}} },
+        y: { grid:{color:"rgba(255,255,255,0.04)"}, ticks:{color:"#555",font:{size:10}, callback: v => v.toLocaleString("fr-FR")+"€"} }
+      }
+    }
+  });
+}
+
+function buildAutoPerfList() {
+  const el = document.getElementById("autoPerfList");
+  if (!el) return;
+  const perfs = [
+    { nom:"Sophie – Réponse vocale",  pct: 96 },
+    { nom:"WhatsApp GPT Support",     pct: 93 },
+    { nom:"Relance J-7",              pct: 88 },
+    { nom:"Notifications RDV",        pct: 85 },
+    { nom:"Support Auto FAQ",         pct: 79 },
+    { nom:"Onboarding Clients",       pct: 72 },
+  ];
+  el.innerHTML = perfs.map(p => `
+    <div class="auto-perf-row">
+      <div class="auto-perf-name" title="${p.nom}">${p.nom}</div>
+      <div class="auto-perf-bar-wrap">
+        <div class="auto-perf-bar" style="width:${p.pct}%;background:${p.pct>=90?'#22c55e':p.pct>=75?'var(--accent)':'#fbbf24'}"></div>
+      </div>
+      <div class="auto-perf-val">${p.pct}%</div>
+    </div>`).join("");
+}
+
+function exportAnalytics() {
+  showToast("Export en cours de préparation…", "info");
+  setTimeout(() => showToast("Rapport exporté (simulation)", "success"), 1200);
 }
 
 function createTicket() {
