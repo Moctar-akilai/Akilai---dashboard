@@ -1239,6 +1239,223 @@
       .form-grid-2 { grid-template-columns: 1fr; }
       .client-kpi-grid { grid-template-columns: repeat(2,1fr); }
     }
+
+    /* ============================================================
+       TICKETS — Séquence 7
+    ============================================================ */
+    .tickets-summary {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .tickets-summary-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .tsc-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .tsc-info .tsc-val  { font-size: 22px; font-weight: 700; color: var(--text); }
+    .tsc-info .tsc-lbl  { font-size: 11px; color: var(--text-muted); font-weight: 500; margin-top: 2px; }
+
+    .tickets-toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .tickets-toolbar .search-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0 12px;
+      height: 38px;
+      flex: 1;
+      min-width: 180px;
+    }
+    .tickets-toolbar .search-box input {
+      background: none; border: none; outline: none;
+      color: var(--text); font-size: 13px; width: 100%;
+      font-family: inherit;
+    }
+    .tickets-toolbar .search-box input::placeholder { color: var(--text-muted); }
+    .tickets-toolbar select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0 12px;
+      height: 38px;
+      color: var(--text);
+      font-size: 13px;
+      font-family: inherit;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .ticket-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 18px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .ticket-card:hover { border-color: rgba(112,178,222,0.3); background: rgba(255,255,255,0.02); }
+    .ticket-card.open-detail { border-color: var(--accent); background: rgba(112,178,222,0.04); }
+    .ticket-card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .ticket-id {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+    .ticket-sujet {
+      flex: 1;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .badge-prio {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-prio.urgente { background: rgba(239,68,68,0.15); color: #ef4444; }
+    .badge-prio.haute   { background: rgba(249,115,22,0.15); color: #f97316; }
+    .badge-prio.normale { background: rgba(112,178,222,0.15); color: var(--accent); }
+    .badge-prio.basse   { background: rgba(100,116,139,0.15); color: #64748b; }
+
+    .badge-tkt-statut {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-tkt-statut.ouvert    { background: rgba(251,191,36,0.12); color: #fbbf24; }
+    .badge-tkt-statut.en-cours  { background: rgba(112,178,222,0.12); color: var(--accent); }
+    .badge-tkt-statut.résolu    { background: rgba(34,197,94,0.12); color: #22c55e; }
+    .badge-tkt-statut.fermé     { background: rgba(100,116,139,0.12); color: #64748b; }
+
+    .ticket-meta {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .ticket-meta .dot-sep::before { content: "·"; margin-right: 14px; }
+
+    /* Ticket detail drawer */
+    .ticket-detail {
+      display: none;
+      margin-top: 12px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .ticket-detail.visible { display: block; }
+
+    .ticket-thread { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+    .tkt-msg {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .tkt-msg.support { flex-direction: row-reverse; }
+    .tkt-avatar {
+      width: 30px; height: 30px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700; flex-shrink: 0;
+    }
+    .tkt-avatar.client  { background: rgba(112,178,222,0.2); color: var(--accent); }
+    .tkt-avatar.support { background: rgba(112,178,222,0.8); color: #fff; }
+    .tkt-bubble {
+      max-width: 75%;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 13px;
+      font-size: 13px;
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .tkt-msg.support .tkt-bubble {
+      background: rgba(112,178,222,0.1);
+      border-color: rgba(112,178,222,0.25);
+    }
+    .tkt-bubble-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .tkt-msg.support .tkt-bubble-meta { text-align: right; }
+
+    .ticket-reply-box {
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+      margin-top: 4px;
+    }
+    .ticket-reply-box textarea {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      color: var(--text);
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+      resize: none;
+      height: 60px;
+      transition: border-color 0.15s;
+    }
+    .ticket-reply-box textarea:focus { border-color: var(--accent); }
+
+    .ticket-detail-footer {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    .ticket-detail-footer select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0 10px;
+      height: 34px;
+      color: var(--text);
+      font-size: 12px;
+      font-family: inherit;
+      cursor: pointer;
+      outline: none;
+    }
+
+    @media (max-width: 768px) {
+      .tickets-summary { grid-template-columns: repeat(2,1fr); }
+    }
   </style>
 </head>
 <body>
@@ -2127,20 +2344,47 @@
             <h1 class="page-title">Tickets</h1>
             <p class="page-subtitle">Suivi des demandes de support.</p>
           </div>
-          <button class="btn btn-primary">
+          <button class="btn btn-primary" onclick="openNewTicketModal()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Nouveau ticket
           </button>
         </div>
+
+        <!-- Summary counters -->
+        <div class="tickets-summary" id="ticketsSummary"></div>
+
         <div class="card">
-          <div class="placeholder-content">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/>
-              <line x1="9" y1="12" x2="15" y2="12"/>
-            </svg>
-            <h3>Séquence 7 à venir</h3>
-            <p>Système de tickets avec fils de conversation.</p>
+          <!-- Toolbar -->
+          <div class="tickets-toolbar">
+            <div class="search-box">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input id="ticketSearch" type="text" placeholder="Rechercher un ticket…" oninput="buildTicketsList()">
+            </div>
+            <select id="filterTktStatut" onchange="buildTicketsList()">
+              <option value="">Tous les statuts</option>
+              <option>Ouvert</option>
+              <option>En cours</option>
+              <option>Résolu</option>
+              <option>Fermé</option>
+            </select>
+            <select id="filterTktPrio" onchange="buildTicketsList()">
+              <option value="">Toutes priorités</option>
+              <option>Urgente</option>
+              <option>Haute</option>
+              <option>Normale</option>
+              <option>Basse</option>
+            </select>
+            <select id="filterTktCat" onchange="buildTicketsList()">
+              <option value="">Toutes catégories</option>
+              <option>Technique</option>
+              <option>Configuration</option>
+              <option>Facturation</option>
+              <option>Fonctionnel</option>
+            </select>
           </div>
+
+          <!-- Ticket list -->
+          <div id="ticketsList"></div>
         </div>
       </div>
 
@@ -2285,6 +2529,58 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeNewClientModal()">Annuler</button>
       <button class="btn btn-primary" onclick="createClient()">Créer le client</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     7C — MODAL NOUVEAU TICKET
+============================================================ -->
+<div class="modal-overlay" id="newTicketModal" onclick="closeNewTicketModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">Nouveau ticket</div>
+      <button class="modal-close" onclick="closeNewTicketModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid-2">
+        <div class="form-group full">
+          <label>Sujet</label>
+          <input id="nt-sujet" type="text" placeholder="Décrivez brièvement le problème…">
+        </div>
+        <div class="form-group">
+          <label>Client</label>
+          <select id="nt-client"></select>
+        </div>
+        <div class="form-group">
+          <label>Catégorie</label>
+          <select id="nt-categorie">
+            <option>Technique</option>
+            <option>Configuration</option>
+            <option>Facturation</option>
+            <option>Fonctionnel</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Priorité</label>
+          <select id="nt-priorite">
+            <option>Normale</option>
+            <option>Basse</option>
+            <option>Haute</option>
+            <option>Urgente</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label>Message initial</label>
+          <textarea id="nt-message" placeholder="Décrivez le problème en détail…" style="height:100px"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeNewTicketModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="createTicket()">Créer le ticket</button>
     </div>
   </div>
 </div>
@@ -2742,6 +3038,7 @@ function navigate(sectionId) {
   if (navItem) navItem.classList.add('active');
 
   if (sectionId === 'clients') buildClientsTable();
+  if (sectionId === 'tickets') { buildTicketsSummary(); buildTicketsList(); }
 
   currentSection = sectionId;
   closeMobileSidebar();
@@ -2801,6 +3098,8 @@ document.addEventListener('DOMContentLoaded', () => {
   buildWaTable(conversations_wa);
   loadVoixConfig();
   buildClientsTable();
+  buildTicketsSummary();
+  buildTicketsList();
 });
 
 /* ============================================================
@@ -3762,8 +4061,197 @@ function createClient() {
 document.addEventListener("keydown", e => {
   if (e.key === "Escape") {
     document.getElementById("newClientModal")?.classList.remove("open");
+    document.getElementById("newTicketModal")?.classList.remove("open");
   }
 });
+
+/* ============================================================
+   7 — TICKETS SUPPORT
+============================================================ */
+let openTicketId = null;
+
+function prioBadge(prio) {
+  return `<span class="badge-prio ${prio.toLowerCase()}">${prio}</span>`;
+}
+
+function tktStatutBadge(statut) {
+  const cls = statut.toLowerCase().replace(" ", "-");
+  return `<span class="badge-tkt-statut ${cls}">${statut}</span>`;
+}
+
+function buildTicketsSummary() {
+  const el = document.getElementById("ticketsSummary");
+  if (!el) return;
+  const counts = {
+    ouvert:    tickets.filter(t => t.statut === "Ouvert").length,
+    "en-cours":tickets.filter(t => t.statut === "En cours").length,
+    résolu:    tickets.filter(t => t.statut === "Résolu").length,
+    fermé:     tickets.filter(t => t.statut === "Fermé").length,
+  };
+  const items = [
+    { label:"Ouverts",  val: counts.ouvert,     color:"#fbbf24" },
+    { label:"En cours", val: counts["en-cours"], color:"var(--accent)" },
+    { label:"Résolus",  val: counts.résolu,      color:"#22c55e" },
+    { label:"Fermés",   val: counts.fermé,       color:"#64748b" },
+  ];
+  el.innerHTML = items.map(i => `
+    <div class="tickets-summary-card">
+      <div class="tsc-dot" style="background:${i.color}"></div>
+      <div class="tsc-info">
+        <div class="tsc-val">${i.val}</div>
+        <div class="tsc-lbl">${i.label}</div>
+      </div>
+    </div>`).join("");
+}
+
+function buildTicketsList() {
+  const q       = (document.getElementById("ticketSearch")?.value || "").toLowerCase();
+  const statut  = document.getElementById("filterTktStatut")?.value || "";
+  const prio    = document.getElementById("filterTktPrio")?.value || "";
+  const cat     = document.getElementById("filterTktCat")?.value || "";
+
+  const filtered = tickets.filter(t => {
+    if (q && !t.sujet.toLowerCase().includes(q) && !t.id.toLowerCase().includes(q)) return false;
+    if (statut && t.statut !== statut) return false;
+    if (prio   && t.priorite !== prio) return false;
+    if (cat    && t.categorie !== cat) return false;
+    return true;
+  });
+
+  const container = document.getElementById("ticketsList");
+  if (!container) return;
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div style="text-align:center;padding:32px;color:var(--text-muted);font-size:13px">Aucun ticket trouvé</div>`;
+    return;
+  }
+
+  container.innerHTML = filtered.map(t => {
+    const client = clients.find(c => c.id === t.client_id);
+    const isOpen = openTicketId === t.id;
+    return `
+    <div class="ticket-card ${isOpen ? "open-detail" : ""}" id="tktcard-${t.id}" onclick="toggleTicketDetail('${t.id}', event)">
+      <div class="ticket-card-header">
+        <span class="ticket-id">${t.id}</span>
+        <span class="ticket-sujet">${t.sujet}</span>
+        ${prioBadge(t.priorite)}
+        ${tktStatutBadge(t.statut)}
+        <svg style="flex-shrink:0;transition:transform 0.2s;transform:rotate(${isOpen?'90deg':'0deg'})" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="ticket-meta">
+        <span>${client ? client.nom : "—"}</span>
+        <span class="dot-sep">${t.categorie}</span>
+        <span class="dot-sep">${t.date}</span>
+        <span class="dot-sep">${t.messages.length} message${t.messages.length > 1 ? "s" : ""}</span>
+      </div>
+      <div class="ticket-detail ${isOpen ? "visible" : ""}" id="tktdetail-${t.id}" onclick="event.stopPropagation()">
+        <div class="ticket-thread" id="thread-${t.id}">
+          ${renderThread(t)}
+        </div>
+        <div class="ticket-reply-box">
+          <textarea id="reply-${t.id}" placeholder="Votre réponse…"></textarea>
+          <button class="btn btn-primary" style="height:60px;padding:0 16px;" onclick="sendReply('${t.id}')">Envoyer</button>
+        </div>
+        <div class="ticket-detail-footer">
+          <span style="font-size:12px;color:var(--text-muted)">Changer le statut :</span>
+          <select id="statusSelect-${t.id}" onchange="changeTicketStatus('${t.id}', this.value)">
+            ${["Ouvert","En cours","Résolu","Fermé"].map(s =>
+              `<option ${t.statut === s ? "selected" : ""}>${s}</option>`
+            ).join("")}
+          </select>
+          <button class="btn btn-ghost" style="height:34px;font-size:12px;" onclick="closeTicketDirect('${t.id}')">Fermer le ticket</button>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function renderThread(t) {
+  return t.messages.map(m => `
+    <div class="tkt-msg ${m.role}">
+      <div class="tkt-avatar ${m.role}">${m.role === "support" ? "AI" : initials(m.auteur)}</div>
+      <div>
+        <div class="tkt-bubble">${m.text}</div>
+        <div class="tkt-bubble-meta">${m.auteur} · ${m.heure}</div>
+      </div>
+    </div>`).join("");
+}
+
+function toggleTicketDetail(id, e) {
+  if (openTicketId === id) {
+    openTicketId = null;
+  } else {
+    openTicketId = id;
+  }
+  buildTicketsList();
+}
+
+function sendReply(id) {
+  const textarea = document.getElementById("reply-" + id);
+  const text = textarea?.value.trim();
+  if (!text) return;
+  const t = tickets.find(x => x.id === id);
+  if (!t) return;
+  t.messages.push({ auteur:"Support AkilAI", role:"support", text, heure: new Date().toLocaleTimeString("fr-FR", {hour:"2-digit",minute:"2-digit"}) });
+  if (t.statut === "Ouvert") t.statut = "En cours";
+  buildTicketsSummary();
+  buildTicketsList();
+  showToast("Réponse envoyée", "success");
+}
+
+function changeTicketStatus(id, newStatut) {
+  const t = tickets.find(x => x.id === id);
+  if (!t) return;
+  t.statut = newStatut;
+  buildTicketsSummary();
+  buildTicketsList();
+  showToast(`Statut mis à jour : ${newStatut}`, "info");
+}
+
+function closeTicketDirect(id) {
+  changeTicketStatus(id, "Fermé");
+  openTicketId = null;
+}
+
+/* ---- 7C Modal ---- */
+function openNewTicketModal() {
+  const sel = document.getElementById("nt-client");
+  if (sel) {
+    sel.innerHTML = clients.map(c => `<option value="${c.id}">${c.nom}</option>`).join("");
+  }
+  ["nt-sujet","nt-message"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+  document.getElementById("newTicketModal").classList.add("open");
+}
+
+function closeNewTicketModal(e) {
+  if (e && e.target !== document.getElementById("newTicketModal")) return;
+  document.getElementById("newTicketModal").classList.remove("open");
+}
+
+function createTicket() {
+  const sujet    = document.getElementById("nt-sujet").value.trim();
+  const clientId = parseInt(document.getElementById("nt-client").value);
+  const categorie= document.getElementById("nt-categorie").value;
+  const priorite = document.getElementById("nt-priorite").value;
+  const message  = document.getElementById("nt-message").value.trim();
+
+  if (!sujet) { showToast("Le sujet est obligatoire", "error"); return; }
+
+  const client = clients.find(c => c.id === clientId);
+  const newId  = "T-" + String(tickets.length + 1).padStart(3, "0");
+  tickets.unshift({
+    id: newId,
+    sujet, client_id: clientId, priorite, categorie,
+    statut: "Ouvert",
+    date: new Date().toISOString().split("T")[0],
+    messages: message ? [{ auteur: client?.nom || "Client", role:"client", text: message, heure: new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}) }] : []
+  });
+
+  document.getElementById("newTicketModal").classList.remove("open");
+  buildTicketsSummary();
+  buildTicketsList();
+  showToast(`Ticket ${newId} créé`, "success");
+}
 
 </script>
 </body>
