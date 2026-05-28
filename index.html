@@ -1,13 +1,960 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>akilai---dashboard</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AkilAI — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ============================================================
+       1A — IDENTITÉ VISUELLE & VARIABLES CSS
+    ============================================================ */
+    :root {
+      --bg:            #0a0a0a;
+      --surface:       #111111;
+      --surface-2:     #161616;
+      --accent:        #70B2DE;
+      --accent-dim:    rgba(112, 178, 222, 0.12);
+      --accent-border: rgba(112, 178, 222, 0.35);
+      --success:       #22c55e;
+      --danger:        #ef4444;
+      --warning:       #f59e0b;
+      --text:          #e5e5e5;
+      --text-muted:    #888;
+      --text-faint:    #555;
+      --border:        rgba(255, 255, 255, 0.07);
+      --border-hover:  rgba(255, 255, 255, 0.12);
+      --radius:        12px;
+      --radius-sm:     8px;
+      --sidebar-w:     220px;
+      --header-h:      60px;
+      --font:          'Space Grotesk', system-ui, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ============================================================
+       1B — LAYOUT SHELL
+    ============================================================ */
+    #app { display: flex; min-height: 100vh; }
+
+    /* --- Sidebar --- */
+    #sidebar {
+      position: fixed;
+      top: 0; left: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: #0d0d0d;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      z-index: 100;
+      transition: width 0.25s ease;
+      overflow: hidden;
+    }
+    #sidebar.collapsed { width: 60px; }
+
+    /* Logo */
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 20px 18px 16px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .logo-icon {
+      width: 32px; height: 32px;
+      background: var(--accent-dim);
+      border: 1px solid var(--accent-border);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      font-size: 12px; font-weight: 700; color: var(--accent);
+    }
+    .logo-text {
+      font-size: 16px; font-weight: 700;
+      color: var(--text); letter-spacing: -0.3px;
+      white-space: nowrap;
+    }
+    .logo-text span { color: var(--accent); }
+    #sidebar.collapsed .logo-text { display: none; }
+
+    /* Nav scroll area */
+    .sidebar-nav {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 12px 0;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    /* Section labels */
+    .nav-section-label {
+      font-size: 10px; font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-faint);
+      padding: 10px 18px 4px;
+      white-space: nowrap;
+      transition: opacity 0.2s;
+    }
+    #sidebar.collapsed .nav-section-label { opacity: 0; pointer-events: none; }
+
+    /* Nav items */
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 14px 9px 16px;
+      margin: 1px 8px 1px 0;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 13.5px; font-weight: 500;
+      transition: background 0.15s, color 0.15s;
+      white-space: nowrap;
+      border-left: 3px solid transparent;
+      user-select: none;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+    .nav-item.active {
+      background: var(--accent-dim);
+      color: var(--accent);
+      border-left-color: var(--accent);
+    }
+    .nav-item svg { flex-shrink: 0; }
+    .nav-label { white-space: nowrap; transition: opacity 0.2s; }
+    #sidebar.collapsed .nav-label { opacity: 0; width: 0; overflow: hidden; }
+    #sidebar.collapsed .nav-item { padding-left: 18px; margin-right: 0; }
+
+    /* Sidebar footer */
+    .sidebar-footer {
+      padding: 12px 10px;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .sidebar-user {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px; border-radius: var(--radius-sm);
+      cursor: pointer; transition: background 0.15s;
+    }
+    .sidebar-user:hover { background: rgba(255,255,255,0.04); }
+    .avatar-sm {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: var(--accent); color: #0a0a0a;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; flex-shrink: 0;
+    }
+    .sidebar-user-info { min-width: 0; transition: opacity 0.2s; }
+    .sidebar-user-info .name { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; }
+    .sidebar-user-info .role { font-size: 11px; color: var(--text-muted); }
+    #sidebar.collapsed .sidebar-user-info { opacity: 0; width: 0; overflow: hidden; }
+
+    /* --- Main area --- */
+    #main {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      transition: margin-left 0.25s ease;
+    }
+    #main.sidebar-collapsed { margin-left: 60px; }
+
+    /* --- Header --- */
+    #header {
+      position: sticky; top: 0; z-index: 50;
+      height: var(--header-h);
+      background: rgba(10,10,10,0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px;
+      gap: 16px;
+    }
+
+    .header-left { display: flex; align-items: center; gap: 12px; }
+
+    .burger-btn {
+      display: none;
+      background: none; border: none; cursor: pointer;
+      color: var(--text-muted); padding: 4px;
+      border-radius: 6px; transition: color 0.15s, background 0.15s;
+    }
+    .burger-btn:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+
+    .header-divider { height: 18px; width: 1px; background: var(--border); }
+    .header-client { font-size: 14px; font-weight: 600; color: var(--text); }
+
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 12px; font-weight: 500;
+      padding: 3px 9px; border-radius: 20px;
+    }
+    .status-badge.active   { background: rgba(34,197,94,0.12);  color: var(--success); }
+    .status-badge.inactive { background: rgba(239,68,68,0.12);  color: var(--danger); }
+    .status-badge.trial    { background: rgba(245,158,11,0.12); color: var(--warning); }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+    .header-right { display: flex; align-items: center; gap: 8px; }
+
+    .icon-btn {
+      width: 36px; height: 36px; border-radius: var(--radius-sm);
+      background: none; border: 1px solid var(--border);
+      color: var(--text-muted); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      position: relative;
+    }
+    .icon-btn:hover { background: rgba(255,255,255,0.06); color: var(--text); border-color: var(--border-hover); }
+
+    .notif-dot {
+      position: absolute; top: 6px; right: 6px;
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--danger); border: 1.5px solid #0a0a0a;
+    }
+    .avatar-header {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: var(--accent); color: #0a0a0a;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; cursor: pointer;
+      border: 2px solid var(--accent-border);
+    }
+
+    /* --- Page content --- */
+    #content { flex: 1; padding: 28px 28px 40px; }
+
+    .page { display: none; animation: fadeIn 0.15s ease; }
+    .page.active { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ============================================================
+       COMPOSANTS GÉNÉRIQUES
+    ============================================================ */
+
+    .page-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      margin-bottom: 24px; gap: 16px; flex-wrap: wrap;
+    }
+    .page-title    { font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
+    .page-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
+    .breadcrumb    { font-size: 12px; color: var(--text-faint); margin-bottom: 6px; }
+    .breadcrumb span { color: var(--text-muted); }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 8px 16px; border-radius: var(--radius-sm);
+      font-family: var(--font); font-size: 13px; font-weight: 600;
+      cursor: pointer; border: none; transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .btn-primary   { background: var(--accent); color: #0a0a0a; }
+    .btn-primary:hover { background: #8ec4e8; }
+    .btn-secondary {
+      background: rgba(255,255,255,0.06); color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.1); border-color: var(--border-hover); }
+    .btn-ghost  { background: none; color: var(--text-muted); border: 1px solid transparent; }
+    .btn-ghost:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 11px; font-weight: 600; padding: 3px 8px;
+      border-radius: 20px; white-space: nowrap;
+    }
+    .badge-success { background: rgba(34,197,94,0.12);  color: var(--success); }
+    .badge-danger  { background: rgba(239,68,68,0.12);  color: var(--danger); }
+    .badge-warning { background: rgba(245,158,11,0.12); color: var(--warning); }
+    .badge-accent  { background: var(--accent-dim);     color: var(--accent); }
+    .badge-muted   { background: rgba(255,255,255,0.06);color: var(--text-muted); }
+
+    .placeholder-content {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-height: 280px; gap: 12px; color: var(--text-muted);
+    }
+    .placeholder-content svg { opacity: 0.25; }
+    .placeholder-content h3  { font-size: 16px; font-weight: 600; color: var(--text); }
+    .placeholder-content p   { font-size: 13px; text-align: center; max-width: 280px; }
+
+    hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+    /* ============================================================
+       RESPONSIVE
+    ============================================================ */
+    @media (max-width: 768px) {
+      #sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.25s ease;
+        width: 220px !important;
+      }
+      #sidebar.mobile-open { transform: translateX(0); }
+      #main { margin-left: 0 !important; }
+      #content { padding: 16px; }
+      .burger-btn { display: flex !important; }
+      #sidebarToggleBtn { display: none !important; }
+
+      .sidebar-overlay {
+        display: none;
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.6);
+        z-index: 99;
+      }
+      .sidebar-overlay.active { display: block; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ======================================================
+       SIDEBAR — 1C
+  ====================================================== -->
+  <aside id="sidebar">
+
+    <div class="sidebar-logo">
+      <div class="logo-icon">AI</div>
+      <div class="logo-text">Akil<span>AI</span></div>
+    </div>
+
+    <nav class="sidebar-nav">
+
+      <!-- GÉNÉRAL -->
+      <div class="nav-section-label">Général</div>
+
+      <div class="nav-item active" data-section="overview" onclick="navigate('overview')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+        </svg>
+        <span class="nav-label">Vue d'ensemble</span>
+      </div>
+
+      <div class="nav-item" data-section="automations" onclick="navigate('automations')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </svg>
+        <span class="nav-label">Automations</span>
+      </div>
+
+      <div class="nav-item" data-section="clients" onclick="navigate('clients')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        <span class="nav-label">Clients</span>
+      </div>
+
+      <!-- HISTORIQUE -->
+      <div class="nav-section-label" style="margin-top:8px">Historique</div>
+
+      <div class="nav-item" data-section="appels" onclick="navigate('appels')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4a2 2 0 0 1 1.99-2.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.08 6.08l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+        </svg>
+        <span class="nav-label">Appels vocaux</span>
+      </div>
+
+      <div class="nav-item" data-section="whatsapp" onclick="navigate('whatsapp')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+        <span class="nav-label">Conv. WhatsApp</span>
+      </div>
+
+      <!-- CONFIGURATION -->
+      <div class="nav-section-label" style="margin-top:8px">Configuration</div>
+
+      <div class="nav-item" data-section="voix-ia" onclick="navigate('voix-ia')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/>
+          <line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/>
+          <line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/>
+          <line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/>
+          <line x1="17" y1="16" x2="23" y2="16"/>
+        </svg>
+        <span class="nav-label">Voix &amp; IA</span>
+      </div>
+
+      <div class="nav-item" data-section="programmation" onclick="navigate('programmation')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        <span class="nav-label">Programmation</span>
+      </div>
+
+      <!-- SUPPORT -->
+      <div class="nav-section-label" style="margin-top:8px">Support</div>
+
+      <div class="nav-item" data-section="tickets" onclick="navigate('tickets')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/>
+          <line x1="9" y1="12" x2="15" y2="12"/>
+        </svg>
+        <span class="nav-label">Tickets</span>
+      </div>
+
+      <div class="nav-item" data-section="analytics" onclick="navigate('analytics')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"/>
+          <line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="6"  y1="20" x2="6"  y2="14"/>
+        </svg>
+        <span class="nav-label">Analytics</span>
+      </div>
+
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="avatar-sm">MA</div>
+        <div class="sidebar-user-info">
+          <div class="name">Moctar Akilai</div>
+          <div class="role">Administrateur</div>
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- Overlay mobile -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebar()"></div>
+
+  <!-- ======================================================
+       ZONE PRINCIPALE
+  ====================================================== -->
+  <div id="main">
+
+    <!-- Header -->
+    <header id="header">
+      <div class="header-left">
+        <button class="burger-btn" onclick="toggleMobileSidebar()" style="display:none" aria-label="Menu">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+        <button class="icon-btn" id="sidebarToggleBtn" onclick="toggleSidebar()" title="Réduire la sidebar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <line x1="9" y1="3" x2="9" y2="21"/>
+          </svg>
+        </button>
+        <div class="header-divider"></div>
+        <div class="header-client" id="headerClientName">Cabinet Dr. Moreau</div>
+        <span class="status-badge active" id="headerClientStatus">
+          <span class="status-dot"></span> Actif
+        </span>
+      </div>
+
+      <div class="header-right">
+        <button class="icon-btn" title="Notifications">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+          <span class="notif-dot"></span>
+        </button>
+        <div class="avatar-header" title="Moctar Akilai">MA</div>
+      </div>
+    </header>
+
+    <!-- Pages -->
+    <div id="content">
+
+      <!-- ===== VUE D'ENSEMBLE ===== -->
+      <div class="page active" id="page-overview">
+        <div class="page-header">
+          <div>
+            <div class="breadcrumb">Général <span>/ Vue d'ensemble</span></div>
+            <h1 class="page-title">Vue d'ensemble</h1>
+            <p class="page-subtitle">Bienvenue, Moctar — voici l'état de vos automations.</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="placeholder-content">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+              <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+            </svg>
+            <h3>Séquence 2 à venir</h3>
+            <p>KPIs, graphiques Chart.js et recommandations seront ajoutés ici.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== AUTOMATIONS ===== -->
+      <div class="page" id="page-automations">
+        <div class="page-header">
+          <div>
+            <div class="breadcrumb">Général <span>/ Automations</span></div>
+            <h1 class="page-title">Automations</h1>
+            <p class="page-subtitle">Gérez et planifiez vos automations IA.</p>
+          </div>
+          <button class="btn btn-primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nouvelle automation
+          </button>
+        </div>
+        <div class="card">
+          <div class="placeholder-content">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+            <h3>Séquence 3 à venir</h3>
+            <p>Tableau des automations, toggles et planification.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== CLIENTS ===== -->
+      <div class="page" id="page-clients">
+        <div class="page-header">
+          <div>
+            <div class="breadcrumb">Général <span>/ Clients</span></div>
+            <h1 class="page-title">Clients</h1>
+            <p class="page-subtitle">Gérez vos clients et leurs configurations.</p>
+          </div>
+          <button class="btn btn-primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nouveau client
+          </button>
+        </div>
+        <div class="card">
+          <div class="placeholder-content">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            <h3>Séquence 6 à venir</h3>
+            <p>Liste clients, fiches détaillées, notes et tags.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== APPELS VOCAUX ===== -->
+      <div class="page" id="page-appels">
+        <div class="page-header">
+          <div>
+            <div class="breadcrumb">Historique <span>/ Appels vocaux</span></div>
+            <h1 class="page-title">Appels vocaux</h1>
+            <p class="page-subtitle">Historique des appels traités par Sophie.</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="placeholder-content">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4a2 2 0 0 1 1.99-2.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.08 6.08l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+            <h3>Séquence 4 à venir</h3>
+            <p>Tableau des appels avec transcriptions et lecteur audio.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== WHATSAPP ===== -->
+      <div class="page" id="page-whatsapp">
+        <div class="page-header">
+          <div>
+            <div class="breadcrumb">Historique <span>/ Conversations WhatsApp</span></div>
+            <h1 class="page-title">Conversations WhatsApp</h1>
+            <p class="page-subtitle">Messagerie automatisée via WhatsApp GPT.</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="placeholder-content">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            <h3>Séquence 4 à venir</h3>
+            <p>Historique WhatsApp avec bulles de chat et messages vocaux.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== VOIX & IA ===== -->
+      <div class="page" id="page-voix-ia">
+        <div class="page-header">
+          <div>
+            <div class="breadcrumb">Configuration <span>/ Voix &amp; IA</span></div>
+            <h1 class="page-title">Voix &amp; IA</h1>
+            <p class="page-subtitle">Personnalisez votre assistant vocal.</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="placeholder-content">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/>
+              <line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/>
+              <line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/>
+              <line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/>
+              <line x1="17" y1="16" x2="23" y2="16"/>
+            </svg>
+            <h3>Séquence 5 à venir</h3>
+            <p>Configuration voix, tonalité, prompt système et aperçu live.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== PROGRAMMATION ===== -->
+      <div class="page" id="page-programmation">
+        <div class="page-header">
+          <div>
+            <div class="breadcrumb">Configuration <span>/ Programmation</span></div>
+            <h1 class="page-title">Programmation</h1>
+            <p class="page-subtitle">Vue calendrier de vos automations planifiées.</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="placeholder-content">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            <h3>Séquence 3 à venir</h3>
+            <p>Vue calendrier hebdomadaire avec créneaux horaires.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TICKETS ===== -->
+      <div class="page" id="page-tickets">
+        <div class="page-header">
+          <div>
+            <div class="breadcrumb">Support <span>/ Tickets</span></div>
+            <h1 class="page-title">Tickets</h1>
+            <p class="page-subtitle">Suivi des demandes de support.</p>
+          </div>
+          <button class="btn btn-primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nouveau ticket
+          </button>
+        </div>
+        <div class="card">
+          <div class="placeholder-content">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/>
+              <line x1="9" y1="12" x2="15" y2="12"/>
+            </svg>
+            <h3>Séquence 7 à venir</h3>
+            <p>Système de tickets avec fils de conversation.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== ANALYTICS ===== -->
+      <div class="page" id="page-analytics">
+        <div class="page-header">
+          <div>
+            <div class="breadcrumb">Support <span>/ Analytics</span></div>
+            <h1 class="page-title">Analytics</h1>
+            <p class="page-subtitle">Analyse détaillée des performances.</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="placeholder-content">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <line x1="18" y1="20" x2="18" y2="10"/>
+              <line x1="12" y1="20" x2="12" y2="4"/>
+              <line x1="6"  y1="20" x2="6"  y2="14"/>
+            </svg>
+            <h3>Séquence 2 à venir</h3>
+            <p>Graphiques avancés et métriques de performance.</p>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ============================================================
+     JAVASCRIPT — 1D DONNÉES MOCKÉES + NAVIGATION
+============================================================ -->
+<script>
+
+/* ============================================================
+   DONNÉES MOCKÉES — miroir tables Airtable (base: appQapY4J7WC1iW4F)
+============================================================ */
+
+const clients = [
+  { id:1, nom:"Cabinet Dr. Moreau",   secteur:"Médical",      statut:"Actif",   plan:"Business", date_debut:"2024-01-15", revenus_mensuels:890,  email:"contact@cabinet-moreau.fr",  telephone:"01 42 33 12 45", tags:["VIP","Médical"],        notes:["Client fidèle depuis jan 2024","Souhaite ajouter module prise de RDV"] },
+  { id:2, nom:"Restaurant Le Jardin", secteur:"Restauration", statut:"Actif",   plan:"Starter",  date_debut:"2024-03-01", revenus_mensuels:290,  email:"info@lejardin.fr",            telephone:"04 91 22 44 56", tags:["Restauration"],         notes:["Saisonnier, moins actif en hiver"] },
+  { id:3, nom:"Immo Premium",         secteur:"Immobilier",   statut:"Essai",   plan:"Premium",  date_debut:"2024-06-10", revenus_mensuels:0,    email:"direction@immopremium.fr",    telephone:"06 12 34 56 78", tags:["Essai","À-relancer"],   notes:["Essai 14 jours, décision le 24 juin"] },
+  { id:4, nom:"FormaPro Academy",     secteur:"Formation",    statut:"Actif",   plan:"Business", date_debut:"2023-11-20", revenus_mensuels:690,  email:"tech@formapro.fr",            telephone:"03 88 12 34 56", tags:["Formation","VIP"],      notes:[] },
+  { id:5, nom:"Clinique Beauté Plus", secteur:"Médical",      statut:"Inactif", plan:"Starter",  date_debut:"2024-02-05", revenus_mensuels:0,    email:"contact@beauteplus.fr",       telephone:"05 56 78 90 12", tags:["Médical","Inactif"],    notes:["Pause temporaire, reprend en juillet"] }
+];
+
+const automations = [
+  { id:1, nom:"Sophie – Réponse vocale",     type:"Voix",     statut:"Actif",   derniere_exec:"2024-06-18 14:22", prochaine_exec:"2024-06-19 08:00", client_id:1, schedule:{ jours:[1,2,3,4,5],   heure:"08:00", recurrence:"quotidien" } },
+  { id:2, nom:"WhatsApp GPT Support",        type:"WhatsApp", statut:"Actif",   derniere_exec:"2024-06-18 16:05", prochaine_exec:"2024-06-19 08:00", client_id:1, schedule:{ jours:[1,2,3,4,5,6], heure:"08:00", recurrence:"quotidien" } },
+  { id:3, nom:"Relance J-7",                 type:"Relance",  statut:"Actif",   derniere_exec:"2024-06-11 09:00", prochaine_exec:"2024-06-18 09:00", client_id:2, schedule:{ jours:[2],           heure:"09:00", recurrence:"hebdo"     } },
+  { id:4, nom:"Relance J-3",                 type:"Relance",  statut:"Erreur",  derniere_exec:"2024-06-15 09:00", prochaine_exec:null,               client_id:2, schedule:{ jours:[6],           heure:"09:00", recurrence:"hebdo"     } },
+  { id:5, nom:"Support Auto FAQ",            type:"WhatsApp", statut:"Actif",   derniere_exec:"2024-06-18 11:30", prochaine_exec:"2024-06-19 08:00", client_id:4, schedule:{ jours:[1,2,3,4,5],   heure:"08:00", recurrence:"quotidien" } },
+  { id:6, nom:"Onboarding Nouveaux Clients", type:"Email",    statut:"Actif",   derniere_exec:"2024-06-17 10:00", prochaine_exec:"2024-06-24 10:00", client_id:3, schedule:{ jours:[1],           heure:"10:00", recurrence:"hebdo"     } },
+  { id:7, nom:"Notifications RDV",           type:"Voix",     statut:"Actif",   derniere_exec:"2024-06-18 07:00", prochaine_exec:"2024-06-19 07:00", client_id:1, schedule:{ jours:[1,2,3,4,5],   heure:"07:00", recurrence:"quotidien" } },
+  { id:8, nom:"Suspension Impayés",          type:"Système",  statut:"Inactif", derniere_exec:"2024-05-01 00:00", prochaine_exec:null,               client_id:null, schedule:{ jours:[1],        heure:"00:00", recurrence:"mensuel"   } },
+  { id:9, nom:"Lead Qualif Calendly",        type:"Voix",     statut:"Erreur",  derniere_exec:"2024-06-16 15:00", prochaine_exec:null,               client_id:3, schedule:{ jours:[1,3,5],       heure:"15:00", recurrence:"hebdo"     } }
+];
+
+const appels = [
+  { id:1, nom:"Marie Dupont",          numero:"06 12 34 56 78", date:"2024-06-18", heure:"14h22", duree:"2:34", statut:"Traité",  client_id:1,
+    resume:"Patiente souhaite déplacer son RDV du 20 juin. RDV reprogrammé au 25 juin à 10h30.",
+    transcription:[
+      {role:"assistant",text:"Cabinet du Dr Moreau, bonjour ! Sophie à votre service, comment puis-je vous aider ?"},
+      {role:"user",     text:"Bonjour, je voudrais déplacer mon rendez-vous du 20 juin s'il vous plaît."},
+      {role:"assistant",text:"Bien sûr ! Puis-je avoir votre nom s'il vous plaît ?"},
+      {role:"user",     text:"Oui, c'est Marie Dupont."},
+      {role:"assistant",text:"Merci Madame Dupont. Votre RDV du jeudi 20 juin à 9h — quelle date vous conviendrait mieux ?"},
+      {role:"user",     text:"Le 25 juin si c'est possible."},
+      {role:"assistant",text:"J'ai une disponibilité le mardi 25 juin à 10h30. Cela vous convient ?"},
+      {role:"user",     text:"Oui c'est parfait, merci !"},
+      {role:"assistant",text:"C'est noté ! RDV confirmé pour le 25 juin à 10h30. Vous recevrez un rappel la veille. Bonne journée !"}
+    ]},
+  { id:2, nom:"Jean-Pierre Martin",    numero:"07 45 67 89 01", date:"2024-06-18", heure:"11h05", duree:"1:12", statut:"Manqué", client_id:1,
+    resume:"Appel entrant non décroché. Message laissé sur répondeur.", transcription:[] },
+  { id:3, nom:"Isabelle Leroy",        numero:"06 98 76 54 32", date:"2024-06-17", heure:"16h30", duree:"3:45", statut:"Traité",  client_id:1,
+    resume:"Demande de résultats d'analyse. Patiente orientée vers le portail patient en ligne.",
+    transcription:[
+      {role:"assistant",text:"Cabinet Dr Moreau, bonjour, Sophie à l'appareil !"},
+      {role:"user",     text:"Bonjour, j'attends mes résultats d'analyse depuis 5 jours, est-ce normal ?"},
+      {role:"assistant",text:"Les résultats sont généralement disponibles sous 5 à 7 jours ouvrés. Avez-vous accès à votre espace patient ?"},
+      {role:"user",     text:"Non, je ne sais pas comment ça marche."},
+      {role:"assistant",text:"Pas de souci ! Je vous envoie un SMS avec le lien d'accès."}
+    ]},
+  { id:4, nom:"Thomas Bernard",        numero:"06 11 22 33 44", date:"2024-06-17", heure:"09h15", duree:"0:45", statut:"Traité",  client_id:1,
+    resume:"Demande d'information sur les horaires du cabinet. Informations fournies.",
+    transcription:[
+      {role:"assistant",text:"Cabinet Dr Moreau, bonjour !"},
+      {role:"user",     text:"Bonjour, quels sont vos horaires le samedi ?"},
+      {role:"assistant",text:"Le cabinet est ouvert le samedi de 9h à 12h30. Souhaitez-vous prendre un RDV ?"},
+      {role:"user",     text:"Non merci, c'était juste pour savoir. Bonne journée !"},
+      {role:"assistant",text:"Bonne journée à vous !"}
+    ]},
+  { id:5, nom:"Nathalie Petit",        numero:"07 55 66 77 88", date:"2024-06-16", heure:"15h50", duree:"4:20", statut:"Traité",  client_id:1,
+    resume:"Urgence relative — douleurs abdominales. Orientée vers consultation du jour à 17h45.",
+    transcription:[
+      {role:"assistant",text:"Cabinet Dr Moreau, bonjour !"},
+      {role:"user",     text:"J'ai des douleurs abdominales depuis ce matin, c'est assez fort."},
+      {role:"assistant",text:"Ces douleurs sont-elles accompagnées de fièvre ou de nausées ?"},
+      {role:"user",     text:"Un peu de nausées, oui. Pas de fièvre que je sache."},
+      {role:"assistant",text:"Je vérifie si le Dr Moreau peut vous recevoir en urgence aujourd'hui..."},
+      {role:"user",     text:"Merci..."},
+      {role:"assistant",text:"Bonne nouvelle : créneau ce soir à 17h45. Pouvez-vous venir ?"},
+      {role:"user",     text:"Oui oui, je serai là. Merci beaucoup !"}
+    ]},
+  { id:6, nom:"Appel entrant inconnu", numero:"01 23 45 67 89", date:"2024-06-16", heure:"10h00", duree:"0:30", statut:"Manqué", client_id:1,
+    resume:"Numéro non identifié. Raccroché sans message.", transcription:[] },
+  { id:7, nom:"Claire Fontaine",       numero:"06 44 55 66 77", date:"2024-06-15", heure:"13h20", duree:"2:05", statut:"Traité",  client_id:1,
+    resume:"Annulation de RDV. Slot remis dans le planning.",
+    transcription:[
+      {role:"assistant",text:"Cabinet Dr Moreau, bonjour !"},
+      {role:"user",     text:"Je dois annuler mon rendez-vous de vendredi."},
+      {role:"assistant",text:"Pas de problème. Quel est votre nom s'il vous plaît ?"},
+      {role:"user",     text:"Claire Fontaine, RDV vendredi 21 à 11h."},
+      {role:"assistant",text:"C'est noté, votre RDV du vendredi 21 juin à 11h est annulé. Souhaitez-vous en reprendre un ?"},
+      {role:"user",     text:"Pas pour l'instant, merci !"}
+    ]},
+  { id:8, nom:"Paul Girard",           numero:"06 99 88 77 66", date:"2024-06-15", heure:"08h30", duree:"1:55", statut:"Traité",  client_id:1,
+    resume:"Renouvellement d'ordonnance demandé. Dossier transmis au médecin.",
+    transcription:[
+      {role:"assistant",text:"Cabinet Dr Moreau, bonjour !"},
+      {role:"user",     text:"J'ai besoin de renouveler mon ordonnance pour la tension."},
+      {role:"assistant",text:"Je note votre demande et la transmets au Dr Moreau. Il vous rappellera sous 48h."},
+      {role:"user",     text:"Très bien, merci beaucoup."}
+    ]}
+];
+
+const conversations_wa = [
+  { id:1, nom:"Lucie Marchand",  numero:"+33 6 11 22 33 44", date:"2024-06-18", nb_messages:6, client_id:1,
+    messages:[
+      {role:"user",     text:"Bonjour, j'ai un RDV demain à 10h, c'est bien confirmé ?", heure:"09:12"},
+      {role:"assistant",text:"Bonjour Lucie ! Oui, votre RDV du mercredi 19 juin à 10h00 est bien confirmé. 😊", heure:"09:12"},
+      {role:"user",     text:"Super merci ! Et où est le cabinet exactement ?", heure:"09:14"},
+      {role:"assistant",text:"24 rue des Lilas, 75012 Paris. Métro Reuilly-Diderot (lignes 1 et 8).", heure:"09:14"},
+      {role:"user",     text:"Parfait, merci beaucoup !", heure:"09:15"},
+      {role:"assistant",text:"Avec plaisir ! À demain 🙂", heure:"09:15"}
+    ]},
+  { id:2, nom:"Marc Dubois",     numero:"+33 7 55 44 33 22", date:"2024-06-18", nb_messages:4, client_id:1,
+    messages:[
+      {role:"user",     text:"Bonjour, est-ce que je peux avoir un certificat médical pour le sport ?", heure:"14:30"},
+      {role:"assistant",text:"Bonjour Marc ! Pour un certificat sport, il faut une consultation. Vendredi 21 à 9h30 ou lundi 24 à 11h ?", heure:"14:31"},
+      {role:"user",     text:"Le vendredi c'est parfait", heure:"14:35"},
+      {role:"assistant",text:"✅ RDV confirmé vendredi 21 juin à 9h30. Un rappel vous sera envoyé la veille !", heure:"14:35"}
+    ]},
+  { id:3, nom:"Amina Bensaid",   numero:"+33 6 77 88 99 00", date:"2024-06-17", nb_messages:6, client_id:4,
+    messages:[
+      {role:"user",     text:"Bonjour, je voudrais m'inscrire à la formation Excel avancé", heure:"10:00"},
+      {role:"assistant",text:"Bonjour Amina ! Formation Excel Avancé démarre le 1er juillet, 4 séances de 2h. Tarif : 320€. Inscription ?", heure:"10:01"},
+      {role:"user",     text:"Oui ! Comment je paye ?", heure:"10:05"},
+      {role:"assistant",text:"Par virement ou CB sur formapro.fr/paiement. Code EXCEL-JUL pour votre place.", heure:"10:06"},
+      {role:"user",     text:"", type:"audio", duree:"0:18", heure:"10:10"},
+      {role:"assistant",text:"Votre inscription est enregistrée. Vous recevrez un email de confirmation sous 24h.", heure:"10:11"}
+    ]},
+  { id:4, nom:"Romain Tessier",  numero:"+33 6 23 45 67 89", date:"2024-06-17", nb_messages:4, client_id:2,
+    messages:[
+      {role:"user",     text:"Bonsoir, votre terrasse est disponible ce samedi à 20h pour 4 personnes ?", heure:"18:45"},
+      {role:"assistant",text:"Bonsoir Romain ! Oui, terrasse disponible samedi soir. Réservation pour 4 à 20h. Votre nom ?", heure:"18:46"},
+      {role:"user",     text:"Tessier, merci !", heure:"18:48"},
+      {role:"assistant",text:"Table réservée au nom de Tessier, samedi 22 juin à 20h en terrasse. À samedi ! 🍽️", heure:"18:48"}
+    ]},
+  { id:5, nom:"Sophie Nguyen",   numero:"+33 7 11 22 33 55", date:"2024-06-16", nb_messages:5, client_id:1,
+    messages:[
+      {role:"user",     text:"Bonjour, je suis enceinte de 3 mois, est-ce que le Dr Moreau fait le suivi de grossesse ?", heure:"11:00"},
+      {role:"assistant",text:"Bonjour Sophie, félicitations ! Oui, le Dr Moreau assure le suivi jusqu'à 6 mois. Souhaitez-vous un premier RDV ?", heure:"11:01"},
+      {role:"user",     text:"Oui s'il vous plaît, le plus tôt possible", heure:"11:03"},
+      {role:"assistant",text:"Créneau disponible jeudi 20 juin à 14h00. Cela vous convient ?", heure:"11:03"},
+      {role:"user",     text:"Oui parfait merci !", heure:"11:05"}
+    ]},
+  { id:6, nom:"Kevin Lambert",   numero:"+33 6 88 77 66 55", date:"2024-06-15", nb_messages:4, client_id:4,
+    messages:[
+      {role:"user",     text:"Bonjour, j'ai un problème pour accéder à la plateforme de cours", heure:"09:30"},
+      {role:"assistant",text:"Bonjour Kevin ! Pouvez-vous préciser le problème ? (Mot de passe oublié, page d'erreur, autre ?)", heure:"09:31"},
+      {role:"user",     text:"", type:"audio", duree:"0:23", heure:"09:33"},
+      {role:"assistant",text:"Problème de connexion après mise à jour. Je transmets au support technique. Ticket #T-2024-089 créé.", heure:"09:34"}
+    ]}
+];
+
+const tickets = [
+  { id:"T-001", sujet:"Erreur automation Relance J-3",       client_id:2, priorite:"Haute",   categorie:"Technique",     statut:"Ouvert",   date:"2024-06-18",
+    messages:[
+      {auteur:"Restaurant Le Jardin", role:"client",  text:"La Relance J-3 ne s'exécute plus depuis samedi. Les clients ne reçoivent plus de rappel.", heure:"09:12"},
+      {auteur:"Support AkilAI",       role:"support", text:"Nous analysons le problème. Il semble lié à une mise à jour de l'API WhatsApp. Correction en cours.", heure:"10:30"}
+    ]},
+  { id:"T-002", sujet:"Modifier le script de Sophie",        client_id:1, priorite:"Normale", categorie:"Configuration", statut:"En cours", date:"2024-06-17",
+    messages:[
+      {auteur:"Cabinet Dr. Moreau", role:"client",  text:"Nous souhaiterions que Sophie propose également des créneaux le samedi matin.", heure:"14:00"},
+      {auteur:"Support AkilAI",     role:"support", text:"Bien reçu ! Nous mettons à jour le script. La modification sera active demain matin.", heure:"16:30"}
+    ]},
+  { id:"T-003", sujet:"Demande de facturation juillet",      client_id:4, priorite:"Basse",   categorie:"Facturation",   statut:"Résolu",   date:"2024-06-15",
+    messages:[
+      {auteur:"FormaPro Academy", role:"client",  text:"Pouvez-vous envoyer la facture de juillet en avance pour notre comptabilité ?", heure:"11:00"},
+      {auteur:"Support AkilAI",   role:"support", text:"Facture juillet envoyée à votre adresse email. Bonne journée !", heure:"11:45"}
+    ]},
+  { id:"T-004", sujet:"Lead Qualif Calendly ne démarre pas", client_id:3, priorite:"Urgente", categorie:"Technique",     statut:"Ouvert",   date:"2024-06-18",
+    messages:[
+      {auteur:"Immo Premium", role:"client", text:"Notre automation Lead Qualif est en erreur depuis 2 jours ! On perd des leads !", heure:"08:55"}
+    ]},
+  { id:"T-005", sujet:"Question sur l'offre Premium",        client_id:3, priorite:"Normale", categorie:"Fonctionnel",   statut:"Ouvert",   date:"2024-06-16",
+    messages:[
+      {auteur:"Immo Premium", role:"client", text:"Quelles fonctionnalités supplémentaires comprend l'offre Premium par rapport à Business ?", heure:"15:30"}
+    ]}
+];
+
+const kpis = {
+  appels_par_jour:      [12,18,15,22,19,25,21,17,23,28,24,20,16,19,22,25,18,21,24,27,20,15,18,22,19,23,26,21,17,24],
+  messages_wa_par_jour: [45,52,38,61,55,70,48,44,59,72,65,50,42,56,63,71,49,58,67,75,53,41,55,61,52,66,73,58,46,69],
+  revenus_par_mois:     [5200,5800,6100,5900,6400,6200,6800,7100,6900,7400,7200,7800],
+  objectif_mensuel:     [6000,6000,6500,6500,7000,7000,7000,7500,7500,7500,8000,8000],
+  duree_moyenne:        "2m 34s",
+  taux_escalade:        8.3,
+  satisfaction:         4.7,
+  revenus_mois:         7800
+};
+
+/* ============================================================
+   NAVIGATION SPA
+============================================================ */
+let currentSection   = 'overview';
+let sidebarCollapsed = false;
+
+function navigate(sectionId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const target = document.getElementById('page-' + sectionId);
+  if (target) target.classList.add('active');
+
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const navItem = document.querySelector('.nav-item[data-section="' + sectionId + '"]');
+  if (navItem) navItem.classList.add('active');
+
+  currentSection = sectionId;
+  closeMobileSidebar();
+}
+
+/* ============================================================
+   SIDEBAR DESKTOP COLLAPSE
+============================================================ */
+function toggleSidebar() {
+  sidebarCollapsed = !sidebarCollapsed;
+  document.getElementById('sidebar').classList.toggle('collapsed', sidebarCollapsed);
+  document.getElementById('main').classList.toggle('sidebar-collapsed', sidebarCollapsed);
+}
+
+/* ============================================================
+   SIDEBAR MOBILE
+============================================================ */
+function toggleMobileSidebar() {
+  document.getElementById('sidebar').classList.toggle('mobile-open');
+  document.getElementById('sidebarOverlay').classList.toggle('active');
+}
+
+function closeMobileSidebar() {
+  document.getElementById('sidebar').classList.remove('mobile-open');
+  document.getElementById('sidebarOverlay').classList.remove('active');
+}
+
+/* ============================================================
+   RESPONSIVE — affiche burger sous 768px
+============================================================ */
+function handleResize() {
+  const burgerBtn = document.querySelector('.burger-btn');
+  const toggleBtn = document.getElementById('sidebarToggleBtn');
+  if (window.innerWidth <= 768) {
+    burgerBtn.style.display = 'flex';
+    toggleBtn.style.display = 'none';
+  } else {
+    burgerBtn.style.display = 'none';
+    toggleBtn.style.display = 'flex';
+    closeMobileSidebar();
+  }
+}
+
+window.addEventListener('resize', handleResize);
+
+/* ============================================================
+   INIT
+============================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+  handleResize();
+  navigate('overview');
+});
+
+</script>
+</body>
 </html>
