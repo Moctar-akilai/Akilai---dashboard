@@ -3221,6 +3221,8 @@ function setPeriod(days, btn) {
   btn.classList.add("active");
   updateKPIs(days);
   buildCharts(days);
+  /* Si Airtable connecté, recharger les KPIs pour la nouvelle période */
+  if (window._airtableConnected) loadKPIsFromAirtable(days);
 }
 
 function initOverview() {
@@ -3326,6 +3328,8 @@ async function checkConnection() {
       if (dot)   { dot.style.background = "#22c55e"; }
       if (label) { label.textContent = "Connecté · Airtable"; label.style.color = "#22c55e"; }
       window._airtableConnected = true;
+      /* Charger toutes les sections depuis Airtable */
+      loadAllFromAirtable();
     } else {
       throw new Error(data.error || "Erreur inconnue");
     }
@@ -3334,6 +3338,98 @@ async function checkConnection() {
     if (label) { label.textContent = "Mode démo"; label.style.color = "#ef4444"; }
     window._airtableConnected = false;
     console.warn("[AkilAI] Airtable non disponible — données mockées actives.", e.message);
+  }
+}
+
+/* ============================================================
+   SÉQUENCE 2 — CHARGEMENT DONNÉES AIRTABLE
+   Chaque loader a un fallback silencieux sur les données mockées.
+============================================================ */
+
+async function apiFetch(path) {
+  const res = await fetch(path);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+async function loadAllFromAirtable() {
+  await Promise.allSettled([
+    loadClientsFromAirtable(),
+    loadAutomationsFromAirtable(),
+    loadHistoriqueFromAirtable(),
+    loadTicketsFromAirtable(),
+    loadKPIsFromAirtable(currentPeriod),
+  ]);
+}
+
+async function loadClientsFromAirtable() {
+  try {
+    const data = await apiFetch("/.netlify/functions/get-clients");
+    if (data.clients?.length) {
+      clients.splice(0, clients.length, ...data.clients);
+      buildClientsTable();
+    }
+  } catch (e) {
+    console.warn("[AkilAI] get-clients fallback:", e.message);
+  }
+}
+
+async function loadAutomationsFromAirtable() {
+  try {
+    const data = await apiFetch("/.netlify/functions/get-automations");
+    if (data.automations?.length) {
+      automations.splice(0, automations.length, ...data.automations);
+      buildAutoTable();
+      buildCalendar();
+      populateScheduleSelect();
+    }
+  } catch (e) {
+    console.warn("[AkilAI] get-automations fallback:", e.message);
+  }
+}
+
+async function loadHistoriqueFromAirtable() {
+  try {
+    const data = await apiFetch("/.netlify/functions/get-historique");
+    if (data.appels?.length) {
+      appels.splice(0, appels.length, ...data.appels);
+      buildAppelsTable(appels);
+    }
+    if (data.conversations_wa?.length) {
+      conversations_wa.splice(0, conversations_wa.length, ...data.conversations_wa);
+      buildWaTable(conversations_wa);
+    }
+  } catch (e) {
+    console.warn("[AkilAI] get-historique fallback:", e.message);
+  }
+}
+
+async function loadTicketsFromAirtable() {
+  try {
+    const data = await apiFetch("/.netlify/functions/get-tickets");
+    if (data.tickets?.length) {
+      tickets.splice(0, tickets.length, ...data.tickets);
+      buildTicketsSummary();
+      buildTicketsList();
+      updateTicketsNavDot();
+    }
+  } catch (e) {
+    console.warn("[AkilAI] get-tickets fallback:", e.message);
+  }
+}
+
+async function loadKPIsFromAirtable(days) {
+  try {
+    const data = await apiFetch(`/.netlify/functions/get-kpis?days=${days}`);
+    if (data.kpis) {
+      Object.assign(kpis, data.kpis);
+      /* Reconstruire les graphiques Vue d'ensemble et Analytics */
+      buildCharts(days);
+      updateKPIs(days);
+      if (document.getElementById("aChartLine")) initAnalytics();
+    }
+  } catch (e) {
+    console.warn("[AkilAI] get-kpis fallback:", e.message);
   }
 }
 
