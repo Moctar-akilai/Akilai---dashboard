@@ -3693,6 +3693,7 @@ function _initDashboard() {
   buildTicketsList();
   updateTicketsNavDot();
   setTimeout(updateNotifications, 200);
+  applyPlanFilter();
 }
 
 /* ============================================================
@@ -3916,6 +3917,28 @@ async function loadClientsFromAirtable() {
   } catch (e) {
     console.warn("[AkilAI] get-clients fallback:", e.message);
   }
+  applyPlanFilter();
+}
+
+function applyPlanFilter() {
+  const plan = (clients[0]?.plan || "").toLowerCase();
+  const navAppels   = document.querySelector('.nav-item[data-section="appels"]');
+  const navWhatsapp = document.querySelector('.nav-item[data-section="whatsapp"]');
+  if (!navAppels || !navWhatsapp) return;
+
+  const voiceOnly = ["assistant vocal", "starter"].some(k => plan.includes(k));
+  const waOnly    = plan === "whatsapp";
+
+  if (voiceOnly) {
+    navAppels.style.display   = "";
+    navWhatsapp.style.display = "none";
+  } else if (waOnly) {
+    navAppels.style.display   = "none";
+    navWhatsapp.style.display = "";
+  } else {
+    navAppels.style.display   = "";
+    navWhatsapp.style.display = "";
+  }
 }
 
 async function loadAutomationsFromAirtable() {
@@ -4096,7 +4119,7 @@ function buildAppelsTable(data) {
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:16px">
               <div>
                 <div class="ai-summary">
-                  <strong>🤖 Résumé IA</strong>
+                  <strong>🤖 Résumé ${(document.getElementById('cfgNom')?.value?.trim() || 'Assistant')}</strong>
                   ${appel.resume}
                 </div>
                 ${audioHtml}
