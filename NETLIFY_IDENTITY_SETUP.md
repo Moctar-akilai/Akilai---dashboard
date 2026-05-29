@@ -51,7 +51,7 @@ Dans Netlify → **Site settings → Environment variables**, configurer :
 | Variable | Description |
 |---|---|
 | `AIRTABLE_API_KEY` | Clé API Airtable (depuis airtable.com → Account → API) |
-| `AIRTABLE_BASE_ID` | `appQapY4J7WC1iW4F` |
+| `AIRTABLE_BASE_ID` | ID de votre base Airtable (visible dans l'URL Airtable, commence par "app") |
 | `RESEND_API_KEY` | Clé API Resend (depuis resend.com) |
 | `ADMIN_EMAIL` | Email de l'administrateur AkilAI pour les alertes |
 | `MAKE_API_KEY` | Clé API Make (depuis Make → Account → API) |

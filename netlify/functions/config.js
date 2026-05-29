@@ -1,5 +1,9 @@
-const BASE_ID = process.env.AIRTABLE_BASE_ID || "appQapY4J7WC1iW4F";
+const BASE_ID = process.env.AIRTABLE_BASE_ID;
 const API_KEY  = process.env.AIRTABLE_API_KEY  || "";
+
+if (!BASE_ID) {
+  console.error("[AkilAI] AIRTABLE_BASE_ID non configuré — définir la variable d'environnement dans Netlify");
+}
 
 const BASE_URL = `https://api.airtable.com/v0/${BASE_ID}`;
 

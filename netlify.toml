@@ -10,7 +10,7 @@
 
 # Variables d'environnement à configurer dans Netlify → Site settings → Env vars :
 #   AIRTABLE_API_KEY   — clé API Airtable
-#   AIRTABLE_BASE_ID   — ID de la base (appQapY4J7WC1iW4F)
+#   AIRTABLE_BASE_ID   — ID de la base Airtable (commence par "app...")
 #   RESEND_API_KEY     — clé API Resend
 #   ADMIN_EMAIL        — email destinataire des alertes (ex: diopmohamed92@gmail.com)
 #   URL                — URL du site Netlify (automatique Netlify, ne pas définir manuellement)
