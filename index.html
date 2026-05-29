@@ -3915,24 +3915,36 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
+  /* Détecter les tokens AVANT init() pour adapter l'UI immédiatement */
+  const _hash       = window.location.hash || "";
+  const _isInvite   = _hash.includes('invite_token');
+  const _isRecovery = _hash.includes('recovery_token');
+
+  if (_isInvite || _isRecovery) {
+    const msg = _isInvite
+      ? 'Définissez votre mot de passe pour activer votre compte.'
+      : 'Réinitialisation de votre mot de passe.';
+    const lp = document.getElementById('loginPage');
+    if (lp) {
+      lp.innerHTML = `
+        <div class="login-card">
+          <div class="login-logo">Akil<span>AI</span></div>
+          <div class="login-subtitle">${msg}</div>
+          <div style="color:var(--text-faint,#888);font-size:13px;margin-top:12px">Ouverture du formulaire…</div>
+        </div>`;
+    }
+  }
+
   /* Enregistrer les listeners AVANT init() */
   netlifyIdentity.on('init', (user) => {
-    const hash = window.location.hash || "";
-
-    /* Token d'invitation email → ouvrir le formulaire de création de mot de passe */
-    if (hash.includes('invite_token')) {
-      _showLoginPage();
-      netlifyIdentity.open('signup');
+    if (_isInvite) {
+      setTimeout(() => netlifyIdentity.open('signup'), 200);
       return;
     }
-
-    /* Token de reset mot de passe → ouvrir le formulaire de récupération */
-    if (hash.includes('recovery_token')) {
-      _showLoginPage();
-      netlifyIdentity.open('recovery');
+    if (_isRecovery) {
+      setTimeout(() => netlifyIdentity.open('recovery'), 200);
       return;
     }
-
     /* Flux normal : utilisateur déjà connecté ou pas */
     if (user) {
       _onLogin(user);
