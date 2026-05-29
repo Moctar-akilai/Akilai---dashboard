@@ -3717,9 +3717,10 @@ function _showDashboard() {
    SIDEBAR USER INFO
 ============================================================ */
 function updateSidebarUser() {
-  const c   = clients[0];
-  const nom = c?.nom  || "Cabinet Dr. Moreau";
-  const plan = c?.plan || "Premium";
+  /* Si une session réelle existe, elle a déjà été appliquée — ne pas l'écraser avec les données mock */
+  const session = _getSession();
+  const nom  = session?.nom  || clients[0]?.nom  || "Cabinet Dr. Moreau";
+  const plan = session?.plan || clients[0]?.plan || "Premium";
   const initials = nom.split(" ").filter(Boolean).map(w => w[0]).join("").substring(0, 2).toUpperCase();
   const nomEl  = document.getElementById("sidebarClientNom");
   const planEl = document.getElementById("sidebarClientPlan");
@@ -3930,12 +3931,21 @@ function _startDashboard(session) {
 function _applySessionToUI(session) {
   const nom  = session.nom  || '';
   const plan = session.plan || '';
+
+  /* Sidebar user block */
   const nomEl  = document.getElementById('sidebarClientNom');
   const planEl = document.getElementById('sidebarClientPlan');
   const avEl   = document.getElementById('sidebarAvatar');
   if (nomEl)  nomEl.textContent  = nom;
   if (planEl) planEl.textContent = plan;
   if (avEl)   avEl.textContent   = nom.split(' ').filter(Boolean).map(w => w[0]).join('').substring(0, 2).toUpperCase();
+
+  /* Subtitle bienvenue */
+  const subtitle = document.getElementById('overviewSubtitle');
+  if (subtitle) subtitle.textContent = `Bienvenue, ${nom} — voici l'état de vos automations.`;
+
+  /* Filtrage sidebar selon plan */
+  applyPlanFilterFromSession(plan);
 }
 
 /* LOGIN — submit */
@@ -4063,25 +4073,38 @@ async function loadClientsFromAirtable() {
   updateSidebarUser();
 }
 
-function applyPlanFilter() {
-  const plan = (clients[0]?.plan || "").toLowerCase();
+function applyPlanFilterFromSession(rawPlan) {
+  const plan        = (rawPlan || "").toLowerCase();
   const navAppels   = document.querySelector('.nav-item[data-section="appels"]');
   const navWhatsapp = document.querySelector('.nav-item[data-section="whatsapp"]');
   if (!navAppels || !navWhatsapp) return;
 
-  const voiceOnly = ["assistant vocal", "starter"].some(k => plan.includes(k));
-  const waOnly    = plan === "whatsapp";
+  /*
+    Plans WhatsApp  → "whatsapp" dans le nom  → WA seul
+    Plans Vocal     → "vocal" dans le nom      → Appels seul
+    Plans Combo     → "combo" dans le nom, ou aucun mot-clé → les deux
+  */
+  const isWa    = plan.includes("whatsapp") && !plan.includes("combo");
+  const isVocal = plan.includes("vocal")    && !plan.includes("combo");
 
-  if (voiceOnly) {
-    navAppels.style.display   = "";
-    navWhatsapp.style.display = "none";
-  } else if (waOnly) {
+  if (isWa) {
     navAppels.style.display   = "none";
     navWhatsapp.style.display = "";
+  } else if (isVocal) {
+    navAppels.style.display   = "";
+    navWhatsapp.style.display = "none";
   } else {
+    /* combo ou plan inconnu → tout afficher */
     navAppels.style.display   = "";
     navWhatsapp.style.display = "";
   }
+}
+
+function applyPlanFilter() {
+  /* Appelé depuis loadClientsFromAirtable (mode démo) */
+  const session = _getSession();
+  const plan    = session?.plan || clients[0]?.plan || "";
+  applyPlanFilterFromSession(plan);
 }
 
 async function loadAutomationsFromAirtable() {
