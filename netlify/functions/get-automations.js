@@ -1,23 +1,46 @@
 const { BASE_URL, headers, ok, err, preflight } = require("./config");
 
-exports.handler = async (event) => {
+exports.handler = async function(event, context) {
   if (event.httpMethod === "OPTIONS") return preflight();
 
   try {
-    const clientId = event.queryStringParameters?.clientId || null;
-    const params   = new URLSearchParams({ "view": "Grid view" });
-    if (clientId) params.set("filterByFormula", `FIND("${clientId}",ARRAYJOIN({User ID}))`);
+    const clientId = (event.queryStringParameters && event.queryStringParameters.clientId) || null;
+    console.log("[get-automations] ClientId reçu :", clientId);
 
-    const res = await fetch(`${BASE_URL}/Automatisations?${params}`, { headers });
-    if (!res.ok) return err(`Airtable ${res.status}`);
+    const params = new URLSearchParams({ "view": "Grid view" });
+
+    if (clientId) {
+      const formula = `FIND("${clientId}",ARRAYJOIN({User ID}))`;
+      console.log("[get-automations] Formule :", formula);
+      params.set("filterByFormula", formula);
+    } else {
+      console.log("[get-automations] Pas de clientId — retour de toutes les automations");
+    }
+
+    const url = `${BASE_URL}/Automatisations?${params}`;
+    console.log("[get-automations] URL appelée :", url.replace(BASE_URL, "[BASE_URL]"));
+
+    const res = await fetch(url, { headers });
+    console.log("[get-automations] Statut Airtable :", res.status);
+
+    if (!res.ok) {
+      const text = await res.text();
+      console.error("[get-automations] Erreur Airtable :", res.status, text);
+      return err("Airtable " + res.status);
+    }
 
     const data    = await res.json();
     const records = data.records || [];
+    console.log("[get-automations] Nb automations trouvées :", records.length);
 
-    const automations = records.map((r, i) => {
+    if (records.length > 0) {
+      console.log("[get-automations] Champs du premier record :", JSON.stringify(records[0].fields));
+    }
+
+    const automations = records.map(function(r, i) {
       const f = r.fields;
       let jours = [1,2,3,4,5];
-      try { jours = f.JoursProgrammes ? JSON.parse(f.JoursProgrammes) : jours; } catch {}
+      try { jours = f.JoursProgrammes ? JSON.parse(f.JoursProgrammes) : jours; } catch(e) {}
 
       return {
         id:             r.id,
@@ -39,6 +62,7 @@ exports.handler = async (event) => {
 
     return ok({ automations });
   } catch (e) {
+    console.error("[get-automations] Exception :", e.message, e.stack);
     return err(e.message);
   }
 };
