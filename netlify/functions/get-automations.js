@@ -33,7 +33,9 @@ exports.handler = async function(event, context) {
     const records = data.records || [];
     console.log("[get-automations] Nb automations trouvées :", records.length);
 
-    if (records.length > 0) {
+    if (records.length === 0) {
+      console.warn("[get-automations] 0 résultat — réponse brute Airtable :", JSON.stringify(data));
+    } else {
       console.log("[get-automations] Champs du premier record :", JSON.stringify(records[0].fields));
     }
 
