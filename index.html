@@ -50,7 +50,7 @@
     /* ============================================================
        1B — LAYOUT SHELL
     ============================================================ */
-    #app { display: flex; min-height: 100vh; }
+    #app { display: none; min-height: 100vh; }
 
     /* --- Sidebar --- */
     #sidebar {
@@ -1764,78 +1764,6 @@
     /* Wrapper relatif pour le dropdown */
     .notif-wrapper { position: relative; }
 
-    /* ============================================================
-       AUTH — Page de login & écran de chargement
-    ============================================================ */
-    #loginPage {
-      position: fixed; inset: 0;
-      background: var(--bg);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 9000;
-      flex-direction: column;
-      gap: 0;
-    }
-    #loginPage.hidden { display: none; }
-
-    .login-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 48px 44px;
-      width: 100%;
-      max-width: 400px;
-      text-align: center;
-      box-shadow: 0 24px 80px rgba(0,0,0,0.5);
-    }
-    .login-logo {
-      font-size: 32px; font-weight: 800; letter-spacing: -1px;
-      color: var(--text); margin-bottom: 8px;
-    }
-    .login-logo span { color: var(--accent); }
-    .login-subtitle {
-      font-size: 14px; color: var(--text-muted); margin-bottom: 36px;
-      line-height: 1.5;
-    }
-    .login-btn {
-      width: 100%; padding: 14px;
-      background: var(--accent); color: #fff;
-      border: none; border-radius: var(--radius-sm);
-      font-family: var(--font); font-size: 15px; font-weight: 700;
-      cursor: pointer; letter-spacing: -0.2px;
-      transition: opacity 0.15s;
-    }
-    .login-btn:hover { opacity: 0.88; }
-    .login-btn:disabled { opacity: 0.5; cursor: default; }
-    .login-input {
-      width: 100%; padding: 12px 14px; margin-bottom: 12px;
-      background: var(--bg); border: 1px solid var(--border);
-      border-radius: var(--radius-sm); color: var(--text);
-      font-family: var(--font); font-size: 14px; box-sizing: border-box;
-    }
-    .login-input:focus { outline: none; border-color: var(--accent); }
-    .login-footer {
-      margin-top: 20px; font-size: 11px; color: var(--text-faint);
-    }
-
-    /* Écran de chargement */
-    #loadingScreen {
-      position: fixed; inset: 0;
-      background: var(--bg);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 8000; flex-direction: column; gap: 20px;
-    }
-    #loadingScreen.hidden { display: none; }
-    .loading-logo { font-size: 28px; font-weight: 800; color: var(--text); }
-    .loading-logo span { color: var(--accent); }
-    .loading-spinner {
-      width: 36px; height: 36px;
-      border: 3px solid var(--border);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
     /* Bouton logout dans le header */
     .btn-logout {
       font-size: 12px; padding: 5px 12px; border-radius: 20px;
@@ -1845,7 +1773,6 @@
     }
     .btn-logout:hover { background: rgba(239,68,68,0.2); }
   </style>
-  <!-- Netlify Identity supprimé — auth custom via auth-login.js -->
   <style>
     /* ============================================================
        POLISH UI — animations, skeletons, micro-interactions
@@ -3992,9 +3919,14 @@ async function loginSubmit() {
 /* LOGOUT */
 function logout() {
   _clearSession();
-  document.getElementById('loginPage').classList.remove('hidden');
-  document.getElementById('loginEmail').value = '';
+  /* Cacher le dashboard */
+  document.getElementById('app').style.display = 'none';
+  /* Réinitialiser et afficher la page login */
+  document.getElementById('loginEmail').value    = '';
   document.getElementById('loginError').textContent = '';
+  document.getElementById('loginPage').classList.remove('hidden');
+  /* Remettre le focus sur le champ email */
+  setTimeout(() => document.getElementById('loginEmail').focus(), 50);
 }
 
 /* ============================================================
