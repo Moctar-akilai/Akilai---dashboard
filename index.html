@@ -2156,7 +2156,7 @@
   <div class="login-card">
     <div class="login-logo">Akil<span>AI</span></div>
     <div class="login-subtitle">Votre portail d'automatisation IA</div>
-    <button class="login-btn" data-netlify-identity-button>Se connecter</button>
+    <button class="login-btn" onclick="openLogin()">Se connecter</button>
     <div class="login-footer">Accès réservé aux clients AkilAI</div>
   </div>
 </div>
@@ -4016,7 +4016,7 @@ function _onLogout() {
     <div class="login-card">
       <div class="login-logo">Akil<span>AI</span></div>
       <div class="login-subtitle">Votre portail d'automatisation IA</div>
-      <button class="login-btn" data-netlify-identity-button>Se connecter</button>
+      <button class="login-btn" onclick="openLogin()">Se connecter</button>
       <div class="login-footer">Accès réservé aux clients AkilAI</div>
     </div>`;
 }
@@ -4176,40 +4176,47 @@ window.addEventListener("hashchange", () => {
   else adminClose();
 });
 
-document.addEventListener('DOMContentLoaded', () => {
+/* ============================================================
+   NETLIFY IDENTITY — listeners enregistrés IMMÉDIATEMENT
+   (avant DOMContentLoaded, sinon l'événement 'init' est raté
+   car le widget auto-initialise depuis le <head> en premier)
+============================================================ */
+if (typeof netlifyIdentity !== "undefined") {
+
+  netlifyIdentity.on('init', function(user) {
+    if (user) { _onLogin(user); } else { _showLoginPage(); }
+  });
+
+  netlifyIdentity.on('login', function(user) {
+    netlifyIdentity.close();
+    _onLogin(user);
+  });
+
+  netlifyIdentity.on('logout', function() { _onLogout(); });
+
+  netlifyIdentity.on('error', function(err) {
+    console.error('[NetlifyIdentity]', err);
+    var errMsg = String((err && (err.message || err.msg)) || err || '').toLowerCase();
+    if (errMsg.indexOf('not confirmed') >= 0 || errMsg.indexOf('confirmation') >= 0) {
+      var u = netlifyIdentity.currentUser ? netlifyIdentity.currentUser() : null;
+      if (u) { netlifyIdentity.close(); _onLogin(u); return; }
+    }
+    _showLoginPage();
+  });
+
+}
+
+document.addEventListener('DOMContentLoaded', function() {
   if (typeof netlifyIdentity === "undefined") {
+    /* Dev local sans CDN */
     _initDashboard();
     _showDashboard();
     checkConnection();
     return;
   }
-
-  /* Le widget gère nativement invite_token et recovery_token dans l'URL.
-     On écoute juste les événements — pas besoin d'appeler open() manuellement. */
-
-  netlifyIdentity.on('init', (user) => {
-    if (user) _onLogin(user); else _showLoginPage();
-  });
-
-  netlifyIdentity.on('login', (user) => {
-    netlifyIdentity.close();
-    _onLogin(user);
-  });
-
-  netlifyIdentity.on('logout', () => _onLogout());
-
-  netlifyIdentity.on('error', (err) => {
-    console.error('[NetlifyIdentity]', err);
-    /* Si email non confirmé : forcer le passage si l'utilisateur existe quand même */
-    const msg = (err && (err.message || err.msg || String(err))).toLowerCase();
-    if (msg.includes('not confirmed') || msg.includes('confirmation')) {
-      const user = netlifyIdentity.currentUser ? netlifyIdentity.currentUser() : null;
-      if (user) { netlifyIdentity.close(); _onLogin(user); return; }
-    }
-    _showLoginPage();
-  });
-
-  netlifyIdentity.init();
+  /* init() ici en fallback au cas où data-netlify-identity-button
+     n'aurait pas déclenché l'auto-init du widget */
+  try { netlifyIdentity.init(); } catch(e) {}
   _checkAdminRoute();
 });
 
