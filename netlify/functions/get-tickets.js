@@ -9,7 +9,7 @@ exports.handler = async (event) => {
       "sort[0][field]":     "DateCreation",
       "sort[0][direction]": "desc",
     });
-    if (clientId) params.set("filterByFormula", `{ClientId}="${clientId}"`);
+    if (clientId) params.set("filterByFormula", `FIND("${clientId}",ARRAYJOIN({User ID}))`);
 
     const res = await fetch(`${BASE_URL}/Support?${params}`, { headers });
     if (!res.ok) return err(`Airtable ${res.status}`);
@@ -26,7 +26,7 @@ exports.handler = async (event) => {
         id:        r.id,
         _seq:      `T-${String(i + 1).padStart(3, "0")}`,
         sujet:     f.Sujet     || "Sans sujet",
-        client_id: f.ClientId  || null,
+        client_id: (f["User ID"] || [])[0] || null,
         priorite:  f.Priorite  || "Normale",
         categorie: f.Categorie || "Autre",
         statut:    f.Statut    || "Ouvert",

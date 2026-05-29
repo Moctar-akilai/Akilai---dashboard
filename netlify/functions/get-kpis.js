@@ -11,7 +11,7 @@ exports.handler = async (event) => {
     const cutoffISO = cutoff.toISOString();
 
     const dateFilter   = `IS_AFTER({DateHeure},"${cutoffISO}")`;
-    const clientFilter = clientId ? `{ClientId}="${clientId}"` : null;
+    const clientFilter = clientId ? `FIND("${clientId}",ARRAYJOIN({User ID}))` : null;
     const histFormula  = clientFilter ? `AND(${dateFilter},${clientFilter})` : dateFilter;
 
     const histParams = new URLSearchParams({

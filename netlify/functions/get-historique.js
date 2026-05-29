@@ -10,7 +10,7 @@ exports.handler = async (event) => {
       "sort[0][direction]": "desc",
       maxRecords:           "100",
     });
-    if (clientId) params.set("filterByFormula", `{ClientId}="${clientId}"`);
+    if (clientId) params.set("filterByFormula", `FIND("${clientId}",ARRAYJOIN({User ID}))`);
 
     const res = await fetch(`${BASE_URL}/Historique?${params}`, { headers });
     if (!res.ok) return err(`Airtable ${res.status}`);
@@ -42,7 +42,7 @@ exports.handler = async (event) => {
           heure,
           duree:         f.Duree    || "0:00",
           statut:        f.Statut   || "Traité",
-          client_id:     f.ClientId || null,
+          client_id:     (f["User ID"] || [])[0] || null,
           resume:        f.Resume   || "",
           transcription,
         });

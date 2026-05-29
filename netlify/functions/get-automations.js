@@ -6,7 +6,7 @@ exports.handler = async (event) => {
   try {
     const clientId = event.queryStringParameters?.clientId || null;
     const params   = new URLSearchParams({ "view": "Grid view" });
-    if (clientId) params.set("filterByFormula", `{ClientId}="${clientId}"`);
+    if (clientId) params.set("filterByFormula", `FIND("${clientId}",ARRAYJOIN({User ID}))`);
 
     const res = await fetch(`${BASE_URL}/Automatisations?${params}`, { headers });
     if (!res.ok) return err(`Airtable ${res.status}`);
@@ -27,7 +27,7 @@ exports.handler = async (event) => {
         statut:         f.Statut         || "Actif",
         derniere_exec:  f.DerniereExec   || null,
         prochaine_exec: f.ProchaineExec  || null,
-        client_id:      f.ClientId       || null,
+        client_id:      (f["User ID"] || [])[0] || null,
         makeScenarioId: f.MakeScenarioId || null,
         schedule: {
           jours,
