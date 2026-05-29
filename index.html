@@ -2183,9 +2183,113 @@
     .admin-status-err  { color: #ef4444; font-size: 12px; margin-top: 4px; }
     .admin-badge-ok    { display: inline-block; background: rgba(34,197,94,.15); color: #22c55e; border-radius: 4px; padding: 1px 6px; font-size: 11px; }
     .admin-badge-miss  { display: inline-block; background: rgba(239,68,68,.15); color: #ef4444; border-radius: 4px; padding: 1px 6px; font-size: 11px; }
+
+    /* ============================================================
+       LOGIN PAGE
+    ============================================================ */
+    #loginPage {
+      position: fixed; inset: 0; z-index: 9999;
+      background: #0a0a0a;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #loginPage.hidden { display: none; }
+
+    .login-card {
+      width: 100%; max-width: 380px;
+      background: #111111;
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 16px;
+      padding: 48px 40px 40px;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 0;
+    }
+
+    .login-logo {
+      font-size: 28px; font-weight: 700; letter-spacing: -0.5px;
+      color: #e5e5e5; margin-bottom: 8px;
+    }
+    .login-logo span { color: #70B2DE; }
+
+    .login-subtitle {
+      font-size: 13px; color: #888; text-align: center;
+      margin-bottom: 36px;
+    }
+
+    .login-field { width: 100%; margin-bottom: 12px; }
+    .login-field label {
+      display: block; font-size: 12px; font-weight: 600;
+      color: #888; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .login-field input {
+      width: 100%; background: #0a0a0a;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px; padding: 12px 14px;
+      color: #e5e5e5; font-family: var(--font); font-size: 14px;
+      outline: none; transition: border-color 0.2s;
+    }
+    .login-field input:focus { border-color: #70B2DE; }
+    .login-field input::placeholder { color: #555; }
+
+    .login-error {
+      width: 100%; font-size: 12px; color: #ef4444;
+      min-height: 18px; margin-bottom: 4px;
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    .login-btn {
+      width: 100%; margin-top: 8px;
+      background: #70B2DE; color: #0a0a0a;
+      border: none; border-radius: 10px;
+      padding: 13px; font-size: 14px; font-weight: 700;
+      font-family: var(--font); cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .login-btn:hover   { opacity: 0.88; }
+    .login-btn:active  { transform: scale(0.98); }
+    .login-btn:disabled { opacity: 0.45; cursor: default; }
+
+    .login-footer {
+      margin-top: 28px; font-size: 11px; color: #444; text-align: center;
+    }
+
+    @media (max-width: 440px) {
+      .login-card { padding: 36px 24px 32px; margin: 0 16px; border-radius: 14px; }
+      .login-logo { font-size: 24px; }
+    }
   </style>
 </head>
 <body>
+
+<!-- ============================================================
+     PAGE LOGIN
+============================================================ -->
+<div id="loginPage" class="hidden">
+  <div class="login-card">
+    <div class="login-logo">Akil<span>AI</span></div>
+    <div class="login-subtitle">Votre portail d'automatisation IA</div>
+
+    <div class="login-field">
+      <label for="loginEmail">Adresse email</label>
+      <input
+        type="email"
+        id="loginEmail"
+        placeholder="votre@email.com"
+        autocomplete="email"
+        onkeydown="if(event.key==='Enter')loginSubmit()"
+      />
+    </div>
+
+    <div class="login-error" id="loginError"></div>
+
+    <button class="login-btn" id="loginBtn" onclick="loginSubmit()">
+      Accéder
+    </button>
+
+    <div class="login-footer">
+      Un problème d'accès ? Contactez&nbsp;<strong>AkilAI</strong>
+    </div>
+  </div>
+</div>
 
 <div id="app">
 
@@ -2296,7 +2400,7 @@
           <div class="role" id="sidebarClientPlan">Premium</div>
         </div>
         <div class="sidebar-user-actions">
-          <button title="Se déconnecter" onclick="showToast('Déconnexion…','warning')">
+          <button title="Se déconnecter" onclick="logout()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
           </button>
         </div>
@@ -3789,11 +3893,99 @@ window.addEventListener("hashchange", () => {
 ============================================================ */
 
 window.addEventListener('load', function() {
+  const session = _getSession();
+  if (session) {
+    _startDashboard(session);
+  } else {
+    document.getElementById('loginPage').classList.remove('hidden');
+  }
+});
+
+/* ============================================================
+   SESSION HELPERS
+============================================================ */
+const SESSION_KEY = 'akilai_client';
+
+function _getSession() {
+  try { return JSON.parse(sessionStorage.getItem(SESSION_KEY)); } catch { return null; }
+}
+
+function _setSession(data) {
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify(data));
+}
+
+function _clearSession() {
+  sessionStorage.removeItem(SESSION_KEY);
+}
+
+function _startDashboard(session) {
+  document.getElementById('loginPage').classList.add('hidden');
+  _applySessionToUI(session);
   _initDashboard();
   _showDashboard();
   checkConnection();
   _checkAdminRoute();
-});
+}
+
+function _applySessionToUI(session) {
+  const nom  = session.nom  || '';
+  const plan = session.plan || '';
+  const nomEl  = document.getElementById('sidebarClientNom');
+  const planEl = document.getElementById('sidebarClientPlan');
+  const avEl   = document.getElementById('sidebarAvatar');
+  if (nomEl)  nomEl.textContent  = nom;
+  if (planEl) planEl.textContent = plan;
+  if (avEl)   avEl.textContent   = nom.split(' ').filter(Boolean).map(w => w[0]).join('').substring(0, 2).toUpperCase();
+}
+
+/* LOGIN — submit */
+async function loginSubmit() {
+  const emailEl = document.getElementById('loginEmail');
+  const errEl   = document.getElementById('loginError');
+  const btn     = document.getElementById('loginBtn');
+  const email   = emailEl.value.trim().toLowerCase();
+
+  errEl.textContent = '';
+  if (!email || !email.includes('@')) {
+    errEl.textContent = '⚠ Veuillez saisir un email valide.';
+    return;
+  }
+
+  btn.disabled    = true;
+  btn.textContent = 'Vérification…';
+
+  try {
+    const res  = await fetch('/.netlify/functions/auth-login', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ email }),
+    });
+    const data = await res.json();
+
+    if (data.ok) {
+      const session = { clientId: data.clientId, nom: data.nom, plan: data.plan };
+      _setSession(session);
+      _startDashboard(session);
+    } else {
+      errEl.textContent = '⚠ ' + (data.message || 'Email non reconnu. Contactez AkilAI.');
+      emailEl.focus();
+    }
+  } catch (e) {
+    errEl.textContent = '⚠ Erreur de connexion. Réessayez.';
+    console.error('[AkilAI login]', e);
+  } finally {
+    btn.disabled    = false;
+    btn.textContent = 'Accéder';
+  }
+}
+
+/* LOGOUT */
+function logout() {
+  _clearSession();
+  document.getElementById('loginPage').classList.remove('hidden');
+  document.getElementById('loginEmail').value = '';
+  document.getElementById('loginError').textContent = '';
+}
 
 /* ============================================================
    CONNEXION AIRTABLE — ping au démarrage
