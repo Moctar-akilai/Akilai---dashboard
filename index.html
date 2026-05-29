@@ -2016,20 +2016,50 @@
     #sidebar.collapsed .nav-item { justify-content: center; padding-left: 0; padding-right: 0; }
     #sidebar.collapsed .nav-item svg { flex-shrink: 0; }
 
-    /* 19 — Responsive mobile renforcé */
+    /* 19 — Responsive mobile renforcé (375px) */
     @media (max-width: 600px) {
-      #content { padding: 14px; }
-      .page-header { flex-direction: column; align-items: flex-start; gap: 12px; }
-      .page-title { font-size: 18px; }
+      /* Layout */
+      #content { padding: 12px; }
+      #main { overflow-x: hidden; }
+
+      /* Header compact */
+      #header { padding: 0 12px; gap: 8px; }
+      .header-left { gap: 8px; }
+      .page-title-header { font-size: 13px; }
+
+      /* Page titles */
+      .page-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+      .page-title  { font-size: 17px; }
+      .page-subtitle { font-size: 12px; }
+
+      /* KPI — 2 colonnes */
       .kpi-grid { grid-template-columns: 1fr 1fr !important; gap: 10px; }
+      .kpi-card { padding: 14px 12px; gap: 8px; }
+      .kpi-value { font-size: 22px; }
+
+      /* Graphiques — pleine largeur, pas de débordement */
       .charts-grid, .charts-grid-3 { grid-template-columns: 1fr; gap: 12px; }
+      .chart-wrap { height: 160px; }
+      .chart-card { overflow: hidden; }
+      canvas { max-width: 100% !important; }
+
+      /* Recommandations AkilAI */
+      .reco-grid { grid-template-columns: 1fr; gap: 10px; }
+      .reco-card { padding: 12px 14px; }
+      #recoSection { margin-bottom: 12px; }
+
+      /* Tableaux — scroll horizontal */
+      .auto-table-wrap, .hist-table-wrap, .wa-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      table { min-width: 480px; }
+
+      /* Modales */
+      .modal, .modal-box { width: calc(100vw - 20px) !important; margin: 10px; border-radius: 14px !important; }
+
+      /* Divers */
       .card { padding: 14px; }
-      .btn { font-size: 12px; padding: 7px 12px; }
-      .modal, .modal-box { width: calc(100vw - 24px) !important; margin: 12px; border-radius: 14px !important; }
+      .btn  { font-size: 12px; padding: 7px 12px; }
       .config-layout { grid-template-columns: 1fr; }
-      .login-card { padding: 32px 24px; }
-      .header-client, .header-divider { display: none; }
-      .btn-logout { font-size: 11px; padding: 4px 9px; }
+      .analytics-kpi-grid { grid-template-columns: 1fr 1fr; }
     }
 
     /* 20 — Notification dropdown : animation */
