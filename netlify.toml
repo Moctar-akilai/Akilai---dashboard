@@ -13,4 +13,7 @@
 #   AIRTABLE_BASE_ID   — ID de la base (appQapY4J7WC1iW4F)
 #   RESEND_API_KEY     — clé API Resend
 #   ADMIN_EMAIL        — email destinataire des alertes (ex: diopmohamed92@gmail.com)
-#   URL                — URL du site Netlify (ex: https://akilai.netlify.app)
+#   URL                — URL du site Netlify (automatique Netlify, ne pas définir manuellement)
+#   MAKE_API_KEY       — clé API Make (ex: token depuis Make → Account → API)
+#   VAPI_API_KEY       — clé API Vapi (depuis dashboard.vapi.ai)
+#   VAPI_ASSISTANT_ID  — ID de l'assistant Vapi à mettre à jour

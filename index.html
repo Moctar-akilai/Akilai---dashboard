@@ -3977,10 +3977,31 @@ async function saveVoixConfig() {
       });
       const data = await res.json();
       if (data.ok && data.id) {
-        /* Conserver l'ID Airtable pour les prochaines sauvegardes */
         cfg._id = data.id;
         localStorage.setItem("voixConfig", JSON.stringify(cfg));
       }
+
+      /* 6B — Synchroniser l'assistant Vapi en temps réel */
+      fetch("/.netlify/functions/trigger-vapi-config", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({
+          voix:          cfg.voix,
+          promptSysteme: cfg.prompt,
+          vitesseParole: parseFloat(cfg.vitesse),
+          silenceMax:    parseInt(cfg.silence),
+          interruptions: cfg.interruptions,
+          nomAssistant:  cfg.nom,
+          langue:        cfg.langPrimaire,
+        }),
+      })
+      .then(r => r.json())
+      .then(v => {
+        if (v.ok) showToast("Assistant Vapi mis à jour ✓", "success");
+        else      console.warn("[AkilAI] trigger-vapi-config:", v.error);
+      })
+      .catch(e => console.warn("[AkilAI] trigger-vapi-config:", e.message));
+
     } catch (e) {
       console.warn("[AkilAI] save-config POST:", e.message);
     }
@@ -4155,6 +4176,18 @@ function toggleAuto(id, checkbox) {
         document.getElementById("badge-" + id).innerHTML = statusBadgeHtml(prevStatut);
         updateAutoCount();
         showToast("Erreur de mise à jour — annulé", "error");
+      } else {
+        /* 6A — Synchroniser le scénario Make en parallèle */
+        fetch("/.netlify/functions/toggle-make-scenario", {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body:    JSON.stringify({ id: airtableId, statut: newStatut }),
+        })
+        .then(r => r.json())
+        .then(mk => {
+          if (mk.ok && !mk.skipped) console.info(`[Make] Scénario ${mk.scenarioId} → isEnabled=${mk.isEnabled}`);
+        })
+        .catch(e => console.warn("[AkilAI] toggle-make-scenario:", e.message));
       }
     })
     .catch(() => {
