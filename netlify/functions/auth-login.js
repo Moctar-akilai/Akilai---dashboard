@@ -1,4 +1,3 @@
-const bcrypt = require('bcryptjs');
 const { BASE_URL, headers, ok, err, preflight } = require('./config');
 
 exports.handler = async (event) => {
@@ -8,12 +7,12 @@ exports.handler = async (event) => {
   let body;
   try { body = JSON.parse(event.body || '{}'); } catch { return err('JSON invalide', 400); }
 
-  const { email, password } = body;
-  if (!email || !password) return err('Email et mot de passe requis', 400);
+  const { email } = body;
+  if (!email) return err('Email requis', 400);
 
   try {
     const res = await fetch(
-      `${BASE_URL}/Clients?filterByFormula=${encodeURIComponent(`{Email}="${email}"`)}`,
+      `${BASE_URL}/Clients?filterByFormula=${encodeURIComponent(`{Email}="${email.trim()}"`)}`,
       { headers }
     );
     if (!res.ok) return err(`Airtable ${res.status}`, 502);
@@ -21,13 +20,7 @@ exports.handler = async (event) => {
     const data = await res.json();
     const record = data.records?.[0];
 
-    if (!record) return ok({ ok: false, error: 'Email ou mot de passe incorrect' });
-
-    const hash = record.fields?.MotDePasse;
-    if (!hash) return ok({ ok: false, error: 'Compte non configuré — contactez AkilAI' });
-
-    const valid = await bcrypt.compare(password, hash);
-    if (!valid) return ok({ ok: false, error: 'Email ou mot de passe incorrect' });
+    if (!record) return ok({ ok: false, message: 'Email non reconnu. Contactez AkilAI.' });
 
     return ok({
       ok: true,
