@@ -8,24 +8,39 @@ exports.handler = async (event) => {
   try { body = JSON.parse(event.body || "{}"); } catch { return err("JSON invalide", 400); }
 
   const email = (body.email || "").trim().toLowerCase();
+  console.log("[auth-login] Email reçu :", JSON.stringify(email));
   if (!email) return err("Email requis", 400);
 
   try {
-    const formula = encodeURIComponent(`LOWER({Email})="${email}"`);
-    const res  = await fetch(`${BASE_URL}/Clients?filterByFormula=${formula}&maxRecords=1`, { headers });
+    const formula = `LOWER({Email})="${email}"`;
+    console.log("[auth-login] Formule de filtre :", formula);
+    console.log("[auth-login] URL Airtable :", `${BASE_URL}/Clients?filterByFormula=...&maxRecords=1`);
+
+    const res = await fetch(
+      `${BASE_URL}/Clients?filterByFormula=${encodeURIComponent(formula)}&maxRecords=1`,
+      { headers }
+    );
+
+    console.log("[auth-login] Statut réponse Airtable :", res.status);
 
     if (!res.ok) {
       const text = await res.text();
-      console.error("[auth-login] Airtable error:", res.status, text);
+      console.error("[auth-login] Erreur Airtable :", res.status, text);
       return err(`Airtable ${res.status}`, 502);
     }
 
-    const data    = await res.json();
-    const record  = data.records?.[0];
+    const data = await res.json();
+    console.log("[auth-login] Nombre de records retournés :", data.records?.length ?? 0);
+
+    const record = data.records?.[0];
 
     if (!record) {
+      console.log("[auth-login] Aucun record trouvé pour cet email.");
       return ok({ ok: false, message: "Email non reconnu. Contactez AkilAI." });
     }
+
+    console.log("[auth-login] Record trouvé — ID :", record.id);
+    console.log("[auth-login] Champs du record :", JSON.stringify(record.fields));
 
     const f = record.fields;
     return ok({
@@ -35,7 +50,8 @@ exports.handler = async (event) => {
       plan:     f.Plan       || "",
     });
   } catch (e) {
-    console.error("[auth-login] Exception:", e.message, e.stack);
+    console.error("[auth-login] Exception :", e.message);
+    console.error("[auth-login] Stack :", e.stack);
     return err(e.message);
   }
 };
