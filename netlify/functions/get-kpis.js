@@ -8,7 +8,7 @@ const { requireAuth, filterByClient } = require("./auth");
 exports.handler = async (event, context) => {
   if (event.httpMethod === "OPTIONS") return preflight();
 
-  const auth = requireAuth(event, context);
+  const auth = requireAuth(event);
   if (auth.error) return auth.error;
   const { clientId } = auth;
 

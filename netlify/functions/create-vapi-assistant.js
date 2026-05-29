@@ -9,7 +9,7 @@ exports.handler = async (event, context) => {
   if (event.httpMethod === "OPTIONS") return preflight();
   if (event.httpMethod !== "POST") return err("Méthode non autorisée", 405);
 
-  const auth = requireAuth(event, context);
+  const auth = requireAuth(event);
   if (auth.error) return auth.error;
   const { clientId } = auth;
 

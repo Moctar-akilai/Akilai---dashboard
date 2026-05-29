@@ -1805,6 +1805,14 @@
       transition: opacity 0.15s;
     }
     .login-btn:hover { opacity: 0.88; }
+    .login-btn:disabled { opacity: 0.5; cursor: default; }
+    .login-input {
+      width: 100%; padding: 12px 14px; margin-bottom: 12px;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); color: var(--text);
+      font-family: var(--font); font-size: 14px; box-sizing: border-box;
+    }
+    .login-input:focus { outline: none; border-color: var(--accent); }
     .login-footer {
       margin-top: 20px; font-size: 11px; color: var(--text-faint);
     }
@@ -1837,7 +1845,7 @@
     }
     .btn-logout:hover { background: rgba(239,68,68,0.2); }
   </style>
-  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <!-- Netlify Identity supprimé — auth custom via auth-login.js -->
   <style>
     /* ============================================================
        POLISH UI — animations, skeletons, micro-interactions
@@ -2150,15 +2158,10 @@
 <body>
 
 <!-- ======================================================
-     PAGE DE LOGIN — Netlify Identity
+     PAGE DE LOGIN — rendu dynamique par _showLoginPage()
 ====================================================== -->
 <div id="loginPage">
-  <div class="login-card">
-    <div class="login-logo">Akil<span>AI</span></div>
-    <div class="login-subtitle">Votre portail d'automatisation IA</div>
-    <button class="login-btn" onclick="openLogin()">Se connecter</button>
-    <div class="login-footer">Accès réservé aux clients AkilAI</div>
-  </div>
+  <!-- contenu injecté par _showLoginPage() selon le contexte (login / setup) -->
 </div>
 
 <!-- ======================================================
@@ -3193,6 +3196,16 @@
         </div>
       </div>
 
+      <!-- Inviter un client -->
+      <div style="background:var(--surface,#1a1d27);border:1px solid var(--border,#2a2d3a);border-radius:10px;padding:20px;margin-bottom:24px">
+        <div style="font-weight:600;font-size:14px;margin-bottom:12px">Inviter un client</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input id="adminInviteClientId" class="admin-id-input" style="width:200px" placeholder="ID Airtable (recXXXX)">
+          <button class="admin-save-btn" onclick="adminGenerateInvite()">Générer le lien</button>
+        </div>
+        <div id="adminInviteResult" style="margin-top:10px;font-size:13px;min-height:16px"></div>
+      </div>
+
       <div id="adminUserList">
         <div style="color:var(--text-faint,#888);font-size:14px">Chargement…</div>
       </div>
@@ -3874,151 +3887,173 @@ function handleResize() {
 window.addEventListener('resize', handleResize);
 
 /* ============================================================
-   AUTH — Netlify Identity
+   AUTH — session locale (sessionStorage)
 ============================================================ */
 
-/* Token JWT en mémoire uniquement (jamais en localStorage) */
-let _authToken  = null;
-let _authUser   = null;
+function _getSession() {
+  try { return JSON.parse(sessionStorage.getItem('_akilai_session') || 'null'); } catch { return null; }
+}
 
-function openLogin() {
-  if (typeof netlifyIdentity === "undefined") {
-    console.error("[AkilAI] netlifyIdentity non disponible — vérifier que le script CDN est chargé");
-    return;
-  }
-  netlifyIdentity.open("login");
+function _saveSession(data) {
+  sessionStorage.setItem('_akilai_session', JSON.stringify(data));
+  window._currentClientId = data.clientId;
+}
+
+function _clearSession() {
+  sessionStorage.removeItem('_akilai_session');
+  window._currentClientId = null;
 }
 
 function handleLogout() {
-  _onLogout();
-  if (typeof netlifyIdentity !== "undefined") {
-    netlifyIdentity.logout();
-  }
+  _clearSession();
+  _showLoginPage();
 }
 
 function _showLoginPage() {
-  document.getElementById("loginPage").classList.remove("hidden");
-  document.getElementById("app").style.display = "none";
-  document.getElementById("loadingScreen").classList.add("hidden");
+  /* Détecter le flux setup (lien d'invitation) */
+  var hash = window.location.hash || '';
+  var setupMatch = hash.match(/[#&]setup\?token=([^&]+)/);
+  if (!setupMatch) setupMatch = hash.match(/setup[?&]token=([^&]+)/);
+  var inviteToken = setupMatch ? setupMatch[1] : null;
+
+  var lp = document.getElementById('loginPage');
+  if (!lp) return;
+
+  if (inviteToken) {
+    lp.innerHTML = `
+      <div class="login-card">
+        <div class="login-logo">Akil<span>AI</span></div>
+        <div class="login-subtitle">Définissez votre mot de passe pour accéder au dashboard.</div>
+        <input id="setupPwd1" type="password" class="login-input" placeholder="Nouveau mot de passe (8 caractères min.)"
+               onkeydown="if(event.key==='Enter')document.getElementById('setupPwd2').focus()">
+        <input id="setupPwd2" type="password" class="login-input" placeholder="Confirmer le mot de passe"
+               onkeydown="if(event.key==='Enter')doSetupPassword()">
+        <button class="login-btn" onclick="doSetupPassword()">Confirmer mon mot de passe</button>
+        <div id="setupErr" style="color:#ef4444;font-size:13px;margin-top:8px;min-height:16px"></div>
+      </div>`;
+    setTimeout(() => { var el = document.getElementById('setupPwd1'); if (el) el.focus(); }, 100);
+    lp.dataset.inviteToken = inviteToken;
+  } else {
+    lp.innerHTML = `
+      <div class="login-card">
+        <div class="login-logo">Akil<span>AI</span></div>
+        <div class="login-subtitle">Votre portail d'automatisation IA</div>
+        <input id="loginEmail" type="email" class="login-input" placeholder="Email"
+               onkeydown="if(event.key==='Enter')document.getElementById('loginPwd').focus()">
+        <input id="loginPwd" type="password" class="login-input" placeholder="Mot de passe"
+               onkeydown="if(event.key==='Enter')doLogin()">
+        <button class="login-btn" onclick="doLogin()">Se connecter</button>
+        <div id="loginErr" style="color:#ef4444;font-size:13px;margin-top:8px;min-height:16px"></div>
+        <div class="login-footer">Accès réservé aux clients AkilAI</div>
+      </div>`;
+    setTimeout(() => { var el = document.getElementById('loginEmail'); if (el) el.focus(); }, 100);
+  }
+
+  lp.classList.remove('hidden');
+  document.getElementById('app').style.display = 'none';
+  var ls = document.getElementById('loadingScreen');
+  if (ls) ls.classList.add('hidden');
 }
 
 function _showLoadingScreen() {
-  document.getElementById("loginPage").classList.add("hidden");
-  document.getElementById("loadingScreen").classList.remove("hidden");
-  document.getElementById("app").style.display = "none";
+  document.getElementById('loginPage').classList.add('hidden');
+  var ls = document.getElementById('loadingScreen');
+  if (ls) ls.classList.remove('hidden');
+  document.getElementById('app').style.display = 'none';
 }
 
 function _showDashboard() {
-  document.getElementById("loginPage").classList.add("hidden");
-  document.getElementById("loadingScreen").classList.add("hidden");
-  document.getElementById("app").style.display = "flex";
+  document.getElementById('loginPage').classList.add('hidden');
+  var ls = document.getElementById('loadingScreen');
+  if (ls) ls.classList.add('hidden');
+  document.getElementById('app').style.display = 'flex';
 }
 
 function _setLoadingStep(msg) {
-  const el = document.getElementById("loadingStep");
+  var el = document.getElementById('loadingStep');
   if (el) el.textContent = msg;
 }
 
-function _applyUserToUI(user) {
-  if (!user) return;
-  const name    = user.user_metadata?.full_name || user.email || "Utilisateur";
-  const initials = name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
-  const avatar  = document.getElementById("userAvatar");
-  if (avatar) { avatar.textContent = initials; avatar.title = name; }
-
-  /* Sous-titre de la vue d'ensemble */
-  const subtitle = document.getElementById("overviewSubtitle");
-  if (subtitle) subtitle.textContent = `Bienvenue, ${name.split(" ")[0]} — voici l'état de vos automations.`;
-}
-
-async function _onLogin(user) {
-  _authUser  = user;
-  _authToken = user?.token?.access_token || null;
-
-  /* 4A — Vérifier que le token n'est pas expiré */
-  if (_authToken) {
-    try {
-      const payload = JSON.parse(atob(_authToken.split('.')[1]));
-      if (payload.exp && payload.exp * 1000 < Date.now()) {
-        /* Token expiré → tenter un refresh silencieux */
-        const refreshed = await netlifyIdentity.refresh().catch(() => null);
-        if (refreshed) {
-          _authToken = refreshed;
-        } else {
-          handleLogout();
-          return;
-        }
-      }
-    } catch {}
-  }
-
-  const clientId = user?.app_metadata?.airtable_client_id || null;
-  window._currentClientId = clientId;
-
-  /* 4A — Compte non configuré */
-  if (!clientId) {
-    _showLoginPage();
-    document.getElementById("loginPage").innerHTML = `
-      <div class="login-card">
-        <div class="login-logo">Akil<span>AI</span></div>
-        <div style="margin-bottom:16px;font-size:32px">⚠️</div>
-        <div class="login-subtitle" style="color:var(--warning);font-weight:600">
-          Votre compte n'est pas encore configuré.
-        </div>
-        <div class="login-subtitle" style="margin-top:-20px">
-          Contactez AkilAI pour activer votre accès.
-        </div>
-        <button class="login-btn" style="background:var(--danger);margin-top:8px" onclick="handleLogout()">
-          Se déconnecter
-        </button>
-      </div>`;
-    return;
-  }
-
-  _applyUserToUI(user);
-  /* 4B — Afficher l'écran de chargement avec étapes */
-  _showLoadingScreen();
-  _setLoadingStep("Connexion à Airtable…");
-
-  /* Init dashboard (structure) */
-  _initDashboard();
-
-  /* 4B — Timeout 3s max : afficher le dashboard même si données partielles */
-  let _dashboardShown = false;
-  const timeout = setTimeout(() => {
-    if (!_dashboardShown) { _dashboardShown = true; _showDashboard(); }
-  }, 3000);
+async function doLogin() {
+  var email = (document.getElementById('loginEmail') || {}).value?.trim();
+  var pwd   = (document.getElementById('loginPwd')   || {}).value;
+  var errEl = document.getElementById('loginErr');
+  if (!email || !pwd) { if (errEl) errEl.textContent = 'Email et mot de passe requis.'; return; }
+  if (errEl) errEl.textContent = 'Connexion…';
 
   try {
-    _setLoadingStep("Chargement des données…");
+    var res  = await fetch('/.netlify/functions/auth-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pwd }),
+    });
+    var data = await res.json();
+    if (!res.ok || !data.ok) {
+      if (errEl) errEl.textContent = data.error || 'Identifiants incorrects.';
+      return;
+    }
+    _saveSession({ clientId: data.clientId, nom: data.nom, email: data.email });
+    _onLoginSuccess(data);
+  } catch (e) {
+    if (errEl) errEl.textContent = 'Erreur réseau — réessayez.';
+  }
+}
+
+async function doSetupPassword() {
+  var lp    = document.getElementById('loginPage');
+  var token = lp?.dataset?.inviteToken;
+  var p1    = (document.getElementById('setupPwd1') || {}).value;
+  var p2    = (document.getElementById('setupPwd2') || {}).value;
+  var errEl = document.getElementById('setupErr');
+
+  if (!token) { if (errEl) errEl.textContent = 'Token manquant.'; return; }
+  if (!p1 || p1.length < 8) { if (errEl) errEl.textContent = 'Mot de passe trop court (8 caractères min.).'; return; }
+  if (p1 !== p2) { if (errEl) errEl.textContent = 'Les mots de passe ne correspondent pas.'; return; }
+  if (errEl) errEl.textContent = 'Enregistrement…';
+
+  try {
+    var res  = await fetch('/.netlify/functions/auth-setup-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, password: p1 }),
+    });
+    var data = await res.json();
+    if (!res.ok || !data.ok) {
+      if (errEl) errEl.textContent = data.error || 'Erreur — réessayez.';
+      return;
+    }
+    window.location.hash = '';
+    _saveSession({ clientId: data.clientId, nom: data.nom, email: data.email });
+    _onLoginSuccess(data);
+  } catch (e) {
+    if (errEl) errEl.textContent = 'Erreur réseau — réessayez.';
+  }
+}
+
+function _applyUserToUI(nom, email) {
+  var name     = nom || email || 'Client';
+  var initials = name.split(' ').map(function(w){ return w[0]; }).join('').slice(0, 2).toUpperCase();
+  var avatar   = document.getElementById('userAvatar');
+  if (avatar) { avatar.textContent = initials; avatar.title = name; }
+  var subtitle = document.getElementById('overviewSubtitle');
+  if (subtitle) subtitle.textContent = 'Bienvenue, ' + name.split(' ')[0] + ' — voici l\'état de vos automations.';
+}
+
+async function _onLoginSuccess(data) {
+  _applyUserToUI(data.nom, data.email);
+  _showLoadingScreen();
+  _setLoadingStep('Connexion à Airtable…');
+  _initDashboard();
+
+  var _shown = false;
+  var timeout = setTimeout(function() { if (!_shown) { _shown = true; _showDashboard(); } }, 3000);
+  try {
+    _setLoadingStep('Chargement des données…');
     await checkConnection();
   } finally {
     clearTimeout(timeout);
-    if (!_dashboardShown) { _dashboardShown = true; _showDashboard(); }
+    if (!_shown) { _shown = true; _showDashboard(); }
   }
-
-  /* Refresh automatique du token toutes les 50 min */
-  setInterval(async () => {
-    try {
-      const refreshed = await netlifyIdentity.refresh();
-      if (refreshed) _authToken = refreshed;
-    } catch {}
-  }, 50 * 60 * 1000);
-}
-
-function _onLogout() {
-  _authToken  = null;
-  _authUser   = null;
-  window._currentClientId = null;
-  _showLoginPage();
-  /* Remettre la page de login propre (au cas où message d'erreur) */
-  document.getElementById("loginPage").innerHTML = `
-    <div class="login-card">
-      <div class="login-logo">Akil<span>AI</span></div>
-      <div class="login-subtitle">Votre portail d'automatisation IA</div>
-      <button class="login-btn" onclick="openLogin()">Se connecter</button>
-      <div class="login-footer">Accès réservé aux clients AkilAI</div>
-    </div>`;
 }
 
 /* ============================================================
@@ -4164,6 +4199,44 @@ async function adminSaveUser(userId) {
   }
 }
 
+async function adminGenerateInvite() {
+  if (!_adminPassword) return;
+  const clientId = (document.getElementById('adminInviteClientId') || {}).value?.trim();
+  const resultEl = document.getElementById('adminInviteResult');
+  if (!clientId) { if (resultEl) resultEl.innerHTML = '<span style="color:#ef4444">Entrez un ID Airtable (recXXXX).</span>'; return; }
+  if (resultEl) resultEl.innerHTML = 'Génération…';
+
+  try {
+    const res  = await fetch('/.netlify/functions/auth-generate-invite', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-password': _adminPassword },
+      body: JSON.stringify({ clientId }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) {
+      resultEl.innerHTML = `<span style="color:#ef4444">Erreur : ${data.error || res.status}</span>`;
+      return;
+    }
+    const expDate = new Date(data.expiry).toLocaleDateString('fr-FR');
+    resultEl.innerHTML = `
+      <div style="color:#22c55e;margin-bottom:6px">✓ Lien généré — valide jusqu'au ${expDate}</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input readonly value="${data.link}"
+          style="flex:1;padding:8px 10px;background:var(--bg,#0f1117);border:1px solid var(--border,#2a2d3a);
+                 border-radius:6px;color:var(--text,#e2e8f0);font-size:12px;font-family:monospace">
+        <button class="admin-save-btn" style="padding:8px 12px;font-size:12px"
+          onclick="navigator.clipboard.writeText('${data.link}').then(()=>showToast('Lien copié','success'))">
+          Copier
+        </button>
+      </div>
+      <div style="color:var(--text-faint,#888);font-size:11px;margin-top:6px">
+        Envoyez ce lien par email au client. Il sera valide 7 jours.
+      </div>`;
+  } catch (e) {
+    resultEl.innerHTML = `<span style="color:#ef4444">Erreur réseau : ${e.message}</span>`;
+  }
+}
+
 /* Ouvrir la page admin via /#admin dans l'URL */
 function _checkAdminRoute() {
   if (window.location.hash === "#admin") {
@@ -4172,50 +4245,23 @@ function _checkAdminRoute() {
 }
 
 window.addEventListener("hashchange", () => {
-  if (window.location.hash === "#admin") adminOpen();
-  else adminClose();
+  var h = window.location.hash;
+  if (h === "#admin") { adminOpen(); return; }
+  if (h.indexOf("setup") >= 0) { _showLoginPage(); return; }
+  adminClose();
 });
 
 /* ============================================================
-   NETLIFY IDENTITY — initialisation unique via window.load
+   INIT — vérification session au chargement
 ============================================================ */
 window.addEventListener('load', function() {
-  if (typeof netlifyIdentity === "undefined") {
-    /* Dev local sans CDN */
-    _initDashboard();
-    _showDashboard();
-    checkConnection();
-    return;
-  }
-
-  netlifyIdentity.on('login', function(user) {
-    netlifyIdentity.close();
-    window.location.hash = '';
-    _onLogin(user);
-  });
-
-  netlifyIdentity.on('logout', function() {
-    _onLogout();
-  });
-
-  netlifyIdentity.init();
-
-  /* Si token dans l'URL → ouvrir le widget immédiatement */
-  var hash = window.location.hash || '';
-  if (hash.indexOf('invite_token') >= 0 ||
-      hash.indexOf('recovery_token') >= 0 ||
-      hash.indexOf('confirmation_token') >= 0) {
-    netlifyIdentity.open();
+  var session = _getSession();
+  if (session && session.clientId) {
+    window._currentClientId = session.clientId;
+    _onLoginSuccess(session);
   } else {
-    /* Vérifier si déjà connecté */
-    var existingUser = netlifyIdentity.currentUser();
-    if (existingUser) {
-      _onLogin(existingUser);
-    } else {
-      _showLoginPage();
-    }
+    _showLoginPage();
   }
-
   _checkAdminRoute();
 });
 
@@ -4250,11 +4296,10 @@ async function checkConnection() {
    Chaque loader a un fallback silencieux sur les données mockées.
 ============================================================ */
 
-/* authFetch — wrapper qui injecte le JWT Netlify Identity dans chaque requête */
+/* authFetch — injecte x-client-id dans chaque requête */
 function _authHeaders(extra = {}) {
   const h = { ...extra };
-  if (_authToken) h["Authorization"] = `Bearer ${_authToken}`;
-  if (window._currentClientId) h["x-client-id"] = window._currentClientId;
+  if (window._currentClientId) h['x-client-id'] = window._currentClientId;
   return h;
 }
 
@@ -4263,17 +4308,15 @@ async function apiFetch(path, options = {}) {
     ...options,
     headers: _authHeaders(options.headers || {}),
   });
-  /* Token expiré → déconnexion automatique */
-  if (res.status === 401) { handleLogout(); throw new Error("Session expirée"); }
+  if (res.status === 401) { handleLogout(); throw new Error('Session expirée'); }
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
 
-/* apiFetchPost — shorthand pour les requêtes POST authentifiées */
 async function apiFetchPost(path, body) {
   return apiFetch(path, {
-    method:  "POST",
-    headers: { "Content-Type": "application/json" },
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
     body:    JSON.stringify(body),
   });
 }
