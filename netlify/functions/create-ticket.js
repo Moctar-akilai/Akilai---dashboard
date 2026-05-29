@@ -3,9 +3,7 @@ const { BASE_URL, headers, ok, err, preflight } = require("./config");
 /**
  * POST /Support — crée un ticket
  * Body : { sujet, description, priorite, categorie, clientId, statut? }
- * Retourne l'enregistrement créé avec son ID Airtable.
- *
- * Déclenche aussi notify-new-ticket (séquence 5B) en fire-and-forget.
+ * clientId = record ID Airtable (recXXXXXXXX) — stocké dans le champ lien "User ID"
  */
 exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") return preflight();
@@ -22,21 +20,22 @@ exports.handler = async (event) => {
     ? JSON.stringify([{ auteur: "Client", role: "client", text: description, heure: now }])
     : "[]";
 
+  /* "User ID" est un champ lien Airtable → tableau de record IDs */
+  const fields = {
+    Sujet:        sujet,
+    Priorite:     priorite  || "Normale",
+    Categorie:    categorie || "Autre",
+    Statut:       statut,
+    DateCreation: now,
+    Messages:     messagesInit,
+  };
+  if (clientId) fields["User ID"] = [clientId];
+
   try {
     const res = await fetch(`${BASE_URL}/Support`, {
       method: "POST",
       headers,
-      body: JSON.stringify({
-        fields: {
-          Sujet:        sujet,
-          Priorite:     priorite  || "Normale",
-          Categorie:    categorie || "Autre",
-          Statut:       statut,
-          ClientId:     clientId  || "",
-          DateCreation: now,
-          Messages:     messagesInit,
-        },
-      }),
+      body:   JSON.stringify({ fields }),
     });
 
     if (!res.ok) {
@@ -50,7 +49,7 @@ exports.handler = async (event) => {
       id:        data.id,
       _seq:      data.id,
       sujet:     data.fields.Sujet,
-      client_id: data.fields.ClientId || null,
+      client_id: (data.fields["User ID"] || [])[0] || null,
       priorite:  data.fields.Priorite,
       categorie: data.fields.Categorie,
       statut:    data.fields.Statut,
@@ -60,7 +59,7 @@ exports.handler = async (event) => {
         : [],
     };
 
-    /* Fire-and-forget notification email (séquence 5) */
+    /* Fire-and-forget notification email */
     fetch(`${process.env.URL || ""}/.netlify/functions/notify-new-ticket`, {
       method:  "POST",
       headers: { "Content-Type": "application/json" },

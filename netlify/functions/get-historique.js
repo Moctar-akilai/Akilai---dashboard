@@ -63,7 +63,7 @@ exports.handler = async (event) => {
           numero:      f.Numero    || "",
           date,
           nb_messages: Number(f.NbMessages) || messages.length,
-          client_id:   f.ClientId  || null,
+          client_id:   (f["User ID"] || [])[0] || null,
           statut:      f.Statut    || "Traité",
           intention:   f.Intention || null,
           messages,
