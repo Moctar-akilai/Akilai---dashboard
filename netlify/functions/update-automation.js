@@ -31,7 +31,20 @@ exports.handler = async (event) => {
     }
 
     const data = await res.json();
-    return ok({ ok: true, statut: data.fields?.Statut || statut });
+    const newStatut = data.fields?.Statut || statut;
+
+    /* Fire-and-forget email si statut = Erreur (séquence 5D) */
+    if (newStatut === "Erreur") {
+      const autoData = { id, nom: data.fields?.Nom || id, type: data.fields?.Type,
+                         derniere_exec: data.fields?.DerniereExec, prochaine_exec: data.fields?.ProchaineExec };
+      fetch(`${process.env.URL || ""}/.netlify/functions/notify-automation-error`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ automation: autoData }),
+      }).catch(() => {});
+    }
+
+    return ok({ ok: true, statut: newStatut });
   } catch (e) {
     return err(e.message);
   }
