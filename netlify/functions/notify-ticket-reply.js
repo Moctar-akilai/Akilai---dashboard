@@ -5,7 +5,7 @@ const { BASE_URL, headers, ok, err, preflight } = require("./config");
  * Appelée en fire-and-forget par update-ticket.js quand role === "support".
  * Envoie un email au client (récupéré depuis Airtable via clientId).
  */
-exports.handler = async (event) => {
+exports.handler = async function(event, context) {
   if (event.httpMethod === "OPTIONS") return preflight();
   if (event.httpMethod !== "POST") return err("Méthode non autorisée", 405);
 

@@ -3532,7 +3532,6 @@ function updateKPIs(days) {
   const totalCalls = callData.reduce((a,b) => a+b, 0);
   const totalWa    = waData.reduce((a,b) => a+b, 0);
 
-  /* Calcul delta vs période précédente */
   const prevCalls = getDataForPeriod(kpis.appels_par_jour, days * 2).slice(0, days);
   const prevWa    = getDataForPeriod(kpis.messages_wa_par_jour, days * 2).slice(0, days);
   const prevTotalCalls = prevCalls.reduce((a,b) => a+b, 0) || 1;
@@ -3540,19 +3539,21 @@ function updateKPIs(days) {
   const deltaCallsPct  = Math.round((totalCalls - prevTotalCalls) / prevTotalCalls * 100);
   const deltaWaPct     = Math.round((totalWa    - prevTotalWa)    / prevTotalWa    * 100);
 
-  document.getElementById("kpiCallsVal").textContent   = totalCalls;
-  document.getElementById("kpiWaVal").textContent       = totalWa.toLocaleString("fr-FR");
-  document.getElementById("kpiCallsDelta").textContent  = (deltaCallsPct >= 0 ? "+" : "") + deltaCallsPct + "%";
-  document.getElementById("kpiCallsDelta").className    = "kpi-delta " + (deltaCallsPct >= 0 ? "pos" : "neg");
-  document.getElementById("kpiWaDelta").textContent     = (deltaWaPct >= 0 ? "+" : "") + deltaWaPct + "%";
-  document.getElementById("kpiWaDelta").className       = "kpi-delta " + (deltaWaPct >= 0 ? "pos" : "neg");
+  function setText(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
+  function setClass(id, cls) { const el = document.getElementById(id); if (el) el.className = cls; }
 
-  /* Sous-titres graphiques */
+  setText("kpiCallsVal",   totalCalls);
+  setText("kpiWaVal",      totalWa.toLocaleString("fr-FR"));
+  setText("kpiCallsDelta", (deltaCallsPct >= 0 ? "+" : "") + deltaCallsPct + "%");
+  setClass("kpiCallsDelta", "kpi-delta " + (deltaCallsPct >= 0 ? "pos" : "neg"));
+  setText("kpiWaDelta",    (deltaWaPct >= 0 ? "+" : "") + deltaWaPct + "%");
+  setClass("kpiWaDelta",   "kpi-delta " + (deltaWaPct >= 0 ? "pos" : "neg"));
+
   const sub = days + " derniers jours";
-  document.getElementById("chartCallsSubtitle").textContent = sub;
-  document.getElementById("chartWaSubtitle").textContent    = sub;
-  document.getElementById("chartCallsTotal").textContent    = totalCalls + " appels";
-  document.getElementById("chartWaTotal").textContent       = totalWa.toLocaleString("fr-FR") + " messages";
+  setText("chartCallsSubtitle", sub);
+  setText("chartWaSubtitle",    sub);
+  setText("chartCallsTotal",    totalCalls + " appels");
+  setText("chartWaTotal",       totalWa.toLocaleString("fr-FR") + " messages");
 }
 
 function setPeriod(days, btn) {

@@ -25,7 +25,7 @@ const { ok, err, preflight } = require("./config");
  *
  * Variables d'env requises : VAPI_API_KEY, VAPI_ASSISTANT_ID
  */
-exports.handler = async (event) => {
+exports.handler = async function(event, context) {
   if (event.httpMethod === "OPTIONS") return preflight();
   if (event.httpMethod !== "POST") return err("Méthode non autorisée", 405);
 

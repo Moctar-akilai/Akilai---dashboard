@@ -15,7 +15,7 @@ const { BASE_URL, headers, ok, err, preflight } = require("./config");
  *
  * Variables d'env requises : MAKE_API_KEY
  */
-exports.handler = async (event) => {
+exports.handler = async function(event, context) {
   if (event.httpMethod === "OPTIONS") return preflight();
   if (event.httpMethod !== "POST") return err("Méthode non autorisée", 405);
 

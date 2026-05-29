@@ -12,7 +12,7 @@ const { BASE_URL, headers, ok, err } = require("./config");
  *   - Revenus (Paiements, DatePaiement > J-7)
  * Compare avec la semaine précédente (J-14 → J-7).
  */
-exports.handler = async (event) => {
+exports.handler = async function(event, context) {
   const adminEmail = process.env.ADMIN_EMAIL;
   if (!adminEmail) return err("ADMIN_EMAIL non configuré", 500);
 

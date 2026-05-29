@@ -1,6 +1,6 @@
 const { BASE_URL, headers, ok, err, preflight } = require("./config");
 
-exports.handler = async (event) => {
+exports.handler = async function(event, context) {
   if (event.httpMethod === "OPTIONS") return preflight();
 
   if (event.httpMethod === "GET") {

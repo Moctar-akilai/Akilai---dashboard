@@ -1,6 +1,6 @@
 const { corsHeaders, ok, err, preflight } = require("./config");
 
-exports.handler = async (event) => {
+exports.handler = async function(event, context) {
   if (event.httpMethod === "OPTIONS") return preflight();
   if (event.httpMethod !== "GET") return err("Méthode non autorisée", 405);
 

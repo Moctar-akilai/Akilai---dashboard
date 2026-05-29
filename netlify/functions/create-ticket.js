@@ -5,7 +5,7 @@ const { BASE_URL, headers, ok, err, preflight } = require("./config");
  * Body : { sujet, description, priorite, categorie, clientId, statut? }
  * clientId = record ID Airtable (recXXXXXXXX) — stocké dans le champ lien "User ID"
  */
-exports.handler = async (event) => {
+exports.handler = async function(event, context) {
   if (event.httpMethod === "OPTIONS") return preflight();
   if (event.httpMethod !== "POST") return err("Méthode non autorisée", 405);
 

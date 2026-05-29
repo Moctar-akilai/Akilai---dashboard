@@ -5,7 +5,7 @@ const { ok, err, preflight } = require("./config");
  * Appelée en fire-and-forget par update-automation.js si nouveau statut === "Erreur".
  * Envoie un email à l'admin avec les détails de l'automation en erreur.
  */
-exports.handler = async (event) => {
+exports.handler = async function(event, context) {
   if (event.httpMethod === "OPTIONS") return preflight();
   if (event.httpMethod !== "POST") return err("Méthode non autorisée", 405);
 
