@@ -3917,11 +3917,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* Enregistrer les listeners AVANT init() */
   netlifyIdentity.on('init', (user) => {
-    /* Intercepter le token d'invitation APRÈS init (pas avant) */
-    if (window.location.hash.includes('invite_token') || window.location.hash.includes('recovery_token')) {
+    const hash = window.location.hash || "";
+
+    /* Token d'invitation email → ouvrir le formulaire de création de mot de passe */
+    if (hash.includes('invite_token')) {
+      _showLoginPage();
       netlifyIdentity.open('signup');
       return;
     }
+
+    /* Token de reset mot de passe → ouvrir le formulaire de récupération */
+    if (hash.includes('recovery_token')) {
+      _showLoginPage();
+      netlifyIdentity.open('recovery');
+      return;
+    }
+
+    /* Flux normal : utilisateur déjà connecté ou pas */
     if (user) {
       _onLogin(user);
     } else {
