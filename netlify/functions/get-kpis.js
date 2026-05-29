@@ -4,14 +4,14 @@ exports.handler = async function(event, context) {
   if (event.httpMethod === "OPTIONS") return preflight();
 
   try {
-    const days      = parseInt(event.queryStringParameters?.days || "30", 10);
-    const clientId  = event.queryStringParameters?.clientId || null;
+    const days      = parseInt((event.queryStringParameters && event.queryStringParameters.days) || "30", 10);
+    const email     = (event.queryStringParameters && event.queryStringParameters.email) || null;
     const cutoff    = new Date();
     cutoff.setDate(cutoff.getDate() - days);
     const cutoffISO = cutoff.toISOString();
 
     const dateFilter   = `IS_AFTER({DateHeure},"${cutoffISO}")`;
-    const clientFilter = clientId ? `FIND("${clientId}",ARRAYJOIN({User ID}))` : null;
+    const clientFilter = email ? `{User ID}="${email}"` : null;
     const histFormula  = clientFilter ? `AND(${dateFilter},${clientFilter})` : dateFilter;
 
     const histParams = new URLSearchParams({

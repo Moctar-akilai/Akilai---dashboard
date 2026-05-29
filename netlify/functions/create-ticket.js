@@ -2,8 +2,8 @@ const { BASE_URL, headers, ok, err, preflight } = require("./config");
 
 /**
  * POST /Support — crée un ticket
- * Body : { sujet, description, priorite, categorie, clientId, statut? }
- * clientId = record ID Airtable (recXXXXXXXX) — stocké dans le champ lien "User ID"
+ * Body : { sujet, description, priorite, categorie, email, statut? }
+ * email = adresse email du client — stockée dans le champ texte "User ID"
  */
 exports.handler = async function(event, context) {
   if (event.httpMethod === "OPTIONS") return preflight();
@@ -12,7 +12,7 @@ exports.handler = async function(event, context) {
   let body;
   try { body = JSON.parse(event.body || "{}"); } catch { return err("JSON invalide", 400); }
 
-  const { sujet, description, priorite, categorie, clientId, statut = "Ouvert" } = body;
+  const { sujet, description, priorite, categorie, email, statut = "Ouvert" } = body;
   if (!sujet) return err("Le champ sujet est obligatoire", 400);
 
   const now = new Date().toISOString();
@@ -20,7 +20,6 @@ exports.handler = async function(event, context) {
     ? JSON.stringify([{ auteur: "Client", role: "client", text: description, heure: now }])
     : "[]";
 
-  /* "User ID" est un champ lien Airtable → tableau de record IDs */
   const fields = {
     Sujet:        sujet,
     Priorite:     priorite  || "Normale",
@@ -29,7 +28,7 @@ exports.handler = async function(event, context) {
     DateCreation: now,
     Messages:     messagesInit,
   };
-  if (clientId) fields["User ID"] = [clientId];
+  if (email) fields["User ID"] = email;
 
   try {
     const res = await fetch(`${BASE_URL}/Support`, {
@@ -49,7 +48,7 @@ exports.handler = async function(event, context) {
       id:        data.id,
       _seq:      data.id,
       sujet:     data.fields.Sujet,
-      client_id: (data.fields["User ID"] || [])[0] || null,
+      client_id: data.fields["User ID"] || null,
       priorite:  data.fields.Priorite,
       categorie: data.fields.Categorie,
       statut:    data.fields.Statut,
@@ -63,7 +62,7 @@ exports.handler = async function(event, context) {
     fetch(`${process.env.URL || ""}/.netlify/functions/notify-new-ticket`, {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ ticket: record, clientId }),
+      body:    JSON.stringify({ ticket: record, email }),
     }).catch(() => {});
 
     return ok({ ok: true, ticket: record });

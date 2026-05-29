@@ -56,6 +56,7 @@ exports.handler = async function(event, context) {
     return ok({
       ok:         true,
       clientId:   record.id,
+      email:      f.Email || email,
       contact,
       entreprise,
       plan:       f.Plan || "",

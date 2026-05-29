@@ -63,7 +63,7 @@ exports.handler = async function(event, context) {
       fetch(`${process.env.URL || ""}/.netlify/functions/notify-ticket-reply`, {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ ticketId: id, message, clientId: (existing.fields["User ID"] || [])[0] || null }),
+        body:    JSON.stringify({ ticketId: id, message, email: existing.fields["User ID"] || null }),
       }).catch(() => {});
     }
 

@@ -3915,7 +3915,7 @@ async function loginSubmit() {
     const data = await res.json();
 
     if (data.ok) {
-      const session = { clientId: data.clientId, contact: data.contact, entreprise: data.entreprise, plan: data.plan };
+      const session = { clientId: data.clientId, email: data.email, contact: data.contact, entreprise: data.entreprise, plan: data.plan };
       _setSession(session);
       _startDashboard(session);
     } else {
@@ -4057,10 +4057,10 @@ function applyPlanFilter() {
 
 async function loadAutomationsFromAirtable() {
   try {
-    const cid = _getActiveClientId();
-    const qs  = cid ? `?clientId=${encodeURIComponent(cid)}` : "";
-    console.log("[AkilAI] Chargement automations pour clientId:", cid);
-    console.log("[AkilAI] URL appelée:", `/.netlify/functions/get-automations${qs}`);
+    const em = _getActiveEmail();
+    const qs = em ? `?email=${encodeURIComponent(em)}` : "";
+    console.log("[AkilAI] Chargement automations pour email:", em);
+    console.log("[AkilAI] URL appelée:", `/.netlify/functions/get-automations${qs || ""}`);
     const data = await apiFetch(`/.netlify/functions/get-automations${qs}`);
     console.log("[AkilAI] Automations reçues:", data.automations?.length ?? 0);
     if (data.automations?.length) {
@@ -4078,8 +4078,8 @@ async function loadAutomationsFromAirtable() {
 
 async function loadHistoriqueFromAirtable() {
   try {
-    const cid  = _getActiveClientId();
-    const qs   = cid ? `?clientId=${encodeURIComponent(cid)}` : "";
+    const em   = _getActiveEmail();
+    const qs   = em ? `?email=${encodeURIComponent(em)}` : "";
     const data = await apiFetch(`/.netlify/functions/get-historique${qs}`);
     if (data.appels?.length) {
       appels.splice(0, appels.length, ...data.appels);
@@ -4096,8 +4096,8 @@ async function loadHistoriqueFromAirtable() {
 
 async function loadTicketsFromAirtable() {
   try {
-    const cid  = _getActiveClientId();
-    const qs   = cid ? `?clientId=${encodeURIComponent(cid)}` : "";
+    const em   = _getActiveEmail();
+    const qs   = em ? `?email=${encodeURIComponent(em)}` : "";
     const data = await apiFetch(`/.netlify/functions/get-tickets${qs}`);
     if (data.tickets?.length) {
       tickets.splice(0, tickets.length, ...data.tickets);
@@ -4112,8 +4112,8 @@ async function loadTicketsFromAirtable() {
 
 async function loadKPIsFromAirtable(days) {
   try {
-    const cid  = _getActiveClientId();
-    const qs   = cid ? `&clientId=${encodeURIComponent(cid)}` : "";
+    const em   = _getActiveEmail();
+    const qs   = em ? `&email=${encodeURIComponent(em)}` : "";
     const data = await apiFetch(`/.netlify/functions/get-kpis?days=${days}${qs}`);
     if (data.kpis) {
       Object.assign(kpis, data.kpis);
@@ -4859,11 +4859,15 @@ automations.forEach(a => { autoState[a.id] = a.statut; });
 /* ID du client actif — utilisé pour filtrer toutes les données mockées.
    En mode connecté, remplacé par la valeur Airtable du client authentifié. */
 function _getActiveClientId() {
-  /* En session réelle → utiliser l'ID Airtable du client connecté */
   const session = _getSession();
-  if (session?.clientId) return session.clientId;
-  /* Mode démo → premier client mock */
+  if (session && session.clientId) return session.clientId;
   return clients[0]?.id || 1;
+}
+
+function _getActiveEmail() {
+  const session = _getSession();
+  if (session && session.email) return session.email;
+  return null;
 }
 
 function statusBadgeHtml(statut) {
@@ -5894,7 +5898,7 @@ async function createTicket() {
 
   if (window._airtableConnected) {
     try {
-      const data = await apiFetchPost("/.netlify/functions/create-ticket", { sujet, description: message, priorite: "Normale", categorie, clientId: client?.id, automationId: autoId });
+      const data = await apiFetchPost("/.netlify/functions/create-ticket", { sujet, description: message, priorite: "Normale", categorie, email: _getActiveEmail(), automationId: autoId });
       if (data.ok && data.ticket) {
         newTicket.id = data.ticket.id;
         buildTicketsList();

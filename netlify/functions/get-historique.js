@@ -4,13 +4,13 @@ exports.handler = async function(event, context) {
   if (event.httpMethod === "OPTIONS") return preflight();
 
   try {
-    const clientId = event.queryStringParameters?.clientId || null;
-    const params   = new URLSearchParams({
+    const email  = (event.queryStringParameters && event.queryStringParameters.email) || null;
+    const params = new URLSearchParams({
       "sort[0][field]":     "DateHeure",
       "sort[0][direction]": "desc",
       maxRecords:           "100",
     });
-    if (clientId) params.set("filterByFormula", `FIND("${clientId}",ARRAYJOIN({User ID}))`);
+    if (email) params.set("filterByFormula", `{User ID}="${email}"`);
 
     const res = await fetch(`${BASE_URL}/Historique?${params}`, { headers });
     if (!res.ok) return err(`Airtable ${res.status}`);

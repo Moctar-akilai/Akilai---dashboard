@@ -4,17 +4,17 @@ exports.handler = async function(event, context) {
   if (event.httpMethod === "OPTIONS") return preflight();
 
   try {
-    const clientId = (event.queryStringParameters && event.queryStringParameters.clientId) || null;
-    console.log("[get-automations] ClientId reçu :", clientId);
+    const email = (event.queryStringParameters && event.queryStringParameters.email) || null;
+    console.log("[get-automations] Email reçu :", email);
 
     const params = new URLSearchParams({ "view": "Grid view" });
 
-    if (clientId) {
-      const formula = `FIND("${clientId}",ARRAYJOIN({User ID}))`;
+    if (email) {
+      const formula = `{User ID}="${email}"`;
       console.log("[get-automations] Formule :", formula);
       params.set("filterByFormula", formula);
     } else {
-      console.log("[get-automations] Pas de clientId — retour de toutes les automations");
+      console.log("[get-automations] Pas d'email — retour de toutes les automations");
     }
 
     const url = `${BASE_URL}/Automatisations?${params}`;
