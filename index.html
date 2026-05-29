@@ -2189,16 +2189,6 @@
         <span class="nav-label">Automations</span>
       </div>
 
-      <div class="nav-item" data-section="clients" onclick="navigate('clients')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-          <circle cx="9" cy="7" r="4"/>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-        </svg>
-        <span class="nav-label">Clients</span>
-      </div>
-
       <!-- HISTORIQUE -->
       <div class="nav-section-label" style="margin-top:8px">Historique</div>
 
@@ -2587,120 +2577,6 @@
       </div>
 
       <!-- ===== CLIENTS ===== -->
-      <div class="page" id="page-clients">
-        <div class="page-header">
-          <div>
-            <div class="breadcrumb">Général <span>/ Clients</span></div>
-            <h1 class="page-title">Clients</h1>
-            <p class="page-subtitle">Gérez vos clients et leurs configurations.</p>
-          </div>
-          <button class="btn btn-primary" onclick="openNewClientModal()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Nouveau client
-          </button>
-        </div>
-
-        <div class="card">
-          <div class="clients-toolbar">
-            <div class="search-box">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <input id="clientSearch" type="text" placeholder="Rechercher un client…" oninput="buildClientsTable()">
-            </div>
-            <select id="filterStatut" onchange="buildClientsTable()">
-              <option value="">Tous les statuts</option>
-              <option value="Actif">Actif</option>
-              <option value="Inactif">Inactif</option>
-              <option value="Essai">Essai</option>
-            </select>
-            <select id="filterSecteur" onchange="buildClientsTable()">
-              <option value="">Tous les secteurs</option>
-              <option value="Médical">Médical</option>
-              <option value="Restauration">Restauration</option>
-              <option value="Immobilier">Immobilier</option>
-              <option value="Formation">Formation</option>
-            </select>
-          </div>
-          <div class="client-table-wrap">
-            <table class="client-table">
-              <thead>
-                <tr>
-                  <th>Client</th>
-                  <th>Secteur</th>
-                  <th>Plan</th>
-                  <th>Statut</th>
-                  <th>Revenus/mois</th>
-                  <th>Client depuis</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="clientsTableBody"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- ===== CLIENT DETAIL ===== -->
-      <div class="page" id="page-client-detail">
-        <div class="page-header">
-          <div>
-            <div class="breadcrumb" id="detailBreadcrumb">Général <span>/ Clients / —</span></div>
-            <button class="btn btn-ghost" style="margin-top:4px;font-size:13px;display:flex;align-items:center;gap:6px;padding:6px 10px;" onclick="navigate('clients')">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-              Retour aux clients
-            </button>
-          </div>
-          <div class="detail-header-actions" id="detailHeaderActions"></div>
-        </div>
-
-        <div class="detail-header">
-          <div class="client-avatar-lg" id="detailAvatar"></div>
-          <div class="detail-header-info">
-            <h2 id="detailName"></h2>
-            <p id="detailSubtitle"></p>
-            <div class="detail-header-badges" id="detailBadges"></div>
-          </div>
-        </div>
-
-        <div class="client-kpi-grid" id="clientKPIGrid"></div>
-
-        <div class="card">
-          <div class="client-tabs">
-            <button class="client-tab active" onclick="switchClientTab('conversations', this)">Conversations</button>
-            <button class="client-tab" onclick="switchClientTab('notes', this)">Notes</button>
-            <button class="client-tab" onclick="switchClientTab('tags', this)">Tags</button>
-            <button class="client-tab" onclick="switchClientTab('alertes', this)">Alertes</button>
-          </div>
-
-          <!-- TAB: Conversations -->
-          <div class="client-tab-content active" id="ctab-conversations">
-            <div id="clientConversations"></div>
-          </div>
-
-          <!-- TAB: Notes -->
-          <div class="client-tab-content" id="ctab-notes">
-            <div id="clientNotesList"></div>
-            <div class="note-input-row">
-              <input id="newNoteInput" type="text" placeholder="Ajouter une note…">
-              <button class="btn btn-primary" style="height:38px;" onclick="addClientNote()">Ajouter</button>
-            </div>
-          </div>
-
-          <!-- TAB: Tags -->
-          <div class="client-tab-content" id="ctab-tags">
-            <div class="tag-list" id="clientTagList"></div>
-            <div class="tag-add-row">
-              <input id="newTagInput" type="text" placeholder="Nouveau tag…">
-              <button class="btn btn-primary" style="height:36px;" onclick="addClientTag()">+ Tag</button>
-            </div>
-          </div>
-
-          <!-- TAB: Alertes -->
-          <div class="client-tab-content" id="ctab-alertes">
-            <div id="clientAlertesList"></div>
-          </div>
-        </div>
-      </div>
-
       <!-- ===== APPELS VOCAUX ===== -->
       <div class="page" id="page-appels">
         <div class="page-header">
@@ -3247,64 +3123,6 @@
 <!-- ============================================================
      6C — MODAL NOUVEAU CLIENT
 ============================================================ -->
-<div class="modal-overlay" id="newClientModal" onclick="closeNewClientModal(event)">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-header">
-      <div class="modal-title">Nouveau client</div>
-      <button class="modal-close" onclick="closeNewClientModal()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
-    <div class="modal-body">
-      <div class="form-grid-2">
-        <div class="form-group full">
-          <label>Nom de l'entreprise</label>
-          <input id="nc-nom" type="text" placeholder="ex: Cabinet Dr. Martin">
-        </div>
-        <div class="form-group">
-          <label>Secteur</label>
-          <select id="nc-secteur">
-            <option value="">— Choisir —</option>
-            <option>Médical</option>
-            <option>Restauration</option>
-            <option>Immobilier</option>
-            <option>Formation</option>
-            <option>Autre</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Plan</label>
-          <select id="nc-plan">
-            <option value="Starter">Starter</option>
-            <option value="Business">Business</option>
-            <option value="Premium">Premium</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Email</label>
-          <input id="nc-email" type="email" placeholder="contact@entreprise.fr">
-        </div>
-        <div class="form-group">
-          <label>Téléphone</label>
-          <input id="nc-tel" type="text" placeholder="01 23 45 67 89">
-        </div>
-        <div class="form-group full">
-          <label>Tags (séparés par des virgules)</label>
-          <input id="nc-tags" type="text" placeholder="ex: VIP, Formation">
-        </div>
-        <div class="form-group full">
-          <label>Note initiale</label>
-          <textarea id="nc-note" placeholder="Contexte, informations importantes…"></textarea>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeNewClientModal()">Annuler</button>
-      <button class="btn btn-primary" onclick="createClient()">Créer le client</button>
-    </div>
-  </div>
-</div>
-
 <!-- ============================================================
      7C — MODAL NOUVEAU TICKET
 ============================================================ -->
@@ -3805,13 +3623,10 @@ function navigate(sectionId) {
   const target = document.getElementById('page-' + sectionId);
   if (target) target.classList.add('active');
 
-  /* Nav highlight — client-detail shares the "clients" nav item */
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  const navKey = sectionId === 'client-detail' ? 'clients' : sectionId;
-  const navItem = document.querySelector('.nav-item[data-section="' + navKey + '"]');
+  const navItem = document.querySelector('.nav-item[data-section="' + sectionId + '"]');
   if (navItem) navItem.classList.add('active');
 
-  if (sectionId === 'clients')   buildClientsTable();
   if (sectionId === 'tickets')   { buildTicketsSummary(); buildTicketsList(); }
   if (sectionId === 'analytics') setTimeout(initAnalytics, 50);
 
@@ -3880,7 +3695,6 @@ function _initDashboard() {
   buildAppelsTable(appels);
   buildWaTable(conversations_wa);
   loadVoixConfig();
-  buildClientsTable();
   buildTicketsSummary();
   buildTicketsList();
   updateTicketsNavDot();
@@ -4104,7 +3918,6 @@ async function loadClientsFromAirtable() {
     const data = await apiFetch("/.netlify/functions/get-clients");
     if (data.clients?.length) {
       clients.splice(0, clients.length, ...data.clients);
-      buildClientsTable();
     }
   } catch (e) {
     console.warn("[AkilAI] get-clients fallback:", e.message);
