@@ -3585,8 +3585,11 @@ function navigate(sectionId) {
   const navItem = document.querySelector('.nav-item[data-section="' + sectionId + '"]');
   if (navItem) navItem.classList.add('active');
 
-  if (sectionId === 'tickets')   { buildTicketsSummary(); buildTicketsList(); }
-  if (sectionId === 'analytics') setTimeout(initAnalytics, 50);
+  if (sectionId === 'tickets')     { buildTicketsSummary(); buildTicketsList(); }
+  if (sectionId === 'analytics')   { setTimeout(initAnalytics, 50); }
+  if (sectionId === 'automations') { loadAutomationsFromAirtable(); }
+  if (sectionId === 'appels')      { loadHistoriqueFromAirtable(); }
+  if (sectionId === 'whatsapp')    { loadHistoriqueFromAirtable(); }
 
   currentSection = sectionId;
   closeMobileSidebar();
@@ -4053,14 +4056,19 @@ function applyPlanFilter() {
 
 async function loadAutomationsFromAirtable() {
   try {
-    const cid  = _getActiveClientId();
-    const qs   = cid ? `?clientId=${encodeURIComponent(cid)}` : "";
+    const cid = _getActiveClientId();
+    const qs  = cid ? `?clientId=${encodeURIComponent(cid)}` : "";
+    console.log("[AkilAI] Chargement automations pour clientId:", cid);
+    console.log("[AkilAI] URL appelée:", `/.netlify/functions/get-automations${qs}`);
     const data = await apiFetch(`/.netlify/functions/get-automations${qs}`);
+    console.log("[AkilAI] Automations reçues:", data.automations?.length ?? 0);
     if (data.automations?.length) {
       automations.splice(0, automations.length, ...data.automations);
       buildAutoTable();
       buildCalendar();
       populateScheduleSelect();
+    } else {
+      console.warn("[AkilAI] Aucune automation retournée par Airtable pour ce client.");
     }
   } catch (e) {
     console.warn("[AkilAI] get-automations fallback:", e.message);
