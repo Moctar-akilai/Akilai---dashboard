@@ -4177,36 +4177,9 @@ window.addEventListener("hashchange", () => {
 });
 
 /* ============================================================
-   NETLIFY IDENTITY — listeners enregistrés IMMÉDIATEMENT
-   (avant DOMContentLoaded, sinon l'événement 'init' est raté
-   car le widget auto-initialise depuis le <head> en premier)
+   NETLIFY IDENTITY — initialisation unique via window.load
 ============================================================ */
-if (typeof netlifyIdentity !== "undefined") {
-
-  netlifyIdentity.on('init', function(user) {
-    if (user) { _onLogin(user); } else { _showLoginPage(); }
-  });
-
-  netlifyIdentity.on('login', function(user) {
-    netlifyIdentity.close();
-    _onLogin(user);
-  });
-
-  netlifyIdentity.on('logout', function() { _onLogout(); });
-
-  netlifyIdentity.on('error', function(err) {
-    console.error('[NetlifyIdentity]', err);
-    var errMsg = String((err && (err.message || err.msg)) || err || '').toLowerCase();
-    if (errMsg.indexOf('not confirmed') >= 0 || errMsg.indexOf('confirmation') >= 0) {
-      var u = netlifyIdentity.currentUser ? netlifyIdentity.currentUser() : null;
-      if (u) { netlifyIdentity.close(); _onLogin(u); return; }
-    }
-    _showLoginPage();
-  });
-
-}
-
-document.addEventListener('DOMContentLoaded', function() {
+window.addEventListener('load', function() {
   if (typeof netlifyIdentity === "undefined") {
     /* Dev local sans CDN */
     _initDashboard();
@@ -4214,9 +4187,35 @@ document.addEventListener('DOMContentLoaded', function() {
     checkConnection();
     return;
   }
-  /* init() ici en fallback au cas où data-netlify-identity-button
-     n'aurait pas déclenché l'auto-init du widget */
-  try { netlifyIdentity.init(); } catch(e) {}
+
+  netlifyIdentity.on('login', function(user) {
+    netlifyIdentity.close();
+    window.location.hash = '';
+    _onLogin(user);
+  });
+
+  netlifyIdentity.on('logout', function() {
+    _onLogout();
+  });
+
+  netlifyIdentity.init();
+
+  /* Si token dans l'URL → ouvrir le widget immédiatement */
+  var hash = window.location.hash || '';
+  if (hash.indexOf('invite_token') >= 0 ||
+      hash.indexOf('recovery_token') >= 0 ||
+      hash.indexOf('confirmation_token') >= 0) {
+    netlifyIdentity.open();
+  } else {
+    /* Vérifier si déjà connecté */
+    var existingUser = netlifyIdentity.currentUser();
+    if (existingUser) {
+      _onLogin(existingUser);
+    } else {
+      _showLoginPage();
+    }
+  }
+
   _checkAdminRoute();
 });
 
