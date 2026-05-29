@@ -3,7 +3,7 @@
   publish    = "."
 
 [functions]
-  node_bundler = "esbuild"
+  node_bundler = "nft"
 
 [functions."notify-weekly-report"]
   schedule = "0 8 * * 1"
