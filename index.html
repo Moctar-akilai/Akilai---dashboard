@@ -1770,11 +1770,105 @@
 
     /* Wrapper relatif pour le dropdown */
     .notif-wrapper { position: relative; }
+
+    /* ============================================================
+       AUTH — Page de login & écran de chargement
+    ============================================================ */
+    #loginPage {
+      position: fixed; inset: 0;
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9000;
+      flex-direction: column;
+      gap: 0;
+    }
+    #loginPage.hidden { display: none; }
+
+    .login-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 48px 44px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+    }
+    .login-logo {
+      font-size: 32px; font-weight: 800; letter-spacing: -1px;
+      color: var(--text); margin-bottom: 8px;
+    }
+    .login-logo span { color: var(--accent); }
+    .login-subtitle {
+      font-size: 14px; color: var(--text-muted); margin-bottom: 36px;
+      line-height: 1.5;
+    }
+    .login-btn {
+      width: 100%; padding: 14px;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: var(--radius-sm);
+      font-family: var(--font); font-size: 15px; font-weight: 700;
+      cursor: pointer; letter-spacing: -0.2px;
+      transition: opacity 0.15s;
+    }
+    .login-btn:hover { opacity: 0.88; }
+    .login-footer {
+      margin-top: 20px; font-size: 11px; color: var(--text-faint);
+    }
+
+    /* Écran de chargement */
+    #loadingScreen {
+      position: fixed; inset: 0;
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 8000; flex-direction: column; gap: 20px;
+    }
+    #loadingScreen.hidden { display: none; }
+    .loading-logo { font-size: 28px; font-weight: 800; color: var(--text); }
+    .loading-logo span { color: var(--accent); }
+    .loading-spinner {
+      width: 36px; height: 36px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Bouton logout dans le header */
+    .btn-logout {
+      font-size: 12px; padding: 5px 12px; border-radius: 20px;
+      background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25);
+      color: #ef4444; cursor: pointer; font-family: var(--font); font-weight: 600;
+      transition: background 0.15s;
+    }
+    .btn-logout:hover { background: rgba(239,68,68,0.2); }
   </style>
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 </head>
 <body>
 
-<div id="app">
+<!-- ======================================================
+     PAGE DE LOGIN — Netlify Identity
+====================================================== -->
+<div id="loginPage">
+  <div class="login-card">
+    <div class="login-logo">Akil<span>AI</span></div>
+    <div class="login-subtitle">Votre portail d'automatisation IA</div>
+    <button class="login-btn" onclick="openLogin()">Se connecter</button>
+    <div class="login-footer">Accès réservé aux clients AkilAI</div>
+  </div>
+</div>
+
+<!-- ======================================================
+     ÉCRAN DE CHARGEMENT
+====================================================== -->
+<div id="loadingScreen" class="hidden">
+  <div class="loading-logo">Akil<span>AI</span></div>
+  <div class="loading-spinner"></div>
+</div>
+
+<div id="app" style="display:none">
 
   <!-- ======================================================
        SIDEBAR — 1C
@@ -1959,7 +2053,8 @@
             </div>
           </div>
         </div>
-        <div class="avatar-header" title="Moctar Akilai">MA</div>
+        <div class="avatar-header" id="userAvatar" title="">—</div>
+        <button class="btn-logout" onclick="handleLogout()" title="Se déconnecter">Déconnexion</button>
       </div>
     </header>
 
@@ -3433,9 +3528,109 @@ function handleResize() {
 window.addEventListener('resize', handleResize);
 
 /* ============================================================
+   AUTH — Netlify Identity
+============================================================ */
+
+/* Token JWT en mémoire uniquement (jamais en localStorage) */
+let _authToken  = null;
+let _authUser   = null;
+
+function openLogin() {
+  if (typeof netlifyIdentity !== "undefined") {
+    netlifyIdentity.open("login");
+  }
+}
+
+function handleLogout() {
+  if (typeof netlifyIdentity !== "undefined") {
+    netlifyIdentity.logout();
+  }
+}
+
+function _showLoginPage() {
+  document.getElementById("loginPage").classList.remove("hidden");
+  document.getElementById("app").style.display = "none";
+  document.getElementById("loadingScreen").classList.add("hidden");
+}
+
+function _showLoadingScreen() {
+  document.getElementById("loginPage").classList.add("hidden");
+  document.getElementById("loadingScreen").classList.remove("hidden");
+  document.getElementById("app").style.display = "none";
+}
+
+function _showDashboard() {
+  document.getElementById("loginPage").classList.add("hidden");
+  document.getElementById("loadingScreen").classList.add("hidden");
+  document.getElementById("app").style.display = "flex";
+}
+
+function _applyUserToUI(user) {
+  if (!user) return;
+  const name    = user.user_metadata?.full_name || user.email || "Utilisateur";
+  const initials = name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+  const avatar  = document.getElementById("userAvatar");
+  if (avatar) { avatar.textContent = initials; avatar.title = name; }
+
+  /* Sous-titre de la vue d'ensemble */
+  const subtitle = document.getElementById("overviewSubtitle");
+  if (subtitle) subtitle.textContent = `Bienvenue, ${name.split(" ")[0]} — voici l'état de vos automations.`;
+}
+
+async function _onLogin(user) {
+  _authUser  = user;
+  _authToken = user?.token?.access_token || null;
+
+  const clientId = user?.app_metadata?.airtable_client_id || null;
+  window._currentClientId = clientId;
+
+  if (!clientId) {
+    /* Compte non configuré */
+    _showLoginPage();
+    document.getElementById("loginPage").innerHTML = `
+      <div class="login-card">
+        <div class="login-logo">Akil<span>AI</span></div>
+        <div class="login-subtitle" style="color:var(--warning)">
+          Votre compte n'est pas encore configuré.<br>Contactez AkilAI.
+        </div>
+        <button class="login-btn" style="background:var(--danger)" onclick="handleLogout()">Se déconnecter</button>
+      </div>`;
+    return;
+  }
+
+  _applyUserToUI(user);
+  _showLoadingScreen();
+
+  /* Init dashboard puis charger les données */
+  _initDashboard();
+
+  /* Timeout de sécurité : afficher après 3s max */
+  const timeout = setTimeout(_showDashboard, 3000);
+
+  await checkConnection();
+  clearTimeout(timeout);
+  _showDashboard();
+}
+
+function _onLogout() {
+  _authToken  = null;
+  _authUser   = null;
+  window._currentClientId = null;
+  _showLoginPage();
+  /* Remettre la page de login propre (au cas où message d'erreur) */
+  document.getElementById("loginPage").innerHTML = `
+    <div class="login-card">
+      <div class="login-logo">Akil<span>AI</span></div>
+      <div class="login-subtitle">Votre portail d'automatisation IA</div>
+      <button class="login-btn" onclick="openLogin()">Se connecter</button>
+      <div class="login-footer">Accès réservé aux clients AkilAI</div>
+    </div>`;
+}
+
+/* ============================================================
    INIT
 ============================================================ */
-document.addEventListener('DOMContentLoaded', () => {
+function _initDashboard() {
   handleResize();
   navigate('overview');
   setTimeout(initOverview, 50);
@@ -3449,8 +3644,45 @@ document.addEventListener('DOMContentLoaded', () => {
   buildTicketsSummary();
   buildTicketsList();
   updateTicketsNavDot();
-  checkConnection();
   setTimeout(updateNotifications, 200);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  /* Intercepter le token d'invitation dans l'URL (lien email Netlify) */
+  if (window.location.hash.includes('invite_token') || window.location.hash.includes('recovery_token')) {
+    netlifyIdentity.open('signup');
+  }
+
+  if (typeof netlifyIdentity === "undefined") {
+    /* Netlify Identity non disponible (dev local sans CDN) — afficher dashboard direct */
+    _initDashboard();
+    _showDashboard();
+    checkConnection();
+    return;
+  }
+
+  netlifyIdentity.on('init', (user) => {
+    if (user) {
+      _onLogin(user);
+    } else {
+      _showLoginPage();
+    }
+  });
+
+  netlifyIdentity.on('login', (user) => {
+    netlifyIdentity.close();
+    _onLogin(user);
+  });
+
+  netlifyIdentity.on('logout', () => {
+    _onLogout();
+  });
+
+  netlifyIdentity.on('error', (err) => {
+    console.error('[NetlifyIdentity]', err);
+  });
+
+  netlifyIdentity.init();
 });
 
 /* ============================================================
