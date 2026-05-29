@@ -1866,6 +1866,7 @@
 <div id="loadingScreen" class="hidden">
   <div class="loading-logo">Akil<span>AI</span></div>
   <div class="loading-spinner"></div>
+  <div id="loadingStep" style="font-size:12px;color:var(--text-faint);margin-top:4px">Initialisation…</div>
 </div>
 
 <div id="app" style="display:none">
@@ -3565,6 +3566,11 @@ function _showDashboard() {
   document.getElementById("app").style.display = "flex";
 }
 
+function _setLoadingStep(msg) {
+  const el = document.getElementById("loadingStep");
+  if (el) el.textContent = msg;
+}
+
 function _applyUserToUI(user) {
   if (!user) return;
   const name    = user.user_metadata?.full_name || user.email || "Utilisateur";
@@ -3581,35 +3587,75 @@ async function _onLogin(user) {
   _authUser  = user;
   _authToken = user?.token?.access_token || null;
 
+  /* 4A — Vérifier que le token n'est pas expiré */
+  if (_authToken) {
+    try {
+      const payload = JSON.parse(atob(_authToken.split('.')[1]));
+      if (payload.exp && payload.exp * 1000 < Date.now()) {
+        /* Token expiré → tenter un refresh silencieux */
+        const refreshed = await netlifyIdentity.refresh().catch(() => null);
+        if (refreshed) {
+          _authToken = refreshed;
+        } else {
+          handleLogout();
+          return;
+        }
+      }
+    } catch {}
+  }
+
   const clientId = user?.app_metadata?.airtable_client_id || null;
   window._currentClientId = clientId;
 
+  /* 4A — Compte non configuré */
   if (!clientId) {
-    /* Compte non configuré */
     _showLoginPage();
     document.getElementById("loginPage").innerHTML = `
       <div class="login-card">
         <div class="login-logo">Akil<span>AI</span></div>
-        <div class="login-subtitle" style="color:var(--warning)">
-          Votre compte n'est pas encore configuré.<br>Contactez AkilAI.
+        <div style="margin-bottom:16px;font-size:32px">⚠️</div>
+        <div class="login-subtitle" style="color:var(--warning);font-weight:600">
+          Votre compte n'est pas encore configuré.
         </div>
-        <button class="login-btn" style="background:var(--danger)" onclick="handleLogout()">Se déconnecter</button>
+        <div class="login-subtitle" style="margin-top:-20px">
+          Contactez AkilAI pour activer votre accès.
+        </div>
+        <button class="login-btn" style="background:var(--danger);margin-top:8px" onclick="handleLogout()">
+          Se déconnecter
+        </button>
       </div>`;
     return;
   }
 
   _applyUserToUI(user);
+  /* 4B — Afficher l'écran de chargement avec étapes */
   _showLoadingScreen();
+  _setLoadingStep("Connexion à Airtable…");
 
-  /* Init dashboard puis charger les données */
+  /* Init dashboard (structure) */
   _initDashboard();
 
-  /* Timeout de sécurité : afficher après 3s max */
-  const timeout = setTimeout(_showDashboard, 3000);
+  /* 4B — Timeout 3s max : afficher le dashboard même si données partielles */
+  let _dashboardShown = false;
+  const timeout = setTimeout(() => {
+    if (!_dashboardShown) { _dashboardShown = true; _showDashboard(); }
+  }, 3000);
 
-  await checkConnection();
-  clearTimeout(timeout);
-  _showDashboard();
+  try {
+    _setLoadingStep("Chargement des données…");
+    await checkConnection();
+  } finally {
+    clearTimeout(timeout);
+    if (!_dashboardShown) { _dashboardShown = true; _showDashboard(); }
+  }
+
+  /* Refresh automatique du token toutes les 50 min */
+  setInterval(async () => {
+    try {
+      const refreshed = await netlifyIdentity.refresh();
+      if (refreshed) _authToken = refreshed;
+    } catch {}
+  }, 50 * 60 * 1000);
 }
 
 function _onLogout() {
