@@ -2937,13 +2937,6 @@
               <option>Résolu</option>
               <option>Fermé</option>
             </select>
-            <select id="filterTktPrio" onchange="buildTicketsList()">
-              <option value="">Toutes priorités</option>
-              <option>Urgente</option>
-              <option>Haute</option>
-              <option>Normale</option>
-              <option>Basse</option>
-            </select>
             <select id="filterTktCat" onchange="buildTicketsList()">
               <option value="">Toutes catégories</option>
               <option>Technique</option>
@@ -3137,7 +3130,8 @@
         </div>
         <div class="form-group">
           <label>Client</label>
-          <select id="nt-client"></select>
+          <input id="nt-client-display" type="text" disabled style="background:rgba(255,255,255,0.04);color:var(--text-muted);cursor:default">
+          <input type="hidden" id="nt-client">
         </div>
         <div class="form-group">
           <label>Catégorie</label>
@@ -3148,13 +3142,10 @@
             <option>Fonctionnel</option>
           </select>
         </div>
-        <div class="form-group">
-          <label>Priorité</label>
-          <select id="nt-priorite">
-            <option>Normale</option>
-            <option>Basse</option>
-            <option>Haute</option>
-            <option>Urgente</option>
+        <div class="form-group full">
+          <label>Automation concernée <span style="color:var(--text-faint);font-weight:400">(optionnel)</span></label>
+          <select id="nt-automation">
+            <option value="">— Aucune —</option>
           </select>
         </div>
         <div class="form-group full">
@@ -5367,13 +5358,11 @@ function buildTicketsList() {
       <div class="ticket-card-header">
         <span class="ticket-id">${t.id}</span>
         <span class="ticket-sujet">${t.sujet}</span>
-        ${prioBadge(t.priorite)}
         ${tktStatutBadge(t.statut)}
         <svg style="flex-shrink:0;transition:transform 0.2s;transform:rotate(${isOpen?'90deg':'0deg'})" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
       <div class="ticket-meta">
-        <span>${client ? client.nom : "—"}</span>
-        <span class="dot-sep">${t.categorie}</span>
+        <span>${t.categorie}</span>
         <span class="dot-sep">${t.date}</span>
         <span class="dot-sep">${t.messages.length} message${t.messages.length > 1 ? "s" : ""}</span>
       </div>
@@ -5384,15 +5373,6 @@ function buildTicketsList() {
         <div class="ticket-reply-box">
           <textarea id="reply-${t.id}" placeholder="Votre réponse…"></textarea>
           <button class="btn btn-primary" style="height:60px;padding:0 16px;" onclick="sendReply('${t.id}')">Envoyer</button>
-        </div>
-        <div class="ticket-detail-footer">
-          <span style="font-size:12px;color:var(--text-muted)">Changer le statut :</span>
-          <select id="statusSelect-${t.id}" onchange="changeTicketStatus('${t.id}', this.value)">
-            ${["Ouvert","En cours","Résolu","Fermé"].map(s =>
-              `<option ${t.statut === s ? "selected" : ""}>${s}</option>`
-            ).join("")}
-          </select>
-          <button class="btn btn-ghost" style="height:34px;font-size:12px;" onclick="closeTicketDirect('${t.id}')">Fermer le ticket</button>
         </div>
       </div>
     </div>`;
@@ -5426,9 +5406,10 @@ async function sendReply(id) {
   const t = tickets.find(x => x.id === id);
   if (!t) return;
 
-  const entry = { auteur:"Support AkilAI", role:"support", text, heure: new Date().toLocaleTimeString("fr-FR", {hour:"2-digit",minute:"2-digit"}) };
+  const clientNom = clients[0]?.nom || "Client";
+  const entry = { auteur: clientNom, role:"client", text, heure: new Date().toLocaleTimeString("fr-FR", {hour:"2-digit",minute:"2-digit"}) };
   t.messages.push(entry);
-  if (t.statut === "Ouvert") t.statut = "En cours";
+  if (t.statut === "Résolu" || t.statut === "Fermé") t.statut = "Ouvert";
   if (textarea) textarea.value = "";
   buildTicketsSummary();
   buildTicketsList();
@@ -5466,10 +5447,19 @@ function closeTicketDirect(id) {
 
 /* ---- 7C Modal ---- */
 function openNewTicketModal() {
-  const sel = document.getElementById("nt-client");
-  if (sel) {
-    sel.innerHTML = clients.map(c => `<option value="${c.id}">${c.nom}</option>`).join("");
+  const client = clients[0];
+  const displayEl = document.getElementById("nt-client-display");
+  const hiddenEl  = document.getElementById("nt-client");
+  if (displayEl) displayEl.value = client?.nom || "—";
+  if (hiddenEl)  hiddenEl.value  = client?.id  || "";
+
+  const autoSel = document.getElementById("nt-automation");
+  if (autoSel) {
+    const clientAutos = automations.filter(a => a.client_id === client?.id);
+    autoSel.innerHTML = '<option value="">— Aucune —</option>' +
+      clientAutos.map(a => `<option value="${a.id}">${a.nom}</option>`).join("");
   }
+
   ["nt-sujet","nt-message"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
   document.getElementById("newTicketModal").classList.add("open");
 }
@@ -5673,28 +5663,28 @@ function exportAnalytics() {
 }
 
 async function createTicket() {
-  const sujet     = document.getElementById("nt-sujet").value.trim();
-  const clientId  = document.getElementById("nt-client").value;
-  const categorie = document.getElementById("nt-categorie").value;
-  const priorite  = document.getElementById("nt-priorite").value;
-  const message   = document.getElementById("nt-message").value.trim();
+  const sujet      = document.getElementById("nt-sujet").value.trim();
+  const clientId   = document.getElementById("nt-client").value;
+  const categorie  = document.getElementById("nt-categorie").value;
+  const autoId     = document.getElementById("nt-automation").value;
+  const message    = document.getElementById("nt-message").value.trim();
 
   if (!sujet) { showToast("Le sujet est obligatoire", "error"); return; }
 
-  const client = clients.find(c => String(c.id) === String(clientId));
+  const client = clients.find(c => String(c.id) === String(clientId)) || clients[0];
   const newId  = "T-" + String(tickets.length + 1).padStart(3, "0");
   const newTicket = {
-    id:        newId,
+    id:           newId,
     sujet,
-    client_id: clientId,
-    priorite,
+    client_id:    client?.id || null,
+    priorite:     "Normale",
     categorie,
-    statut:    "Ouvert",
-    date:      new Date().toISOString().split("T")[0],
-    messages:  message ? [{ auteur: client?.nom || "Client", role:"client", text: message, heure: new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}) }] : [],
+    automation_id: autoId || null,
+    statut:       "Ouvert",
+    date:         new Date().toISOString().split("T")[0],
+    messages:     message ? [{ auteur: client?.nom || "Client", role:"client", text: message, heure: new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}) }] : [],
   };
 
-  /* Ajout optimiste */
   tickets.unshift(newTicket);
   document.getElementById("newTicketModal").classList.remove("open");
   buildTicketsSummary();
@@ -5702,12 +5692,10 @@ async function createTicket() {
   updateTicketsNavDot();
   showToast(`Ticket ${newId} créé`, "success");
 
-  /* Persist dans Airtable si connecté */
   if (window._airtableConnected) {
     try {
-      const data = await apiFetchPost("/.netlify/functions/create-ticket", { sujet, description: message, priorite, categorie, clientId });
+      const data = await apiFetchPost("/.netlify/functions/create-ticket", { sujet, description: message, priorite: "Normale", categorie, clientId: client?.id, automationId: autoId });
       if (data.ok && data.ticket) {
-        /* Mettre à jour l'ID local avec l'ID Airtable */
         newTicket.id = data.ticket.id;
         buildTicketsList();
       }
