@@ -4,7 +4,11 @@ exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") return preflight();
 
   try {
-    const res = await fetch(`${BASE_URL}/Automatisations?view=Grid%20view`, { headers });
+    const clientId = event.queryStringParameters?.clientId || null;
+    const params   = new URLSearchParams({ "view": "Grid view" });
+    if (clientId) params.set("filterByFormula", `{ClientId}="${clientId}"`);
+
+    const res = await fetch(`${BASE_URL}/Automatisations?${params}`, { headers });
     if (!res.ok) return err(`Airtable ${res.status}`);
 
     const data    = await res.json();

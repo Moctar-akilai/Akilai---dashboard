@@ -3936,7 +3936,7 @@ async function checkConnection() {
   const dot   = document.getElementById("connectionDot");
   const label = document.getElementById("connectionLabel");
   try {
-    const res  = await fetch("/.netlify/functions/ping-airtable", { headers: _authHeaders() });
+    const res  = await fetch("/.netlify/functions/ping-airtable");
     const data = await res.json();
     if (data.ok) {
       if (dot)   { dot.style.background = "#22c55e"; }
@@ -4042,7 +4042,9 @@ function applyPlanFilter() {
 
 async function loadAutomationsFromAirtable() {
   try {
-    const data = await apiFetch("/.netlify/functions/get-automations");
+    const cid  = _getActiveClientId();
+    const qs   = cid ? `?clientId=${encodeURIComponent(cid)}` : "";
+    const data = await apiFetch(`/.netlify/functions/get-automations${qs}`);
     if (data.automations?.length) {
       automations.splice(0, automations.length, ...data.automations);
       buildAutoTable();
@@ -4056,14 +4058,16 @@ async function loadAutomationsFromAirtable() {
 
 async function loadHistoriqueFromAirtable() {
   try {
-    const data = await apiFetch("/.netlify/functions/get-historique");
+    const cid  = _getActiveClientId();
+    const qs   = cid ? `?clientId=${encodeURIComponent(cid)}` : "";
+    const data = await apiFetch(`/.netlify/functions/get-historique${qs}`);
     if (data.appels?.length) {
       appels.splice(0, appels.length, ...data.appels);
-      buildAppelsTable(appels.filter(a => a.client_id === _getActiveClientId()));
+      buildAppelsTable(appels);
     }
     if (data.conversations_wa?.length) {
       conversations_wa.splice(0, conversations_wa.length, ...data.conversations_wa);
-      buildWaTable(conversations_wa.filter(a => a.client_id === _getActiveClientId()));
+      buildWaTable(conversations_wa);
     }
   } catch (e) {
     console.warn("[AkilAI] get-historique fallback:", e.message);
@@ -4072,7 +4076,9 @@ async function loadHistoriqueFromAirtable() {
 
 async function loadTicketsFromAirtable() {
   try {
-    const data = await apiFetch("/.netlify/functions/get-tickets");
+    const cid  = _getActiveClientId();
+    const qs   = cid ? `?clientId=${encodeURIComponent(cid)}` : "";
+    const data = await apiFetch(`/.netlify/functions/get-tickets${qs}`);
     if (data.tickets?.length) {
       tickets.splice(0, tickets.length, ...data.tickets);
       buildTicketsSummary();
@@ -4086,7 +4092,9 @@ async function loadTicketsFromAirtable() {
 
 async function loadKPIsFromAirtable(days) {
   try {
-    const data = await apiFetch(`/.netlify/functions/get-kpis?days=${days}`);
+    const cid  = _getActiveClientId();
+    const qs   = cid ? `&clientId=${encodeURIComponent(cid)}` : "";
+    const data = await apiFetch(`/.netlify/functions/get-kpis?days=${days}${qs}`);
     if (data.kpis) {
       Object.assign(kpis, data.kpis);
       /* Reconstruire les graphiques Vue d'ensemble et Analytics */
@@ -4831,6 +4839,10 @@ automations.forEach(a => { autoState[a.id] = a.statut; });
 /* ID du client actif — utilisé pour filtrer toutes les données mockées.
    En mode connecté, remplacé par la valeur Airtable du client authentifié. */
 function _getActiveClientId() {
+  /* En session réelle → utiliser l'ID Airtable du client connecté */
+  const session = _getSession();
+  if (session?.clientId) return session.clientId;
+  /* Mode démo → premier client mock */
   return clients[0]?.id || 1;
 }
 

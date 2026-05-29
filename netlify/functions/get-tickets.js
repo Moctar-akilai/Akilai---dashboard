@@ -4,10 +4,12 @@ exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") return preflight();
 
   try {
-    const params = new URLSearchParams({
+    const clientId = event.queryStringParameters?.clientId || null;
+    const params   = new URLSearchParams({
       "sort[0][field]":     "DateCreation",
       "sort[0][direction]": "desc",
     });
+    if (clientId) params.set("filterByFormula", `{ClientId}="${clientId}"`);
 
     const res = await fetch(`${BASE_URL}/Support?${params}`, { headers });
     if (!res.ok) return err(`Airtable ${res.status}`);

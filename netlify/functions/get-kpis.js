@@ -5,12 +5,17 @@ exports.handler = async (event) => {
 
   try {
     const days      = parseInt(event.queryStringParameters?.days || "30", 10);
+    const clientId  = event.queryStringParameters?.clientId || null;
     const cutoff    = new Date();
     cutoff.setDate(cutoff.getDate() - days);
     const cutoffISO = cutoff.toISOString();
 
+    const dateFilter   = `IS_AFTER({DateHeure},"${cutoffISO}")`;
+    const clientFilter = clientId ? `{ClientId}="${clientId}"` : null;
+    const histFormula  = clientFilter ? `AND(${dateFilter},${clientFilter})` : dateFilter;
+
     const histParams = new URLSearchParams({
-      filterByFormula: `IS_AFTER({DateHeure},"${cutoffISO}")`,
+      filterByFormula: histFormula,
       "fields[]":      "Type",
     });
     histParams.append("fields[]", "DateHeure");
