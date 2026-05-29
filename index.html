@@ -905,6 +905,34 @@
     }
     .preview-summary span { color: var(--text); font-weight: 600; }
 
+    /* ── Cartes voix ElevenLabs ── */
+    .voice-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .voice-card:hover { border-color: var(--accent-border); background: var(--accent-dim); }
+    .voice-card.selected { border-color: var(--accent); background: var(--accent-dim); }
+    .voice-card-name { font-size: 13px; font-weight: 600; color: var(--text); }
+    .voice-card-labels { font-size: 11px; color: var(--text-faint); }
+    .voice-card-actions { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
+    .btn-listen {
+      font-size: 10px; padding: 3px 8px; border-radius: 20px;
+      background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+      color: var(--text-muted); cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .btn-listen:hover { background: var(--accent-dim); color: var(--accent); border-color: var(--accent-border); }
+    .voice-selected-badge {
+      font-size: 10px; color: var(--accent); font-weight: 700;
+      padding: 2px 6px; border-radius: 10px;
+      background: var(--accent-dim); border: 1px solid var(--accent-border);
+    }
+
     /* ============================================================
        RESPONSIVE — grilles
     ============================================================ */
@@ -2385,11 +2413,15 @@
             <h1 class="page-title">Voix &amp; IA</h1>
             <p class="page-subtitle">Personnalisez votre assistant vocal — configuration sauvegardée automatiquement.</p>
           </div>
-          <div style="display:flex;gap:8px">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn btn-ghost btn-sm" onclick="resetVoixConfig()">Réinitialiser</button>
             <button class="btn btn-primary" onclick="saveVoixConfig()">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
               Sauvegarder
+            </button>
+            <button class="btn btn-primary" id="btnVapiAssistant" onclick="createOrUpdateVapiAssistant()" style="background:linear-gradient(135deg,#5b21b6,#7c3aed)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span id="btnVapiLabel">Créer mon assistant</span>
             </button>
           </div>
         </div>
@@ -2407,14 +2439,21 @@
 
             <!-- Voix ElevenLabs -->
             <div class="card">
-              <div class="form-label" style="margin-bottom:10px">Voix ElevenLabs</div>
-              <select class="form-select" id="cfgVoix" onchange="updatePreview()">
-                <option value="chloe">Chloé — FR · Féminin · Douce</option>
-                <option value="thomas">Thomas — FR · Masculin · Posé</option>
-                <option value="sofia">Sofia — ES · Féminin · Chaleureuse</option>
-                <option value="james">James — EN · Masculin · Professionnel</option>
-                <option value="amina">Amina — FR · Féminin · Dynamique</option>
-              </select>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                <div class="form-label" style="margin-bottom:0">Voix ElevenLabs</div>
+                <button class="btn btn-ghost btn-sm" onclick="loadElevenLabsVoices()" id="btnRefreshVoices" style="font-size:11px">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                  Actualiser
+                </button>
+              </div>
+              <!-- Grille de cartes voix (chargée dynamiquement) -->
+              <div id="voixCardsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;min-height:80px">
+                <div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--text-faint);font-size:12px" id="voixCardsLoader">
+                  Chargement des voix…
+                </div>
+              </div>
+              <!-- Champ caché pour stocker voice_id sélectionné -->
+              <input type="hidden" id="cfgVoix" value="" />
             </div>
 
             <!-- Tonalité -->
@@ -3813,7 +3852,9 @@ function filterWa() {
 
 const VOIX_CONFIG_DEFAULT = {
   nom: "Sophie",
-  voix: "chloe",
+  voix: "",
+  voiceId: "",
+  voiceName: "",
   tonalite: "chaleureux",
   personnalite: "empathique",
   langPrimaire: "fr",
@@ -3825,9 +3866,13 @@ const VOIX_CONFIG_DEFAULT = {
 };
 
 const VOIX_LABELS = {
-  chloe:"Chloé", thomas:"Thomas", sofia:"Sofia", james:"James", amina:"Amina",
   fr:"Français", en:"Anglais", es:"Espagnol", ar:"Arabe", pt:"Portugais", none:"—"
 };
+
+/* Cache des voix ElevenLabs chargées */
+let _elevenLabsVoices = [];
+/* VapiAssistantId du client courant (chargé depuis Airtable) */
+let _vapiAssistantId  = null;
 
 const SIMULATION_BY_TON = {
   formel:     "\"Bonjour, cabinet du Dr. Moreau. Comment puis-je vous assister ?\"",
@@ -3841,9 +3886,13 @@ function updateSliderVal(inputId, displayId, suffix) {
 }
 
 function getVoixFormValues() {
+  const voiceId = document.getElementById("cfgVoix").value;
+  const voice   = _elevenLabsVoices.find(v => v.voice_id === voiceId);
   return {
     nom:          document.getElementById("cfgNom").value.trim() || "Assistant",
-    voix:         document.getElementById("cfgVoix").value,
+    voix:         voiceId,
+    voiceId:      voiceId,
+    voiceName:    voice?.name || voiceId,
     tonalite:     document.querySelector("input[name='tonalite']:checked")?.value || "neutre",
     personnalite: document.querySelector("input[name='personnalite']:checked")?.value || "efficace",
     langPrimaire: document.getElementById("cfgLangPrimaire").value,
@@ -3859,11 +3908,10 @@ function updatePreview() {
   const v = getVoixFormValues();
   const nom = v.nom || "Assistant";
 
-  /* Avatar emoji selon voix */
-  const avatarMap = { chloe:"💁", thomas:"🧑‍💼", sofia:"💃", james:"👨‍💼", amina:"🙋" };
-  document.getElementById("previewAvatar").textContent   = avatarMap[v.voix] || "🤖";
+  document.getElementById("previewAvatar").textContent   = "🤖";
   document.getElementById("previewName").textContent     = nom;
-  document.getElementById("previewMeta").textContent     = `Voix ${VOIX_LABELS[v.voix]} · ${VOIX_LABELS[v.langPrimaire]}`;
+  const voiceDisplay = v.voiceName || v.voix || "—";
+  document.getElementById("previewMeta").textContent     = `Voix ${voiceDisplay} · ${VOIX_LABELS[v.langPrimaire] || v.langPrimaire}`;
 
   /* Tags */
   const tags = [
@@ -3878,7 +3926,7 @@ function updatePreview() {
 
   /* Résumé texte */
   document.getElementById("ps-nom").textContent  = nom;
-  document.getElementById("ps-voix").textContent = VOIX_LABELS[v.voix] || v.voix;
+  document.getElementById("ps-voix").textContent = v.voiceName || v.voix || "—";
   document.getElementById("ps-lang").textContent = VOIX_LABELS[v.langPrimaire] || v.langPrimaire;
   document.getElementById("ps-ton").textContent  = v.tonalite || "—";
   document.getElementById("ps-pers").textContent = v.personnalite || "—";
@@ -3892,6 +3940,9 @@ function updatePreview() {
 }
 
 async function loadVoixConfig() {
+  /* Charger les voix ElevenLabs en parallèle */
+  loadElevenLabsVoices();
+
   let cfg = VOIX_CONFIG_DEFAULT;
 
   /* 1. Essayer Airtable si connecté */
@@ -3903,6 +3954,8 @@ async function loadVoixConfig() {
         cfg = {
           nom:          data.config.nomAssistant,
           voix:         data.config.voix,
+          voiceId:      data.config.voix,
+          voiceName:    data.config.voiceName || data.config.voix,
           tonalite:     data.config.tonalite,
           personnalite: data.config.personnalite,
           langPrimaire: data.config.langue,
@@ -3917,6 +3970,19 @@ async function loadVoixConfig() {
     } catch (e) {
       console.warn("[AkilAI] save-config GET fallback:", e.message);
     }
+
+    /* Charger VapiAssistantId du client courant */
+    try {
+      const clientId = window._currentClientId;
+      if (clientId) {
+        const cRes  = await fetch(`/.netlify/functions/get-clients`);
+        const cData = await cRes.json();
+        const client = (cData.clients || []).find(c => c.id === clientId);
+        _vapiAssistantId = client?.vapiAssistantId || null;
+      }
+    } catch (e) {
+      console.warn("[AkilAI] load VapiAssistantId:", e.message);
+    }
   }
 
   /* 2. Fallback localStorage */
@@ -3926,11 +3992,14 @@ async function loadVoixConfig() {
   }
 
   _applyVoixConfig(cfg);
+  _updateVapiButton();
 }
 
 function _applyVoixConfig(cfg) {
   document.getElementById("cfgNom").value          = cfg.nom          || "";
-  document.getElementById("cfgVoix").value         = cfg.voix         || "";
+  document.getElementById("cfgVoix").value         = cfg.voiceId || cfg.voix || "";
+  /* Mettre à jour la sélection dans les cartes */
+  _highlightVoiceCard(cfg.voiceId || cfg.voix || "");
   document.getElementById("cfgLangPrimaire").value = cfg.langPrimaire || "fr";
   document.getElementById("cfgLangSecours").value  = cfg.langSecours  || "none";
   document.getElementById("cfgVitesse").value      = cfg.vitesse      || "1.0";
@@ -3956,7 +4025,8 @@ async function saveVoixConfig() {
     try {
       const payload = {
         nomAssistant:  cfg.nom,
-        voix:          cfg.voix,
+        voix:          cfg.voiceId || cfg.voix,
+        voiceName:     cfg.voiceName,
         tonalite:      cfg.tonalite,
         personnalite:  cfg.personnalite,
         langue:        cfg.langPrimaire,
@@ -3981,26 +4051,7 @@ async function saveVoixConfig() {
         localStorage.setItem("voixConfig", JSON.stringify(cfg));
       }
 
-      /* 6B — Synchroniser l'assistant Vapi en temps réel */
-      fetch("/.netlify/functions/trigger-vapi-config", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({
-          voix:          cfg.voix,
-          promptSysteme: cfg.prompt,
-          vitesseParole: parseFloat(cfg.vitesse),
-          silenceMax:    parseInt(cfg.silence),
-          interruptions: cfg.interruptions,
-          nomAssistant:  cfg.nom,
-          langue:        cfg.langPrimaire,
-        }),
-      })
-      .then(r => r.json())
-      .then(v => {
-        if (v.ok) showToast("Assistant Vapi mis à jour ✓", "success");
-        else      console.warn("[AkilAI] trigger-vapi-config:", v.error);
-      })
-      .catch(e => console.warn("[AkilAI] trigger-vapi-config:", e.message));
+      /* Voix & IA : synchronisation Vapi gérée par le bouton dédié */
 
     } catch (e) {
       console.warn("[AkilAI] save-config POST:", e.message);
@@ -4026,8 +4077,172 @@ function resetVoixConfig() {
   if (tonEl) tonEl.checked = true;
   const persEl = document.getElementById("pers-" + cfg.personnalite);
   if (persEl) persEl.checked = true;
+  _highlightVoiceCard("");
   updatePreview();
   showToast("Configuration réinitialisée", "info");
+}
+
+/* ============================================================
+   SÉQ 7 — ELEVENLABS : chargement dynamique des voix
+============================================================ */
+
+async function loadElevenLabsVoices() {
+  const grid   = document.getElementById("voixCardsGrid");
+  const loader = document.getElementById("voixCardsLoader");
+  if (loader) loader.textContent = "Chargement des voix…";
+
+  try {
+    const res  = await fetch("/.netlify/functions/get-voices");
+    const data = await res.json();
+
+    if (!data.ok || !data.voices?.length) {
+      _renderVoiceFallback(grid);
+      return;
+    }
+
+    _elevenLabsVoices = data.voices;
+    _renderVoiceCards(grid, data.voices);
+
+    const currentId = document.getElementById("cfgVoix").value;
+    if (currentId) _highlightVoiceCard(currentId);
+
+  } catch (e) {
+    console.warn("[AkilAI] get-voices:", e.message);
+    _renderVoiceFallback(grid);
+  }
+}
+
+function _renderVoiceCards(grid, voices) {
+  grid.innerHTML = voices.map(v => {
+    const lang   = v.labels?.language || "";
+    const gender = v.labels?.gender   || "";
+    const accent = v.labels?.accent   || "";
+    const meta   = [lang, gender, accent].filter(Boolean).join(" · ");
+    const safeName = v.name.replace(/'/g, "\\'");
+    return `
+      <div class="voice-card" id="vcard-${v.voice_id}" onclick="selectVoice('${v.voice_id}','${safeName}')">
+        <div class="voice-card-name">${v.name}</div>
+        ${meta ? `<div class="voice-card-labels">${meta}</div>` : ""}
+        <div class="voice-card-actions">
+          ${v.preview_url
+            ? `<button class="btn-listen" onclick="event.stopPropagation();previewVoice('${v.preview_url}',this)">▶ Écouter</button>`
+            : `<span></span>`}
+          <span class="voice-selected-badge" id="vbadge-${v.voice_id}" style="display:none">✓</span>
+        </div>
+      </div>`;
+  }).join("");
+}
+
+function _renderVoiceFallback(grid) {
+  const fallback = [
+    { voice_id:"chloe",  name:"Chloé",  preview_url:null, labels:{ language:"FR", gender:"Féminin" }},
+    { voice_id:"thomas", name:"Thomas", preview_url:null, labels:{ language:"FR", gender:"Masculin" }},
+    { voice_id:"sofia",  name:"Sofia",  preview_url:null, labels:{ language:"ES", gender:"Féminin" }},
+    { voice_id:"james",  name:"James",  preview_url:null, labels:{ language:"EN", gender:"Masculin" }},
+    { voice_id:"amina",  name:"Amina",  preview_url:null, labels:{ language:"AR", gender:"Féminin" }},
+  ];
+  _elevenLabsVoices = fallback;
+  _renderVoiceCards(grid, fallback);
+}
+
+function selectVoice(voiceId, voiceName) {
+  document.getElementById("cfgVoix").value = voiceId;
+  _highlightVoiceCard(voiceId);
+  updatePreview();
+}
+
+function _highlightVoiceCard(voiceId) {
+  document.querySelectorAll(".voice-card").forEach(el => {
+    el.classList.remove("selected");
+    const id    = el.id.replace("vcard-", "");
+    const badge = document.getElementById("vbadge-" + id);
+    if (badge) badge.style.display = "none";
+  });
+  if (voiceId) {
+    const card  = document.getElementById("vcard-" + voiceId);
+    const badge = document.getElementById("vbadge-" + voiceId);
+    if (card)  card.classList.add("selected");
+    if (badge) badge.style.display = "inline-block";
+  }
+}
+
+let _currentAudio = null;
+function previewVoice(url, btn) {
+  if (_currentAudio) { _currentAudio.pause(); _currentAudio = null; }
+  _currentAudio = new Audio(url);
+  _currentAudio.play().catch(() => {});
+  const orig = btn.textContent;
+  btn.textContent = "⏹ Stop";
+  _currentAudio.onended = () => { btn.textContent = orig; _currentAudio = null; };
+  btn.onclick = (e) => {
+    e.stopPropagation();
+    if (_currentAudio) { _currentAudio.pause(); _currentAudio = null; }
+    btn.textContent = orig;
+    btn.onclick = (ev) => { ev.stopPropagation(); previewVoice(url, btn); };
+  };
+}
+
+/* ============================================================
+   SÉQ 8 — VAPI : créer ou mettre à jour l'assistant par client
+============================================================ */
+
+function _updateVapiButton() {
+  const label = document.getElementById("btnVapiLabel");
+  if (!label) return;
+  label.textContent = _vapiAssistantId ? "Mettre à jour mon assistant" : "Créer mon assistant";
+}
+
+async function createOrUpdateVapiAssistant() {
+  const cfg      = getVoixFormValues();
+  const clientId = window._currentClientId;
+  const btn      = document.getElementById("btnVapiAssistant");
+
+  if (!clientId) {
+    showToast("Aucun client sélectionné", "warning");
+    return;
+  }
+  if (!cfg.voiceId) {
+    showToast("Veuillez sélectionner une voix", "warning");
+    return;
+  }
+
+  btn.disabled = true;
+  const origLabel = document.getElementById("btnVapiLabel").textContent;
+  document.getElementById("btnVapiLabel").textContent = "En cours…";
+
+  try {
+    const res  = await fetch("/.netlify/functions/create-vapi-assistant", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({
+        clientId,
+        nomAssistant:  cfg.nom,
+        voiceId:       cfg.voiceId,
+        langue:        cfg.langPrimaire,
+        promptSysteme: cfg.prompt,
+        tonalite:      cfg.tonalite,
+        vitesseParole: parseFloat(cfg.vitesse),
+        silenceMax:    parseInt(cfg.silence),
+        interruptions: cfg.interruptions,
+      }),
+    });
+    const data = await res.json();
+
+    if (data.ok) {
+      _vapiAssistantId = data.assistantId;
+      _updateVapiButton();
+      showToast(data.created ? "Assistant créé ✓" : "Assistant mis à jour ✓", "success");
+    } else {
+      showToast("Erreur : " + (data.error || "inconnue"), "error");
+    }
+  } catch (e) {
+    console.error("[AkilAI] create-vapi-assistant:", e.message);
+    showToast("Erreur réseau", "error");
+  } finally {
+    btn.disabled = false;
+    document.getElementById("btnVapiLabel").textContent = origLabel;
+    _updateVapiButton();
+  }
 }
 
 /* ============================================================
