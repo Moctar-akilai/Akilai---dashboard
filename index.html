@@ -2047,6 +2047,14 @@
 
     /* 23 — Sélection texte */
     ::selection { background: rgba(112,178,222,0.25); color: var(--text); }
+
+    /* 24 — Netlify Identity widget : z-index au-dessus de #loginPage (9000) */
+    [data-netlify-identity-widget],
+    #netlify-identity-widget,
+    #netlify-identity-widget-wrapper,
+    .netlify-identity-widget {
+      z-index: 99999 !important;
+    }
   </style>
 </head>
 <body>
@@ -3740,9 +3748,11 @@ let _authToken  = null;
 let _authUser   = null;
 
 function openLogin() {
-  if (typeof netlifyIdentity !== "undefined") {
-    netlifyIdentity.open("login");
+  if (typeof netlifyIdentity === "undefined") {
+    console.error("[AkilAI] netlifyIdentity non disponible — vérifier que le script CDN est chargé");
+    return;
   }
+  netlifyIdentity.open("login");
 }
 
 function handleLogout() {
@@ -3897,11 +3907,6 @@ function _initDashboard() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  /* Intercepter le token d'invitation dans l'URL (lien email Netlify) */
-  if (window.location.hash.includes('invite_token') || window.location.hash.includes('recovery_token')) {
-    netlifyIdentity.open('signup');
-  }
-
   if (typeof netlifyIdentity === "undefined") {
     /* Netlify Identity non disponible (dev local sans CDN) — afficher dashboard direct */
     _initDashboard();
@@ -3910,7 +3915,13 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
+  /* Enregistrer les listeners AVANT init() */
   netlifyIdentity.on('init', (user) => {
+    /* Intercepter le token d'invitation APRÈS init (pas avant) */
+    if (window.location.hash.includes('invite_token') || window.location.hash.includes('recovery_token')) {
+      netlifyIdentity.open('signup');
+      return;
+    }
     if (user) {
       _onLogin(user);
     } else {
@@ -3929,8 +3940,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   netlifyIdentity.on('error', (err) => {
     console.error('[NetlifyIdentity]', err);
+    /* Si erreur à l'init, afficher quand même la page de login */
+    _showLoginPage();
   });
 
+  /* Appeler init() en dernier, après les listeners */
   netlifyIdentity.init();
 });
 
