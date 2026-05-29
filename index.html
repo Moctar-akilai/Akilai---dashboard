@@ -4111,7 +4111,13 @@ function _adminRenderUsers(users) {
           ${u.airtable_client_id
             ? `<span class="admin-badge-ok">✓ configuré</span> <span>${u.airtable_client_id}</span>`
             : `<span class="admin-badge-miss">⚠ non configuré</span>`}
-          &nbsp;·&nbsp; ${u.confirmed ? 'Compte actif' : '<span style="color:#f59e0b">Email non confirmé</span>'}
+          &nbsp;·&nbsp;
+          ${u.confirmed
+            ? '<span class="admin-badge-ok">✓ email confirmé</span>'
+            : `<span class="admin-badge-miss">⚠ email non confirmé</span>
+               <button class="admin-save-btn" id="admin-confirm-btn-${u.id}"
+                 style="padding:3px 10px;font-size:11px;margin-left:6px;background:var(--warning,#f59e0b)"
+                 onclick="adminConfirmUser('${u.id}')">Confirmer</button>`}
         </div>
         <div id="admin-status-${u.id}" style="min-height:16px"></div>
       </div>
@@ -4126,6 +4132,55 @@ function _adminRenderUsers(users) {
       </div>
     </div>
   `).join("");
+}
+
+async function adminConfirmUser(userId) {
+  if (!_adminPassword) return;
+  const btn      = document.getElementById(`admin-confirm-btn-${userId}`);
+  const statusEl = document.getElementById(`admin-status-${userId}`);
+  if (btn) btn.disabled = true;
+  statusEl.className = "";
+  statusEl.textContent = "Confirmation en cours…";
+
+  try {
+    const res = await fetch("/.netlify/functions/admin-confirm-user", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-admin-password": _adminPassword },
+      body: JSON.stringify({ userId }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      statusEl.className = "admin-status-err";
+      statusEl.textContent = "Erreur : " + (data.error || res.status);
+      if (btn) btn.disabled = false;
+    } else {
+      statusEl.className = "admin-status-ok";
+      statusEl.textContent = "✓ Email confirmé — rechargement…";
+      setTimeout(() => adminLoadUsers(), 1200);
+    }
+  } catch (e) {
+    statusEl.className = "admin-status-err";
+    statusEl.textContent = "Erreur réseau : " + e.message;
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function adminResendConfirmation() {
+  const statusEl = document.getElementById("resendStatus");
+  if (statusEl) statusEl.textContent = "Envoi…";
+  try {
+    const user = typeof netlifyIdentity !== "undefined" && netlifyIdentity.currentUser
+      ? netlifyIdentity.currentUser()
+      : null;
+    if (user && typeof user.confirm === "function") {
+      await user.confirm();
+      if (statusEl) { statusEl.style.color = "#22c55e"; statusEl.textContent = "Email de confirmation envoyé !"; }
+    } else {
+      if (statusEl) { statusEl.style.color = "#f59e0b"; statusEl.textContent = "Reconnectez-vous et réessayez, ou contactez l'administrateur."; }
+    }
+  } catch (e) {
+    if (statusEl) { statusEl.style.color = "#ef4444"; statusEl.textContent = "Erreur : " + e.message; }
+  }
 }
 
 async function adminSaveUser(userId) {
@@ -4235,7 +4290,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
   netlifyIdentity.on('error', (err) => {
     console.error('[NetlifyIdentity]', err);
-    /* Si erreur à l'init, afficher quand même la page de login */
+    const msg = (err && (err.message || err.msg || String(err))).toLowerCase();
+    if (msg.includes('email not confirmed') || msg.includes('not confirmed')) {
+      _showLoginPage();
+      document.getElementById("loginPage").innerHTML = `
+        <div class="login-card">
+          <div class="login-logo">Akil<span>AI</span></div>
+          <div style="font-size:32px;margin-bottom:8px">📧</div>
+          <div class="login-subtitle" style="color:var(--warning,#f59e0b);font-weight:600">
+            Email non confirmé
+          </div>
+          <div class="login-subtitle" style="margin-top:-16px;font-size:13px;color:var(--text-faint,#888)">
+            Votre adresse email n'a pas encore été confirmée.<br>
+            Vérifiez votre boîte mail et cliquez sur le lien de confirmation.
+          </div>
+          <button class="login-btn" style="margin-top:4px" onclick="adminResendConfirmation()">
+            Renvoyer l'email de confirmation
+          </button>
+          <div id="resendStatus" style="font-size:12px;margin-top:8px;min-height:16px"></div>
+          <div style="margin-top:16px">
+            <a href="#" onclick="handleLogout();return false"
+               style="color:var(--text-faint,#888);font-size:12px;text-decoration:none">
+              ← Se déconnecter
+            </a>
+          </div>
+        </div>`;
+      return;
+    }
     _showLoginPage();
   });
 
