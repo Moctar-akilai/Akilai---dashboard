@@ -3170,15 +3170,11 @@ const clients = [
 ];
 
 const automations = [
-  { id:1, nom:"Sophie – Réponse vocale",     type:"Voix",     statut:"Actif",   derniere_exec:"2024-06-18 14:22", prochaine_exec:"2024-06-19 08:00", client_id:1, schedule:{ jours:[1,2,3,4,5],   heure:"08:00", recurrence:"quotidien" } },
-  { id:2, nom:"WhatsApp GPT Support",        type:"WhatsApp", statut:"Actif",   derniere_exec:"2024-06-18 16:05", prochaine_exec:"2024-06-19 08:00", client_id:1, schedule:{ jours:[1,2,3,4,5,6], heure:"08:00", recurrence:"quotidien" } },
-  { id:3, nom:"Relance J-7",                 type:"Relance",  statut:"Actif",   derniere_exec:"2024-06-11 09:00", prochaine_exec:"2024-06-18 09:00", client_id:2, schedule:{ jours:[2],           heure:"09:00", recurrence:"hebdo"     } },
-  { id:4, nom:"Relance J-3",                 type:"Relance",  statut:"Erreur",  derniere_exec:"2024-06-15 09:00", prochaine_exec:null,               client_id:2, schedule:{ jours:[6],           heure:"09:00", recurrence:"hebdo"     } },
-  { id:5, nom:"Support Auto FAQ",            type:"WhatsApp", statut:"Actif",   derniere_exec:"2024-06-18 11:30", prochaine_exec:"2024-06-19 08:00", client_id:4, schedule:{ jours:[1,2,3,4,5],   heure:"08:00", recurrence:"quotidien" } },
-  { id:6, nom:"Onboarding Nouveaux Clients", type:"Email",    statut:"Actif",   derniere_exec:"2024-06-17 10:00", prochaine_exec:"2024-06-24 10:00", client_id:3, schedule:{ jours:[1],           heure:"10:00", recurrence:"hebdo"     } },
-  { id:7, nom:"Notifications RDV",           type:"Voix",     statut:"Actif",   derniere_exec:"2024-06-18 07:00", prochaine_exec:"2024-06-19 07:00", client_id:1, schedule:{ jours:[1,2,3,4,5],   heure:"07:00", recurrence:"quotidien" } },
-  { id:8, nom:"Suspension Impayés",          type:"Système",  statut:"Inactif", derniere_exec:"2024-05-01 00:00", prochaine_exec:null,               client_id:null, schedule:{ jours:[1],        heure:"00:00", recurrence:"mensuel"   } },
-  { id:9, nom:"Lead Qualif Calendly",        type:"Voix",     statut:"Erreur",  derniere_exec:"2024-06-16 15:00", prochaine_exec:null,               client_id:3, schedule:{ jours:[1,3,5],       heure:"15:00", recurrence:"hebdo"     } }
+  { id:1, nom:"Sophie – Réponse vocale", type:"Voix",     statut:"Actif",   derniere_exec:"2024-06-18 14:22", prochaine_exec:"2024-06-19 08:00", client_id:1, schedule:{ jours:[1,2,3,4,5],   heure:"08:00", recurrence:"quotidien" } },
+  { id:2, nom:"WhatsApp GPT Support",   type:"WhatsApp", statut:"Actif",   derniere_exec:"2024-06-18 16:05", prochaine_exec:"2024-06-19 08:00", client_id:1, schedule:{ jours:[1,2,3,4,5,6], heure:"08:00", recurrence:"quotidien" } },
+  { id:7, nom:"Notifications RDV",      type:"Voix",     statut:"Actif",   derniere_exec:"2024-06-18 07:00", prochaine_exec:"2024-06-19 07:00", client_id:1, schedule:{ jours:[1,2,3,4,5],   heure:"07:00", recurrence:"quotidien" } },
+  { id:3, nom:"Relance J-7",            type:"Relance",  statut:"Actif",   derniere_exec:"2024-06-11 09:00", prochaine_exec:"2024-06-18 09:00", client_id:1, schedule:{ jours:[2],           heure:"09:00", recurrence:"hebdo"     } },
+  { id:4, nom:"Relance J-3",            type:"Relance",  statut:"Erreur",  derniere_exec:"2024-06-15 09:00", prochaine_exec:null,               client_id:1, schedule:{ jours:[6],           heure:"09:00", recurrence:"hebdo"     } },
 ];
 
 const appels = [
@@ -3266,7 +3262,7 @@ const conversations_wa = [
       {role:"user",     text:"Le vendredi c'est parfait", heure:"14:35"},
       {role:"assistant",text:"✅ RDV confirmé vendredi 21 juin à 9h30. Un rappel vous sera envoyé la veille !", heure:"14:35"}
     ]},
-  { id:3, nom:"Amina Bensaid",   numero:"+33 6 77 88 99 00", date:"2024-06-17", nb_messages:6, client_id:4, intention:"📋 Demande info",
+  { id:3, nom:"Amina Bensaid",   numero:"+33 6 77 88 99 00", date:"2024-06-17", nb_messages:6, client_id:1, intention:"📋 Demande info",
     messages:[
       {role:"user",     text:"Bonjour, je voudrais m'inscrire à la formation Excel avancé", heure:"10:00"},
       {role:"assistant",text:"Bonjour Amina ! Formation Excel Avancé démarre le 1er juillet, 4 séances de 2h. Tarif : 320€. Inscription ?", heure:"10:01"},
@@ -3275,7 +3271,7 @@ const conversations_wa = [
       {role:"user",     text:"", type:"audio", duree:"0:18", heure:"10:10"},
       {role:"assistant",text:"Votre inscription est enregistrée. Vous recevrez un email de confirmation sous 24h.", heure:"10:11"}
     ]},
-  { id:4, nom:"Romain Tessier",  numero:"+33 6 23 45 67 89", date:"2024-06-17", nb_messages:4, client_id:2, intention:"📅 Prise de RDV",
+  { id:4, nom:"Romain Tessier",  numero:"+33 6 23 45 67 89", date:"2024-06-17", nb_messages:4, client_id:1, intention:"📅 Prise de RDV",
     messages:[
       {role:"user",     text:"Bonsoir, votre terrasse est disponible ce samedi à 20h pour 4 personnes ?", heure:"18:45"},
       {role:"assistant",text:"Bonsoir Romain ! Oui, terrasse disponible samedi soir. Réservation pour 4 à 20h. Votre nom ?", heure:"18:46"},
@@ -3290,7 +3286,7 @@ const conversations_wa = [
       {role:"assistant",text:"Créneau disponible jeudi 20 juin à 14h00. Cela vous convient ?", heure:"11:03"},
       {role:"user",     text:"Oui parfait merci !", heure:"11:05"}
     ]},
-  { id:6, nom:"Kevin Lambert",   numero:"+33 6 88 77 66 55", date:"2024-06-15", nb_messages:4, client_id:4, intention:"❌ Annulation",
+  { id:6, nom:"Kevin Lambert",   numero:"+33 6 88 77 66 55", date:"2024-06-15", nb_messages:4, client_id:1, intention:"❌ Annulation",
     messages:[
       {role:"user",     text:"Bonjour, j'ai un problème pour accéder à la plateforme de cours", heure:"09:30"},
       {role:"assistant",text:"Bonjour Kevin ! Pouvez-vous préciser le problème ? (Mot de passe oublié, page d'erreur, autre ?)", heure:"09:31"},
@@ -3300,28 +3296,24 @@ const conversations_wa = [
 ];
 
 const tickets = [
-  { id:"T-001", sujet:"Erreur automation Relance J-3",       client_id:2, priorite:"Haute",   categorie:"Technique",     statut:"Ouvert",   date:"2024-06-18",
+  { id:"T-001", sujet:"Erreur automation Relance J-3",  client_id:1, priorite:"Haute",   categorie:"Technique",     statut:"Ouvert",   date:"2024-06-18",
     messages:[
-      {auteur:"Restaurant Le Jardin", role:"client",  text:"La Relance J-3 ne s'exécute plus depuis samedi. Les clients ne reçoivent plus de rappel.", heure:"09:12"},
-      {auteur:"Support AkilAI",       role:"support", text:"Nous analysons le problème. Il semble lié à une mise à jour de l'API WhatsApp. Correction en cours.", heure:"10:30"}
+      {auteur:"Cabinet Dr. Moreau", role:"client",  text:"La Relance J-3 ne s'exécute plus depuis samedi. Les appels de rappel ne partent plus.", heure:"09:12"},
+      {auteur:"Support AkilAI",     role:"support", text:"Nous analysons le problème. Correction en cours.", heure:"10:30"}
     ]},
-  { id:"T-002", sujet:"Modifier le script de Sophie",        client_id:1, priorite:"Normale", categorie:"Configuration", statut:"En cours", date:"2024-06-17",
+  { id:"T-002", sujet:"Modifier le script de Sophie",   client_id:1, priorite:"Normale", categorie:"Configuration", statut:"En cours", date:"2024-06-17",
     messages:[
       {auteur:"Cabinet Dr. Moreau", role:"client",  text:"Nous souhaiterions que Sophie propose également des créneaux le samedi matin.", heure:"14:00"},
       {auteur:"Support AkilAI",     role:"support", text:"Bien reçu ! Nous mettons à jour le script. La modification sera active demain matin.", heure:"16:30"}
     ]},
-  { id:"T-003", sujet:"Demande de facturation juillet",      client_id:4, priorite:"Basse",   categorie:"Facturation",   statut:"Résolu",   date:"2024-06-15",
+  { id:"T-003", sujet:"Demande de facture juillet",     client_id:1, priorite:"Basse",   categorie:"Facturation",   statut:"Résolu",   date:"2024-06-15",
     messages:[
-      {auteur:"FormaPro Academy", role:"client",  text:"Pouvez-vous envoyer la facture de juillet en avance pour notre comptabilité ?", heure:"11:00"},
-      {auteur:"Support AkilAI",   role:"support", text:"Facture juillet envoyée à votre adresse email. Bonne journée !", heure:"11:45"}
+      {auteur:"Cabinet Dr. Moreau", role:"client",  text:"Pouvez-vous envoyer la facture de juillet en avance pour notre comptabilité ?", heure:"11:00"},
+      {auteur:"Support AkilAI",     role:"support", text:"Facture juillet envoyée à votre adresse email. Bonne journée !", heure:"11:45"}
     ]},
-  { id:"T-004", sujet:"Lead Qualif Calendly ne démarre pas", client_id:3, priorite:"Urgente", categorie:"Technique",     statut:"Ouvert",   date:"2024-06-18",
+  { id:"T-004", sujet:"Question sur les horaires WhatsApp", client_id:1, priorite:"Normale", categorie:"Fonctionnel", statut:"Ouvert",   date:"2024-06-16",
     messages:[
-      {auteur:"Immo Premium", role:"client", text:"Notre automation Lead Qualif est en erreur depuis 2 jours ! On perd des leads !", heure:"08:55"}
-    ]},
-  { id:"T-005", sujet:"Question sur l'offre Premium",        client_id:3, priorite:"Normale", categorie:"Fonctionnel",   statut:"Ouvert",   date:"2024-06-16",
-    messages:[
-      {auteur:"Immo Premium", role:"client", text:"Quelles fonctionnalités supplémentaires comprend l'offre Premium par rapport à Business ?", heure:"15:30"}
+      {auteur:"Cabinet Dr. Moreau", role:"client", text:"À quelles heures le bot WhatsApp répond-il automatiquement ?", heure:"15:30"}
     ]}
 ];
 
@@ -3473,9 +3465,10 @@ function buildCharts(days) {
   });
 
   /* --- Donut : statuts automations --- */
-  const actif   = automations.filter(a => a.statut === "Actif").length;
-  const erreur  = automations.filter(a => a.statut === "Erreur").length;
-  const inactif = automations.filter(a => a.statut === "Inactif").length;
+  const _cid    = _getActiveClientId();
+  const actif   = automations.filter(a => a.client_id === _cid && a.statut === "Actif").length;
+  const erreur  = automations.filter(a => a.client_id === _cid && a.statut === "Erreur").length;
+  const inactif = automations.filter(a => a.client_id === _cid && a.statut === "Inactif").length;
 
   chartDonut = new Chart(document.getElementById("chartDonut"), {
     type: "doughnut",
@@ -3669,8 +3662,8 @@ function _initDashboard() {
   buildAutoTable();
   populateScheduleSelect();
   buildCalendar();
-  buildAppelsTable(appels);
-  buildWaTable(conversations_wa);
+  buildAppelsTable(appels.filter(a => a.client_id === _getActiveClientId()));
+  buildWaTable(conversations_wa.filter(a => a.client_id === _getActiveClientId()));
   loadVoixConfig();
   buildTicketsSummary();
   buildTicketsList();
@@ -3943,11 +3936,11 @@ async function loadHistoriqueFromAirtable() {
     const data = await apiFetch("/.netlify/functions/get-historique");
     if (data.appels?.length) {
       appels.splice(0, appels.length, ...data.appels);
-      buildAppelsTable(appels);
+      buildAppelsTable(appels.filter(a => a.client_id === _getActiveClientId()));
     }
     if (data.conversations_wa?.length) {
       conversations_wa.splice(0, conversations_wa.length, ...data.conversations_wa);
-      buildWaTable(conversations_wa);
+      buildWaTable(conversations_wa.filter(a => a.client_id === _getActiveClientId()));
     }
   } catch (e) {
     console.warn("[AkilAI] get-historique fallback:", e.message);
@@ -3986,7 +3979,8 @@ async function loadKPIsFromAirtable(days) {
 function updateTicketsNavDot() {
   const dot = document.getElementById("ticketsNavDot");
   if (!dot) return;
-  const open = tickets.filter(t => t.statut === "Ouvert" || t.statut === "En cours").length;
+  const cid  = _getActiveClientId();
+  const open = tickets.filter(t => t.client_id === cid && (t.statut === "Ouvert" || t.statut === "En cours")).length;
   dot.style.display = open > 0 ? "block" : "none";
 }
 
@@ -4179,9 +4173,11 @@ function fmtSec(s) {
 
 /* Filtres appels */
 function filterAppels() {
-  const q  = (document.getElementById("appelSearch").value || "").toLowerCase();
-  const st = document.getElementById("appelStatut").value;
+  const cid = _getActiveClientId();
+  const q   = (document.getElementById("appelSearch").value || "").toLowerCase();
+  const st  = document.getElementById("appelStatut").value;
   const filtered = appels.filter(a => {
+    if (a.client_id !== cid) return false;
     const matchQ  = !q || a.nom.toLowerCase().includes(q) || a.numero.includes(q);
     const matchSt = st === "all" || a.statut === st;
     return matchQ && matchSt;
@@ -4285,9 +4281,10 @@ function toggleWaDetail(id) {
 }
 
 function filterWa() {
-  const q = (document.getElementById("waSearch").value || "").toLowerCase();
+  const cid = _getActiveClientId();
+  const q   = (document.getElementById("waSearch").value || "").toLowerCase();
   const filtered = conversations_wa.filter(c =>
-    !q || c.nom.toLowerCase().includes(q) || c.numero.includes(q)
+    c.client_id === cid && (!q || c.nom.toLowerCase().includes(q) || c.numero.includes(q))
   );
   buildWaTable(filtered);
 }
@@ -4708,6 +4705,12 @@ function showToast(msg, type = "success") {
 const autoState = {};
 automations.forEach(a => { autoState[a.id] = a.statut; });
 
+/* ID du client actif — utilisé pour filtrer toutes les données mockées.
+   En mode connecté, remplacé par la valeur Airtable du client authentifié. */
+function _getActiveClientId() {
+  return clients[0]?.id || 1;
+}
+
 function statusBadgeHtml(statut) {
   const map = {
     "Actif":   "badge badge-success",
@@ -4739,11 +4742,11 @@ function buildAutoTable() {
   if (!tbody) return;
   tbody.innerHTML = "";
 
-  automations.forEach(a => {
+  const cid = _getActiveClientId();
+  automations.filter(a => a.client_id === cid).forEach(a => {
     const isActive  = autoState[a.id] === "Actif";
     const isErr     = autoState[a.id] === "Erreur";
     const checked   = isActive ? "checked" : "";
-    const client    = clients.find(c => c.id === a.client_id);
 
     /* Ligne principale */
     const tr = document.createElement("tr");
@@ -4756,7 +4759,6 @@ function buildAutoTable() {
       </td>
       <td>
         <div class="cell-name">${a.nom}</div>
-        <div style="font-size:11px;color:var(--text-faint);margin-top:2px">${client ? client.nom : "—"}</div>
       </td>
       <td>${typeChipHtml(a.type)}</td>
       <td id="badge-${a.id}">${statusBadgeHtml(autoState[a.id])}</td>
@@ -4838,7 +4840,8 @@ function toggleLogs(id) {
 }
 
 function updateAutoCount() {
-  const actifs = Object.values(autoState).filter(s => s === "Actif").length;
+  const cid   = _getActiveClientId();
+  const actifs = automations.filter(a => a.client_id === cid && autoState[a.id] === "Actif").length;
   const el = document.getElementById("autoActiveCount");
   if (el) el.textContent = actifs;
 }
@@ -5291,13 +5294,15 @@ function tktStatutBadge(statut) {
 }
 
 function buildTicketsSummary() {
-  const el = document.getElementById("ticketsSummary");
+  const el  = document.getElementById("ticketsSummary");
   if (!el) return;
+  const cid = _getActiveClientId();
+  const myT = tickets.filter(t => t.client_id === cid);
   const counts = {
-    ouvert:    tickets.filter(t => t.statut === "Ouvert").length,
-    "en-cours":tickets.filter(t => t.statut === "En cours").length,
-    résolu:    tickets.filter(t => t.statut === "Résolu").length,
-    fermé:     tickets.filter(t => t.statut === "Fermé").length,
+    ouvert:    myT.filter(t => t.statut === "Ouvert").length,
+    "en-cours":myT.filter(t => t.statut === "En cours").length,
+    résolu:    myT.filter(t => t.statut === "Résolu").length,
+    fermé:     myT.filter(t => t.statut === "Fermé").length,
   };
   const items = [
     { label:"Ouverts",  val: counts.ouvert,     color:"#fbbf24" },
@@ -5321,7 +5326,9 @@ function buildTicketsList() {
   const prio    = document.getElementById("filterTktPrio")?.value || "";
   const cat     = document.getElementById("filterTktCat")?.value || "";
 
+  const cid = _getActiveClientId();
   const filtered = tickets.filter(t => {
+    if (t.client_id !== cid) return false;
     if (q && !t.sujet.toLowerCase().includes(q) && !t.id.toLowerCase().includes(q)) return false;
     if (statut && t.statut !== statut) return false;
     if (prio   && t.priorite !== prio) return false;
@@ -5476,25 +5483,28 @@ function initAnalytics() {
 }
 
 function buildAnalyticsKPIs() {
-  const el = document.getElementById("analyticsKPIs");
+  const el  = document.getElementById("analyticsKPIs");
   if (!el) return;
 
+  const cid   = _getActiveClientId();
   const now   = new Date();
   const month = now.getMonth();
   const year  = now.getFullYear();
 
   const appelsThisMois = appels.filter(a => {
+    if (a.client_id !== cid) return false;
     const d = new Date(a.date);
     return d.getMonth() === month && d.getFullYear() === year;
   }).length;
 
   const waThisMois = conversations_wa.filter(a => {
+    if (a.client_id !== cid) return false;
     const d = new Date(a.date);
     return d.getMonth() === month && d.getFullYear() === year;
   }).length;
 
   const ticketsResolus = tickets.filter(t =>
-    t.statut === "Résolu" || t.statut === "Fermé"
+    t.client_id === cid && (t.statut === "Résolu" || t.statut === "Fermé")
   ).length;
 
   const totalAppelsMois30 = kpis.appels_par_jour.slice(-30).reduce((a,b)=>a+b,0);
@@ -5506,10 +5516,9 @@ function buildAnalyticsKPIs() {
   const chgWA = totalWAPrev ? Math.round((totalWA30 - totalWAPrev) / totalWAPrev * 100) : 0;
 
   const items = [
-    { icon:"📞", val: appelsThisMois,   lbl:"Appels traités ce mois",       chg:(chgAppels>=0?"+":"")+chgAppels+"%", up:chgAppels>=0 },
-    { icon:"💬", val: waThisMois,       lbl:"Messages WhatsApp ce mois",    chg:(chgWA>=0?"+":"")+chgWA+"%",        up:chgWA>=0 },
-    { icon:"✅", val: ticketsResolus,   lbl:"Tickets résolus",               chg:"ce mois",                          up:true },
-    { icon:"⭐", val: "4.8 / 5",        lbl:"Satisfaction client",           chg:"+0.1 vs mois dernier",             up:true },
+    { icon:"📞", val: appelsThisMois,   lbl:"Appels traités ce mois",    chg:(chgAppels>=0?"+":"")+chgAppels+"%", up:chgAppels>=0 },
+    { icon:"💬", val: waThisMois,       lbl:"Messages WhatsApp ce mois", chg:(chgWA>=0?"+":"")+chgWA+"%",        up:chgWA>=0 },
+    { icon:"✅", val: ticketsResolus,   lbl:"Tickets résolus ce mois",   chg:"ce mois",                          up:true },
   ];
   el.innerHTML = items.map(k => `
     <div class="analytics-kpi-card">
@@ -5575,8 +5584,9 @@ function buildAnalyticsBar() {
   if (!ctx) return;
   if (aChartBar) { aChartBar.destroy(); }
 
+  const cid    = _getActiveClientId();
   const cats   = ["Technique","Configuration","Facturation","Fonctionnel"];
-  const counts = cats.map(cat => tickets.filter(t => t.categorie === cat).length);
+  const counts = cats.map(cat => tickets.filter(t => t.client_id === cid && t.categorie === cat).length);
 
   aChartBar = new Chart(ctx, {
     type: "bar",
@@ -5612,8 +5622,9 @@ function buildAutoPerfList() {
   const MOCK_EXEC = { 1:62, 2:60, 3:4, 4:4, 5:62, 6:8, 7:62, 8:0, 9:3 };
   const MOCK_PCT  = { 1:96, 2:93, 3:88, 4:null, 5:91, 6:85, 7:97, 8:null, 9:null };
 
+  const cid  = _getActiveClientId();
   const rows = automations
-    .filter(a => autoState[a.id] !== "Inactif")
+    .filter(a => a.client_id === cid && autoState[a.id] !== "Inactif")
     .map(a => ({
       nom:    a.nom,
       exec:   MOCK_EXEC[a.id] || 0,
@@ -5652,12 +5663,13 @@ function exportAnalytics() {
   const today   = new Date().toISOString().split("T")[0];
   const filename = `AkilAI_Analytics_${today}.csv`;
 
+  const cid   = _getActiveClientId();
   const now   = new Date();
   const month = now.getMonth();
   const year  = now.getFullYear();
-  const appelsM = appels.filter(a => { const d=new Date(a.date); return d.getMonth()===month&&d.getFullYear()===year; }).length;
-  const waM     = conversations_wa.filter(a => { const d=new Date(a.date); return d.getMonth()===month&&d.getFullYear()===year; }).length;
-  const tktRes  = tickets.filter(t=>t.statut==="Résolu"||t.statut==="Fermé").length;
+  const appelsM = appels.filter(a => { const d=new Date(a.date); return a.client_id===cid&&d.getMonth()===month&&d.getFullYear()===year; }).length;
+  const waM     = conversations_wa.filter(a => { const d=new Date(a.date); return a.client_id===cid&&d.getMonth()===month&&d.getFullYear()===year; }).length;
+  const tktRes  = tickets.filter(t=>t.client_id===cid&&(t.statut==="Résolu"||t.statut==="Fermé")).length;
 
   const lines = [
     "KPIS",
@@ -5673,11 +5685,11 @@ function exportAnalytics() {
     "",
     "TICKETS PAR CATEGORIE",
     "Catégorie,Nombre",
-    ...["Technique","Configuration","Facturation","Fonctionnel"].map(cat => `${cat},${tickets.filter(t=>t.categorie===cat).length}`),
+    ...["Technique","Configuration","Facturation","Fonctionnel"].map(cat => `${cat},${tickets.filter(t=>t.client_id===cid&&t.categorie===cat).length}`),
     "",
     "PERFORMANCE AUTOMATIONS",
     "Automation,Exécutions ce mois,Taux de succès",
-    ...automations.filter(a=>autoState[a.id]!=="Inactif").map(a => {
+    ...automations.filter(a=>a.client_id===cid&&autoState[a.id]!=="Inactif").map(a => {
       const EXEC={1:62,2:60,3:4,4:4,5:62,6:8,7:62,8:0,9:3};
       const PCT ={1:96,2:93,3:88,4:null,5:91,6:85,7:97,8:null,9:null};
       const s = autoState[a.id]==="Erreur" ? "Erreur" : PCT[a.id]!=null ? PCT[a.id]+"%" : "—";
