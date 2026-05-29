@@ -4178,49 +4178,48 @@ window.addEventListener("hashchange", () => {
 
 document.addEventListener('DOMContentLoaded', () => {
   if (typeof netlifyIdentity === "undefined") {
-    /* Netlify Identity non disponible (dev local sans CDN) — afficher dashboard direct */
     _initDashboard();
     _showDashboard();
     checkConnection();
     return;
   }
 
-  /* Détecter les tokens AVANT init() pour adapter l'UI immédiatement */
   const _hash       = window.location.hash || "";
   const _isInvite   = _hash.includes('invite_token');
   const _isRecovery = _hash.includes('recovery_token');
+  const _mode       = _isInvite ? 'signup' : 'recovery';
 
+  /* Pour les flux token : afficher un vrai bouton cliquable + tenter l'auto-ouverture */
   if (_isInvite || _isRecovery) {
-    const msg = _isInvite
-      ? 'Définissez votre mot de passe pour activer votre compte.'
-      : 'Réinitialisation de votre mot de passe.';
+    const label = _isInvite ? 'Définir mon mot de passe' : 'Réinitialiser mon mot de passe';
+    const sub   = _isInvite
+      ? 'Bienvenue ! Cliquez pour définir votre mot de passe.'
+      : 'Cliquez pour choisir un nouveau mot de passe.';
     const lp = document.getElementById('loginPage');
     if (lp) {
       lp.innerHTML = `
         <div class="login-card">
           <div class="login-logo">Akil<span>AI</span></div>
-          <div class="login-subtitle">${msg}</div>
-          <div style="color:var(--text-faint,#888);font-size:13px;margin-top:12px">Ouverture du formulaire…</div>
+          <div class="login-subtitle">${sub}</div>
+          <button class="login-btn" id="tokenBtn" onclick="netlifyIdentity.open('${_mode}')">${label}</button>
+          <div id="tokenMsg" style="color:var(--text-faint,#888);font-size:12px;margin-top:10px"></div>
         </div>`;
     }
   }
 
-  /* Enregistrer les listeners AVANT init() */
   netlifyIdentity.on('init', (user) => {
-    if (_isInvite) {
-      setTimeout(() => netlifyIdentity.open('signup'), 200);
+    if (_isInvite || _isRecovery) {
+      /* Tenter l'auto-ouverture ; le bouton reste visible si ça échoue */
+      const msg = document.getElementById('tokenMsg');
+      if (msg) msg.textContent = 'Ouverture automatique en cours…';
+      setTimeout(() => {
+        try { netlifyIdentity.open(_mode); }
+        catch(e) { console.error('[AkilAI] open() failed:', e); }
+        if (msg) msg.textContent = 'Si le formulaire ne s\'ouvre pas, cliquez sur le bouton ci-dessus.';
+      }, 400);
       return;
     }
-    if (_isRecovery) {
-      setTimeout(() => netlifyIdentity.open('recovery'), 200);
-      return;
-    }
-    /* Flux normal : utilisateur déjà connecté ou pas */
-    if (user) {
-      _onLogin(user);
-    } else {
-      _showLoginPage();
-    }
+    if (user) _onLogin(user); else _showLoginPage();
   });
 
   netlifyIdentity.on('login', (user) => {
