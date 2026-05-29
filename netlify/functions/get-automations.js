@@ -1,16 +1,19 @@
 const { BASE_URL, headers, ok, err, preflight } = require("./config");
+const { requireAuth, filterByClient } = require("./auth");
 
 /**
- * GET /Automatisations → tableau automations[] mappé
- * Champs Airtable : Nom, Type, Statut, DerniereExec, ProchaineExec,
- *   ClientId (text), JoursProgrammes (JSON array), HeureProgrammee, Recurrence,
- *   MakeScenarioId (pour séquence 6)
+ * GET /Automatisations → tableau automations[] filtrés par client authentifié.
  */
-exports.handler = async (event) => {
+exports.handler = async (event, context) => {
   if (event.httpMethod === "OPTIONS") return preflight();
 
+  const auth = requireAuth(event, context);
+  if (auth.error) return auth.error;
+  const { clientId } = auth;
+
   try {
-    const res = await fetch(`${BASE_URL}/Automatisations?view=Grid%20view`, { headers });
+    const filter = filterByClient(clientId);
+    const res    = await fetch(`${BASE_URL}/Automatisations?${filter}&view=Grid%20view`, { headers });
     if (!res.ok) return err(`Airtable ${res.status}`);
 
     const data    = await res.json();
@@ -33,8 +36,8 @@ exports.handler = async (event) => {
         makeScenarioId: f.MakeScenarioId || null,
         schedule: {
           jours,
-          heure:       f.HeureProgrammee || "08:00",
-          recurrence:  f.Recurrence      || "quotidien",
+          heure:      f.HeureProgrammee || "08:00",
+          recurrence: f.Recurrence      || "quotidien",
         },
       };
     });

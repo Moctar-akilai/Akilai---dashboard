@@ -1,15 +1,19 @@
 const { BASE_URL, headers, ok, err, preflight } = require("./config");
+const { requireAuth, filterByClient } = require("./auth");
 
 /**
- * GET /Clients → tableau clients[] mappé vers la structure du dashboard
- * Champs Airtable attendus : Nom, Secteur, Statut, Plan, DateDebut,
- *   RevenusMensuels, Email, Telephone, Tags (multiselect), Notes (long text JSON)
+ * GET /Clients → retourne uniquement les données du client authentifié.
  */
-exports.handler = async (event) => {
+exports.handler = async (event, context) => {
   if (event.httpMethod === "OPTIONS") return preflight();
 
+  const auth = requireAuth(event, context);
+  if (auth.error) return auth.error;
+  const { clientId } = auth;
+
   try {
-    const res  = await fetch(`${BASE_URL}/Clients?view=Grid%20view`, { headers });
+    const filter = filterByClient(clientId);
+    const res    = await fetch(`${BASE_URL}/Clients?${filter}&view=Grid%20view`, { headers });
     if (!res.ok) return err(`Airtable ${res.status}`);
 
     const data    = await res.json();
@@ -21,8 +25,8 @@ exports.handler = async (event) => {
       try { notes = f.Notes ? JSON.parse(f.Notes) : []; } catch { notes = f.Notes ? [f.Notes] : []; }
 
       return {
-        id:               r.id,           // ID Airtable (string recXXX)
-        _seq:             i + 1,          // index local pour compatibilité
+        id:               r.id,
+        _seq:             i + 1,
         nom:              f.Nom              || "",
         secteur:          f.Secteur          || "Autre",
         statut:           f.Statut           || "Actif",
@@ -32,6 +36,7 @@ exports.handler = async (event) => {
         email:            f.Email            || "",
         telephone:        f.Telephone        || "",
         tags:             Array.isArray(f.Tags) ? f.Tags : (f.Tags ? [f.Tags] : []),
+        vapiAssistantId:  f.VapiAssistantId  || null,
         notes,
       };
     });

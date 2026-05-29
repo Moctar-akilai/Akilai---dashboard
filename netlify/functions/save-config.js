@@ -1,42 +1,44 @@
 const { BASE_URL, headers, ok, err, preflight } = require("./config");
+const { requireAuth, filterByClient } = require("./auth");
 
 /**
- * GET  → retourne la config Voix & IA du client (par clientId queryParam)
+ * GET  → retourne la config Voix & IA du client authentifié
  * POST → PATCH /Configurations/{id} avec tous les champs Voix & IA
  *
- * Champs Airtable : NomAssistant, Voix, Tonalite, Personnalite, Langue,
+ * Champs Airtable : NomAssistant, Voix, VoiceName, Tonalite, Personnalite, Langue,
  *   LangueSecours, VitesseParole, SilenceMax, Interruptions, PromptSysteme, ClientId
  */
-exports.handler = async (event) => {
+exports.handler = async (event, context) => {
   if (event.httpMethod === "OPTIONS") return preflight();
+
+  const auth = requireAuth(event, context);
+  if (auth.error) return auth.error;
+  const { clientId } = auth;
 
   /* ---- GET : charger la config ---- */
   if (event.httpMethod === "GET") {
-    const clientId = event.queryStringParameters?.clientId;
-    const filter   = clientId
-      ? `?filterByFormula=${encodeURIComponent(`{ClientId}="${clientId}"`)}&maxRecords=1`
-      : "?maxRecords=1";
-
     try {
-      const res = await fetch(`${BASE_URL}/Configurations${filter}`, { headers });
+      const filter = filterByClient(clientId);
+      const res    = await fetch(`${BASE_URL}/Configurations?${filter}&maxRecords=1`, { headers });
       if (!res.ok) return err(`Airtable ${res.status}`, 502);
 
       const data = await res.json();
       const rec  = data.records?.[0];
-      if (!rec) return ok({ config: null }); /* pas encore de config */
+      if (!rec) return ok({ config: null });
 
       const f = rec.fields;
       return ok({
         config: {
           _id:           rec.id,
           nomAssistant:  f.NomAssistant  || "Sophie",
-          voix:          f.Voix          || "Alloy",
-          tonalite:      f.Tonalite      || "Professionnel",
-          personnalite:  f.Personnalite  || "Chaleureux",
-          langue:        f.Langue        || "fr-FR",
-          langueSecours: f.LangueSecours || "en-US",
+          voix:          f.Voix          || "",
+          voiceName:     f.VoiceName     || "",
+          tonalite:      f.Tonalite      || "neutre",
+          personnalite:  f.Personnalite  || "efficace",
+          langue:        f.Langue        || "fr",
+          langueSecours: f.LangueSecours || "none",
           vitesseParole: Number(f.VitesseParole) || 1.0,
-          silenceMax:    Number(f.SilenceMax)    || 3,
+          silenceMax:    Number(f.SilenceMax)    || 8,
           interruptions: Boolean(f.Interruptions),
           promptSysteme: f.PromptSysteme || "",
         },
@@ -51,12 +53,13 @@ exports.handler = async (event) => {
     let body;
     try { body = JSON.parse(event.body || "{}"); } catch { return err("JSON invalide", 400); }
 
-    const { _id, clientId, ...cfg } = body;
-    if (!_id && !clientId) return err("_id ou clientId requis", 400);
+    const { _id, ...cfg } = body;
 
     const fields = {
+      ClientId:      clientId,
       NomAssistant:  cfg.nomAssistant,
       Voix:          cfg.voix,
+      VoiceName:     cfg.voiceName,
       Tonalite:      cfg.tonalite,
       Personnalite:  cfg.personnalite,
       Langue:        cfg.langue,
@@ -66,27 +69,23 @@ exports.handler = async (event) => {
       Interruptions: cfg.interruptions,
       PromptSysteme: cfg.promptSysteme,
     };
-    if (clientId) fields.ClientId = clientId;
 
     try {
       let recordId = _id;
 
-      /* Si pas d'ID, chercher ou créer */
       if (!recordId) {
-        const filter = `?filterByFormula=${encodeURIComponent(`{ClientId}="${clientId}"`)}&maxRecords=1`;
-        const findRes = await fetch(`${BASE_URL}/Configurations${filter}`, { headers });
+        const filter  = filterByClient(clientId);
+        const findRes = await fetch(`${BASE_URL}/Configurations?${filter}&maxRecords=1`, { headers });
         const findData = findRes.ok ? await findRes.json() : { records: [] };
         recordId = findData.records?.[0]?.id || null;
       }
 
       let res;
       if (recordId) {
-        /* PATCH sur l'existant */
         res = await fetch(`${BASE_URL}/Configurations/${recordId}`, {
           method: "PATCH", headers, body: JSON.stringify({ fields }),
         });
       } else {
-        /* POST pour créer */
         res = await fetch(`${BASE_URL}/Configurations`, {
           method: "POST", headers, body: JSON.stringify({ fields }),
         });

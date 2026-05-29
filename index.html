@@ -3692,7 +3692,7 @@ async function checkConnection() {
   const dot   = document.getElementById("connectionDot");
   const label = document.getElementById("connectionLabel");
   try {
-    const res  = await fetch("/.netlify/functions/ping-airtable");
+    const res  = await fetch("/.netlify/functions/ping-airtable", { headers: _authHeaders() });
     const data = await res.json();
     if (data.ok) {
       if (dot)   { dot.style.background = "#22c55e"; }
@@ -3716,10 +3716,32 @@ async function checkConnection() {
    Chaque loader a un fallback silencieux sur les données mockées.
 ============================================================ */
 
-async function apiFetch(path) {
-  const res = await fetch(path);
+/* authFetch — wrapper qui injecte le JWT Netlify Identity dans chaque requête */
+function _authHeaders(extra = {}) {
+  const h = { ...extra };
+  if (_authToken) h["Authorization"] = `Bearer ${_authToken}`;
+  if (window._currentClientId) h["x-client-id"] = window._currentClientId;
+  return h;
+}
+
+async function apiFetch(path, options = {}) {
+  const res = await fetch(path, {
+    ...options,
+    headers: _authHeaders(options.headers || {}),
+  });
+  /* Token expiré → déconnexion automatique */
+  if (res.status === 401) { handleLogout(); throw new Error("Session expirée"); }
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
+}
+
+/* apiFetchPost — shorthand pour les requêtes POST authentifiées */
+async function apiFetchPost(path, body) {
+  return apiFetch(path, {
+    method:  "POST",
+    headers: { "Content-Type": "application/json" },
+    body:    JSON.stringify(body),
+  });
 }
 
 async function loadAllFromAirtable() {
@@ -4180,8 +4202,7 @@ async function loadVoixConfig() {
   /* 1. Essayer Airtable si connecté */
   if (window._airtableConnected) {
     try {
-      const res  = await fetch("/.netlify/functions/save-config");
-      const data = await res.json();
+      const data = await apiFetch("/.netlify/functions/save-config");
       if (data.config) {
         cfg = {
           nom:          data.config.nomAssistant,
@@ -4207,8 +4228,7 @@ async function loadVoixConfig() {
     try {
       const clientId = window._currentClientId;
       if (clientId) {
-        const cRes  = await fetch(`/.netlify/functions/get-clients`);
-        const cData = await cRes.json();
+        const cData  = await apiFetch("/.netlify/functions/get-clients");
         const client = (cData.clients || []).find(c => c.id === clientId);
         _vapiAssistantId = client?.vapiAssistantId || null;
       }
@@ -4272,12 +4292,7 @@ async function saveVoixConfig() {
       const prev   = stored ? JSON.parse(stored) : {};
       if (prev._id) payload._id = prev._id;
 
-      const res  = await fetch("/.netlify/functions/save-config", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify(payload),
-      });
-      const data = await res.json();
+      const data = await apiFetchPost("/.netlify/functions/save-config", payload);
       if (data.ok && data.id) {
         cfg._id = data.id;
         localStorage.setItem("voixConfig", JSON.stringify(cfg));
@@ -4324,8 +4339,7 @@ async function loadElevenLabsVoices() {
   if (loader) loader.textContent = "Chargement des voix…";
 
   try {
-    const res  = await fetch("/.netlify/functions/get-voices");
-    const data = await res.json();
+    const data = await apiFetch("/.netlify/functions/get-voices");
 
     if (!data.ok || !data.voices?.length) {
       _renderVoiceFallback(grid);
@@ -4443,22 +4457,16 @@ async function createOrUpdateVapiAssistant() {
   document.getElementById("btnVapiLabel").textContent = "En cours…";
 
   try {
-    const res  = await fetch("/.netlify/functions/create-vapi-assistant", {
-      method:  "POST",
-      headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({
-        clientId,
-        nomAssistant:  cfg.nom,
-        voiceId:       cfg.voiceId,
-        langue:        cfg.langPrimaire,
-        promptSysteme: cfg.prompt,
-        tonalite:      cfg.tonalite,
-        vitesseParole: parseFloat(cfg.vitesse),
-        silenceMax:    parseInt(cfg.silence),
-        interruptions: cfg.interruptions,
-      }),
+    const data = await apiFetchPost("/.netlify/functions/create-vapi-assistant", {
+      nomAssistant:  cfg.nom,
+      voiceId:       cfg.voiceId,
+      langue:        cfg.langPrimaire,
+      promptSysteme: cfg.prompt,
+      tonalite:      cfg.tonalite,
+      vitesseParole: parseFloat(cfg.vitesse),
+      silenceMax:    parseInt(cfg.silence),
+      interruptions: cfg.interruptions,
     });
-    const data = await res.json();
 
     if (data.ok) {
       _vapiAssistantId = data.assistantId;
@@ -4609,15 +4617,9 @@ function toggleAuto(id, checkbox) {
   if (window._airtableConnected) {
     const auto = automations.find(a => a.id === id || a._seq === id);
     const airtableId = auto?.id || id;
-    fetch("/.netlify/functions/update-automation", {
-      method:  "POST",
-      headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ id: airtableId, statut: newStatut }),
-    })
-    .then(r => r.json())
+    apiFetchPost("/.netlify/functions/update-automation", { id: airtableId, statut: newStatut })
     .then(data => {
       if (!data.ok) {
-        /* Rollback si erreur */
         autoState[id] = prevStatut;
         checkbox.checked = prevStatut === "Actif";
         document.getElementById("badge-" + id).innerHTML = statusBadgeHtml(prevStatut);
@@ -4625,12 +4627,7 @@ function toggleAuto(id, checkbox) {
         showToast("Erreur de mise à jour — annulé", "error");
       } else {
         /* 6A — Synchroniser le scénario Make en parallèle */
-        fetch("/.netlify/functions/toggle-make-scenario", {
-          method:  "POST",
-          headers: { "Content-Type": "application/json" },
-          body:    JSON.stringify({ id: airtableId, statut: newStatut }),
-        })
-        .then(r => r.json())
+        apiFetchPost("/.netlify/functions/toggle-make-scenario", { id: airtableId, statut: newStatut })
         .then(mk => {
           if (mk.ok && !mk.skipped) console.info(`[Make] Scénario ${mk.scenarioId} → isEnabled=${mk.isEnabled}`);
         })
@@ -4728,12 +4725,7 @@ function saveSchedule() {
 
   /* Persist dans Airtable si connecté */
   if (window._airtableConnected && a) {
-    fetch("/.netlify/functions/save-programmation", {
-      method:  "POST",
-      headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ id: a.id, jours, heure, recurrence }),
-    })
-    .then(r => r.json())
+    apiFetchPost("/.netlify/functions/save-programmation", { id: a.id, jours, heure, recurrence })
     .then(data => { if (!data.ok) showToast("Programmation non sauvegardée dans Airtable", "warning"); })
     .catch(() => showToast("Erreur réseau — programmation locale uniquement", "warning"));
   }
@@ -5226,11 +5218,8 @@ async function sendReply(id) {
 
   /* Persist dans Airtable si connecté */
   if (window._airtableConnected) {
-    fetch("/.netlify/functions/update-ticket", {
-      method:  "POST",
-      headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ id, message: entry, statut: t.statut }),
-    }).catch(e => console.warn("[AkilAI] update-ticket:", e.message));
+    apiFetchPost("/.netlify/functions/update-ticket", { id, message: entry, statut: t.statut })
+    .catch(e => console.warn("[AkilAI] update-ticket:", e.message));
   }
 }
 
@@ -5246,12 +5235,7 @@ function changeTicketStatus(id, newStatut) {
 
   /* Persist dans Airtable si connecté */
   if (window._airtableConnected) {
-    fetch("/.netlify/functions/update-ticket", {
-      method:  "POST",
-      headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ id, statut: newStatut }),
-    })
-    .then(r => r.json())
+    apiFetchPost("/.netlify/functions/update-ticket", { id, statut: newStatut })
     .then(data => { if (!data.ok) { t.statut = prevStatut; buildTicketsSummary(); buildTicketsList(); showToast("Erreur — statut annulé", "error"); } })
     .catch(e => console.warn("[AkilAI] update-ticket status:", e.message));
   }
@@ -5503,12 +5487,7 @@ async function createTicket() {
   /* Persist dans Airtable si connecté */
   if (window._airtableConnected) {
     try {
-      const res  = await fetch("/.netlify/functions/create-ticket", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ sujet, description: message, priorite, categorie, clientId }),
-      });
-      const data = await res.json();
+      const data = await apiFetchPost("/.netlify/functions/create-ticket", { sujet, description: message, priorite, categorie, clientId });
       if (data.ok && data.ticket) {
         /* Mettre à jour l'ID local avec l'ID Airtable */
         newTicket.id = data.ticket.id;
