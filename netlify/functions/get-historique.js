@@ -57,12 +57,13 @@ exports.handler = async (event) => {
         conversations_wa.push({
           id:          r.id,
           _seq:        i + 1,
-          nom:         f.Nom      || "Inconnu",
-          numero:      f.Numero   || "",
+          nom:         f.Nom       || "Inconnu",
+          numero:      f.Numero    || "",
           date,
           nb_messages: Number(f.NbMessages) || messages.length,
-          client_id:   f.ClientId || null,
-          statut:      f.Statut   || "Traité",
+          client_id:   f.ClientId  || null,
+          statut:      f.Statut    || "Traité",
+          intention:   f.Intention || null,
           messages,
         });
       }

@@ -2647,6 +2647,7 @@
                   <th>Contact</th>
                   <th>Numéro</th>
                   <th>Canal</th>
+                  <th>Intention</th>
                   <th>Date</th>
                   <th>Messages</th>
                   <th></th>
@@ -3267,7 +3268,7 @@ const appels = [
 ];
 
 const conversations_wa = [
-  { id:1, nom:"Lucie Marchand",  numero:"+33 6 11 22 33 44", date:"2024-06-18", nb_messages:6, client_id:1,
+  { id:1, nom:"Lucie Marchand",  numero:"+33 6 11 22 33 44", date:"2024-06-18", nb_messages:6, client_id:1, intention:"🎯 Confirmation RDV",
     messages:[
       {role:"user",     text:"Bonjour, j'ai un RDV demain à 10h, c'est bien confirmé ?", heure:"09:12"},
       {role:"assistant",text:"Bonjour Lucie ! Oui, votre RDV du mercredi 19 juin à 10h00 est bien confirmé. 😊", heure:"09:12"},
@@ -3276,14 +3277,14 @@ const conversations_wa = [
       {role:"user",     text:"Parfait, merci beaucoup !", heure:"09:15"},
       {role:"assistant",text:"Avec plaisir ! À demain 🙂", heure:"09:15"}
     ]},
-  { id:2, nom:"Marc Dubois",     numero:"+33 7 55 44 33 22", date:"2024-06-18", nb_messages:4, client_id:1,
+  { id:2, nom:"Marc Dubois",     numero:"+33 7 55 44 33 22", date:"2024-06-18", nb_messages:4, client_id:1, intention:"📅 Prise de RDV",
     messages:[
       {role:"user",     text:"Bonjour, est-ce que je peux avoir un certificat médical pour le sport ?", heure:"14:30"},
       {role:"assistant",text:"Bonjour Marc ! Pour un certificat sport, il faut une consultation. Vendredi 21 à 9h30 ou lundi 24 à 11h ?", heure:"14:31"},
       {role:"user",     text:"Le vendredi c'est parfait", heure:"14:35"},
       {role:"assistant",text:"✅ RDV confirmé vendredi 21 juin à 9h30. Un rappel vous sera envoyé la veille !", heure:"14:35"}
     ]},
-  { id:3, nom:"Amina Bensaid",   numero:"+33 6 77 88 99 00", date:"2024-06-17", nb_messages:6, client_id:4,
+  { id:3, nom:"Amina Bensaid",   numero:"+33 6 77 88 99 00", date:"2024-06-17", nb_messages:6, client_id:4, intention:"📋 Demande info",
     messages:[
       {role:"user",     text:"Bonjour, je voudrais m'inscrire à la formation Excel avancé", heure:"10:00"},
       {role:"assistant",text:"Bonjour Amina ! Formation Excel Avancé démarre le 1er juillet, 4 séances de 2h. Tarif : 320€. Inscription ?", heure:"10:01"},
@@ -3292,14 +3293,14 @@ const conversations_wa = [
       {role:"user",     text:"", type:"audio", duree:"0:18", heure:"10:10"},
       {role:"assistant",text:"Votre inscription est enregistrée. Vous recevrez un email de confirmation sous 24h.", heure:"10:11"}
     ]},
-  { id:4, nom:"Romain Tessier",  numero:"+33 6 23 45 67 89", date:"2024-06-17", nb_messages:4, client_id:2,
+  { id:4, nom:"Romain Tessier",  numero:"+33 6 23 45 67 89", date:"2024-06-17", nb_messages:4, client_id:2, intention:"📅 Prise de RDV",
     messages:[
       {role:"user",     text:"Bonsoir, votre terrasse est disponible ce samedi à 20h pour 4 personnes ?", heure:"18:45"},
       {role:"assistant",text:"Bonsoir Romain ! Oui, terrasse disponible samedi soir. Réservation pour 4 à 20h. Votre nom ?", heure:"18:46"},
       {role:"user",     text:"Tessier, merci !", heure:"18:48"},
       {role:"assistant",text:"Table réservée au nom de Tessier, samedi 22 juin à 20h en terrasse. À samedi ! 🍽️", heure:"18:48"}
     ]},
-  { id:5, nom:"Sophie Nguyen",   numero:"+33 7 11 22 33 55", date:"2024-06-16", nb_messages:5, client_id:1,
+  { id:5, nom:"Sophie Nguyen",   numero:"+33 7 11 22 33 55", date:"2024-06-16", nb_messages:5, client_id:1, intention:"❓ Question",
     messages:[
       {role:"user",     text:"Bonjour, je suis enceinte de 3 mois, est-ce que le Dr Moreau fait le suivi de grossesse ?", heure:"11:00"},
       {role:"assistant",text:"Bonjour Sophie, félicitations ! Oui, le Dr Moreau assure le suivi jusqu'à 6 mois. Souhaitez-vous un premier RDV ?", heure:"11:01"},
@@ -3307,7 +3308,7 @@ const conversations_wa = [
       {role:"assistant",text:"Créneau disponible jeudi 20 juin à 14h00. Cela vous convient ?", heure:"11:03"},
       {role:"user",     text:"Oui parfait merci !", heure:"11:05"}
     ]},
-  { id:6, nom:"Kevin Lambert",   numero:"+33 6 88 77 66 55", date:"2024-06-15", nb_messages:4, client_id:4,
+  { id:6, nom:"Kevin Lambert",   numero:"+33 6 88 77 66 55", date:"2024-06-15", nb_messages:4, client_id:4, intention:"❌ Annulation",
     messages:[
       {role:"user",     text:"Bonjour, j'ai un problème pour accéder à la plateforme de cours", heure:"09:30"},
       {role:"assistant",text:"Bonjour Kevin ! Pouvez-vous préciser le problème ? (Mot de passe oublié, page d'erreur, autre ?)", heure:"09:31"},
@@ -4216,7 +4217,7 @@ function buildWaTable(data) {
   tbody.innerHTML = "";
 
   if (data.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state">
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state">
       <div class="empty-state-icon">💬</div>
       <div class="empty-state-title">Aucune conversation</div>
       <div class="empty-state-sub">Les conversations WhatsApp apparaîtront ici une fois reçues.</div>
@@ -4238,6 +4239,7 @@ function buildWaTable(data) {
           WhatsApp
         </span>
       </td>
+      <td style="font-size:13px;white-space:nowrap">${conv.intention || "—"}</td>
       <td>${conv.date}</td>
       <td><span class="badge badge-accent">${conv.nb_messages} msgs</span></td>
       <td>
@@ -4278,7 +4280,7 @@ function buildWaTable(data) {
     }).join("");
 
     trDetail.innerHTML = `
-      <td colspan="6">
+      <td colspan="7">
         <div class="detail-content" id="detail-wa-${conv.id}">
           <div class="detail-inner">
             <div style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px">
