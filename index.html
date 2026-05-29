@@ -1621,6 +1621,127 @@
     /* Pulse animation for active dots */
     @keyframes pulse { 0%,100%{ opacity:1; } 50%{ opacity:0.4; } }
     .badge-statut.actif::before { animation: pulse 2.5s infinite; }
+
+    /* ============================================================
+       SÉQUENCE 4 — NOTIFICATIONS IN-APP
+    ============================================================ */
+
+    /* Bandeau d'alerte critique */
+    #alertBanner {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 20px;
+      background: rgba(245,158,11,0.12);
+      border-bottom: 1px solid rgba(245,158,11,0.3);
+      font-size: 13px;
+      color: #f59e0b;
+      position: sticky;
+      top: 0;
+      z-index: 80;
+      animation: pageFadeIn 0.2s ease;
+    }
+    #alertBanner.visible { display: flex; }
+    #alertBanner .banner-msg { flex: 1; font-weight: 500; }
+    #alertBanner .banner-cta {
+      background: rgba(245,158,11,0.2);
+      border: 1px solid rgba(245,158,11,0.35);
+      color: #f59e0b;
+      padding: 4px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    #alertBanner .banner-close {
+      background: none; border: none;
+      color: #f59e0b; cursor: pointer;
+      padding: 2px; opacity: 0.7;
+      display: flex; align-items: center;
+    }
+    #alertBanner .banner-close:hover { opacity: 1; }
+
+    /* Bouton cloche header */
+    .notif-btn {
+      position: relative;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      display: flex; align-items: center; justify-content: center;
+      width: 34px; height: 34px;
+      border-radius: 10px;
+      transition: background 0.15s, color 0.15s;
+    }
+    .notif-btn:hover { background: rgba(255,255,255,0.06); color: var(--text); }
+    .notif-badge {
+      position: absolute;
+      top: 4px; right: 4px;
+      width: 16px; height: 16px;
+      background: #ef4444;
+      color: #fff;
+      border-radius: 50%;
+      font-size: 9px;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      border: 2px solid var(--bg);
+    }
+    .notif-badge.hidden { display: none; }
+
+    /* Dropdown notifications */
+    .notif-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      width: 340px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+      z-index: 200;
+      overflow: hidden;
+      animation: pageFadeIn 0.15s ease;
+      display: none;
+    }
+    .notif-dropdown.open { display: block; }
+    .notif-dropdown-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px; font-weight: 700; color: var(--text);
+    }
+    .notif-dropdown-header button {
+      font-size: 11px; font-weight: 600; color: var(--accent);
+      background: none; border: none; cursor: pointer; padding: 0;
+    }
+    .notif-list { max-height: 320px; overflow-y: auto; }
+    .notif-item {
+      display: flex; gap: 10px; align-items: flex-start;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      cursor: default;
+      transition: background 0.12s;
+    }
+    .notif-item:last-child { border-bottom: none; }
+    .notif-item:hover { background: rgba(255,255,255,0.03); }
+    .notif-item.unread { background: rgba(112,178,222,0.04); }
+    .notif-item-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+    .notif-item-body { flex: 1; }
+    .notif-item-msg  { font-size: 12px; color: var(--text); line-height: 1.4; }
+    .notif-item-time { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+    .notif-item-cta  {
+      font-size: 11px; color: var(--accent); background: none; border: none;
+      cursor: pointer; padding: 0; margin-top: 4px; display: block; font-weight: 600;
+    }
+    .notif-empty {
+      padding: 32px 16px; text-align: center;
+      font-size: 13px; color: var(--text-muted);
+    }
+    .notif-empty-icon { font-size: 28px; margin-bottom: 8px; }
+
+    /* Wrapper relatif pour le dropdown */
+    .notif-wrapper { position: relative; }
   </style>
 </head>
 <body>
@@ -1788,16 +1909,41 @@
       </div>
 
       <div class="header-right">
-        <button class="icon-btn" title="Notifications">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-          </svg>
-          <span class="notif-dot"></span>
-        </button>
+        <div class="notif-wrapper">
+          <button class="notif-btn" id="notifBtn" onclick="toggleNotifDropdown()" title="Notifications">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+            <span class="notif-badge hidden" id="notifBadge">0</span>
+          </button>
+          <!-- Dropdown notifications -->
+          <div class="notif-dropdown" id="notifDropdown">
+            <div class="notif-dropdown-header">
+              <span>Notifications</span>
+              <button onclick="markAllRead()">Tout marquer comme lu</button>
+            </div>
+            <div class="notif-list" id="notifList">
+              <div class="notif-empty">
+                <div class="notif-empty-icon">🔔</div>
+                Aucune alerte active
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="avatar-header" title="Moctar Akilai">MA</div>
       </div>
     </header>
+
+    <!-- Bandeau alerte critique -->
+    <div id="alertBanner">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" flex-shrink="0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span class="banner-msg" id="bannerMsg"></span>
+      <button class="banner-cta" id="bannerCta" onclick="handleBannerCta()"></button>
+      <button class="banner-close" onclick="dismissBanner()" title="Masquer">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
 
     <!-- Pages -->
     <div id="content">
@@ -1976,62 +2122,14 @@
           </div>
         </div>
 
-        <!-- 2D — Recommandations AkilAI -->
-        <div style="margin-bottom:16px">
+        <!-- 4D — Recommandations AkilAI (dynamiques) -->
+        <div style="margin-bottom:16px" id="recoSection">
           <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:8px">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             Recommandations AkilAI
           </div>
-          <div class="reco-grid">
-
-            <div class="reco-card danger-card">
-              <div class="reco-top">
-                <div class="reco-icon danger">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                </div>
-                <div class="reco-body">
-                  <div class="reco-title">2 automations en erreur depuis 3j</div>
-                  <div class="reco-desc">Relance J-3 et Lead Qualif Calendly sont inactives — des clients ne reçoivent plus de relances.</div>
-                </div>
-              </div>
-              <button class="btn btn-sm btn-secondary" onclick="navigate('automations')">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                Voir automations
-              </button>
-            </div>
-
-            <div class="reco-card warning-card">
-              <div class="reco-top">
-                <div class="reco-icon warning">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-                </div>
-                <div class="reco-body">
-                  <div class="reco-title">Taux d'escalade élevé (8.3%)</div>
-                  <div class="reco-desc">Cette semaine, 8.3% des appels ont été transférés à un humain — objectif cible : &lt; 5%.</div>
-                </div>
-              </div>
-              <button class="btn btn-sm btn-secondary" onclick="navigate('analytics')">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-                Voir analytics
-              </button>
-            </div>
-
-            <div class="reco-card accent-card">
-              <div class="reco-top">
-                <div class="reco-icon accent">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                </div>
-                <div class="reco-body">
-                  <div class="reco-title">Relance J-3 non programmée</div>
-                  <div class="reco-desc">L'automation de relance à J-3 n'a pas de créneau planifié pour la semaine prochaine.</div>
-                </div>
-              </div>
-              <button class="btn btn-sm btn-secondary" onclick="navigate('programmation')">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                Voir programmation
-              </button>
-            </div>
-
+          <div class="reco-grid" id="recoGrid">
+            <!-- Rempli dynamiquement par renderRecommandations() -->
           </div>
         </div>
 
@@ -3313,6 +3411,7 @@ document.addEventListener('DOMContentLoaded', () => {
   buildTicketsList();
   updateTicketsNavDot();
   checkConnection();
+  setTimeout(updateNotifications, 200);
 });
 
 /* ============================================================
@@ -3360,6 +3459,8 @@ async function loadAllFromAirtable() {
     loadTicketsFromAirtable(),
     loadKPIsFromAirtable(currentPeriod),
   ]);
+  /* Réévaluer les alertes après chargement complet */
+  updateNotifications();
 }
 
 async function loadClientsFromAirtable() {
@@ -4937,6 +5038,274 @@ async function createTicket() {
       console.warn("[AkilAI] create-ticket fallback:", e.message);
     }
   }
+}
+
+/* ============================================================
+   SÉQUENCE 4 — MOTEUR D'ALERTES IN-APP
+============================================================ */
+
+/* État persisté en localStorage */
+const ALERT_STORAGE_KEY = "akilai_read_alerts";
+
+function getReadAlerts() {
+  try { return JSON.parse(localStorage.getItem(ALERT_STORAGE_KEY) || "[]"); } catch { return []; }
+}
+function markAlertRead(id) {
+  const read = getReadAlerts();
+  if (!read.includes(id)) { read.push(id); localStorage.setItem(ALERT_STORAGE_KEY, JSON.stringify(read)); }
+}
+
+/* ---- 4A — Moteur de règles ---- */
+function checkAlerts(data) {
+  const now          = new Date();
+  const alerts       = [];
+  const _autos       = data.automations || automations;
+  const _tickets     = data.tickets     || tickets;
+  const _appels      = data.appels      || appels;
+  const _kpis        = data.kpis        || kpis;
+  const _autoState   = data.autoState   || autoState;
+
+  /* R1 — Automation en erreur depuis > 1 jour */
+  _autos.forEach(a => {
+    if (_autoState[a.id] === "Erreur" || a.statut === "Erreur") {
+      const lastExec = a.derniere_exec ? new Date(a.derniere_exec) : null;
+      const heures   = lastExec ? (now - lastExec) / 3600000 : 999;
+      if (heures > 24) {
+        alerts.push({
+          id:       `R1-${a.id}`,
+          priority: "high",
+          icon:     "⚠️",
+          title:    `Automation en erreur : ${a.nom}`,
+          message:  `En erreur depuis ${Math.floor(heures/24)} jour(s). Dernière exécution : ${a.derniere_exec || "inconnue"}.`,
+          cta:      { label:"Voir automations", section:"automations" },
+          time:     "Maintenant",
+        });
+      }
+    }
+  });
+
+  /* R2 — Ticket ouvert sans réponse depuis > 24h */
+  _tickets.forEach(t => {
+    if (t.statut !== "Ouvert" && t.statut !== "En cours") return;
+    const lastMsg = t.messages[t.messages.length - 1];
+    if (lastMsg && lastMsg.role === "client") {
+      const msgDate = lastMsg.heure ? new Date() : new Date(t.date);
+      const heures  = (now - msgDate) / 3600000;
+      if (heures > 24 || !lastMsg.heure) {
+        alerts.push({
+          id:       `R2-${t.id}`,
+          priority: "medium",
+          icon:     "🎫",
+          title:    `Ticket #${t._seq || t.id} en attente`,
+          message:  `Sans réponse depuis plus de 24h — priorité ${t.priorite}.`,
+          cta:      { label:"Voir tickets", section:"tickets" },
+          time:     t.date,
+        });
+      }
+    }
+  });
+
+  /* R3 — Taux d'escalade > 20% sur 7 derniers jours */
+  if (_kpis.taux_escalade > 20) {
+    alerts.push({
+      id:       "R3-escalade",
+      priority: "medium",
+      icon:     "📈",
+      title:    "Taux d'escalade élevé",
+      message:  `${_kpis.taux_escalade}% des appels escaladés cette semaine — objectif < 20%.`,
+      cta:      { label:"Voir analytics", section:"analytics" },
+      time:     "Cette semaine",
+    });
+  }
+
+  /* R4 — Aucun appel traité depuis 48h */
+  const appelsTreites = _appels.filter(a => a.statut === "Traité");
+  if (appelsTreites.length > 0) {
+    const dernierTraite = appelsTreites
+      .map(a => new Date(`${a.date}T${a.heure?.replace("h",":") || "00:00"}`))
+      .sort((a,b) => b-a)[0];
+    if (dernierTraite && (now - dernierTraite) / 3600000 > 48) {
+      alerts.push({
+        id:       "R4-silence",
+        priority: "high",
+        icon:     "🔇",
+        title:    "Aucun appel traité depuis 48h",
+        message:  "Sophie ne semble plus traiter d'appels — vérifier l'assistant Vapi.",
+        cta:      { label:"Voir Voix & IA", section:"voix-ia" },
+        time:     dernierTraite.toLocaleDateString("fr-FR"),
+      });
+    }
+  }
+
+  /* R5 — Automation non exécutée à l'heure prévue (écart > 30min) */
+  _autos.forEach(a => {
+    if (!a.prochaine_exec) return;
+    const prevue = new Date(a.prochaine_exec);
+    const ecartMin = (now - prevue) / 60000;
+    if (ecartMin > 30 && ecartMin < 1440) { /* entre 30min et 24h de retard */
+      const statut = _autoState[a.id] || a.statut;
+      if (statut === "Actif") {
+        alerts.push({
+          id:       `R5-${a.id}`,
+          priority: "medium",
+          icon:     "⏰",
+          title:    `${a.nom} — retard d'exécution`,
+          message:  `Prévue à ${a.prochaine_exec}, non exécutée (retard ${Math.floor(ecartMin)}min).`,
+          cta:      { label:"Voir programmation", section:"programmation" },
+          time:     a.prochaine_exec,
+        });
+      }
+    }
+  });
+
+  return alerts;
+}
+
+/* ---- 4B — Centre de notifications ---- */
+let _currentAlerts = [];
+let _bannerCtaSection = null;
+
+function updateNotifications() {
+  _currentAlerts = checkAlerts({});
+  const readIds  = getReadAlerts();
+  const unread   = _currentAlerts.filter(a => !readIds.includes(a.id));
+
+  /* Badge */
+  const badge = document.getElementById("notifBadge");
+  if (badge) {
+    if (unread.length > 0) {
+      badge.textContent = unread.length > 9 ? "9+" : unread.length;
+      badge.classList.remove("hidden");
+    } else {
+      badge.classList.add("hidden");
+    }
+  }
+
+  /* Liste dropdown */
+  const list = document.getElementById("notifList");
+  if (list) {
+    if (_currentAlerts.length === 0) {
+      list.innerHTML = `<div class="notif-empty"><div class="notif-empty-icon">✅</div>Aucune alerte active</div>`;
+    } else {
+      list.innerHTML = _currentAlerts.map(a => {
+        const isUnread = !readIds.includes(a.id);
+        return `
+        <div class="notif-item ${isUnread ? "unread" : ""}" id="notif-${a.id}">
+          <div class="notif-item-icon">${a.icon}</div>
+          <div class="notif-item-body">
+            <div class="notif-item-msg"><strong>${a.title}</strong><br>${a.message}</div>
+            <div class="notif-item-time">${a.time}</div>
+            ${a.cta ? `<button class="notif-item-cta" onclick="notifGoto('${a.id}','${a.cta.section}')">${a.cta.label} →</button>` : ""}
+          </div>
+        </div>`;
+      }).join("");
+    }
+  }
+
+  /* 4C — Bandeau critique (R1 ou R4) */
+  const criticals = _currentAlerts.filter(a => a.priority === "high" && !readIds.includes(a.id));
+  const banner    = document.getElementById("alertBanner");
+  if (banner) {
+    const dismissed = localStorage.getItem("akilai_banner_dismissed");
+    if (criticals.length > 0 && dismissed !== criticals[0].id) {
+      document.getElementById("bannerMsg").textContent = criticals[0].title + " — " + criticals[0].message;
+      const cta = document.getElementById("bannerCta");
+      if (cta && criticals[0].cta) {
+        cta.textContent = criticals[0].cta.label;
+        _bannerCtaSection = criticals[0].cta.section;
+      }
+      banner.classList.add("visible");
+    } else {
+      banner.classList.remove("visible");
+    }
+  }
+
+  /* 4D — Recommandations dynamiques */
+  renderRecommandations(_currentAlerts);
+}
+
+function toggleNotifDropdown() {
+  const dd = document.getElementById("notifDropdown");
+  if (dd) dd.classList.toggle("open");
+}
+
+function notifGoto(alertId, section) {
+  markAlertRead(alertId);
+  document.getElementById("notifDropdown")?.classList.remove("open");
+  navigate(section);
+  updateNotifications();
+}
+
+function markAllRead() {
+  _currentAlerts.forEach(a => markAlertRead(a.id));
+  document.getElementById("notifDropdown")?.classList.remove("open");
+  updateNotifications();
+  showToast("Toutes les alertes marquées comme lues", "info");
+}
+
+function dismissBanner() {
+  const criticals = _currentAlerts.filter(a => a.priority === "high");
+  if (criticals.length > 0) localStorage.setItem("akilai_banner_dismissed", criticals[0].id);
+  document.getElementById("alertBanner")?.classList.remove("visible");
+}
+
+function handleBannerCta() {
+  if (_bannerCtaSection) navigate(_bannerCtaSection);
+  dismissBanner();
+}
+
+/* Fermer le dropdown en cliquant ailleurs */
+document.addEventListener("click", e => {
+  const wrapper = document.getElementById("notifBtn")?.closest(".notif-wrapper");
+  if (wrapper && !wrapper.contains(e.target)) {
+    document.getElementById("notifDropdown")?.classList.remove("open");
+  }
+});
+
+/* ---- 4D — Recommandations dynamiques ---- */
+const RECO_ICONS = {
+  danger:  `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
+  warning: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+  accent:  `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+};
+
+function renderRecommandations(alerts) {
+  const grid = document.getElementById("recoGrid");
+  if (!grid) return;
+
+  if (!alerts || alerts.length === 0) {
+    grid.innerHTML = `
+      <div class="reco-card accent-card" style="grid-column:1/-1">
+        <div class="reco-top">
+          <div class="reco-icon accent">✅</div>
+          <div class="reco-body">
+            <div class="reco-title" style="color:#22c55e">Tout fonctionne correctement</div>
+            <div class="reco-desc">Aucune alerte active — toutes vos automations sont opérationnelles.</div>
+          </div>
+        </div>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = alerts.slice(0, 3).map(a => {
+    const cardClass = a.priority === "high" ? "danger-card" : a.priority === "medium" ? "warning-card" : "accent-card";
+    const iconClass = a.priority === "high" ? "danger"  : a.priority === "medium" ? "warning" : "accent";
+    const icon      = RECO_ICONS[iconClass] || RECO_ICONS.accent;
+    return `
+    <div class="reco-card ${cardClass}">
+      <div class="reco-top">
+        <div class="reco-icon ${iconClass}">${icon}</div>
+        <div class="reco-body">
+          <div class="reco-title">${a.title}</div>
+          <div class="reco-desc">${a.message}</div>
+        </div>
+      </div>
+      ${a.cta ? `
+      <button class="btn btn-sm btn-secondary" onclick="navigate('${a.cta.section}')">
+        ${a.cta.label}
+      </button>` : ""}
+    </div>`;
+  }).join("");
 }
 
 </script>
