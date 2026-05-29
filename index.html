@@ -3790,36 +3790,100 @@ function updatePreview() {
   document.getElementById("previewSimulation").textContent = sim.replace("Sophie", nom);
 }
 
-function loadVoixConfig() {
-  const stored = localStorage.getItem("voixConfig");
-  const cfg = stored ? JSON.parse(stored) : VOIX_CONFIG_DEFAULT;
+async function loadVoixConfig() {
+  let cfg = VOIX_CONFIG_DEFAULT;
 
-  document.getElementById("cfgNom").value         = cfg.nom;
-  document.getElementById("cfgVoix").value        = cfg.voix;
-  document.getElementById("cfgLangPrimaire").value= cfg.langPrimaire;
-  document.getElementById("cfgLangSecours").value = cfg.langSecours;
-  document.getElementById("cfgVitesse").value     = cfg.vitesse;
-  document.getElementById("cfgSilence").value     = cfg.silence;
-  document.getElementById("cfgInterruptions").checked = cfg.interruptions;
-  document.getElementById("cfgPrompt").value      = cfg.prompt;
+  /* 1. Essayer Airtable si connecté */
+  if (window._airtableConnected) {
+    try {
+      const res  = await fetch("/.netlify/functions/save-config");
+      const data = await res.json();
+      if (data.config) {
+        cfg = {
+          nom:          data.config.nomAssistant,
+          voix:         data.config.voix,
+          tonalite:     data.config.tonalite,
+          personnalite: data.config.personnalite,
+          langPrimaire: data.config.langue,
+          langSecours:  data.config.langueSecours,
+          vitesse:      String(data.config.vitesseParole),
+          silence:      String(data.config.silenceMax),
+          interruptions:data.config.interruptions,
+          prompt:       data.config.promptSysteme,
+          _id:          data.config._id,
+        };
+      }
+    } catch (e) {
+      console.warn("[AkilAI] save-config GET fallback:", e.message);
+    }
+  }
 
-  /* Sliders display */
-  document.getElementById("vitesseVal").textContent = cfg.vitesse + "×";
-  document.getElementById("silenceVal").textContent = cfg.silence + "s";
+  /* 2. Fallback localStorage */
+  if (!window._airtableConnected) {
+    const stored = localStorage.getItem("voixConfig");
+    if (stored) try { cfg = JSON.parse(stored); } catch {}
+  }
 
-  /* Radio buttons */
+  _applyVoixConfig(cfg);
+}
+
+function _applyVoixConfig(cfg) {
+  document.getElementById("cfgNom").value          = cfg.nom          || "";
+  document.getElementById("cfgVoix").value         = cfg.voix         || "";
+  document.getElementById("cfgLangPrimaire").value = cfg.langPrimaire || "fr";
+  document.getElementById("cfgLangSecours").value  = cfg.langSecours  || "none";
+  document.getElementById("cfgVitesse").value      = cfg.vitesse      || "1.0";
+  document.getElementById("cfgSilence").value      = cfg.silence      || "8";
+  document.getElementById("cfgInterruptions").checked = Boolean(cfg.interruptions);
+  document.getElementById("cfgPrompt").value       = cfg.prompt       || "";
+  document.getElementById("vitesseVal").textContent = (cfg.vitesse || "1.0") + "×";
+  document.getElementById("silenceVal").textContent = (cfg.silence || "8") + "s";
   const tonEl = document.getElementById("ton-" + cfg.tonalite);
   if (tonEl) tonEl.checked = true;
   const persEl = document.getElementById("pers-" + cfg.personnalite);
   if (persEl) persEl.checked = true;
-
   updatePreview();
 }
 
-function saveVoixConfig() {
+async function saveVoixConfig() {
   const cfg = getVoixFormValues();
   localStorage.setItem("voixConfig", JSON.stringify(cfg));
   showToast("Configuration sauvegardée ✓", "success");
+
+  /* Persist dans Airtable si connecté */
+  if (window._airtableConnected) {
+    try {
+      const payload = {
+        nomAssistant:  cfg.nom,
+        voix:          cfg.voix,
+        tonalite:      cfg.tonalite,
+        personnalite:  cfg.personnalite,
+        langue:        cfg.langPrimaire,
+        langueSecours: cfg.langSecours,
+        vitesseParole: parseFloat(cfg.vitesse),
+        silenceMax:    parseInt(cfg.silence),
+        interruptions: cfg.interruptions,
+        promptSysteme: cfg.prompt,
+      };
+      const stored = localStorage.getItem("voixConfig");
+      const prev   = stored ? JSON.parse(stored) : {};
+      if (prev._id) payload._id = prev._id;
+
+      const res  = await fetch("/.netlify/functions/save-config", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (data.ok && data.id) {
+        /* Conserver l'ID Airtable pour les prochaines sauvegardes */
+        cfg._id = data.id;
+        localStorage.setItem("voixConfig", JSON.stringify(cfg));
+      }
+    } catch (e) {
+      console.warn("[AkilAI] save-config POST:", e.message);
+    }
+  }
 }
 
 function resetVoixConfig() {
@@ -3963,11 +4027,39 @@ function buildAutoTable() {
 }
 
 function toggleAuto(id, checkbox) {
-  const newStatut = checkbox.checked ? "Actif" : "Inactif";
+  const newStatut  = checkbox.checked ? "Actif" : "Inactif";
+  const prevStatut = autoState[id];
+
+  /* Mise à jour optimiste */
   autoState[id] = newStatut;
   document.getElementById("badge-" + id).innerHTML = statusBadgeHtml(newStatut);
   showToast(`Automation ${newStatut === "Actif" ? "activée ✓" : "désactivée"}`, newStatut === "Actif" ? "success" : "info");
   updateAutoCount();
+
+  /* Persist dans Airtable si connecté */
+  if (window._airtableConnected) {
+    const auto = automations.find(a => a.id === id || a._seq === id);
+    const airtableId = auto?.id || id;
+    fetch("/.netlify/functions/update-automation", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ id: airtableId, statut: newStatut }),
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (!data.ok) {
+        /* Rollback si erreur */
+        autoState[id] = prevStatut;
+        checkbox.checked = prevStatut === "Actif";
+        document.getElementById("badge-" + id).innerHTML = statusBadgeHtml(prevStatut);
+        updateAutoCount();
+        showToast("Erreur de mise à jour — annulé", "error");
+      }
+    })
+    .catch(() => {
+      showToast("Erreur réseau — changement non sauvegardé", "error");
+    });
+  }
 }
 
 function toggleLogs(id) {
@@ -4037,21 +4129,33 @@ function escCloseModal(e) {
 }
 
 function saveSchedule() {
-  const autoId = parseInt(document.getElementById("scheduleAutoSelect").value);
-  const heure  = document.getElementById("scheduleTime").value;
+  const autoId     = parseInt(document.getElementById("scheduleAutoSelect").value);
+  const heure      = document.getElementById("scheduleTime").value;
   const recurrence = document.getElementById("scheduleRecurrence").value;
-  const jours  = Array.from(document.querySelectorAll("#scheduleDaysGrid input:checked")).map(cb => parseInt(cb.value));
+  const jours      = Array.from(document.querySelectorAll("#scheduleDaysGrid input:checked")).map(cb => parseInt(cb.value));
 
-  if (!autoId)           { showToast("Choisissez une automation", "warning"); return; }
-  if (jours.length === 0){ showToast("Sélectionnez au moins un jour", "warning"); return; }
+  if (!autoId)            { showToast("Choisissez une automation", "warning"); return; }
+  if (jours.length === 0) { showToast("Sélectionnez au moins un jour", "warning"); return; }
 
-  /* Mise à jour des données mockées */
-  const a = automations.find(x => x.id === autoId);
+  /* Mise à jour locale */
+  const a = automations.find(x => x.id === autoId || x._seq === autoId);
   if (a) { a.schedule.jours = jours; a.schedule.heure = heure; a.schedule.recurrence = recurrence; }
 
   document.getElementById("scheduleModal").classList.remove("open");
   showToast("Programmation sauvegardée ✓", "success");
   buildCalendar();
+
+  /* Persist dans Airtable si connecté */
+  if (window._airtableConnected && a) {
+    fetch("/.netlify/functions/save-programmation", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ id: a.id, jours, heure, recurrence }),
+    })
+    .then(r => r.json())
+    .then(data => { if (!data.ok) showToast("Programmation non sauvegardée dans Airtable", "warning"); })
+    .catch(() => showToast("Erreur réseau — programmation locale uniquement", "warning"));
+  }
 }
 
 /* ============================================================
@@ -4524,27 +4628,52 @@ function toggleTicketDetail(id, e) {
   buildTicketsList();
 }
 
-function sendReply(id) {
+async function sendReply(id) {
   const textarea = document.getElementById("reply-" + id);
   const text = textarea?.value.trim();
   if (!text) return;
   const t = tickets.find(x => x.id === id);
   if (!t) return;
-  t.messages.push({ auteur:"Support AkilAI", role:"support", text, heure: new Date().toLocaleTimeString("fr-FR", {hour:"2-digit",minute:"2-digit"}) });
+
+  const entry = { auteur:"Support AkilAI", role:"support", text, heure: new Date().toLocaleTimeString("fr-FR", {hour:"2-digit",minute:"2-digit"}) };
+  t.messages.push(entry);
   if (t.statut === "Ouvert") t.statut = "En cours";
+  if (textarea) textarea.value = "";
   buildTicketsSummary();
   buildTicketsList();
   showToast("Réponse envoyée", "success");
+
+  /* Persist dans Airtable si connecté */
+  if (window._airtableConnected) {
+    fetch("/.netlify/functions/update-ticket", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ id, message: entry, statut: t.statut }),
+    }).catch(e => console.warn("[AkilAI] update-ticket:", e.message));
+  }
 }
 
 function changeTicketStatus(id, newStatut) {
   const t = tickets.find(x => x.id === id);
   if (!t) return;
+  const prevStatut = t.statut;
   t.statut = newStatut;
   buildTicketsSummary();
   buildTicketsList();
   updateTicketsNavDot();
   showToast(`Statut mis à jour : ${newStatut}`, "info");
+
+  /* Persist dans Airtable si connecté */
+  if (window._airtableConnected) {
+    fetch("/.netlify/functions/update-ticket", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ id, statut: newStatut }),
+    })
+    .then(r => r.json())
+    .then(data => { if (!data.ok) { t.statut = prevStatut; buildTicketsSummary(); buildTicketsList(); showToast("Erreur — statut annulé", "error"); } })
+    .catch(e => console.warn("[AkilAI] update-ticket status:", e.message));
+  }
 }
 
 function closeTicketDirect(id) {
@@ -4760,29 +4889,54 @@ function exportAnalytics() {
   setTimeout(() => showToast("Rapport exporté (simulation)", "success"), 1200);
 }
 
-function createTicket() {
-  const sujet    = document.getElementById("nt-sujet").value.trim();
-  const clientId = parseInt(document.getElementById("nt-client").value);
-  const categorie= document.getElementById("nt-categorie").value;
-  const priorite = document.getElementById("nt-priorite").value;
-  const message  = document.getElementById("nt-message").value.trim();
+async function createTicket() {
+  const sujet     = document.getElementById("nt-sujet").value.trim();
+  const clientId  = document.getElementById("nt-client").value;
+  const categorie = document.getElementById("nt-categorie").value;
+  const priorite  = document.getElementById("nt-priorite").value;
+  const message   = document.getElementById("nt-message").value.trim();
 
   if (!sujet) { showToast("Le sujet est obligatoire", "error"); return; }
 
-  const client = clients.find(c => c.id === clientId);
+  const client = clients.find(c => String(c.id) === String(clientId));
   const newId  = "T-" + String(tickets.length + 1).padStart(3, "0");
-  tickets.unshift({
-    id: newId,
-    sujet, client_id: clientId, priorite, categorie,
-    statut: "Ouvert",
-    date: new Date().toISOString().split("T")[0],
-    messages: message ? [{ auteur: client?.nom || "Client", role:"client", text: message, heure: new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}) }] : []
-  });
+  const newTicket = {
+    id:        newId,
+    sujet,
+    client_id: clientId,
+    priorite,
+    categorie,
+    statut:    "Ouvert",
+    date:      new Date().toISOString().split("T")[0],
+    messages:  message ? [{ auteur: client?.nom || "Client", role:"client", text: message, heure: new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}) }] : [],
+  };
 
+  /* Ajout optimiste */
+  tickets.unshift(newTicket);
   document.getElementById("newTicketModal").classList.remove("open");
   buildTicketsSummary();
   buildTicketsList();
+  updateTicketsNavDot();
   showToast(`Ticket ${newId} créé`, "success");
+
+  /* Persist dans Airtable si connecté */
+  if (window._airtableConnected) {
+    try {
+      const res  = await fetch("/.netlify/functions/create-ticket", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ sujet, description: message, priorite, categorie, clientId }),
+      });
+      const data = await res.json();
+      if (data.ok && data.ticket) {
+        /* Mettre à jour l'ID local avec l'ID Airtable */
+        newTicket.id = data.ticket.id;
+        buildTicketsList();
+      }
+    } catch (e) {
+      console.warn("[AkilAI] create-ticket fallback:", e.message);
+    }
+  }
 }
 
 </script>
