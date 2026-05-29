@@ -2957,40 +2957,31 @@
           <div>
             <div class="breadcrumb">Support <span>/ Analytics</span></div>
             <h1 class="page-title">Analytics</h1>
-            <p class="page-subtitle">Analyse détaillée des performances de vos automations.</p>
+            <p class="page-subtitle">Analyse des performances de vos automations et interactions.</p>
           </div>
-          <div class="flex gap-2">
-            <button class="btn btn-ghost" onclick="exportAnalytics()">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Exporter
-            </button>
-          </div>
+          <button class="btn btn-ghost" onclick="exportAnalytics()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Exporter CSV
+          </button>
         </div>
 
         <!-- KPIs -->
         <div class="analytics-kpi-grid" id="analyticsKPIs"></div>
 
-        <!-- Row 1: ligne + donut -->
-        <div class="analytics-row-2" style="margin-bottom:16px">
+        <!-- Row 1 : ligne volume 30j -->
+        <div style="margin-bottom:16px">
           <div class="chart-card">
-            <div class="chart-card-title">Appels &amp; Messages WhatsApp <span>30 derniers jours</span></div>
+            <div class="chart-card-title">Volume d'interactions <span>30 derniers jours</span></div>
             <div class="chart-wrap" style="height:220px">
               <canvas id="aChartLine"></canvas>
             </div>
           </div>
-          <div class="chart-card">
-            <div class="chart-card-title">Répartition par client</div>
-            <div class="chart-wrap" style="height:160px">
-              <canvas id="aChartDonut"></canvas>
-            </div>
-            <div class="donut-legend" id="aDonutLegend"></div>
-          </div>
         </div>
 
-        <!-- Row 2: barres revenus + perf automations -->
+        <!-- Row 2 : tickets par catégorie + table automations -->
         <div class="analytics-row-2-equal">
           <div class="chart-card">
-            <div class="chart-card-title">Revenus mensuels <span>12 derniers mois</span></div>
+            <div class="chart-card-title">Tickets par catégorie <span>ce mois</span></div>
             <div class="chart-wrap" style="height:200px">
               <canvas id="aChartBar"></canvas>
             </div>
@@ -5472,16 +5463,14 @@ function closeNewTicketModal(e) {
 /* ============================================================
    8 — ANALYTICS
 ============================================================ */
-let aChartLine   = null;
-let aChartDonut  = null;
-let aChartBar    = null;
+let aChartLine = null;
+let aChartBar  = null;
 
 const MONTHS_FR = ["Jan","Fév","Mar","Avr","Mai","Juin","Juil","Aoû","Sep","Oct","Nov","Déc"];
 
 function initAnalytics() {
   buildAnalyticsKPIs();
   buildAnalyticsLine();
-  buildAnalyticsDonut();
   buildAnalyticsBar();
   buildAutoPerfList();
 }
@@ -5489,18 +5478,38 @@ function initAnalytics() {
 function buildAnalyticsKPIs() {
   const el = document.getElementById("analyticsKPIs");
   if (!el) return;
-  const totalAppels = kpis.appels_par_jour.reduce((a,b)=>a+b,0);
-  const totalWA     = kpis.messages_wa_par_jour.reduce((a,b)=>a+b,0);
-  const revMois     = kpis.revenus_par_mois[kpis.revenus_par_mois.length-1];
-  const revPrec     = kpis.revenus_par_mois[kpis.revenus_par_mois.length-2];
-  const chgRev      = Math.round((revMois - revPrec) / revPrec * 100);
-  const activeAutos = automations.filter(a => autoState[a.id] === "Actif").length;
+
+  const now   = new Date();
+  const month = now.getMonth();
+  const year  = now.getFullYear();
+
+  const appelsThisMois = appels.filter(a => {
+    const d = new Date(a.date);
+    return d.getMonth() === month && d.getFullYear() === year;
+  }).length;
+
+  const waThisMois = conversations_wa.filter(a => {
+    const d = new Date(a.date);
+    return d.getMonth() === month && d.getFullYear() === year;
+  }).length;
+
+  const ticketsResolus = tickets.filter(t =>
+    t.statut === "Résolu" || t.statut === "Fermé"
+  ).length;
+
+  const totalAppelsMois30 = kpis.appels_par_jour.slice(-30).reduce((a,b)=>a+b,0);
+  const totalAppelsPrev30 = kpis.appels_par_jour.slice(-60,-30).reduce((a,b)=>a+b,0);
+  const chgAppels = totalAppelsPrev30 ? Math.round((totalAppelsMois30 - totalAppelsPrev30) / totalAppelsPrev30 * 100) : 0;
+
+  const totalWA30   = kpis.messages_wa_par_jour.slice(-30).reduce((a,b)=>a+b,0);
+  const totalWAPrev = kpis.messages_wa_par_jour.slice(-60,-30).reduce((a,b)=>a+b,0);
+  const chgWA = totalWAPrev ? Math.round((totalWA30 - totalWAPrev) / totalWAPrev * 100) : 0;
 
   const items = [
-    { icon:"📞", bg:"bg-blue-100",   val: totalAppels.toLocaleString("fr-FR"), lbl:"Appels (30j)",      chg:"+18%", up:true },
-    { icon:"💬", bg:"bg-purple-100", val: totalWA.toLocaleString("fr-FR"),     lbl:"Messages WA (30j)", chg:"+12%", up:true },
-    { icon:"💶", bg:"bg-green-100",  val: `${revMois.toLocaleString("fr-FR")} €`, lbl:"Revenus ce mois", chg:(chgRev>=0?"+":"")+chgRev+"%", up:chgRev>=0 },
-    { icon:"⚡", bg:"bg-yellow-100", val: `${activeAutos}/${automations.length}`, lbl:"Automations actives", chg:"+2 ce mois", up:true },
+    { icon:"📞", val: appelsThisMois,   lbl:"Appels traités ce mois",       chg:(chgAppels>=0?"+":"")+chgAppels+"%", up:chgAppels>=0 },
+    { icon:"💬", val: waThisMois,       lbl:"Messages WhatsApp ce mois",    chg:(chgWA>=0?"+":"")+chgWA+"%",        up:chgWA>=0 },
+    { icon:"✅", val: ticketsResolus,   lbl:"Tickets résolus",               chg:"ce mois",                          up:true },
+    { icon:"⭐", val: "4.8 / 5",        lbl:"Satisfaction client",           chg:"+0.1 vs mois dernier",             up:true },
   ];
   el.innerHTML = items.map(k => `
     <div class="analytics-kpi-card">
@@ -5561,76 +5570,36 @@ function buildAnalyticsLine() {
   });
 }
 
-function buildAnalyticsDonut() {
-  const ctx = document.getElementById("aChartDonut");
-  const leg = document.getElementById("aDonutLegend");
-  if (!ctx) return;
-  if (aChartDonut) { aChartDonut.destroy(); }
-
-  const clientNames = clients.map(c => c.nom.split(" ").slice(0,2).join(" "));
-  const revData     = clients.map(c => Math.max(c.revenus_mensuels, 50)); // min 50 for visuals
-  const COLORS      = ["#70B2DE","#a78bfa","#34d399","#fbbf24","#f87171"];
-  const total       = revData.reduce((a,b)=>a+b,0);
-
-  aChartDonut = new Chart(ctx, {
-    type: "doughnut",
-    data: { labels: clientNames, datasets:[{ data: revData, backgroundColor: COLORS, borderWidth:0, hoverOffset:4 }] },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      cutout: "70%",
-      plugins: { legend:{display:false}, tooltip:{ backgroundColor:"#1a1a1a", titleColor:"#e5e5e5", bodyColor:"#aaa" } }
-    }
-  });
-
-  if (leg) {
-    leg.innerHTML = clients.map((c,i) => `
-      <div class="donut-legend-item">
-        <div class="donut-legend-dot" style="background:${COLORS[i]}"></div>
-        <span>${clientNames[i]}</span>
-        <span class="donut-legend-pct">${Math.round(revData[i]/total*100)}%</span>
-      </div>`).join("");
-  }
-}
-
 function buildAnalyticsBar() {
   const ctx = document.getElementById("aChartBar");
   if (!ctx) return;
   if (aChartBar) { aChartBar.destroy(); }
-  const labels = MONTHS_FR;
+
+  const cats   = ["Technique","Configuration","Facturation","Fonctionnel"];
+  const counts = cats.map(cat => tickets.filter(t => t.categorie === cat).length);
+
   aChartBar = new Chart(ctx, {
     type: "bar",
     data: {
-      labels,
-      datasets: [
-        {
-          label:"Revenus",
-          data: kpis.revenus_par_mois,
-          backgroundColor: "rgba(112,178,222,0.7)",
-          borderRadius: 5,
-          borderSkipped: false,
-        },
-        {
-          label:"Objectif",
-          data: kpis.objectif_mensuel,
-          backgroundColor: "rgba(255,255,255,0.05)",
-          borderRadius: 5,
-          borderSkipped: false,
-        }
-      ]
+      labels: cats,
+      datasets: [{
+        label: "Tickets",
+        data: counts,
+        backgroundColor: ["rgba(239,68,68,0.7)","rgba(112,178,222,0.7)","rgba(251,191,36,0.7)","rgba(167,139,250,0.7)"],
+        borderRadius: 6,
+        borderSkipped: false,
+      }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: { display:true, labels:{color:"#888",font:{size:11},boxWidth:10,padding:16} },
-        tooltip: { backgroundColor:"#1a1a1a", titleColor:"#e5e5e5", bodyColor:"#aaa", borderColor:"#333", borderWidth:1,
-          callbacks: { label: ctx => ` ${ctx.parsed.y.toLocaleString("fr-FR")} €` }
-        }
+        legend: { display: false },
+        tooltip: { backgroundColor:"#1a1a1a", titleColor:"#e5e5e5", bodyColor:"#aaa", borderColor:"#333", borderWidth:1 }
       },
       scales: {
-        x: { grid:{display:false}, ticks:{color:"#555",font:{size:10}} },
-        y: { grid:{color:"rgba(255,255,255,0.04)"}, ticks:{color:"#555",font:{size:10}, callback: v => v.toLocaleString("fr-FR")+"€"} }
+        x: { grid:{display:false}, ticks:{color:"#555",font:{size:11}} },
+        y: { grid:{color:"rgba(255,255,255,0.04)"}, ticks:{color:"#555",font:{size:10},stepSize:1} }
       }
     }
   });
@@ -5639,27 +5608,91 @@ function buildAnalyticsBar() {
 function buildAutoPerfList() {
   const el = document.getElementById("autoPerfList");
   if (!el) return;
-  const perfs = [
-    { nom:"Sophie – Réponse vocale",  pct: 96 },
-    { nom:"WhatsApp GPT Support",     pct: 93 },
-    { nom:"Relance J-7",              pct: 88 },
-    { nom:"Notifications RDV",        pct: 85 },
-    { nom:"Support Auto FAQ",         pct: 79 },
-    { nom:"Onboarding Clients",       pct: 72 },
-  ];
-  el.innerHTML = perfs.map(p => `
-    <div class="auto-perf-row">
-      <div class="auto-perf-name" title="${p.nom}">${p.nom}</div>
-      <div class="auto-perf-bar-wrap">
-        <div class="auto-perf-bar" style="width:${p.pct}%;background:${p.pct>=90?'#22c55e':p.pct>=75?'var(--accent)':'#fbbf24'}"></div>
-      </div>
-      <div class="auto-perf-val">${p.pct}%</div>
-    </div>`).join("");
+
+  const MOCK_EXEC = { 1:62, 2:60, 3:4, 4:4, 5:62, 6:8, 7:62, 8:0, 9:3 };
+  const MOCK_PCT  = { 1:96, 2:93, 3:88, 4:null, 5:91, 6:85, 7:97, 8:null, 9:null };
+
+  const rows = automations
+    .filter(a => autoState[a.id] !== "Inactif")
+    .map(a => ({
+      nom:    a.nom,
+      exec:   MOCK_EXEC[a.id] || 0,
+      pct:    MOCK_PCT[a.id]  || null,
+      erreur: autoState[a.id] === "Erreur",
+    }));
+
+  el.innerHTML = `
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead>
+        <tr style="color:var(--text-faint);text-transform:uppercase;font-size:10px;letter-spacing:0.05em">
+          <th style="text-align:left;padding:0 0 8px;font-weight:600">Automation</th>
+          <th style="text-align:right;padding:0 8px 8px;font-weight:600;white-space:nowrap">Exéc. ce mois</th>
+          <th style="text-align:right;padding:0 0 8px;font-weight:600">Succès</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.map(r => `
+          <tr style="border-top:1px solid var(--border)">
+            <td style="padding:9px 0;color:var(--text);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.nom}">${r.nom}</td>
+            <td style="padding:9px 8px;text-align:right;color:var(--text-muted)">${r.exec}</td>
+            <td style="padding:9px 0;text-align:right">
+              ${r.erreur
+                ? `<span style="color:#ef4444;font-weight:600">Erreur</span>`
+                : r.pct !== null
+                  ? `<span style="color:${r.pct>=90?'#22c55e':r.pct>=75?'var(--accent)':'#fbbf24'};font-weight:600">${r.pct}%</span>`
+                  : `<span style="color:var(--text-faint)">—</span>`
+              }
+            </td>
+          </tr>`).join("")}
+      </tbody>
+    </table>`;
 }
 
 function exportAnalytics() {
-  showToast("Export en cours de préparation…", "info");
-  setTimeout(() => showToast("Rapport exporté (simulation)", "success"), 1200);
+  const today   = new Date().toISOString().split("T")[0];
+  const filename = `AkilAI_Analytics_${today}.csv`;
+
+  const now   = new Date();
+  const month = now.getMonth();
+  const year  = now.getFullYear();
+  const appelsM = appels.filter(a => { const d=new Date(a.date); return d.getMonth()===month&&d.getFullYear()===year; }).length;
+  const waM     = conversations_wa.filter(a => { const d=new Date(a.date); return d.getMonth()===month&&d.getFullYear()===year; }).length;
+  const tktRes  = tickets.filter(t=>t.statut==="Résolu"||t.statut==="Fermé").length;
+
+  const lines = [
+    "KPIS",
+    "Métrique,Valeur",
+    `Appels traités ce mois,${appelsM}`,
+    `Messages WhatsApp ce mois,${waM}`,
+    `Tickets résolus,${tktRes}`,
+    `Satisfaction client,4.8 / 5`,
+    "",
+    "VOLUME 30 JOURS",
+    "Jour,Appels,Messages WA",
+    ...makeDayLabels(30).map((lbl, i) => `${lbl},${(kpis.appels_par_jour.slice(-30)[i]||0)},${(kpis.messages_wa_par_jour.slice(-30)[i]||0)}`),
+    "",
+    "TICKETS PAR CATEGORIE",
+    "Catégorie,Nombre",
+    ...["Technique","Configuration","Facturation","Fonctionnel"].map(cat => `${cat},${tickets.filter(t=>t.categorie===cat).length}`),
+    "",
+    "PERFORMANCE AUTOMATIONS",
+    "Automation,Exécutions ce mois,Taux de succès",
+    ...automations.filter(a=>autoState[a.id]!=="Inactif").map(a => {
+      const EXEC={1:62,2:60,3:4,4:4,5:62,6:8,7:62,8:0,9:3};
+      const PCT ={1:96,2:93,3:88,4:null,5:91,6:85,7:97,8:null,9:null};
+      const s = autoState[a.id]==="Erreur" ? "Erreur" : PCT[a.id]!=null ? PCT[a.id]+"%" : "—";
+      return `"${a.nom}",${EXEC[a.id]||0},${s}`;
+    }),
+  ];
+
+  const blob = new Blob([lines.join("\n")], { type:"text/csv;charset=utf-8;" });
+  const url  = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url; link.download = filename;
+  document.body.appendChild(link); link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+  showToast(`Exporté : ${filename}`, "success");
 }
 
 async function createTicket() {
