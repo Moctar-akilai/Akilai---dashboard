@@ -1633,14 +1633,7 @@
     .empty-state h3  { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
     .empty-state p   { font-size: 13px; max-width: 260px; line-height: 1.5; }
 
-    /* Scrollbar styling */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
-
-    /* Smooth nav item */
-    .nav-item { transition: background 0.15s, color 0.15s; }
+    /* Scrollbar & nav-item — voir bloc Polish UI */
 
     /* Card hover lift for stat cards */
     .kpi-card { transition: transform 0.15s, box-shadow 0.15s; }
@@ -1845,6 +1838,216 @@
     .btn-logout:hover { background: rgba(239,68,68,0.2); }
   </style>
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <style>
+    /* ============================================================
+       POLISH UI — animations, skeletons, micro-interactions
+    ============================================================ */
+
+    /* 1 — Scrollbars globales */
+    * { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.08) transparent; }
+    *::-webkit-scrollbar { width: 5px; height: 5px; }
+    *::-webkit-scrollbar-track { background: transparent; }
+    *::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+    *::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
+
+    /* 2 — Page transition plus fluide */
+    .page { animation: pageEnter 0.22s cubic-bezier(0.4,0,0.2,1) both; }
+    @keyframes pageEnter {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 3 — Cards : hover glow subtil */
+    .card {
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .card:hover {
+      border-color: var(--border-hover);
+      box-shadow: 0 0 0 1px rgba(112,178,222,0.06), 0 4px 20px rgba(0,0,0,0.2);
+    }
+
+    /* 4 — KPI cards : lift effect */
+    .kpi-card {
+      transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+    }
+    .kpi-card:hover {
+      border-color: var(--accent-border);
+      box-shadow: 0 0 0 1px rgba(112,178,222,0.08), 0 8px 28px rgba(0,0,0,0.25);
+      transform: translateY(-2px);
+    }
+
+    /* 5 — Boutons : feedback press */
+    .btn { transition: background 0.15s, opacity 0.15s, transform 0.1s, box-shadow 0.15s; }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { box-shadow: 0 2px 12px rgba(112,178,222,0.2); }
+    .btn-primary:hover { box-shadow: 0 4px 20px rgba(112,178,222,0.35); }
+
+    /* 6 — Focus ring accessible */
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+
+    /* 7 — Inputs : focus glow */
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--accent-border) !important;
+      box-shadow: 0 0 0 3px rgba(112,178,222,0.12);
+      outline: none;
+    }
+    .form-input, .form-select, .form-textarea {
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    /* 8 — Badge "Actif" : pulsation */
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(1.4); }
+    }
+    .status-badge.active .status-dot {
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+
+    /* 9 — Nav item : slide indicator */
+    .nav-item {
+      position: relative;
+      overflow: hidden;
+    }
+    .nav-item::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0);
+      transition: background 0.15s;
+    }
+    .nav-item:hover::after { background: rgba(255,255,255,0.025); }
+
+    /* 10 — Skeleton loading */
+    .skeleton {
+      background: linear-gradient(90deg,
+        rgba(255,255,255,0.04) 25%,
+        rgba(255,255,255,0.09) 50%,
+        rgba(255,255,255,0.04) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s ease infinite;
+      border-radius: 6px;
+    }
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    .skeleton-row { display: flex; gap: 12px; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); }
+    .skeleton-circle { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; }
+    .skeleton-lines { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+    .skeleton-line { height: 10px; }
+    .skeleton-line.short { width: 40%; }
+
+    /* 11 — Empty states améliorés */
+    .empty-state {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 56px 24px; text-align: center;
+      color: var(--text-faint);
+    }
+    .empty-state-icon {
+      width: 64px; height: 64px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; margin-bottom: 16px;
+    }
+    .empty-state-title {
+      font-size: 15px; font-weight: 600; color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .empty-state-sub { font-size: 13px; color: var(--text-faint); line-height: 1.6; max-width: 280px; }
+
+    /* 12 — Tables : row hover */
+    .table-row, tr { transition: background 0.12s; }
+    tbody tr:hover { background: rgba(255,255,255,0.025) !important; }
+    tbody tr { cursor: default; }
+
+    /* 13 — Modal : animation entrée */
+    .modal-overlay { animation: none; }
+    .modal-overlay.open { display: flex; }
+    .modal-overlay.open .modal,
+    .modal-overlay.open .modal-box {
+      animation: modalEnter 0.2s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+    @keyframes modalEnter {
+      from { opacity: 0; transform: scale(0.94) translateY(8px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    /* 14 — Toast : slide-in depuis la droite */
+    @keyframes slideInToast {
+      from { opacity: 0; transform: translateX(24px) scale(0.96); }
+      to   { opacity: 1; transform: translateX(0) scale(1); }
+    }
+
+    /* 15 — Toggle switch : transition fluide */
+    .toggle-slider {
+      transition: background 0.2s;
+    }
+    .toggle-slider::before {
+      transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
+    }
+
+    /* 16 — Connection badge : pulsation verte */
+    @keyframes pulse-badge {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.6; }
+    }
+    #connectionDot { transition: background 0.4s; }
+
+    /* 17 — Header client badge */
+    .header-client { transition: color 0.2s; }
+
+    /* 18 — Sidebar collapse : icônes centrées proprement */
+    #sidebar.collapsed .nav-item { justify-content: center; padding-left: 0; padding-right: 0; }
+    #sidebar.collapsed .nav-item svg { flex-shrink: 0; }
+
+    /* 19 — Responsive mobile renforcé */
+    @media (max-width: 600px) {
+      #content { padding: 14px; }
+      .page-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .page-title { font-size: 18px; }
+      .kpi-grid { grid-template-columns: 1fr 1fr !important; gap: 10px; }
+      .charts-grid, .charts-grid-3 { grid-template-columns: 1fr; gap: 12px; }
+      .card { padding: 14px; }
+      .btn { font-size: 12px; padding: 7px 12px; }
+      .modal, .modal-box { width: calc(100vw - 24px) !important; margin: 12px; border-radius: 14px !important; }
+      .config-layout { grid-template-columns: 1fr; }
+      .login-card { padding: 32px 24px; }
+      .header-client, .header-divider { display: none; }
+      .btn-logout { font-size: 11px; padding: 4px 9px; }
+    }
+
+    /* 20 — Notification dropdown : animation */
+    .notif-dropdown {
+      transform-origin: top right;
+      animation: none;
+    }
+    .notif-dropdown.open {
+      animation: dropdownOpen 0.18s cubic-bezier(0.4,0,0.2,1) both;
+    }
+    @keyframes dropdownOpen {
+      from { opacity: 0; transform: scale(0.95) translateY(-6px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    /* 21 — Chips / tags : hover */
+    .preview-tag, .badge-tag {
+      transition: background 0.15s, color 0.15s;
+    }
+
+    /* 22 — Scroll-to-top fluide */
+    html { scroll-behavior: smooth; }
+
+    /* 23 — Sélection texte */
+    ::selection { background: rgba(112,178,222,0.25); color: var(--text); }
+  </style>
 </head>
 <body>
 
@@ -3791,6 +3994,13 @@ async function apiFetchPost(path, body) {
 }
 
 async function loadAllFromAirtable() {
+  /* Afficher les skeletons pendant le chargement */
+  showSkeletonCards("kpiGrid1", 4);
+  showSkeleton("autoTableBody",    6, 4);
+  showSkeleton("clientsTableBody", 7, 4);
+  showSkeleton("appelsTableBody",  6, 4);
+  showSkeleton("waTableBody",      6, 3);
+
   await Promise.allSettled([
     loadClientsFromAirtable(),
     loadAutomationsFromAirtable(),
@@ -3798,7 +4008,6 @@ async function loadAllFromAirtable() {
     loadTicketsFromAirtable(),
     loadKPIsFromAirtable(currentPeriod),
   ]);
-  /* Réévaluer les alertes après chargement complet */
   updateNotifications();
 }
 
@@ -3881,6 +4090,33 @@ function updateTicketsNavDot() {
 }
 
 /* ============================================================
+   POLISH — Skeletons & utilitaires UI
+============================================================ */
+
+function showSkeleton(tbodyId, cols = 5, rows = 4) {
+  const tbody = document.getElementById(tbodyId);
+  if (!tbody) return;
+  const skRow = () => `<tr>${Array(cols).fill(0).map((_, i) =>
+    `<td style="padding:14px 12px"><div class="skeleton" style="height:12px;width:${i===0?'80%':i===cols-1?'50%':'65%'}"></div></td>`
+  ).join("")}</tr>`;
+  tbody.innerHTML = Array(rows).fill(0).map(skRow).join("");
+}
+
+function showSkeletonCards(gridId, count = 4) {
+  const grid = document.getElementById(gridId);
+  if (!grid) return;
+  grid.innerHTML = Array(count).fill(0).map(() => `
+    <div class="kpi-card" style="gap:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="skeleton" style="height:12px;width:55%"></div>
+        <div class="skeleton" style="width:36px;height:36px;border-radius:9px"></div>
+      </div>
+      <div class="skeleton" style="height:28px;width:45%"></div>
+      <div class="skeleton" style="height:10px;width:70%"></div>
+    </div>`).join("");
+}
+
+/* ============================================================
    4A — PAGE APPELS VOCAUX
 ============================================================ */
 
@@ -3893,7 +4129,11 @@ function buildAppelsTable(data) {
   tbody.innerHTML = "";
 
   if (data.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-faint)">Aucun appel trouvé</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state">
+      <div class="empty-state-icon">📞</div>
+      <div class="empty-state-title">Aucun appel enregistré</div>
+      <div class="empty-state-sub">Les appels vocaux de vos clients apparaîtront ici.</div>
+    </div></td></tr>`;
     return;
   }
 
@@ -4058,7 +4298,11 @@ function buildWaTable(data) {
   tbody.innerHTML = "";
 
   if (data.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-faint)">Aucune conversation trouvée</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state">
+      <div class="empty-state-icon">💬</div>
+      <div class="empty-state-title">Aucune conversation</div>
+      <div class="empty-state-sub">Les conversations WhatsApp apparaîtront ici une fois reçues.</div>
+    </div></td></tr>`;
     return;
   }
 
@@ -4553,9 +4797,7 @@ function showToast(msg, type = "success") {
   document.getElementById("toastContainer").appendChild(t);
   setTimeout(() => { t.style.opacity = "0"; t.style.transition = "opacity 0.3s"; setTimeout(() => t.remove(), 300); }, 3000);
 }
-const styleToast = document.createElement("style");
-styleToast.textContent = `@keyframes slideInToast { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }`;
-document.head.appendChild(styleToast);
+/* slideInToast défini dans le bloc Polish UI */
 
 /* ============================================================
    3A — TABLEAU AUTOMATIONS
@@ -4891,7 +5133,11 @@ function buildClientsTable() {
   if (!tbody) return;
 
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted);">Aucun client trouvé</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state">
+      <div class="empty-state-icon">👥</div>
+      <div class="empty-state-title">Aucun client trouvé</div>
+      <div class="empty-state-sub">Essayez d'ajuster vos filtres ou d'ajouter un nouveau client.</div>
+    </div></td></tr>`;
     return;
   }
 
@@ -5183,7 +5429,11 @@ function buildTicketsList() {
   if (!container) return;
 
   if (filtered.length === 0) {
-    container.innerHTML = `<div style="text-align:center;padding:32px;color:var(--text-muted);font-size:13px">Aucun ticket trouvé</div>`;
+    container.innerHTML = `<div class="empty-state">
+      <div class="empty-state-icon">🎫</div>
+      <div class="empty-state-title">Aucun ticket trouvé</div>
+      <div class="empty-state-sub">Aucun ticket ne correspond à vos critères de recherche.</div>
+    </div>`;
     return;
   }
 
@@ -5731,8 +5981,29 @@ function updateNotifications() {
 
 function toggleNotifDropdown() {
   const dd = document.getElementById("notifDropdown");
-  if (dd) dd.classList.toggle("open");
+  if (!dd) return;
+  const isOpen = dd.classList.contains("open");
+  if (isOpen) {
+    dd.style.opacity = "0";
+    dd.style.transform = "scale(0.95) translateY(-6px)";
+    setTimeout(() => { dd.classList.remove("open"); dd.style.opacity = ""; dd.style.transform = ""; }, 160);
+  } else {
+    dd.classList.add("open");
+  }
 }
+
+/* Fermer le dropdown notifs en cliquant ailleurs */
+document.addEventListener("click", (e) => {
+  const wrapper = document.getElementById("notifBtn")?.closest(".notif-wrapper");
+  if (wrapper && !wrapper.contains(e.target)) {
+    const dd = document.getElementById("notifDropdown");
+    if (dd?.classList.contains("open")) {
+      dd.style.opacity = "0";
+      dd.style.transform = "scale(0.95) translateY(-6px)";
+      setTimeout(() => { dd.classList.remove("open"); dd.style.opacity = ""; dd.style.transform = ""; }, 160);
+    }
+  }
+});
 
 function notifGoto(alertId, section) {
   markAlertRead(alertId);
