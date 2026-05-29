@@ -4012,21 +4012,22 @@ function applyPlanFilterFromSession(rawPlan) {
   if (!navAppels || !navWhatsapp) return;
 
   /*
-    Plans WhatsApp  → "whatsapp" dans le nom  → WA seul
-    Plans Vocal     → "vocal" dans le nom      → Appels seul
-    Plans Combo     → "combo" dans le nom, ou aucun mot-clé → les deux
+    Plans Airtable (champ Plan) — 9 valeurs :
+      WhatsApp : Starter WhatsApp | Business WhatsApp | Premium WhatsApp → Conv. WA seul
+      Vocal    : Starter Vocal    | Business Vocal    | Premium Vocal    → Appels seul
+      Combo    : Starter Combo    | Business Combo    | Premium Combo    → les deux
   */
-  const isWa    = plan.includes("whatsapp") && !plan.includes("combo");
-  const isVocal = plan.includes("vocal")    && !plan.includes("combo");
+  const isWa    = plan.includes("whatsapp");
+  const isVocal = plan.includes("vocal");
 
-  if (isWa) {
+  if (isWa && !isVocal) {
     navAppels.style.display   = "none";
     navWhatsapp.style.display = "";
-  } else if (isVocal) {
+  } else if (isVocal && !isWa) {
     navAppels.style.display   = "";
     navWhatsapp.style.display = "none";
   } else {
-    /* combo ou plan inconnu → tout afficher */
+    /* combo (contient les deux) ou plan inconnu → tout afficher */
     navAppels.style.display   = "";
     navWhatsapp.style.display = "";
   }
