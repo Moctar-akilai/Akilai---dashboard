@@ -2055,6 +2055,96 @@
     .netlify-identity-widget {
       z-index: 99999 !important;
     }
+
+    /* ── Admin overlay ── */
+    #adminOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 8000;
+      background: var(--bg, #0f1117);
+      overflow-y: auto;
+    }
+    #adminOverlay.visible { display: block; }
+    .admin-wrap {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+    .admin-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+    }
+    .admin-title { font-size: 22px; font-weight: 700; }
+    .admin-title span { color: var(--accent, #6c63ff); }
+    .admin-lock {
+      background: var(--surface, #1a1d27);
+      border: 1px solid var(--border, #2a2d3a);
+      border-radius: 12px;
+      padding: 32px;
+      max-width: 380px;
+      margin: 80px auto 0;
+      text-align: center;
+    }
+    .admin-lock h2 { font-size: 18px; margin-bottom: 8px; }
+    .admin-lock p  { color: var(--text-faint, #888); font-size: 13px; margin-bottom: 24px; }
+    .admin-input {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--bg, #0f1117);
+      border: 1px solid var(--border, #2a2d3a);
+      border-radius: 8px;
+      color: var(--text, #e2e8f0);
+      font-size: 14px;
+      margin-bottom: 12px;
+      box-sizing: border-box;
+    }
+    .admin-input:focus { outline: none; border-color: var(--accent, #6c63ff); }
+    .admin-user-row {
+      background: var(--surface, #1a1d27);
+      border: 1px solid var(--border, #2a2d3a);
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 12px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+    }
+    .admin-user-email { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+    .admin-user-meta  { font-size: 12px; color: var(--text-faint, #888); }
+    .admin-user-meta span { color: var(--accent, #6c63ff); font-family: monospace; }
+    .admin-row-controls { display: flex; gap: 8px; align-items: center; }
+    .admin-id-input {
+      padding: 7px 10px;
+      background: var(--bg, #0f1117);
+      border: 1px solid var(--border, #2a2d3a);
+      border-radius: 6px;
+      color: var(--text, #e2e8f0);
+      font-size: 13px;
+      font-family: monospace;
+      width: 180px;
+    }
+    .admin-id-input:focus { outline: none; border-color: var(--accent, #6c63ff); }
+    .admin-save-btn {
+      padding: 7px 14px;
+      background: var(--accent, #6c63ff);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .admin-save-btn:hover { opacity: .85; }
+    .admin-save-btn:disabled { opacity: .4; cursor: default; }
+    .admin-status-ok   { color: #22c55e; font-size: 12px; margin-top: 4px; }
+    .admin-status-err  { color: #ef4444; font-size: 12px; margin-top: 4px; }
+    .admin-badge-ok    { display: inline-block; background: rgba(34,197,94,.15); color: #22c55e; border-radius: 4px; padding: 1px 6px; font-size: 11px; }
+    .admin-badge-miss  { display: inline-block; background: rgba(239,68,68,.15); color: #ef4444; border-radius: 4px; padding: 1px 6px; font-size: 11px; }
   </style>
 </head>
 <body>
@@ -3067,6 +3157,50 @@
 </div><!-- /app -->
 
 <!-- ============================================================
+     PAGE ADMIN (accessible via /#admin)
+============================================================ -->
+<div id="adminOverlay">
+  <!-- Écran de verrouillage -->
+  <div id="adminLock">
+    <div class="admin-lock">
+      <div style="font-size:36px;margin-bottom:8px">🔐</div>
+      <h2>Administration AkilAI</h2>
+      <p>Entrez le mot de passe administrateur pour accéder à la gestion des utilisateurs.</p>
+      <input id="adminPwdInput" type="password" class="admin-input" placeholder="Mot de passe admin"
+             onkeydown="if(event.key==='Enter') adminUnlock()">
+      <button class="admin-save-btn" style="width:100%;padding:10px" onclick="adminUnlock()">Accéder</button>
+      <div id="adminLockErr" style="color:#ef4444;font-size:12px;margin-top:8px;min-height:16px"></div>
+      <div style="margin-top:20px">
+        <a href="#" onclick="adminClose()" style="color:var(--text-faint,#888);font-size:12px;text-decoration:none">
+          ← Retour au dashboard
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tableau de bord admin -->
+  <div id="adminDashboard" style="display:none">
+    <div class="admin-wrap">
+      <div class="admin-header">
+        <div class="admin-title">Admin <span>AkilAI</span> — Utilisateurs</div>
+        <div style="display:flex;gap:12px;align-items:center">
+          <button class="admin-save-btn" style="background:var(--surface,#1a1d27);color:var(--text,#e2e8f0);border:1px solid var(--border,#2a2d3a)" onclick="adminLoadUsers()">
+            ↻ Rafraîchir
+          </button>
+          <button class="admin-save-btn" style="background:transparent;color:var(--text-faint,#888);border:1px solid var(--border,#2a2d3a)" onclick="adminClose()">
+            ✕ Fermer
+          </button>
+        </div>
+      </div>
+
+      <div id="adminUserList">
+        <div style="color:var(--text-faint,#888);font-size:14px">Chargement…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
      3B — MODAL PROGRAMMATION
 ============================================================ -->
 <div class="modal-overlay" id="scheduleModal" onclick="closeScheduleModal(event)">
@@ -3907,6 +4041,142 @@ function _initDashboard() {
   setTimeout(updateNotifications, 200);
 }
 
+/* ============================================================
+   ADMIN — gestion des utilisateurs Netlify Identity
+============================================================ */
+let _adminPassword = null;
+
+function adminOpen() {
+  document.getElementById("adminOverlay").classList.add("visible");
+  document.getElementById("adminLock").style.display = "block";
+  document.getElementById("adminDashboard").style.display = "none";
+  document.getElementById("adminLockErr").textContent = "";
+  document.getElementById("adminPwdInput").value = "";
+  setTimeout(() => document.getElementById("adminPwdInput").focus(), 100);
+}
+
+function adminClose() {
+  document.getElementById("adminOverlay").classList.remove("visible");
+  _adminPassword = null;
+}
+
+async function adminUnlock() {
+  const pwd = document.getElementById("adminPwdInput").value.trim();
+  if (!pwd) return;
+  const errEl = document.getElementById("adminLockErr");
+  errEl.textContent = "Vérification…";
+
+  try {
+    const res = await fetch("/.netlify/functions/admin-get-users", {
+      headers: { "x-admin-password": pwd },
+    });
+    if (res.status === 401) { errEl.textContent = "Mot de passe incorrect."; return; }
+    if (!res.ok) { errEl.textContent = `Erreur serveur (${res.status}).`; return; }
+
+    _adminPassword = pwd;
+    const data = await res.json();
+    document.getElementById("adminLock").style.display = "none";
+    document.getElementById("adminDashboard").style.display = "block";
+    _adminRenderUsers(data.users || []);
+  } catch (e) {
+    errEl.textContent = "Erreur réseau : " + e.message;
+  }
+}
+
+async function adminLoadUsers() {
+  if (!_adminPassword) return;
+  document.getElementById("adminUserList").innerHTML = '<div style="color:var(--text-faint,#888);font-size:14px">Chargement…</div>';
+  try {
+    const res = await fetch("/.netlify/functions/admin-get-users", {
+      headers: { "x-admin-password": _adminPassword },
+    });
+    const data = await res.json();
+    _adminRenderUsers(data.users || []);
+  } catch (e) {
+    document.getElementById("adminUserList").innerHTML = `<div style="color:#ef4444">Erreur : ${e.message}</div>`;
+  }
+}
+
+function _adminRenderUsers(users) {
+  const list = document.getElementById("adminUserList");
+  if (!users.length) {
+    list.innerHTML = '<div style="color:var(--text-faint,#888)">Aucun utilisateur trouvé.</div>';
+    return;
+  }
+  list.innerHTML = users.map(u => `
+    <div class="admin-user-row" id="admin-row-${u.id}">
+      <div>
+        <div class="admin-user-email">${u.email}</div>
+        <div class="admin-user-meta">
+          ${u.airtable_client_id
+            ? `<span class="admin-badge-ok">✓ configuré</span> <span>${u.airtable_client_id}</span>`
+            : `<span class="admin-badge-miss">⚠ non configuré</span>`}
+          &nbsp;·&nbsp; ${u.confirmed ? 'Compte actif' : '<span style="color:#f59e0b">Email non confirmé</span>'}
+        </div>
+        <div id="admin-status-${u.id}" style="min-height:16px"></div>
+      </div>
+      <div class="admin-row-controls">
+        <input class="admin-id-input" id="admin-input-${u.id}"
+               value="${u.airtable_client_id || ''}"
+               placeholder="recXXXXXXXXXX"
+               onkeydown="if(event.key==='Enter') adminSaveUser('${u.id}')">
+        <button class="admin-save-btn" id="admin-btn-${u.id}" onclick="adminSaveUser('${u.id}')">
+          Sauvegarder
+        </button>
+      </div>
+    </div>
+  `).join("");
+}
+
+async function adminSaveUser(userId) {
+  if (!_adminPassword) return;
+  const input = document.getElementById(`admin-input-${userId}`);
+  const btn   = document.getElementById(`admin-btn-${userId}`);
+  const statusEl = document.getElementById(`admin-status-${userId}`);
+  const value = input.value.trim();
+
+  btn.disabled = true;
+  statusEl.className = "";
+  statusEl.textContent = "Sauvegarde…";
+
+  try {
+    const res = await fetch("/.netlify/functions/admin-update-user", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-admin-password": _adminPassword,
+      },
+      body: JSON.stringify({ userId, airtable_client_id: value }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      statusEl.className = "admin-status-err";
+      statusEl.textContent = "Erreur : " + (data.error || res.status);
+    } else {
+      statusEl.className = "admin-status-ok";
+      statusEl.textContent = "✓ Sauvegardé — " + (data.airtable_client_id || "vide");
+      setTimeout(() => adminLoadUsers(), 1200);
+    }
+  } catch (e) {
+    statusEl.className = "admin-status-err";
+    statusEl.textContent = "Erreur réseau : " + e.message;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+/* Ouvrir la page admin via /#admin dans l'URL */
+function _checkAdminRoute() {
+  if (window.location.hash === "#admin") {
+    adminOpen();
+  }
+}
+
+window.addEventListener("hashchange", () => {
+  if (window.location.hash === "#admin") adminOpen();
+  else adminClose();
+});
+
 document.addEventListener('DOMContentLoaded', () => {
   if (typeof netlifyIdentity === "undefined") {
     /* Netlify Identity non disponible (dev local sans CDN) — afficher dashboard direct */
@@ -3971,6 +4241,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* Appeler init() en dernier, après les listeners */
   netlifyIdentity.init();
+
+  /* Vérifier la route /#admin au démarrage */
+  _checkAdminRoute();
 });
 
 /* ============================================================
