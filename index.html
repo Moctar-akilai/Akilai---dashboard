@@ -4234,6 +4234,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   netlifyIdentity.on('error', (err) => {
     console.error('[NetlifyIdentity]', err);
+    const msg = (err && (err.message || err.msg || String(err))).toLowerCase();
+    /* Contourner le blocage "Email not confirmed" — forcer le login si l'utilisateur existe */
+    if (msg.includes('not confirmed') || msg.includes('confirmation')) {
+      const user = netlifyIdentity.currentUser ? netlifyIdentity.currentUser() : null;
+      if (user) {
+        netlifyIdentity.close();
+        _onLogin(user);
+        return;
+      }
+    }
     _showLoginPage();
   });
 
