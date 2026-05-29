@@ -2156,7 +2156,7 @@
   <div class="login-card">
     <div class="login-logo">Akil<span>AI</span></div>
     <div class="login-subtitle">Votre portail d'automatisation IA</div>
-    <button class="login-btn" onclick="openLogin()">Se connecter</button>
+    <button class="login-btn" data-netlify-identity-button>Se connecter</button>
     <div class="login-footer">Accès réservé aux clients AkilAI</div>
   </div>
 </div>
@@ -4016,7 +4016,7 @@ function _onLogout() {
     <div class="login-card">
       <div class="login-logo">Akil<span>AI</span></div>
       <div class="login-subtitle">Votre portail d'automatisation IA</div>
-      <button class="login-btn" onclick="openLogin()">Se connecter</button>
+      <button class="login-btn" data-netlify-identity-button>Se connecter</button>
       <div class="login-footer">Accès réservé aux clients AkilAI</div>
     </div>`;
 }
@@ -4184,41 +4184,10 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
-  const _hash       = window.location.hash || "";
-  const _isInvite   = _hash.includes('invite_token');
-  const _isRecovery = _hash.includes('recovery_token');
-  const _mode       = _isInvite ? 'signup' : 'recovery';
-
-  /* Pour les flux token : afficher un vrai bouton cliquable + tenter l'auto-ouverture */
-  if (_isInvite || _isRecovery) {
-    const label = _isInvite ? 'Définir mon mot de passe' : 'Réinitialiser mon mot de passe';
-    const sub   = _isInvite
-      ? 'Bienvenue ! Cliquez pour définir votre mot de passe.'
-      : 'Cliquez pour choisir un nouveau mot de passe.';
-    const lp = document.getElementById('loginPage');
-    if (lp) {
-      lp.innerHTML = `
-        <div class="login-card">
-          <div class="login-logo">Akil<span>AI</span></div>
-          <div class="login-subtitle">${sub}</div>
-          <button class="login-btn" id="tokenBtn" onclick="netlifyIdentity.open('${_mode}')">${label}</button>
-          <div id="tokenMsg" style="color:var(--text-faint,#888);font-size:12px;margin-top:10px"></div>
-        </div>`;
-    }
-  }
+  /* Le widget gère nativement invite_token et recovery_token dans l'URL.
+     On écoute juste les événements — pas besoin d'appeler open() manuellement. */
 
   netlifyIdentity.on('init', (user) => {
-    if (_isInvite || _isRecovery) {
-      /* Tenter l'auto-ouverture ; le bouton reste visible si ça échoue */
-      const msg = document.getElementById('tokenMsg');
-      if (msg) msg.textContent = 'Ouverture automatique en cours…';
-      setTimeout(() => {
-        try { netlifyIdentity.open(_mode); }
-        catch(e) { console.error('[AkilAI] open() failed:', e); }
-        if (msg) msg.textContent = 'Si le formulaire ne s\'ouvre pas, cliquez sur le bouton ci-dessus.';
-      }, 400);
-      return;
-    }
     if (user) _onLogin(user); else _showLoginPage();
   });
 
@@ -4227,29 +4196,20 @@ document.addEventListener('DOMContentLoaded', () => {
     _onLogin(user);
   });
 
-  netlifyIdentity.on('logout', () => {
-    _onLogout();
-  });
+  netlifyIdentity.on('logout', () => _onLogout());
 
   netlifyIdentity.on('error', (err) => {
     console.error('[NetlifyIdentity]', err);
+    /* Si email non confirmé : forcer le passage si l'utilisateur existe quand même */
     const msg = (err && (err.message || err.msg || String(err))).toLowerCase();
-    /* Contourner le blocage "Email not confirmed" — forcer le login si l'utilisateur existe */
     if (msg.includes('not confirmed') || msg.includes('confirmation')) {
       const user = netlifyIdentity.currentUser ? netlifyIdentity.currentUser() : null;
-      if (user) {
-        netlifyIdentity.close();
-        _onLogin(user);
-        return;
-      }
+      if (user) { netlifyIdentity.close(); _onLogin(user); return; }
     }
     _showLoginPage();
   });
 
-  /* Appeler init() en dernier, après les listeners */
   netlifyIdentity.init();
-
-  /* Vérifier la route /#admin au démarrage */
   _checkAdminRoute();
 });
 
