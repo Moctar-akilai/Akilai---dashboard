@@ -1,17 +1,8 @@
 const { BASE_URL, headers, ok, err, preflight } = require("./config");
-const { requireAuth } = require("./auth");
 
-/**
- * POST — Crée ou met à jour l'assistant Vapi du client authentifié.
- * Le clientId est extrait du JWT — le body n'a pas besoin de le fournir.
- */
-exports.handler = async (event, context) => {
+exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") return preflight();
   if (event.httpMethod !== "POST") return err("Méthode non autorisée", 405);
-
-  const auth = requireAuth(event);
-  if (auth.error) return auth.error;
-  const { clientId } = auth;
 
   const vapiKey = process.env.VAPI_API_KEY;
   if (!vapiKey) return err("VAPI_API_KEY non configuré", 500);
@@ -20,6 +11,7 @@ exports.handler = async (event, context) => {
   try { body = JSON.parse(event.body || "{}"); } catch { return err("JSON invalide", 400); }
 
   const {
+    clientId,
     nomAssistant  = "Assistant",
     voiceId,
     langue        = "fr",
@@ -29,15 +21,17 @@ exports.handler = async (event, context) => {
     interruptions = true,
   } = body;
 
-  /* 1. Récupérer VapiAssistantId depuis Airtable */
   let existingAssistantId = null;
-  try {
-    const clientRes  = await fetch(`${BASE_URL}/Clients/${clientId}`, { headers });
-    if (!clientRes.ok) return err(`Airtable ${clientRes.status}`, 502);
-    const clientData = await clientRes.json();
-    existingAssistantId = clientData.fields?.VapiAssistantId || null;
-  } catch (e) {
-    return err(e.message);
+  if (clientId) {
+    try {
+      const clientRes = await fetch(`${BASE_URL}/Clients/${clientId}`, { headers });
+      if (clientRes.ok) {
+        const clientData = await clientRes.json();
+        existingAssistantId = clientData.fields?.VapiAssistantId || null;
+      }
+    } catch (e) {
+      console.warn("[create-vapi-assistant] Airtable fetch:", e.message);
+    }
   }
 
   const LANG_MAP = { "fr":"fr", "fr-FR":"fr", "en":"en", "en-US":"en", "es":"es", "ar":"ar", "pt":"pt" };
@@ -84,12 +78,12 @@ exports.handler = async (event, context) => {
       assistantId      = createData.id;
       created          = true;
 
-      /* Sauvegarder VapiAssistantId dans Airtable */
-      await fetch(`${BASE_URL}/Clients/${clientId}`, {
-        method: "PATCH", headers,
-        body:   JSON.stringify({ fields: { VapiAssistantId: assistantId } }),
-      }).catch(e => console.warn("[create-vapi-assistant] Airtable PATCH:", e.message));
-
+      if (clientId) {
+        await fetch(`${BASE_URL}/Clients/${clientId}`, {
+          method: "PATCH", headers,
+          body:   JSON.stringify({ fields: { VapiAssistantId: assistantId } }),
+        }).catch(e => console.warn("[create-vapi-assistant] Airtable PATCH:", e.message));
+      }
     } else {
       assistantId = existingAssistantId;
 

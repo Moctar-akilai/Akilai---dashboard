@@ -1,19 +1,10 @@
 const { BASE_URL, headers, ok, err, preflight } = require("./config");
-const { requireAuth, filterByClient } = require("./auth");
 
-/**
- * GET /Clients → retourne uniquement les données du client authentifié.
- */
-exports.handler = async (event, context) => {
+exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") return preflight();
 
-  const auth = requireAuth(event);
-  if (auth.error) return auth.error;
-  const { clientId } = auth;
-
   try {
-    const filter = filterByClient(clientId);
-    const res    = await fetch(`${BASE_URL}/Clients?${filter}&view=Grid%20view`, { headers });
+    const res = await fetch(`${BASE_URL}/Clients?view=Grid%20view`, { headers });
     if (!res.ok) return err(`Airtable ${res.status}`);
 
     const data    = await res.json();

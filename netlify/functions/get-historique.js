@@ -1,26 +1,16 @@
 const { BASE_URL, headers, ok, err, preflight } = require("./config");
-const { requireAuth, filterByClient } = require("./auth");
 
-/**
- * GET /Historique — 100 derniers enregistrements du client authentifié, triés par date desc.
- * Retourne : { appels: [...], conversations_wa: [...] }
- */
-exports.handler = async (event, context) => {
+exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") return preflight();
 
-  const auth = requireAuth(event);
-  if (auth.error) return auth.error;
-  const { clientId } = auth;
-
   try {
-    const filter = filterByClient(clientId);
     const params = new URLSearchParams({
       "sort[0][field]":     "DateHeure",
       "sort[0][direction]": "desc",
       maxRecords:           "100",
     });
 
-    const res = await fetch(`${BASE_URL}/Historique?${filter}&${params}`, { headers });
+    const res = await fetch(`${BASE_URL}/Historique?${params}`, { headers });
     if (!res.ok) return err(`Airtable ${res.status}`);
 
     const data    = await res.json();

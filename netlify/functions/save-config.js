@@ -1,25 +1,11 @@
 const { BASE_URL, headers, ok, err, preflight } = require("./config");
-const { requireAuth, filterByClient } = require("./auth");
 
-/**
- * GET  → retourne la config Voix & IA du client authentifié
- * POST → PATCH /Configurations/{id} avec tous les champs Voix & IA
- *
- * Champs Airtable : NomAssistant, Voix, VoiceName, Tonalite, Personnalite, Langue,
- *   LangueSecours, VitesseParole, SilenceMax, Interruptions, PromptSysteme, ClientId
- */
-exports.handler = async (event, context) => {
+exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") return preflight();
 
-  const auth = requireAuth(event);
-  if (auth.error) return auth.error;
-  const { clientId } = auth;
-
-  /* ---- GET : charger la config ---- */
   if (event.httpMethod === "GET") {
     try {
-      const filter = filterByClient(clientId);
-      const res    = await fetch(`${BASE_URL}/Configurations?${filter}&maxRecords=1`, { headers });
+      const res = await fetch(`${BASE_URL}/Configurations?maxRecords=1`, { headers });
       if (!res.ok) return err(`Airtable ${res.status}`, 502);
 
       const data = await res.json();
@@ -48,7 +34,6 @@ exports.handler = async (event, context) => {
     }
   }
 
-  /* ---- POST : sauvegarder la config ---- */
   if (event.httpMethod === "POST") {
     let body;
     try { body = JSON.parse(event.body || "{}"); } catch { return err("JSON invalide", 400); }
@@ -56,7 +41,6 @@ exports.handler = async (event, context) => {
     const { _id, ...cfg } = body;
 
     const fields = {
-      ClientId:      clientId,
       NomAssistant:  cfg.nomAssistant,
       Voix:          cfg.voix,
       VoiceName:     cfg.voiceName,
@@ -74,8 +58,7 @@ exports.handler = async (event, context) => {
       let recordId = _id;
 
       if (!recordId) {
-        const filter  = filterByClient(clientId);
-        const findRes = await fetch(`${BASE_URL}/Configurations?${filter}&maxRecords=1`, { headers });
+        const findRes  = await fetch(`${BASE_URL}/Configurations?maxRecords=1`, { headers });
         const findData = findRes.ok ? await findRes.json() : { records: [] };
         recordId = findData.records?.[0]?.id || null;
       }

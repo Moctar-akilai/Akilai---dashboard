@@ -1,24 +1,15 @@
 const { BASE_URL, headers, ok, err, preflight } = require("./config");
-const { requireAuth, filterByClient } = require("./auth");
 
-/**
- * GET /Support → tableau tickets[] filtrés par client authentifié.
- */
-exports.handler = async (event, context) => {
+exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") return preflight();
 
-  const auth = requireAuth(event);
-  if (auth.error) return auth.error;
-  const { clientId } = auth;
-
   try {
-    const filter = filterByClient(clientId);
     const params = new URLSearchParams({
       "sort[0][field]":     "DateCreation",
       "sort[0][direction]": "desc",
     });
 
-    const res = await fetch(`${BASE_URL}/Support?${filter}&${params}`, { headers });
+    const res = await fetch(`${BASE_URL}/Support?${params}`, { headers });
     if (!res.ok) return err(`Airtable ${res.status}`);
 
     const data    = await res.json();

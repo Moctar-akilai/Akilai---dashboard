@@ -2157,23 +2157,7 @@
 </head>
 <body>
 
-<!-- ======================================================
-     PAGE DE LOGIN — rendu dynamique par _showLoginPage()
-====================================================== -->
-<div id="loginPage">
-  <!-- contenu injecté par _showLoginPage() selon le contexte (login / setup) -->
-</div>
-
-<!-- ======================================================
-     ÉCRAN DE CHARGEMENT
-====================================================== -->
-<div id="loadingScreen" class="hidden">
-  <div class="loading-logo">Akil<span>AI</span></div>
-  <div class="loading-spinner"></div>
-  <div id="loadingStep" style="font-size:12px;color:var(--text-faint);margin-top:4px">Initialisation…</div>
-</div>
-
-<div id="app" style="display:none">
+<div id="app">
 
   <!-- ======================================================
        SIDEBAR — 1C
@@ -2359,7 +2343,6 @@
           </div>
         </div>
         <div class="avatar-header" id="userAvatar" title="">—</div>
-        <button class="btn-logout" onclick="handleLogout()" title="Se déconnecter">Déconnexion</button>
       </div>
     </header>
 
@@ -3876,143 +3859,12 @@ function handleResize() {
 
 window.addEventListener('resize', handleResize);
 
-/* ============================================================
-   AUTH — session locale (sessionStorage)
-============================================================ */
-
-function _getSession() {
-  try { return JSON.parse(sessionStorage.getItem('_akilai_session') || 'null'); } catch { return null; }
-}
-
-function _saveSession(data) {
-  sessionStorage.setItem('_akilai_session', JSON.stringify(data));
-  window._currentClientId = data.clientId;
-}
-
-function _clearSession() {
-  sessionStorage.removeItem('_akilai_session');
-  window._currentClientId = null;
-}
-
-function handleLogout() {
-  _clearSession();
-  _showLoginPage();
-}
-
-function _showLoginPage() {
-  /* Détecter le flux setup (lien d'invitation) */
-  var hash = window.location.hash || '';
-  var setupMatch = hash.match(/[#&]setup\?token=([^&]+)/);
-  if (!setupMatch) setupMatch = hash.match(/setup[?&]token=([^&]+)/);
-  var inviteToken = setupMatch ? setupMatch[1] : null;
-
-  var lp = document.getElementById('loginPage');
-  if (!lp) return;
-
-  if (inviteToken) {
-    lp.innerHTML = `
-      <div class="login-card">
-        <div class="login-logo">Akil<span>AI</span></div>
-        <div class="login-subtitle">Entrez votre email pour accéder au dashboard.</div>
-        <input id="loginEmail" type="email" class="login-input" placeholder="Votre email"
-               onkeydown="if(event.key==='Enter')doLogin()">
-        <button class="login-btn" onclick="doLogin()">Accéder</button>
-        <div id="loginErr" style="color:#ef4444;font-size:13px;margin-top:8px;min-height:16px"></div>
-      </div>`;
-    setTimeout(() => { var el = document.getElementById('loginEmail'); if (el) el.focus(); }, 100);
-    lp.dataset.inviteToken = inviteToken;
-  } else {
-    lp.innerHTML = `
-      <div class="login-card">
-        <div class="login-logo">Akil<span>AI</span></div>
-        <div class="login-subtitle">Votre portail d'automatisation IA</div>
-        <input id="loginEmail" type="email" class="login-input" placeholder="Votre email"
-               onkeydown="if(event.key==='Enter')doLogin()">
-        <button class="login-btn" onclick="doLogin()">Accéder</button>
-        <div id="loginErr" style="color:#ef4444;font-size:13px;margin-top:8px;min-height:16px"></div>
-        <div class="login-footer">Accès réservé aux clients AkilAI</div>
-      </div>`;
-    setTimeout(() => { var el = document.getElementById('loginEmail'); if (el) el.focus(); }, 100);
-  }
-
-  lp.classList.remove('hidden');
-  document.getElementById('app').style.display = 'none';
-  var ls = document.getElementById('loadingScreen');
-  if (ls) ls.classList.add('hidden');
-}
-
-function _showLoadingScreen() {
-  document.getElementById('loginPage').classList.add('hidden');
-  var ls = document.getElementById('loadingScreen');
-  if (ls) ls.classList.remove('hidden');
-  document.getElementById('app').style.display = 'none';
-}
+function handleLogout() { /* auth désactivée */ }
 
 function _showDashboard() {
-  document.getElementById('loginPage').classList.add('hidden');
-  var ls = document.getElementById('loadingScreen');
-  if (ls) ls.classList.add('hidden');
+  var lp = document.getElementById('loginPage');
+  if (lp) lp.classList.add('hidden');
   document.getElementById('app').style.display = 'flex';
-}
-
-function _setLoadingStep(msg) {
-  var el = document.getElementById('loadingStep');
-  if (el) el.textContent = msg;
-}
-
-async function doLogin() {
-  var email = (document.getElementById('loginEmail') || {}).value?.trim();
-  var errEl = document.getElementById('loginErr');
-  if (!email) { if (errEl) errEl.textContent = 'Entrez votre email.'; return; }
-  var btn = document.querySelector('#loginPage .login-btn');
-  if (btn) btn.disabled = true;
-  if (errEl) errEl.textContent = 'Vérification…';
-
-  try {
-    var res  = await fetch('/.netlify/functions/auth-login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
-    });
-    var data = await res.json();
-    if (!res.ok || !data.ok) {
-      if (errEl) errEl.textContent = data.message || 'Email non reconnu. Contactez AkilAI.';
-      if (btn) btn.disabled = false;
-      return;
-    }
-    _saveSession({ clientId: data.clientId, nom: data.nom, email: data.email });
-    _onLoginSuccess(data);
-  } catch (e) {
-    if (errEl) errEl.textContent = 'Erreur réseau — réessayez.';
-    if (btn) btn.disabled = false;
-  }
-}
-
-
-function _applyUserToUI(nom, email) {
-  var name     = nom || email || 'Client';
-  var initials = name.split(' ').map(function(w){ return w[0]; }).join('').slice(0, 2).toUpperCase();
-  var avatar   = document.getElementById('userAvatar');
-  if (avatar) { avatar.textContent = initials; avatar.title = name; }
-  var subtitle = document.getElementById('overviewSubtitle');
-  if (subtitle) subtitle.textContent = 'Bienvenue, ' + name.split(' ')[0] + ' — voici l\'état de vos automations.';
-}
-
-async function _onLoginSuccess(data) {
-  _applyUserToUI(data.nom, data.email);
-  _showLoadingScreen();
-  _setLoadingStep('Connexion à Airtable…');
-  _initDashboard();
-
-  var _shown = false;
-  var timeout = setTimeout(function() { if (!_shown) { _shown = true; _showDashboard(); } }, 3000);
-  try {
-    _setLoadingStep('Chargement des données…');
-    await checkConnection();
-  } finally {
-    clearTimeout(timeout);
-    if (!_shown) { _shown = true; _showDashboard(); }
-  }
 }
 
 /* ============================================================
@@ -4176,14 +4028,11 @@ window.addEventListener("hashchange", () => {
 /* ============================================================
    INIT — vérification session au chargement
 ============================================================ */
+
 window.addEventListener('load', function() {
-  var session = _getSession();
-  if (session && session.clientId) {
-    window._currentClientId = session.clientId;
-    _onLoginSuccess(session);
-  } else {
-    _showLoginPage();
-  }
+  _initDashboard();
+  _showDashboard();
+  checkConnection();
   _checkAdminRoute();
 });
 
@@ -4218,19 +4067,8 @@ async function checkConnection() {
    Chaque loader a un fallback silencieux sur les données mockées.
 ============================================================ */
 
-/* authFetch — injecte x-client-id dans chaque requête */
-function _authHeaders(extra = {}) {
-  const h = { ...extra };
-  if (window._currentClientId) h['x-client-id'] = window._currentClientId;
-  return h;
-}
-
 async function apiFetch(path, options = {}) {
-  const res = await fetch(path, {
-    ...options,
-    headers: _authHeaders(options.headers || {}),
-  });
-  if (res.status === 401) { handleLogout(); throw new Error('Session expirée'); }
+  const res = await fetch(path, options);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }

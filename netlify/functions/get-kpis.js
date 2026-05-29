@@ -1,16 +1,7 @@
 const { BASE_URL, headers, ok, err, preflight } = require("./config");
-const { requireAuth, filterByClient } = require("./auth");
 
-/**
- * Agrège les KPIs depuis Airtable pour le client authentifié.
- * Query param : ?days=7|30|90 (défaut 30)
- */
-exports.handler = async (event, context) => {
+exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") return preflight();
-
-  const auth = requireAuth(event);
-  if (auth.error) return auth.error;
-  const { clientId } = auth;
 
   try {
     const days      = parseInt(event.queryStringParameters?.days || "30", 10);
@@ -18,43 +9,41 @@ exports.handler = async (event, context) => {
     cutoff.setDate(cutoff.getDate() - days);
     const cutoffISO = cutoff.toISOString();
 
-    /* Filtre date pour Historique */
-    const dateExtra = `IS_AFTER({DateHeure},"${cutoffISO}")`;
+    const histParams = new URLSearchParams({
+      filterByFormula: `IS_AFTER({DateHeure},"${cutoffISO}")`,
+      "fields[]":      "Type",
+    });
+    histParams.append("fields[]", "DateHeure");
+    histParams.append("fields[]", "Duree");
+    histParams.append("fields[]", "Statut");
 
-    /* Fetch Historique (appels + WA) filtré par client + date */
-    const histFilter = filterByClient(clientId, dateExtra);
-    const histRes    = await fetch(
-      `${BASE_URL}/Historique?${histFilter}&fields[]=Type&fields[]=DateHeure&fields[]=Duree&fields[]=Statut`,
-      { headers }
-    );
+    const histRes  = await fetch(`${BASE_URL}/Historique?${histParams}`, { headers });
     const histData = histRes.ok ? await histRes.json() : { records: [] };
     const histRecs = histData.records || [];
 
-    /* Fetch Paiements filtrés par client */
-    const payFilter = filterByClient(clientId);
-    const payRes    = await fetch(
-      `${BASE_URL}/Paiements?${payFilter}&fields[]=Montant&fields[]=DatePaiement`,
-      { headers }
-    );
+    const payParams = new URLSearchParams();
+    payParams.append("fields[]", "Montant");
+    payParams.append("fields[]", "DatePaiement");
+
+    const payRes  = await fetch(`${BASE_URL}/Paiements?${payParams}`, { headers });
     const payData = payRes.ok ? await payRes.json() : { records: [] };
     const payRecs = payData.records || [];
 
-    /* Fetch tickets ouverts filtrés par client */
-    const tktFilter = filterByClient(clientId, `OR({Statut}="Ouvert",{Statut}="En cours")`);
-    const tktRes    = await fetch(
-      `${BASE_URL}/Support?${tktFilter}&fields[]=Statut`,
-      { headers }
-    );
+    const tktParams = new URLSearchParams({
+      filterByFormula: `OR({Statut}="Ouvert",{Statut}="En cours")`,
+      "fields[]":      "Statut",
+    });
+
+    const tktRes  = await fetch(`${BASE_URL}/Support?${tktParams}`, { headers });
     const tktData = tktRes.ok ? await tktRes.json() : { records: [] };
 
-    /* Agrégation */
     const appelsRecs = histRecs.filter(r => (r.fields.Type || "").toLowerCase() !== "whatsapp");
     const waRecs     = histRecs.filter(r => (r.fields.Type || "").toLowerCase() === "whatsapp");
 
     const durees = appelsRecs
       .map(r => r.fields.Duree || "0:00")
       .map(d => { const [m, s] = d.split(":").map(Number); return (m || 0) * 60 + (s || 0); });
-    const avgSec       = durees.length ? Math.round(durees.reduce((a, b) => a + b, 0) / durees.length) : 0;
+    const avgSec        = durees.length ? Math.round(durees.reduce((a, b) => a + b, 0) / durees.length) : 0;
     const duree_moyenne = `${Math.floor(avgSec / 60)}m ${String(avgSec % 60).padStart(2, "0")}s`;
 
     const revParMois = Array(12).fill(0);
