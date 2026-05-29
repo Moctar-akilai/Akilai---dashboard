@@ -492,7 +492,7 @@
     .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
     .toggle-slider {
       position: absolute; inset: 0;
-      background: rgba(255,255,255,0.12);
+      background: rgba(239,68,68,0.25);
       border-radius: 20px;
       transition: background 0.2s;
     }
@@ -502,7 +502,7 @@
       width: 14px; height: 14px;
       left: 3px; top: 3px;
       border-radius: 50%;
-      background: #888;
+      background: #ef4444;
       transition: transform 0.2s, background 0.2s;
     }
     .toggle input:checked + .toggle-slider { background: rgba(34,197,94,0.25); }
@@ -2544,16 +2544,10 @@
             <h1 class="page-title">Automations</h1>
             <p class="page-subtitle">Gérez et planifiez vos <span id="autoActiveCount">7</span> automations actives.</p>
           </div>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-secondary btn-sm" onclick="navigate('programmation')">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-              Vue calendrier
-            </button>
-            <button class="btn btn-primary btn-sm" onclick="openScheduleModal(null)">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Nouvelle automation
-            </button>
-          </div>
+          <button class="btn btn-secondary btn-sm" onclick="navigate('programmation')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Vue calendrier
+          </button>
         </div>
 
         <div class="card" style="padding:0;overflow:hidden">
@@ -2561,7 +2555,7 @@
             <table class="auto-table">
               <thead>
                 <tr>
-                  <th style="width:32px"></th>
+                  <th style="width:48px"></th>
                   <th>Nom</th>
                   <th>Type</th>
                   <th>Statut</th>
@@ -4718,9 +4712,11 @@ function statusBadgeHtml(statut) {
 }
 
 function typeChipHtml(type) {
-  const colors = { Voix:"#70B2DE", WhatsApp:"#25D366", Relance:"#f59e0b", Email:"#a855f7", Système:"#888" };
-  const c = colors[type] || "#888";
-  return `<span class="type-chip" style="border-color:${c}22;color:${c}">${type}</span>`;
+  const t = (type || "").toLowerCase();
+  const isWa = t === "whatsapp" || t === "wa";
+  const label = isWa ? "WhatsApp" : "Assistant vocal IA";
+  const color = isWa ? "#25D366" : "#70B2DE";
+  return `<span class="type-chip" style="border-color:${color}22;color:${color}">${label}</span>`;
 }
 
 const MOCK_LOGS = [
