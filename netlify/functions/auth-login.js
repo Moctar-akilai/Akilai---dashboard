@@ -46,11 +46,19 @@ exports.handler = async function(event, context) {
     console.log("[auth-login] Champs du record :", JSON.stringify(record.fields));
 
     const f = record.fields;
+
+    /* Nom du contact (personne) — fallback sur email si champ absent */
+    const contact = f.Nom || f.Contact || f["Nom du contact"] || email;
+
+    /* Nom de l'entreprise */
+    const entreprise = f.Entreprise || f["Nom entreprise"] || contact;
+
     return ok({
-      ok:       true,
-      clientId: record.id,
-      nom:      f.Entreprise || f.Nom || "Client",
-      plan:     f.Plan       || "",
+      ok:         true,
+      clientId:   record.id,
+      contact,
+      entreprise,
+      plan:       f.Plan || "",
     });
   } catch (e) {
     console.error("[auth-login] Exception :", e.message);

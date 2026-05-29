@@ -3644,17 +3644,22 @@ function _showDashboard() {
    SIDEBAR USER INFO
 ============================================================ */
 function updateSidebarUser() {
-  /* Si une session réelle existe, elle a déjà été appliquée — ne pas l'écraser avec les données mock */
-  const session = _getSession();
-  const nom  = session?.nom  || clients[0]?.nom  || "Cabinet Dr. Moreau";
-  const plan = session?.plan || clients[0]?.plan || "Premium";
-  const initials = nom.split(" ").filter(Boolean).map(w => w[0]).join("").substring(0, 2).toUpperCase();
+  /* Session réelle en priorité — ne pas écraser avec les données mock */
+  const session    = _getSession();
+  const contact    = session?.contact    || session?.nom || clients[0]?.nom  || "Cabinet Dr. Moreau";
+  const entreprise = session?.entreprise || clients[0]?.nom  || contact;
+  const plan       = session?.plan       || clients[0]?.plan || "Premium";
+  const initials   = contact.split(" ").filter(Boolean).map(w => w[0]).join("").substring(0, 2).toUpperCase();
+
   const nomEl  = document.getElementById("sidebarClientNom");
   const planEl = document.getElementById("sidebarClientPlan");
   const avEl   = document.getElementById("sidebarAvatar");
-  if (nomEl)  nomEl.textContent  = nom;
+  if (nomEl)  nomEl.textContent  = contact;
   if (planEl) planEl.textContent = plan;
   if (avEl)   avEl.textContent   = initials;
+
+  const headerNom = document.getElementById("headerClientName");
+  if (headerNom && entreprise) headerNom.textContent = entreprise;
 }
 
 /* ============================================================
@@ -3856,20 +3861,26 @@ function _startDashboard(session) {
 }
 
 function _applySessionToUI(session) {
-  const nom  = session.nom  || '';
-  const plan = session.plan || '';
+  const contact    = session.contact    || session.nom || '';
+  const entreprise = session.entreprise || contact;
+  const plan       = session.plan || '';
 
-  /* Sidebar user block */
+  /* Sidebar bas gauche — nom du contact (personne) */
   const nomEl  = document.getElementById('sidebarClientNom');
   const planEl = document.getElementById('sidebarClientPlan');
   const avEl   = document.getElementById('sidebarAvatar');
-  if (nomEl)  nomEl.textContent  = nom;
+  if (nomEl)  nomEl.textContent  = contact;
   if (planEl) planEl.textContent = plan;
-  if (avEl)   avEl.textContent   = nom.split(' ').filter(Boolean).map(w => w[0]).join('').substring(0, 2).toUpperCase();
+  if (avEl)   avEl.textContent   = contact.split(' ').filter(Boolean).map(w => w[0]).join('').substring(0, 2).toUpperCase();
 
-  /* Subtitle bienvenue */
+  /* Header haut — nom de l'entreprise */
+  const headerNom = document.getElementById('headerClientName');
+  if (headerNom) headerNom.textContent = entreprise;
+
+  /* Subtitle bienvenue — prénom du contact */
+  const prenom   = contact.split(' ')[0] || contact;
   const subtitle = document.getElementById('overviewSubtitle');
-  if (subtitle) subtitle.textContent = `Bienvenue, ${nom} — voici l'état de vos automations.`;
+  if (subtitle) subtitle.textContent = `Bienvenue, ${prenom} — voici l'état de vos automations.`;
 
   /* Filtrage sidebar selon plan */
   applyPlanFilterFromSession(plan);
@@ -3900,7 +3911,7 @@ async function loginSubmit() {
     const data = await res.json();
 
     if (data.ok) {
-      const session = { clientId: data.clientId, nom: data.nom, plan: data.plan };
+      const session = { clientId: data.clientId, contact: data.contact, entreprise: data.entreprise, plan: data.plan };
       _setSession(session);
       _startDashboard(session);
     } else {
