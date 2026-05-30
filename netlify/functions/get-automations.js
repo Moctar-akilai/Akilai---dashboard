@@ -35,8 +35,15 @@ exports.handler = async function(event, context) {
 
     if (records.length === 0) {
       console.warn("[get-automations] 0 résultat — réponse brute Airtable :", JSON.stringify(data));
+      /* Appel sans filtre pour voir les vrais champs disponibles */
+      const debugRes = await fetch(`${BASE_URL}/Automatisations?maxRecords=1`, { headers });
+      if (debugRes.ok) {
+        const debugData = await debugRes.json();
+        const debugRec  = debugData.records && debugData.records[0];
+        console.log("[get-automations] DEBUG — 1er record sans filtre — champs bruts Airtable :", JSON.stringify(debugRec ? debugRec.fields : null));
+      }
     } else {
-      console.log("[get-automations] Champs du premier record :", JSON.stringify(records[0].fields));
+      console.log("[get-automations] Champs bruts Airtable :", JSON.stringify(records[0].fields));
     }
 
     const automations = records.map(function(r, i) {
