@@ -36,7 +36,7 @@ exports.handler = async function(event, context) {
 
   if (event.httpMethod === "POST") {
     let body;
-    try { body = JSON.parse(event.body || "{}"); } catch { return err("JSON invalide", 400); }
+    try { body = JSON.parse(event.body || "{}"); } catch(e) { return err("JSON invalide", 400); }
 
     const { _id, ...cfg } = body;
 

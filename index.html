@@ -4065,8 +4065,10 @@ async function loadAutomationsFromAirtable() {
     console.log("[AkilAI] URL appelée:", `/.netlify/functions/get-automations${qs || ""}`);
     const data = await apiFetch(`/.netlify/functions/get-automations${qs}`);
     console.log("[AkilAI] Automations reçues:", data.automations?.length ?? 0);
-    if (data.automations?.length) {
+    if (data.automations && data.automations.length) {
       automations.splice(0, automations.length, ...data.automations);
+      /* Synchroniser autoState avec les statuts Airtable */
+      automations.forEach(function(a) { autoState[a.id] = a.statut || "Actif"; });
       buildAutoTable();
       buildCalendar();
       populateScheduleSelect();
@@ -4921,10 +4923,11 @@ function buildAutoTable() {
 
     /* Ligne principale */
     const tr = document.createElement("tr");
+    const statut = autoState[a.id] || a.statut || "Actif";
     tr.innerHTML = `
       <td>
-        <label class="toggle" title="${isActive ? 'Désactiver' : 'Activer'}">
-          <input type="checkbox" ${checked} onchange="toggleAuto(${a.id}, this)">
+        <label class="toggle" title="${statut === 'Actif' ? 'Désactiver' : 'Activer'}">
+          <input type="checkbox" ${statut === 'Actif' ? 'checked' : ''} onchange="toggleAuto('${a.id}', this)">
           <span class="toggle-slider"></span>
         </label>
       </td>
@@ -4932,16 +4935,16 @@ function buildAutoTable() {
         <div class="cell-name">${a.nom}</div>
       </td>
       <td>${typeChipHtml(a.type)}</td>
-      <td id="badge-${a.id}">${statusBadgeHtml(autoState[a.id])}</td>
+      <td id="badge-${a.id}">${statusBadgeHtml(statut)}</td>
       <td class="cell-time">${a.derniere_exec || "—"}</td>
       <td class="cell-time">${a.prochaine_exec || '<span style="color:var(--danger)">Non planifiée</span>'}</td>
       <td>
         <div style="display:flex;gap:6px">
-          <button class="btn btn-ghost btn-sm" onclick="openScheduleModal(${a.id})" title="Programmer">
+          <button class="btn btn-ghost btn-sm" onclick="openScheduleModal('${a.id}')" title="Programmer">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
             Programmer
           </button>
-          <button class="btn btn-ghost btn-sm" onclick="toggleLogs(${a.id})" title="Voir logs">
+          <button class="btn btn-ghost btn-sm" onclick="toggleLogs('${a.id}')" title="Voir logs">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
             Logs
           </button>

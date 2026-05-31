@@ -8,7 +8,7 @@ exports.handler = async function(event, context) {
   if (!vapiKey) return err("VAPI_API_KEY non configuré", 500);
 
   let body;
-  try { body = JSON.parse(event.body || "{}"); } catch { return err("JSON invalide", 400); }
+  try { body = JSON.parse(event.body || "{}"); } catch(e) { return err("JSON invalide", 400); }
 
   const {
     clientId,

@@ -11,7 +11,7 @@ exports.handler = async function(event, context) {
   if (event.httpMethod !== "POST") return err("Méthode non autorisée", 405);
 
   let body;
-  try { body = JSON.parse(event.body || "{}"); } catch { return err("JSON invalide", 400); }
+  try { body = JSON.parse(event.body || "{}"); } catch(e) { return err("JSON invalide", 400); }
 
   const { ticket, clientId } = body;
   if (!ticket) return err("ticket manquant", 400);
@@ -26,7 +26,7 @@ exports.handler = async function(event, context) {
       const res  = await fetch(`${BASE_URL}/Clients/${clientId}`, { headers });
       const data = res.ok ? await res.json() : null;
       if (data?.fields?.Nom) clientNom = data.fields.Nom;
-    } catch {}
+    } catch(e) {}
   }
 
   const isUrgent = ticket.priorite === "Urgente";

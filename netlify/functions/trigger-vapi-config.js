@@ -36,7 +36,7 @@ exports.handler = async function(event, context) {
   if (!vapiAssistantId) return err("VAPI_ASSISTANT_ID non configuré", 500);
 
   let body;
-  try { body = JSON.parse(event.body || "{}"); } catch { return err("JSON invalide", 400); }
+  try { body = JSON.parse(event.body || "{}"); } catch(e) { return err("JSON invalide", 400); }
 
   const {
     voix,

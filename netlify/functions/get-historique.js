@@ -35,7 +35,7 @@ exports.handler = async function(event, context) {
       const type = (f.Type || "").toLowerCase();
 
       let transcription = [];
-      try { transcription = f.Transcription ? JSON.parse(f.Transcription) : []; } catch {}
+      try { transcription = f.Transcription ? JSON.parse(f.Transcription) : []; } catch(e) {}
 
       if (type === "voix" || type === "appel") {
         const dt   = f.DateHeure ? new Date(f.DateHeure) : new Date();

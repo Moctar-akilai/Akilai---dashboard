@@ -10,7 +10,7 @@ exports.handler = async function(event, context) {
   if (event.httpMethod !== "POST") return err("Méthode non autorisée", 405);
 
   let body;
-  try { body = JSON.parse(event.body || "{}"); } catch { return err("JSON invalide", 400); }
+  try { body = JSON.parse(event.body || "{}"); } catch(e) { return err("JSON invalide", 400); }
 
   const { ticketId, message, clientId } = body;
   if (!ticketId || !message) return err("ticketId et message requis", 400);
@@ -24,7 +24,7 @@ exports.handler = async function(event, context) {
       const data = res.ok ? await res.json() : null;
       if (data?.fields?.Email) clientEmail = data.fields.Email;
       if (data?.fields?.Nom)   clientNom   = data.fields.Nom;
-    } catch {}
+    } catch(e) {}
   }
 
   if (!clientEmail) {

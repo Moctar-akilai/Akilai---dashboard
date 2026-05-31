@@ -23,7 +23,7 @@ exports.handler = async function(event, context) {
   if (!makeApiKey) return err("MAKE_API_KEY non configuré", 500);
 
   let body;
-  try { body = JSON.parse(event.body || "{}"); } catch { return err("JSON invalide", 400); }
+  try { body = JSON.parse(event.body || "{}"); } catch(e) { return err("JSON invalide", 400); }
 
   const { id, statut } = body;
   if (!id || !statut) return err("Champs manquants : id, statut", 400);

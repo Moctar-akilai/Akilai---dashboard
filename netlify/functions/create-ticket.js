@@ -10,7 +10,7 @@ exports.handler = async function(event, context) {
   if (event.httpMethod !== "POST") return err("Méthode non autorisée", 405);
 
   let body;
-  try { body = JSON.parse(event.body || "{}"); } catch { return err("JSON invalide", 400); }
+  try { body = JSON.parse(event.body || "{}"); } catch(e) { return err("JSON invalide", 400); }
 
   const { sujet, description, priorite, categorie, email, statut = "Ouvert" } = body;
   if (!sujet) return err("Le champ sujet est obligatoire", 400);

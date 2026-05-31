@@ -14,7 +14,7 @@ exports.handler = async function(event, context) {
   if (!serviceRole) return err("NETLIFY_IDENTITY_SERVICE_ROLE non configuré", 500);
 
   let body;
-  try { body = JSON.parse(event.body || "{}"); } catch { return err("JSON invalide", 400); }
+  try { body = JSON.parse(event.body || "{}"); } catch(e) { return err("JSON invalide", 400); }
 
   const { userId, airtable_client_id } = body;
   if (!userId) return err("userId manquant", 400);
