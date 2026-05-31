@@ -7,11 +7,7 @@ exports.handler = async function(event, context) {
     const email  = (event.queryStringParameters && event.queryStringParameters.email) || null;
     console.log("[get-historique] Email reçu :", email);
 
-    const params = new URLSearchParams({
-      "sort[0][field]":     "Date de création",
-      "sort[0][direction]": "desc",
-      maxRecords:           "100",
-    });
+    const params = new URLSearchParams({ maxRecords: "100" });
     if (email) params.set("filterByFormula", `{User ID}="${email}"`);
 
     const res = await fetch(`${BASE_URL}/Historique?${params}`, { headers });
@@ -24,7 +20,9 @@ exports.handler = async function(event, context) {
     }
 
     const data    = await res.json();
-    const records = data.records || [];
+    const records = (data.records || []).sort(function(a, b) {
+      return new Date(b.createdTime) - new Date(a.createdTime);
+    });
     console.log("[get-historique] Nb records :", records.length);
 
     const appels           = [];
