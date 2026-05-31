@@ -39,7 +39,7 @@ exports.handler = async function(event, context) {
         transcription = f.Transcription ? [{ role: "assistant", text: f.Transcription }] : [];
       }
 
-      const dateRaw = f["Date de création"] || null;
+      const dateRaw = f["Date de creation"] || r.createdTime || null;
       const dt      = dateRaw ? new Date(dateRaw) : new Date();
       const date    = dt.toISOString().split("T")[0];
       const heure   = dt.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }).replace(":", "h");
