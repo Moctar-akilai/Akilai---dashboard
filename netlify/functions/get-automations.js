@@ -46,21 +46,26 @@ exports.handler = async function(event, context) {
       console.log("[get-automations] Champs bruts Airtable :", JSON.stringify(records[0].fields));
     }
 
+    const typeMap = { "RDV": "Assistant vocal", "Vocal": "Assistant vocal", "WhatsApp": "WhatsApp", "Combo": "Combo" };
+
     const automations = records.map(function(r, i) {
       const f = r.fields;
       let jours = [1,2,3,4,5];
       try { jours = f.JoursProgrammes ? JSON.parse(f.JoursProgrammes) : jours; } catch(e) {}
 
+      const rawType = f.Type || "";
+      const type    = typeMap[rawType] || rawType || "Voix";
+
       return {
         id:             r.id,
         _seq:           i + 1,
-        nom:            f.Nom            || "Automation sans nom",
-        type:           f.Type           || "Voix",
-        statut:         f.Statut         || "Actif",
-        derniere_exec:  f.DerniereExec   || null,
-        prochaine_exec: f.ProchaineExec  || null,
-        client_id:      (f["User ID"] || [])[0] || null,
-        makeScenarioId: f.MakeScenarioId || null,
+        nom:            f.Nom                 || "Automation sans nom",
+        type,
+        statut:         f.Statut              || "Actif",
+        derniere_exec:  f.DerniereExec        || null,
+        prochaine_exec: f.ProchaineExec       || null,
+        client_id:      f["User ID"]          || null,
+        makeScenarioId: f["Make scenario ID"] || f.MakeScenarioId || null,
         schedule: {
           jours,
           heure:      f.HeureProgrammee || "08:00",

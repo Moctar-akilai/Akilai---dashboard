@@ -3856,6 +3856,7 @@ function _clearSession() {
 }
 
 function _startDashboard(session) {
+  console.log('[AkilAI] Session complète:', sessionStorage.getItem('akilai_client'));
   document.getElementById('loginPage').classList.add('hidden');
   _applySessionToUI(session);
   _initDashboard();
