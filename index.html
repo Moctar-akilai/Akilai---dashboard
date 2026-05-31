@@ -5592,15 +5592,21 @@ function buildTicketsList() {
 }
 
 function renderThread(t) {
-  const msgs = t.messages && t.messages.length ? t.messages : [];
+  console.log('[AkilAI] renderThread — t.reponse:', t.reponse, '| t.message_init:', t.message_init, '| messages:', (t.messages||[]).length);
+  const msgs = (t.messages && t.messages.length) ? t.messages.slice() : [];
 
-  /* Si pas de messages threadés mais un message initial ou une réponse */
+  /* Toujours inclure message_init si aucun message threadé */
+  if (msgs.length === 0 && t.message_init) {
+    msgs.push({ role: "client", auteur: "Client", text: t.message_init, heure: t.date || "" });
+  }
+
+  /* Toujours appendre la réponse AkilAI si présente, quelle que soit la longueur de msgs */
+  if (t.reponse) {
+    msgs.push({ role: "support", auteur: "Support AkilAI", text: t.reponse, heure: "" });
+  }
+
   if (msgs.length === 0) {
-    const lines = [];
-    if (t.message_init) lines.push({ role: "client",  auteur: "Client",       text: t.message_init, heure: t.date || "" });
-    if (t.reponse)      lines.push({ role: "support", auteur: "Support AkilAI", text: t.reponse,      heure: "" });
-    if (lines.length === 0) return `<p style="color:var(--text-faint);font-size:13px;font-style:italic;padding:8px 0">Aucun message.</p>`;
-    return renderMsgs(lines);
+    return `<p style="color:var(--text-faint);font-size:13px;font-style:italic;padding:8px 0">Aucun message.</p>`;
   }
   return renderMsgs(msgs);
 }

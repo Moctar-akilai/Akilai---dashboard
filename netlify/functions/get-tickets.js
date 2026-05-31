@@ -24,6 +24,16 @@ exports.handler = async function(event, context) {
       return new Date(b.createdTime) - new Date(a.createdTime);
     });
     console.log("[get-tickets] Nb records :", records.length);
+    if (records.length > 0) {
+      const f0 = records[0].fields;
+      console.log("[get-tickets] Champs bruts record[0] :", JSON.stringify({
+        "N° Ticket":     f0["N° Ticket"],
+        "Réponse Akilai": f0["Réponse Akilai"],
+        "Sujet":         f0["Sujet"],
+        "Statut":        f0["Statut"],
+        "User ID":       f0["User ID"],
+      }));
+    }
 
     const tickets = records.map(function(r, i) {
       const f = r.fields;
@@ -34,13 +44,15 @@ exports.handler = async function(event, context) {
         messages = f.Conversation ? [{ role: "client", text: f.Conversation }] : [];
       }
 
-      /* Date création : champ createdTime Airtable */
+      /* Date : fallback sur r.createdTime (toujours présent) */
       const dateRaw = f["Date création"] || r.createdTime || null;
       const date    = dateRaw ? dateRaw.split("T")[0] : new Date().toISOString().split("T")[0];
 
+      const ticketNum = f["N° Ticket"];
+
       return {
         id:        r.id,
-        _seq:      `T-${String(f["N° Ticket"] || (i + 1)).padStart(3, "0")}`,
+        _seq:      ticketNum ? `T-${String(ticketNum).padStart(3, "0")}` : `T-${String(i + 1).padStart(3, "0")}`,
         sujet:     f.Sujet        || f.Name || "Sans sujet",
         client_id: f["User ID"]   || null,
         priorite:  f["Priorité"]  || "Normale",
@@ -48,8 +60,8 @@ exports.handler = async function(event, context) {
         statut:    f.Statut       || "Ouvert",
         date,
         messages,
-        reponse:   f["Réponse Akilai"] || null,
-        message_init: f.Message   || null,
+        reponse:      f["Réponse Akilai"] || null,
+        message_init: f.Message           || null,
       };
     });
 
