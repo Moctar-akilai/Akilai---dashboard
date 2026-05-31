@@ -1,10 +1,13 @@
 const { BASE_URL, headers, ok, err, preflight } = require("./config");
 
 /**
- * PATCH /Support/{id}
+ * POST — met à jour un ticket Support
  * Body : { id, statut?, message? }
- *   - message : { auteur, role, text } → écrit dans "Nouveau message"
- *   - statut  : champ direct "Statut"
+ *   - message.text : ajouté à "Conversation" (JSON array) avec role "client"
+ *   - statut       : mis à jour dans "Statut"
+ *
+ * Flux :
+ *   GET record → lire "Conversation" → parser → push → PATCH
  */
 exports.handler = async function(event, context) {
   if (event.httpMethod === "OPTIONS") return preflight();
@@ -16,29 +19,49 @@ exports.handler = async function(event, context) {
   const { id, statut, message } = body;
   if (!id) return err("Champ id obligatoire", 400);
 
-  console.log("[update-ticket] id:", id, "| statut:", statut, "| message role:", message && message.role);
-
-  const patchFields = {};
-
-  if (message && message.text) {
-    /* "Nouveau message" = champ texte brut pour la dernière réponse client */
-    patchFields["Nouveau message"] = message.text;
-  }
-  if (statut) patchFields["Statut"] = statut;
-
-  if (Object.keys(patchFields).length === 0) return ok({ ok: true, noChange: true });
+  console.log("[update-ticket] id:", id, "| statut:", statut, "| message:", message && message.text ? message.text.slice(0, 50) : null);
 
   try {
-    const res = await fetch(`${BASE_URL}/Support/${id}`, {
+    const patchFields = {};
+
+    /* Append client message to Conversation JSON array */
+    if (message && message.text) {
+      const getRes = await fetch(`${BASE_URL}/Support/${id}`, { headers });
+      if (!getRes.ok) {
+        const text = await getRes.text();
+        console.error("[update-ticket] GET error:", getRes.status, text);
+        return err(`Airtable GET ${getRes.status}`, 502);
+      }
+      const record = await getRes.json();
+      const raw = record.fields && record.fields["Conversation"];
+
+      let conversation = [];
+      try { conversation = raw ? JSON.parse(raw) : []; } catch(e) { conversation = []; }
+
+      conversation.push({
+        role:    "client",
+        message: message.text,
+        date:    new Date().toISOString(),
+      });
+
+      patchFields["Conversation"] = JSON.stringify(conversation);
+      console.log("[update-ticket] Conversation length now:", conversation.length);
+    }
+
+    if (statut) patchFields["Statut"] = statut;
+
+    if (Object.keys(patchFields).length === 0) return ok({ ok: true, noChange: true });
+
+    const patchRes = await fetch(`${BASE_URL}/Support/${id}`, {
       method:  "PATCH",
       headers,
       body:    JSON.stringify({ fields: patchFields }),
     });
 
-    if (!res.ok) {
-      const text = await res.text();
-      console.error("[update-ticket] Airtable PATCH error:", res.status, text);
-      return err(`Airtable ${res.status}`, 502);
+    if (!patchRes.ok) {
+      const text = await patchRes.text();
+      console.error("[update-ticket] PATCH error:", patchRes.status, text);
+      return err(`Airtable PATCH ${patchRes.status}`, 502);
     }
 
     console.log("[update-ticket] PATCH OK pour", id);

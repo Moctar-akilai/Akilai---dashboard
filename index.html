@@ -5592,23 +5592,24 @@ function buildTicketsList() {
 }
 
 function renderThread(t) {
-  console.log('[AkilAI] renderThread — t.reponse:', t.reponse, '| t.message_init:', t.message_init, '| messages:', (t.messages||[]).length);
+  console.log('[AkilAI] renderThread — message_init:', !!t.message_init, '| conversation length:', (t.conversation||[]).length);
   const msgs = [];
 
-  /* 1. Message initial (champ "Message") — bulle client */
+  /* 1. Message initial (champ "Message") — toujours affiché en premier */
   if (t.message_init) {
     msgs.push({ role: "client", auteur: "Client", text: t.message_init, heure: t.date || "" });
   }
 
-  /* 2. Conversation (historique géré par Make) — tous les échanges */
-  if (t.messages && t.messages.length) {
-    t.messages.forEach(function(m) { msgs.push(m); });
-  }
-
-  /* 3. Réponse AkilAI (champ "Réponse Akilai") — bulle support */
-  if (t.reponse) {
-    msgs.push({ role: "support", auteur: "Support AkilAI", text: t.reponse, heure: "" });
-  }
+  /* 2. Conversation JSON — historique des échanges client + support */
+  const conv = t.conversation || [];
+  conv.forEach(function(m) {
+    msgs.push({
+      role:   m.role   || "client",
+      auteur: m.role === "support" ? "Support AkilAI" : "Client",
+      text:   m.message || m.text || "",
+      heure:  m.date ? new Date(m.date).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "",
+    });
+  });
 
   if (msgs.length === 0) {
     return `<p style="color:var(--text-faint);font-size:13px;font-style:italic;padding:8px 0">Aucun message.</p>`;
@@ -5651,12 +5652,15 @@ async function sendReply(id) {
   /* Vider le champ immédiatement */
   textarea.value = "";
 
-  /* Marquer le statut localement si besoin */
+  /* Optimistic local update : ajouter la bulle dans t.conversation */
+  if (!Array.isArray(t.conversation)) t.conversation = [];
+  t.conversation.push({ role: "client", message: text, date: new Date().toISOString() });
   if (t.statut === "Résolu" || t.statut === "Fermé") t.statut = "Ouvert";
+  buildTicketsList();
 
-  showToast("Message envoyé — en attente de traitement", "success");
+  showToast("Message envoyé", "success");
 
-  /* Persist dans Airtable : écrit dans "Nouveau message" (Make surveille ce champ) */
+  /* Persist dans Airtable : GET → push → PATCH "Conversation" */
   if (window._airtableConnected) {
     apiFetchPost("/.netlify/functions/update-ticket", {
       id,

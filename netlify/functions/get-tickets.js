@@ -38,10 +38,10 @@ exports.handler = async function(event, context) {
     const tickets = records.map(function(r, i) {
       const f = r.fields;
 
-      /* Conversation : JSON stocké dans le champ Conversation */
-      let messages = [];
-      try { messages = f.Conversation ? JSON.parse(f.Conversation) : []; } catch(e) {
-        messages = f.Conversation ? [{ role: "client", text: f.Conversation }] : [];
+      /* Conversation : JSON array stocké dans le champ "Conversation" */
+      let conversation = [];
+      try { conversation = f.Conversation ? JSON.parse(f.Conversation) : []; } catch(e) {
+        conversation = [];
       }
 
       /* Date : fallback sur r.createdTime (toujours présent) */
@@ -59,9 +59,8 @@ exports.handler = async function(event, context) {
         categorie: "Support",
         statut:    f.Statut       || "Ouvert",
         date,
-        messages,
-        reponse:      f["Réponse Akilai"] || null,
-        message_init: f.Message           || null,
+        conversation,
+        message_init: f.Message || null,
       };
     });
 
