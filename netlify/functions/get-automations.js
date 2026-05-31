@@ -65,7 +65,8 @@ exports.handler = async function(event, context) {
         derniere_exec:  f.DerniereExec        || null,
         prochaine_exec: f.ProchaineExec       || null,
         client_id:      f["User ID"]          || null,
-        makeScenarioId: f["Make scenario ID"] || f.MakeScenarioId || null,
+        makeScenarioId:   f["Make scenario ID"] || f.MakeScenarioId || null,
+        messages_traites: Number(f["Messages traités"]) || 0,
         schedule: {
           jours,
           heure:      f.HeureProgrammee || "08:00",

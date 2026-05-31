@@ -2320,14 +2320,14 @@
         <div id="connectionDot" style="width:6px;height:6px;border-radius:50%;background:#444;flex-shrink:0"></div>
         <span id="connectionLabel">Vérification…</span>
       </div>
-      <div class="sidebar-user">
+      <div class="sidebar-user" onclick="openProfileModal()" style="cursor:pointer" title="Mon profil">
         <div class="avatar-sm" id="sidebarAvatar">—</div>
         <div class="sidebar-user-info">
           <div class="name" id="sidebarClientNom">Cabinet Dr. Moreau</div>
           <div class="role" id="sidebarClientPlan">Premium</div>
         </div>
         <div class="sidebar-user-actions">
-          <button title="Se déconnecter" onclick="logout()">
+          <button title="Se déconnecter" onclick="event.stopPropagation();logout()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
           </button>
         </div>
@@ -2496,6 +2496,30 @@
 
         </div>
 
+        <!-- 2B2 — KPIs usage (Minutes / Messages) — affichage conditionnel selon plan -->
+        <div id="kpiUsageGrid" class="kpi-grid" style="margin-bottom:20px;display:none">
+          <div class="kpi-card" id="kpiUsageVoix" style="display:none">
+            <div class="kpi-card-top">
+              <div class="kpi-icon accent">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#70B2DE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+              <span class="kpi-delta neu" id="kpiUsageVoixDelta">ce mois</span>
+            </div>
+            <div class="kpi-value" id="kpiUsageVoixVal">0 / — min</div>
+            <div class="kpi-label">Minutes consommées</div>
+          </div>
+          <div class="kpi-card" id="kpiUsageWa" style="display:none">
+            <div class="kpi-card-top">
+              <div class="kpi-icon" style="background:rgba(37,211,102,0.12)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#25D366" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              </div>
+              <span class="kpi-delta neu" id="kpiUsageWaDelta">ce mois</span>
+            </div>
+            <div class="kpi-value" id="kpiUsageWaVal">0 / — msgs</div>
+            <div class="kpi-label">Messages envoyés</div>
+          </div>
+        </div>
+
         <!-- 2C — Graphiques ligne 1 : barres appels + ligne WA -->
         <div class="charts-grid" style="margin-bottom:14px">
           <div class="chart-card">
@@ -2616,6 +2640,8 @@
           </select>
           <select class="form-select" id="appelStatut" onchange="filterAppels()" style="width:auto;padding:8px 12px">
             <option value="all">Tous les statuts</option>
+            <option value="Succès">Succès</option>
+            <option value="Échec">Échec</option>
             <option value="Traité">Traité</option>
             <option value="Manqué">Manqué</option>
           </select>
@@ -3176,6 +3202,28 @@
 </div>
 
 <!-- ============================================================
+     MODAL PROFIL UTILISATEUR
+============================================================ -->
+<div class="modal-overlay" id="profileModal" onclick="closeProfileModal(event)">
+  <div class="modal" style="max-width:440px" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">Mon profil</div>
+      <button class="modal-close" onclick="closeProfileModal()">&times;</button>
+    </div>
+    <div class="modal-body" id="profileModalBody" style="padding:0">
+      <div style="display:flex;align-items:center;gap:14px;padding:0 0 20px">
+        <div class="avatar-sm" id="profileAvatar" style="width:48px;height:48px;font-size:18px">—</div>
+        <div>
+          <div id="profileNom" style="font-size:16px;font-weight:700;color:var(--text)">—</div>
+          <div id="profileEntreprise" style="font-size:12px;color:var(--text-muted);margin-top:2px">—</div>
+        </div>
+      </div>
+      <div id="profileFields" style="display:grid;grid-template-columns:1fr 1fr;gap:12px 20px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
      JAVASCRIPT — 1D DONNÉES MOCKÉES + NAVIGATION
 ============================================================ -->
 <script>
@@ -3592,6 +3640,7 @@ function navigate(sectionId) {
   if (sectionId === 'whatsapp')    { loadHistoriqueFromAirtable(); }
 
   currentSection = sectionId;
+  try { localStorage.setItem('akilai_section', sectionId); } catch(e) {}
   closeMobileSidebar();
 }
 
@@ -3646,6 +3695,58 @@ function _showDashboard() {
 /* ============================================================
    SIDEBAR USER INFO
 ============================================================ */
+/* ============================================================
+   MODAL PROFIL UTILISATEUR
+============================================================ */
+function openProfileModal() {
+  const session = _getSession();
+  const c       = clients[0] || {};
+
+  const nom        = session?.contact    || c.nom         || "—";
+  const entreprise = session?.entreprise || c.entreprise  || "—";
+  const email      = session?.email      || c.email       || "—";
+  const plan       = session?.plan       || c.plan        || "—";
+  const initials   = nom.split(" ").filter(Boolean).map(function(w) { return w[0]; }).join("").substring(0, 2).toUpperCase();
+
+  const av = document.getElementById("profileAvatar");
+  const n  = document.getElementById("profileNom");
+  const en = document.getElementById("profileEntreprise");
+  if (av) av.textContent = initials;
+  if (n)  n.textContent  = nom;
+  if (en) en.textContent = entreprise;
+
+  const fields = [
+    { label: "Entreprise",           value: entreprise },
+    { label: "Email",                value: email },
+    { label: "Téléphone",            value: c.telephone || "—" },
+    { label: "Secteur",              value: c.secteur   || "—" },
+    { label: "Plan",                 value: plan },
+    { label: "Statut",               value: c.statut    || "—" },
+    { label: "Inscription",          value: c.date_debut         || "—" },
+    { label: "Prochain paiement",    value: c.prochain_paiement  || "—" },
+    { label: "Pays",                 value: c.pays      || "—" },
+  ];
+
+  const container = document.getElementById("profileFields");
+  if (container) {
+    container.innerHTML = fields.map(function(f) {
+      return `<div>
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">${f.label}</div>
+        <div style="font-size:13px;color:var(--text)">${f.value}</div>
+      </div>`;
+    }).join("");
+  }
+
+  const modal = document.getElementById("profileModal");
+  if (modal) modal.classList.add("open");
+}
+
+function closeProfileModal(e) {
+  if (e && e.target !== document.getElementById("profileModal")) return;
+  const modal = document.getElementById("profileModal");
+  if (modal) modal.classList.remove("open");
+}
+
 function updateSidebarUser() {
   /* Session réelle en priorité — ne pas écraser avec les données mock */
   const session    = _getSession();
@@ -3670,7 +3771,8 @@ function updateSidebarUser() {
 ============================================================ */
 function _initDashboard() {
   handleResize();
-  navigate('overview');
+  const savedSection = (function() { try { return localStorage.getItem('akilai_section'); } catch(e) { return null; } })();
+  navigate(savedSection && document.getElementById('page-' + savedSection) ? savedSection : 'overview');
   setTimeout(initOverview, 50);
   buildAutoTable();
   populateScheduleSelect();
@@ -4055,6 +4157,90 @@ function applyPlanFilter() {
   const session = _getSession();
   const plan    = session?.plan || clients[0]?.plan || "";
   applyPlanFilterFromSession(plan);
+  updateUsageKPIs();
+}
+
+/* ============================================================
+   KPI USAGE — Minutes consommées / Messages envoyés
+============================================================ */
+function updateUsageKPIs() {
+  const session = _getSession();
+  const plan    = (session?.plan || clients[0]?.plan || "").toLowerCase();
+
+  const isVocal    = plan.includes("vocal")    || plan.includes("combo");
+  const isWa       = plan.includes("whatsapp") || plan.includes("combo");
+
+  /* Limites mensuelles selon plan */
+  const limiteVoix = (function() {
+    if (plan.includes("starter"))  return 60;
+    if (plan.includes("business")) return 200;
+    if (plan.includes("premium"))  return 500;
+    return null;
+  })();
+  const limiteWa = (function() {
+    if (plan.includes("starter"))  return 500;
+    if (plan.includes("business")) return 2000;
+    if (plan.includes("premium"))  return null; /* illimité */
+    return null;
+  })();
+
+  /* Calcul minutes vocales (historique ce mois) */
+  const now   = new Date();
+  const month = now.getMonth();
+  const year  = now.getFullYear();
+
+  const secondesVoix = appels.filter(function(a) {
+    if (!_matchesCurrentClient(a.client_id)) return false;
+    const d = new Date(a.date);
+    return d.getMonth() === month && d.getFullYear() === year;
+  }).reduce(function(acc, a) {
+    /* a.duree est formaté "Xm Ys" depuis get-historique.js */
+    const m = String(a.duree || "").match(/(\d+)m\s*(\d+)s/);
+    if (m) return acc + parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+    /* fallback format "M:SS" */
+    const p = String(a.duree || "").split(":").map(Number);
+    return acc + (p[0] || 0) * 60 + (p[1] || 0);
+  }, 0);
+  const minsVoix = Math.round(secondesVoix / 60);
+
+  /* Calcul messages WhatsApp (somme messages_traites des automations WA) */
+  const msgsWa = automations.filter(function(a) {
+    return _matchesCurrentClient(a.client_id) &&
+           (a.type === "WhatsApp" || (a.type || "").toLowerCase().includes("whatsapp"));
+  }).reduce(function(acc, a) { return acc + (a.messages_traites || 0); }, 0);
+
+  /* Affichage */
+  const gridEl  = document.getElementById("kpiUsageGrid");
+  const voixEl  = document.getElementById("kpiUsageVoix");
+  const waEl    = document.getElementById("kpiUsageWa");
+  const voixVal = document.getElementById("kpiUsageVoixVal");
+  const waVal   = document.getElementById("kpiUsageWaVal");
+
+  if (!gridEl) return;
+
+  const showVoix = isVocal && limiteVoix !== undefined;
+  const showWa   = isWa;
+
+  gridEl.style.display  = (showVoix || showWa) ? "" : "none";
+  voixEl.style.display  = showVoix ? "" : "none";
+  waEl.style.display    = showWa   ? "" : "none";
+
+  if (voixVal) voixVal.textContent = minsVoix + " / " + (limiteVoix !== null ? limiteVoix + " min" : "∞");
+  if (waVal)   waVal.textContent   = msgsWa   + " / " + (limiteWa   !== null ? limiteWa   + " msgs" : "∞");
+
+  /* Badge couleur selon taux de remplissage */
+  if (limiteVoix && document.getElementById("kpiUsageVoixDelta")) {
+    const pct = Math.round(minsVoix / limiteVoix * 100);
+    const delta = document.getElementById("kpiUsageVoixDelta");
+    delta.textContent = pct + "%";
+    delta.className = "kpi-delta " + (pct >= 90 ? "neg" : pct >= 70 ? "neu" : "pos");
+  }
+  if (limiteWa && document.getElementById("kpiUsageWaDelta")) {
+    const pct = Math.round(msgsWa / limiteWa * 100);
+    const delta = document.getElementById("kpiUsageWaDelta");
+    delta.textContent = pct + "%";
+    delta.className = "kpi-delta " + (pct >= 90 ? "neg" : pct >= 70 ? "neu" : "pos");
+  }
 }
 
 async function loadAutomationsFromAirtable() {
@@ -4072,6 +4258,7 @@ async function loadAutomationsFromAirtable() {
       buildAutoTable();
       buildCalendar();
       populateScheduleSelect();
+      updateUsageKPIs();
     } else {
       console.warn("[AkilAI] Aucune automation retournée par Airtable pour ce client.");
     }
@@ -4093,6 +4280,7 @@ async function loadHistoriqueFromAirtable() {
       conversations_wa.splice(0, conversations_wa.length, ...data.conversations_wa);
       buildWaTable(conversations_wa);
     }
+    updateUsageKPIs();
   } catch (e) {
     console.warn("[AkilAI] get-historique fallback:", e.message);
   }
@@ -4188,7 +4376,9 @@ function buildAppelsTable(data) {
   }
 
   data.forEach(appel => {
-    const isTraite = appel.statut === "Traité";
+    const statut = appel.statut || "Traité";
+    const isSuccess = statut === "Succès" || statut === "Traité";
+    const badgeCls = isSuccess ? "badge-success" : "badge-danger";
 
     /* Ligne principale */
     const tr = document.createElement("tr");
@@ -4202,9 +4392,7 @@ function buildAppelsTable(data) {
       <td>${appel.date} · ${appel.heure}</td>
       <td>${appel.duree}</td>
       <td>
-        <span class="badge ${isTraite ? 'badge-success' : 'badge-danger'}">
-          ${isTraite ? '● Traité' : '● Manqué'}
-        </span>
+        <span class="badge ${badgeCls}">● ${statut}</span>
       </td>
       <td>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"

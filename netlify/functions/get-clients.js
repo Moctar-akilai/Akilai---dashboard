@@ -47,6 +47,7 @@ exports.handler = async function(event, context) {
         statut:           f.Statut                     || "Actif",
         plan:             f.Plan                       || "Starter",
         date_debut:       f["Date inscription"]        || new Date().toISOString().split("T")[0],
+        prochain_paiement: f["Date prochain paiement"] || null,
         email:            f.Email                      || "",
         telephone:        f["Numéro de téléphone"]     || "",
         pays:             f.Pays                       || "",
