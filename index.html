@@ -5593,14 +5593,19 @@ function buildTicketsList() {
 
 function renderThread(t) {
   console.log('[AkilAI] renderThread — t.reponse:', t.reponse, '| t.message_init:', t.message_init, '| messages:', (t.messages||[]).length);
-  const msgs = (t.messages && t.messages.length) ? t.messages.slice() : [];
+  const msgs = [];
 
-  /* Toujours inclure message_init si aucun message threadé */
-  if (msgs.length === 0 && t.message_init) {
+  /* 1. Message initial (champ "Message") — bulle client */
+  if (t.message_init) {
     msgs.push({ role: "client", auteur: "Client", text: t.message_init, heure: t.date || "" });
   }
 
-  /* Toujours appendre la réponse AkilAI si présente, quelle que soit la longueur de msgs */
+  /* 2. Conversation (historique géré par Make) — tous les échanges */
+  if (t.messages && t.messages.length) {
+    t.messages.forEach(function(m) { msgs.push(m); });
+  }
+
+  /* 3. Réponse AkilAI (champ "Réponse Akilai") — bulle support */
   if (t.reponse) {
     msgs.push({ role: "support", auteur: "Support AkilAI", text: t.reponse, heure: "" });
   }
@@ -5638,24 +5643,26 @@ function toggleTicketDetail(id, e) {
 
 async function sendReply(id) {
   const textarea = document.getElementById("reply-" + id);
-  const text = textarea?.value.trim();
+  const text = textarea && textarea.value.trim();
   if (!text) return;
-  const t = tickets.find(x => x.id === id);
+  const t = tickets.find(function(x) { return x.id === id; });
   if (!t) return;
 
-  const clientNom = clients[0]?.nom || "Client";
-  const entry = { auteur: clientNom, role:"client", text, heure: new Date().toLocaleTimeString("fr-FR", {hour:"2-digit",minute:"2-digit"}) };
-  t.messages.push(entry);
-  if (t.statut === "Résolu" || t.statut === "Fermé") t.statut = "Ouvert";
-  if (textarea) textarea.value = "";
-  buildTicketsSummary();
-  buildTicketsList();
-  showToast("Réponse envoyée", "success");
+  /* Vider le champ immédiatement */
+  textarea.value = "";
 
-  /* Persist dans Airtable si connecté */
+  /* Marquer le statut localement si besoin */
+  if (t.statut === "Résolu" || t.statut === "Fermé") t.statut = "Ouvert";
+
+  showToast("Message envoyé — en attente de traitement", "success");
+
+  /* Persist dans Airtable : écrit dans "Nouveau message" (Make surveille ce champ) */
   if (window._airtableConnected) {
-    apiFetchPost("/.netlify/functions/update-ticket", { id, message: entry, statut: t.statut })
-    .catch(e => console.warn("[AkilAI] update-ticket:", e.message));
+    apiFetchPost("/.netlify/functions/update-ticket", {
+      id,
+      message: { text, role: "client" },
+      statut:  t.statut,
+    }).catch(function(e) { console.warn("[AkilAI] update-ticket:", e.message); });
   }
 }
 
