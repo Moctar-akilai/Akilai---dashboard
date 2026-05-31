@@ -2,8 +2,9 @@ const { BASE_URL, headers, ok, err, preflight } = require("./config");
 
 /**
  * POST — crée un ticket dans la table Support (tbl42Bo0bb6BRfavB)
- * Body : { sujet, description, email, automationId? }
- * Champs Airtable réels : Sujet, Message, Priorité, Statut, User ID,
+ * Body : { sujet, description, email, automationId?, clientRecordId? }
+ * Champs Airtable réels : Sujet, Message, Statut, User ID,
+ *   Client (multipleRecordLinks → tble0g9eMTjAfw6OO),
  *   Automatisation concernée (multipleRecordLinks)
  */
 exports.handler = async function(event, context) {
@@ -13,18 +14,19 @@ exports.handler = async function(event, context) {
   let body;
   try { body = JSON.parse(event.body || "{}"); } catch(e) { return err("JSON invalide", 400); }
 
-  const { sujet, description, email, automationId } = body;
+  const { sujet, description, email, automationId, clientRecordId } = body;
   if (!sujet) return err("Le champ sujet est obligatoire", 400);
 
-  console.log("[create-ticket] sujet:", sujet, "| email:", email, "| autoId:", automationId);
+  console.log("[create-ticket] sujet:", sujet, "| email:", email, "| autoId:", automationId, "| clientRecordId:", clientRecordId);
 
   const fields = {
     Sujet:   sujet,
     Statut:  "Ouvert",
   };
-  if (description)  fields["Message"]  = description;
-  if (email)        fields["User ID"]  = email;
-  if (automationId) fields["Automatisation concernée"] = [automationId];
+  if (description)     fields["Message"]                   = description;
+  if (email)           fields["User ID"]                   = email;
+  if (clientRecordId)  fields["Client"]                    = [clientRecordId];
+  if (automationId)    fields["Automatisation concernée"]  = [automationId];
 
   try {
     const res = await fetch(`${BASE_URL}/Support`, {

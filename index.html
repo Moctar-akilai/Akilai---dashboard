@@ -5972,8 +5972,8 @@ async function createTicket() {
 
   if (window._airtableConnected) {
     try {
-      console.log("[AkilAI] create-ticket →", { sujet, email: _getActiveEmail(), automationId: autoId });
-      const data = await apiFetchPost("/.netlify/functions/create-ticket", { sujet, description: message, email: _getActiveEmail(), automationId: autoId || null });
+      console.log("[AkilAI] create-ticket →", { sujet, email: _getActiveEmail(), automationId: autoId, clientRecordId: clientId });
+      const data = await apiFetchPost("/.netlify/functions/create-ticket", { sujet, description: message, email: _getActiveEmail(), automationId: autoId || null, clientRecordId: clientId || null });
       if (data.ok && data.ticket) {
         newTicket.id = data.ticket.id;
         buildTicketsList();

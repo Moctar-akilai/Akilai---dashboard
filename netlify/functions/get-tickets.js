@@ -7,11 +7,7 @@ exports.handler = async function(event, context) {
     const email  = (event.queryStringParameters && event.queryStringParameters.email) || null;
     console.log("[get-tickets] Email reçu :", email);
 
-    /* "Date création" est un champ createdTime → tri natif Airtable */
-    const params = new URLSearchParams({
-      "sort[0][field]":     "Date création",
-      "sort[0][direction]": "desc",
-    });
+    const params = new URLSearchParams();
     if (email) params.set("filterByFormula", `{User ID}="${email}"`);
 
     const res = await fetch(`${BASE_URL}/Support?${params}`, { headers });
@@ -24,7 +20,9 @@ exports.handler = async function(event, context) {
     }
 
     const data    = await res.json();
-    const records = data.records || [];
+    const records = (data.records || []).sort(function(a, b) {
+      return new Date(b.createdTime) - new Date(a.createdTime);
+    });
     console.log("[get-tickets] Nb records :", records.length);
 
     const tickets = records.map(function(r, i) {
@@ -37,7 +35,7 @@ exports.handler = async function(event, context) {
       }
 
       /* Date création : champ createdTime Airtable */
-      const dateRaw = f["Date création"] || null;
+      const dateRaw = f["Date création"] || r.createdTime || null;
       const date    = dateRaw ? dateRaw.split("T")[0] : new Date().toISOString().split("T")[0];
 
       return {
