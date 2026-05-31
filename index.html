@@ -2326,11 +2326,12 @@
           <div class="name" id="sidebarClientNom">Cabinet Dr. Moreau</div>
           <div class="role" id="sidebarClientPlan">Premium</div>
         </div>
-        <div class="sidebar-user-actions">
-          <button title="Se déconnecter" onclick="event.stopPropagation();logout()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-          </button>
-        </div>
+      </div>
+      <div style="padding:4px 4px 0;display:flex;justify-content:flex-end">
+        <button class="sidebar-user-actions" style="background:none;border:none;display:flex;align-items:center;gap:6px;color:var(--text-muted);font-size:11px;cursor:pointer;padding:5px 8px;border-radius:8px;transition:color 0.15s,background 0.15s" title="Se déconnecter" onclick="logout()" onmouseover="this.style.color='var(--text)';this.style.background='rgba(239,68,68,0.1)'" onmouseout="this.style.color='var(--text-muted)';this.style.background='none'">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Déconnexion
+        </button>
       </div>
     </div>
 
@@ -2602,8 +2603,7 @@
             <table class="auto-table">
               <thead>
                 <tr>
-                  <th style="width:48px"></th>
-                  <th>Nom</th>
+                  <th colspan="2">Nom</th>
                   <th>Type</th>
                   <th>Statut</th>
                   <th>Dernière exéc.</th>
@@ -3016,6 +3016,30 @@
 
         <!-- KPIs -->
         <div class="analytics-kpi-grid" id="analyticsKPIs"></div>
+
+        <!-- KPIs usage (Minutes / Messages) — conditionnel selon plan -->
+        <div id="analyticsUsageGrid" class="kpi-grid" style="margin-bottom:20px;display:none">
+          <div class="kpi-card" id="analyticsUsageVoix" style="display:none">
+            <div class="kpi-card-top">
+              <div class="kpi-icon accent">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#70B2DE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+              <span class="kpi-delta neu" id="analyticsUsageVoixDelta">ce mois</span>
+            </div>
+            <div class="kpi-value" id="analyticsUsageVoixVal">0 / — min</div>
+            <div class="kpi-label">Minutes consommées</div>
+          </div>
+          <div class="kpi-card" id="analyticsUsageWa" style="display:none">
+            <div class="kpi-card-top">
+              <div class="kpi-icon" style="background:rgba(37,211,102,0.12)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#25D366" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              </div>
+              <span class="kpi-delta neu" id="analyticsUsageWaDelta">ce mois</span>
+            </div>
+            <div class="kpi-value" id="analyticsUsageWaVal">0 / — msgs</div>
+            <div class="kpi-label">Messages envoyés</div>
+          </div>
+        </div>
 
         <!-- Row 1 : ligne volume 30j -->
         <div style="margin-bottom:16px">
@@ -4209,38 +4233,39 @@ function updateUsageKPIs() {
            (a.type === "WhatsApp" || (a.type || "").toLowerCase().includes("whatsapp"));
   }).reduce(function(acc, a) { return acc + (a.messages_traites || 0); }, 0);
 
-  /* Affichage */
-  const gridEl  = document.getElementById("kpiUsageGrid");
-  const voixEl  = document.getElementById("kpiUsageVoix");
-  const waEl    = document.getElementById("kpiUsageWa");
-  const voixVal = document.getElementById("kpiUsageVoixVal");
-  const waVal   = document.getElementById("kpiUsageWaVal");
+  /* Mettre à jour un groupe de KPI usage (overview ou analytics) */
+  function applyUsageGroup(prefix) {
+    const gridEl  = document.getElementById(prefix + "Grid");
+    const voixEl  = document.getElementById(prefix + "Voix");
+    const waEl    = document.getElementById(prefix + "Wa");
+    const voixVal = document.getElementById(prefix + "VoixVal");
+    const waVal   = document.getElementById(prefix + "WaVal");
+    if (!gridEl) return;
 
-  if (!gridEl) return;
+    const showVoix = isVocal && limiteVoix !== undefined;
+    const showWa   = isWa;
 
-  const showVoix = isVocal && limiteVoix !== undefined;
-  const showWa   = isWa;
+    gridEl.style.display = (showVoix || showWa) ? "" : "none";
+    if (voixEl) voixEl.style.display = showVoix ? "" : "none";
+    if (waEl)   waEl.style.display   = showWa   ? "" : "none";
 
-  gridEl.style.display  = (showVoix || showWa) ? "" : "none";
-  voixEl.style.display  = showVoix ? "" : "none";
-  waEl.style.display    = showWa   ? "" : "none";
+    if (voixVal) voixVal.textContent = minsVoix + " / " + (limiteVoix !== null ? limiteVoix + " min" : "∞");
+    if (waVal)   waVal.textContent   = msgsWa   + " / " + (limiteWa   !== null ? limiteWa   + " msgs" : "∞");
 
-  if (voixVal) voixVal.textContent = minsVoix + " / " + (limiteVoix !== null ? limiteVoix + " min" : "∞");
-  if (waVal)   waVal.textContent   = msgsWa   + " / " + (limiteWa   !== null ? limiteWa   + " msgs" : "∞");
-
-  /* Badge couleur selon taux de remplissage */
-  if (limiteVoix && document.getElementById("kpiUsageVoixDelta")) {
-    const pct = Math.round(minsVoix / limiteVoix * 100);
-    const delta = document.getElementById("kpiUsageVoixDelta");
-    delta.textContent = pct + "%";
-    delta.className = "kpi-delta " + (pct >= 90 ? "neg" : pct >= 70 ? "neu" : "pos");
+    if (limiteVoix) {
+      const pct   = Math.round(minsVoix / limiteVoix * 100);
+      const delta = document.getElementById(prefix + "VoixDelta");
+      if (delta) { delta.textContent = pct + "%"; delta.className = "kpi-delta " + (pct >= 90 ? "neg" : pct >= 70 ? "neu" : "pos"); }
+    }
+    if (limiteWa) {
+      const pct   = Math.round(msgsWa / limiteWa * 100);
+      const delta = document.getElementById(prefix + "WaDelta");
+      if (delta) { delta.textContent = pct + "%"; delta.className = "kpi-delta " + (pct >= 90 ? "neg" : pct >= 70 ? "neu" : "pos"); }
+    }
   }
-  if (limiteWa && document.getElementById("kpiUsageWaDelta")) {
-    const pct = Math.round(msgsWa / limiteWa * 100);
-    const delta = document.getElementById("kpiUsageWaDelta");
-    delta.textContent = pct + "%";
-    delta.className = "kpi-delta " + (pct >= 90 ? "neg" : pct >= 70 ? "neu" : "pos");
-  }
+
+  applyUsageGroup("kpiUsage");
+  applyUsageGroup("analyticsUsage");
 }
 
 async function loadAutomationsFromAirtable() {
@@ -4408,13 +4433,20 @@ function buildAppelsTable(data) {
     trDetail.className = "detail-row";
 
     let transcriptHtml = "";
-    if (appel.transcription && appel.transcription.length > 0) {
-      transcriptHtml = appel.transcription.map(msg => `
-        <div class="bubble ${msg.role}">
-          <div class="bubble-avatar">${msg.role === "assistant" ? "AI" : "U"}</div>
-          <div class="bubble-text">${msg.text}</div>
-        </div>
-      `).join("");
+    const rawTrans = appel.transcription;
+    if (rawTrans && rawTrans.length > 0) {
+      /* rawTrans est déjà un tableau {role, text} depuis get-historique.js */
+      const msgs = parseTranscription(rawTrans);
+      transcriptHtml = msgs.map(function(msg) {
+        const isAssistant = msg.role === "assistant";
+        return `
+        <div class="tkt-msg ${isAssistant ? 'support' : 'client'}">
+          <div class="tkt-avatar ${isAssistant ? 'support' : 'client'}">${isAssistant ? 'AI' : 'U'}</div>
+          <div>
+            <div class="tkt-bubble">${msg.text}</div>
+          </div>
+        </div>`;
+      }).join("");
     } else {
       transcriptHtml = `<p style="color:var(--text-faint);font-size:13px;font-style:italic">Aucune transcription disponible.</p>`;
     }
@@ -4544,6 +4576,56 @@ function seekAudio(id, e) {
   state.elapsed = Math.round(ratio * state.total);
   document.getElementById("progress-" + id).style.width = (ratio * 100).toFixed(1) + "%";
   document.getElementById("audioTime-" + id).textContent = fmtSec(state.elapsed) + " / " + fmtSec(state.total);
+}
+
+/**
+ * Normalise la transcription en tableau [{role, text}].
+ * Accepte :
+ *   - un tableau d'objets {role, text} (déjà parsé)
+ *   - un tableau avec un seul item texte brut → parser ligne par ligne
+ */
+function parseTranscription(rawArray) {
+  if (!rawArray || !rawArray.length) return [];
+
+  /* Si déjà un tableau structuré avec plus d'un item, retourner tel quel */
+  if (rawArray.length > 1 && rawArray[0].role && rawArray[0].text) return rawArray;
+
+  /* Sinon, tenter le parsing ligne par ligne */
+  const text = (rawArray[0] && rawArray[0].text) ? rawArray[0].text : String(rawArray[0]);
+  const ASSISTANT_RE = /^(Assistant|Sophie|IA|Bot)\s*:/i;
+  const CLIENT_RE    = /^(User|Client|Utilisateur|Caller)\s*:/i;
+  const PREFIX_RE    = /^[A-Za-zÀ-ÿ ]+\s*:/;
+
+  const lines = text.split(/\n+/).map(function(l) { return l.trim(); }).filter(Boolean);
+  const result = [];
+  let currentRole = null;
+
+  lines.forEach(function(line) {
+    const isAssistant = ASSISTANT_RE.test(line);
+    const isClient    = CLIENT_RE.test(line);
+    const hasPrefix   = PREFIX_RE.test(line);
+
+    if (isAssistant || isClient) {
+      currentRole = isAssistant ? "assistant" : "user";
+      const body  = line.replace(/^[^:]+:\s*/, "").trim();
+      if (body) result.push({ role: currentRole, text: body });
+    } else if (hasPrefix) {
+      /* Interlocuteur inconnu → côté client par défaut */
+      currentRole = "user";
+      const body  = line.replace(/^[^:]+:\s*/, "").trim();
+      if (body) result.push({ role: currentRole, text: body });
+    } else if (line) {
+      /* Continuation — rattacher au dernier interlocuteur connu */
+      if (result.length > 0) {
+        result[result.length - 1].text += " " + line;
+      } else {
+        result.push({ role: "assistant", text: line });
+      }
+    }
+  });
+
+  /* Fallback : si aucune bulle parsée, afficher en bloc unique */
+  return result.length > 0 ? result : [{ role: "assistant", text: text }];
 }
 
 function parseDuration(str) {
@@ -5153,14 +5235,14 @@ function buildAutoTable() {
     const tr = document.createElement("tr");
     const statut = autoState[a.id] || a.statut || "Actif";
     tr.innerHTML = `
-      <td>
-        <label class="toggle" title="${statut === 'Actif' ? 'Désactiver' : 'Activer'}">
-          <input type="checkbox" ${statut === 'Actif' ? 'checked' : ''} onchange="toggleAuto('${a.id}', this)">
-          <span class="toggle-slider"></span>
-        </label>
-      </td>
-      <td>
-        <div class="cell-name">${a.nom}</div>
+      <td colspan="2">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+          <div class="cell-name">${a.nom}</div>
+          <label class="toggle" title="${statut === 'Actif' ? 'Désactiver' : 'Activer'}" style="flex-shrink:0">
+            <input type="checkbox" ${statut === 'Actif' ? 'checked' : ''} onchange="toggleAuto('${a.id}', this)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
       </td>
       <td>${typeChipHtml(a.type)}</td>
       <td id="badge-${a.id}">${statusBadgeHtml(statut)}</td>
@@ -5918,6 +6000,7 @@ function initAnalytics() {
   buildAnalyticsLine();
   buildAnalyticsBar();
   buildAutoPerfList();
+  updateUsageKPIs();
 }
 
 function buildAnalyticsKPIs() {
