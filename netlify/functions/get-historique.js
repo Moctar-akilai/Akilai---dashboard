@@ -59,6 +59,7 @@ exports.handler = async function(event, context) {
           date,
           heure,
           duree:         dureeStr,
+          duree_sec:     dureeRaw,
           statut:        f.Statut             || "Traité",
           client_id:     f["User ID"]         || null,
           resume:        f["Résumé"]          || f.Détails || "",

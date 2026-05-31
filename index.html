@@ -4114,8 +4114,8 @@ async function apiFetchPost(path, body) {
 }
 
 async function loadAllFromAirtable() {
-  /* Afficher les skeletons pendant le chargement */
-  showSkeletonCards("kpiGrid1", 4);
+  /* NB : ne pas remplacer kpiGrid1 par des skeletons — ses IDs sont
+     mis à jour en place par updateKPIs(). Skeletons uniquement pour les tables. */
   showSkeleton("autoTableBody",    6, 4);
   showSkeleton("clientsTableBody", 7, 4);
   showSkeleton("appelsTableBody",  6, 4);
@@ -4218,14 +4218,15 @@ function updateUsageKPIs() {
     const d = new Date(a.date);
     return d.getMonth() === month && d.getFullYear() === year;
   }).reduce(function(acc, a) {
-    /* a.duree est formaté "Xm Ys" depuis get-historique.js */
+    /* Préférer duree_sec (number brut Airtable) si disponible */
+    if (typeof a.duree_sec === "number") return acc + a.duree_sec;
+    /* Fallback : parser la chaîne "Xm Ys" */
     const m = String(a.duree || "").match(/(\d+)m\s*(\d+)s/);
     if (m) return acc + parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
-    /* fallback format "M:SS" */
     const p = String(a.duree || "").split(":").map(Number);
     return acc + (p[0] || 0) * 60 + (p[1] || 0);
   }, 0);
-  const minsVoix = Math.round(secondesVoix / 60);
+  const minsVoix = Math.round(secondesVoix / 60 * 10) / 10; /* 1 décimale */
 
   /* Calcul messages WhatsApp (somme messages_traites des automations WA) */
   const msgsWa = automations.filter(function(a) {
@@ -4437,14 +4438,13 @@ function buildAppelsTable(data) {
       const nomAssistant = (clients[0] && clients[0].nomAssistant) || "Assistant";
       const msgs = parseTranscription(rawTrans, nomAssistant);
       transcriptHtml = msgs.map(function(msg) {
-        const isAssistant = msg.role === "assistant";
-        const label       = isAssistant ? nomAssistant : "Client";
-        const avatar      = isAssistant
-          ? nomAssistant.substring(0, 2).toUpperCase()
-          : "U";
+        const isIa    = msg.role === "ia" || msg.role === "assistant";
+        const side    = isIa ? "support" : "client";
+        const label   = msg.prefix || (isIa ? nomAssistant : "Client");
+        const avatar  = label.substring(0, 2).toUpperCase();
         return `
-        <div class="tkt-msg ${isAssistant ? 'support' : 'client'}">
-          <div class="tkt-avatar ${isAssistant ? 'support' : 'client'}">${avatar}</div>
+        <div class="tkt-msg ${side}">
+          <div class="tkt-avatar ${side}">${avatar}</div>
           <div>
             <div class="tkt-bubble">${msg.text}</div>
             <div class="tkt-bubble-meta">${label}</div>
@@ -4591,47 +4591,47 @@ function seekAudio(id, e) {
 function parseTranscription(rawArray, nomAssistant) {
   if (!rawArray || !rawArray.length) return [];
 
-  /* Si déjà un tableau structuré avec plus d'un item, retourner tel quel */
-  if (rawArray.length > 1 && rawArray[0].role && rawArray[0].text) return rawArray;
+  /* Si tableau structuré avec plusieurs items {role,text} → passer tel quel */
+  if (rawArray.length > 1 && rawArray[0] && rawArray[0].role && rawArray[0].text) {
+    return rawArray.map(function(m) {
+      const isClient = m.role === "user" || m.role === "client";
+      return { role: isClient ? "client" : "ia", text: m.text || "", prefix: isClient ? "Client" : (nomAssistant || "Assistant") };
+    });
+  }
 
-  /* Sinon, tenter le parsing ligne par ligne */
-  const text = (rawArray[0] && rawArray[0].text) ? rawArray[0].text : String(rawArray[0]);
-  const assistantNames = ["Assistant", "Sophie", "IA", "Bot"];
-  if (nomAssistant && nomAssistant !== "Assistant") assistantNames.push(nomAssistant);
-  const ASSISTANT_RE = new RegExp("^(" + assistantNames.map(function(n) { return n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }).join("|") + ")\\s*:", "i");
-  const CLIENT_RE    = /^(User|Client|Utilisateur|Caller)\s*:/i;
-  const PREFIX_RE    = /^[A-Za-zÀ-ÿ ]+\s*:/;
+  const NOM_ASSISTANT = (nomAssistant || "Assistant").trim();
+  const CLIENT_PREFIXES = new Set(["user", "client", "utilisateur", "appelant", "humain"]);
+  const REGEX_INTERLOCUTEUR = /^([^:]{1,30})\s*:\s*(.+)/;
 
-  const lines = text.split(/\n+/).map(function(l) { return l.trim(); }).filter(Boolean);
+  const rawText = (rawArray[0] && rawArray[0].text) ? rawArray[0].text : String(rawArray[0] || "");
+  const lines   = rawText.split(/\n+/).map(function(l) { return l.trim(); }).filter(Boolean);
+
   const result = [];
-  let currentRole = null;
+  let lastRole   = "ia";
+  let lastPrefix = NOM_ASSISTANT;
 
   lines.forEach(function(line) {
-    const isAssistant = ASSISTANT_RE.test(line);
-    const isClient    = CLIENT_RE.test(line);
-    const hasPrefix   = PREFIX_RE.test(line);
-
-    if (isAssistant || isClient) {
-      currentRole = isAssistant ? "assistant" : "user";
-      const body  = line.replace(/^[^:]+:\s*/, "").trim();
-      if (body) result.push({ role: currentRole, text: body });
-    } else if (hasPrefix) {
-      /* Interlocuteur inconnu → côté client par défaut */
-      currentRole = "user";
-      const body  = line.replace(/^[^:]+:\s*/, "").trim();
-      if (body) result.push({ role: currentRole, text: body });
+    const match = REGEX_INTERLOCUTEUR.exec(line);
+    if (match) {
+      const rawPrefix = match[1].trim();
+      const text      = match[2].trim();
+      const key       = rawPrefix.toLowerCase();
+      const role      = CLIENT_PREFIXES.has(key) ? "client" : "ia";
+      const label     = (role === "ia") ? NOM_ASSISTANT : rawPrefix;
+      lastRole   = role;
+      lastPrefix = label;
+      if (text) result.push({ role, text, prefix: label });
     } else if (line) {
-      /* Continuation — rattacher au dernier interlocuteur connu */
+      /* Ligne sans préfixe — rattacher au dernier interlocuteur */
       if (result.length > 0) {
         result[result.length - 1].text += " " + line;
       } else {
-        result.push({ role: "assistant", text: line });
+        result.push({ role: lastRole, text: line, prefix: lastPrefix });
       }
     }
   });
 
-  /* Fallback : si aucune bulle parsée, afficher en bloc unique */
-  return result.length > 0 ? result : [{ role: "assistant", text: text }];
+  return result.length > 0 ? result : [{ role: "ia", text: rawText, prefix: NOM_ASSISTANT }];
 }
 
 function parseDuration(str) {
