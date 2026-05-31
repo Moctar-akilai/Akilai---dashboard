@@ -9,7 +9,8 @@ exports.handler = async function(event, context) {
 
     const params = new URLSearchParams();
     if (email) {
-      params.set("filterByFormula", `LOWER({Email})="${email.toLowerCase()}"`);
+      /* Filtre par User ID (champ texte contenant l'email) */
+      params.set("filterByFormula", `{User ID}="${email}"`);
     }
 
     const url = `${BASE_URL}/Clients?${params}`;
@@ -40,16 +41,23 @@ exports.handler = async function(event, context) {
       return {
         id:               r.id,
         _seq:             i + 1,
-        nom:              f.Nom              || "",
-        secteur:          f.Secteur          || "Autre",
-        statut:           f.Statut           || "Actif",
-        plan:             f.Plan             || "Starter",
-        date_debut:       f.DateDebut        || new Date().toISOString().split("T")[0],
-        revenus_mensuels: Number(f.RevenusMensuels) || 0,
-        email:            f.Email            || "",
-        telephone:        f.Telephone        || "",
-        tags:             Array.isArray(f.Tags) ? f.Tags : (f.Tags ? [f.Tags] : []),
-        vapiAssistantId:  f.VapiAssistantId  || null,
+        nom:              f.Nom                        || f.Entreprise || "",
+        entreprise:       f.Entreprise                 || "",
+        secteur:          f.Secteur                    || "Autre",
+        statut:           f.Statut                     || "Actif",
+        plan:             f.Plan                       || "Starter",
+        date_debut:       f["Date inscription"]        || new Date().toISOString().split("T")[0],
+        email:            f.Email                      || "",
+        telephone:        f["Numéro de téléphone"]     || "",
+        pays:             f.Pays                       || "",
+        onboarding:       f.Onboarding                 || null,
+        vapiAssistantId:  f.VapiAssistantId            || null,
+        nomAssistant:     f.NomAssistant               || null,
+        voiceId:          f.VoiceId                    || null,
+        langue:           f.Langue                     || "fr",
+        tonalite:         f.Tonalite                   || "neutre",
+        promptSysteme:    f.PromptSysteme              || "",
+        vitesseParole:    Number(f.VitesseParole)      || 1.0,
         notes,
       };
     });
