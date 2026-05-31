@@ -2531,7 +2531,7 @@
             <div class="chart-wrap"><canvas id="chartCalls"></canvas></div>
           </div>
 
-          <div class="chart-card">
+          <div class="chart-card" id="chartCardWa">
             <div class="chart-header">
               <div>
                 <div class="chart-title">Messages WhatsApp</div>
@@ -3492,6 +3492,8 @@ function updateRealKPIs() {
   const _isWaPlan = _planLow.includes("whatsapp") || _planLow.includes("combo");
   const _cardWa = document.getElementById("kpiCardWa");
   if (_cardWa) _cardWa.style.display = _isWaPlan ? "" : "none";
+  const _chartCardWa = document.getElementById("chartCardWa");
+  if (_chartCardWa) _chartCardWa.style.display = _isWaPlan ? "" : "none";
 
   /* ── RDV pris (somme rdv_pris des automations) ── */
   const totalRdv = myAutos.reduce(function(acc, a) { return acc + (a.rdv_pris || 0); }, 0);
@@ -5961,9 +5963,11 @@ function buildAnalyticsKPIs() {
   const totalWAPrev = kpis.messages_wa_par_jour.slice(-60,-30).reduce((a,b)=>a+b,0);
   const chgWA = totalWAPrev ? Math.round((totalWA30 - totalWAPrev) / totalWAPrev * 100) : 0;
 
+  const _aPlanLow = ((_getSession() && _getSession().plan) || (clients[0] && clients[0].plan) || "").toLowerCase();
+  const _aIsWaPlan = _aPlanLow.includes("whatsapp") || _aPlanLow.includes("combo");
   const items = [
     { icon:"📞", val: appelsThisMois,   lbl:"Appels traités ce mois",    chg:(chgAppels>=0?"+":"")+chgAppels+"%", up:chgAppels>=0 },
-    { icon:"💬", val: waThisMois,       lbl:"Messages WhatsApp ce mois", chg:(chgWA>=0?"+":"")+chgWA+"%",        up:chgWA>=0 },
+    ...(_aIsWaPlan ? [{ icon:"💬", val: waThisMois, lbl:"Messages WhatsApp ce mois", chg:(chgWA>=0?"+":"")+chgWA+"%", up:chgWA>=0 }] : []),
     { icon:"✅", val: ticketsResolus,   lbl:"Tickets résolus ce mois",   chg:"ce mois",                          up:true },
   ];
   el.innerHTML = items.map(k => `
