@@ -4232,12 +4232,14 @@ function buildAppelsTable(data) {
     }
 
     /* Lecteur audio */
+    const hasAudio = !!appel.enregistrement;
     const audioHtml = `
-      <div class="audio-player" style="margin-top:4px">
-        <button class="play-btn" id="playBtn-${appel.id}" onclick="togglePlay(${appel.id}, '${appel.duree}', event)" title="Lecture">
+      <div class="audio-player" style="margin-top:4px${!hasAudio ? ';opacity:0.45;pointer-events:none' : ''}">
+        ${hasAudio ? `<audio id="audioEl-${appel.id}" src="${appel.enregistrement}" preload="metadata" style="display:none"></audio>` : ''}
+        <button class="play-btn" id="playBtn-${appel.id}" onclick="togglePlay('${appel.id}', '${appel.duree}', event)" title="${hasAudio ? 'Lecture' : 'Enregistrement non disponible'}">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" id="playIcon-${appel.id}"><polygon points="5 3 19 12 5 21 5 3"/></svg>
         </button>
-        <div class="progress-bar-wrap" onclick="seekAudio(${appel.id}, event)">
+        <div class="progress-bar-wrap" onclick="seekAudio('${appel.id}', event)">
           <div class="progress-bar-fill" id="progress-${appel.id}"></div>
         </div>
         <span class="audio-time" id="audioTime-${appel.id}">0:00 / ${appel.duree}</span>
@@ -4276,32 +4278,64 @@ function toggleAppelDetail(id) {
   if (chevron) chevron.style.transform = isOpen ? "rotate(180deg)" : "";
 }
 
-/* Lecteur audio simulé (src vide géré proprement) */
+/* Lecteur audio — utilise <audio> réel si URL disponible, sinon simulation */
 function togglePlay(id, dureeStr, e) {
   e.stopPropagation();
+  const audioEl = document.getElementById("audioEl-" + id);
+
+  if (audioEl) {
+    /* ---- Lecture réelle ---- */
+    if (audioEl.paused) {
+      /* Mettre en pause tous les autres lecteurs actifs */
+      document.querySelectorAll("audio").forEach(function(a) {
+        if (a !== audioEl && !a.paused) { a.pause(); }
+      });
+      audioEl.play().catch(function(err) { console.warn("[audio] play() refusé :", err.message); });
+      document.getElementById("playIcon-" + id).innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+    } else {
+      audioEl.pause();
+      document.getElementById("playIcon-" + id).innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
+    }
+
+    audioEl.ontimeupdate = function() {
+      const dur  = audioEl.duration || parseDuration(dureeStr);
+      const pct  = dur ? (audioEl.currentTime / dur * 100).toFixed(1) : 0;
+      const prog = document.getElementById("progress-" + id);
+      const timeEl = document.getElementById("audioTime-" + id);
+      if (prog)   prog.style.width = pct + "%";
+      if (timeEl) timeEl.textContent = fmtSec(Math.floor(audioEl.currentTime)) + " / " + fmtSec(Math.floor(dur));
+    };
+    audioEl.onended = function() {
+      document.getElementById("playIcon-" + id).innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
+      const prog = document.getElementById("progress-" + id);
+      if (prog) prog.style.width = "0%";
+    };
+    return;
+  }
+
+  /* ---- Simulation (pas d'enregistrement) ---- */
   const state = audioState[id] || { playing: false, elapsed: 0, total: parseDuration(dureeStr) };
   audioState[id] = state;
-
   if (state.playing) {
     clearInterval(state.interval);
     state.playing = false;
-    document.getElementById("playIcon-" + id).innerHTML = `<polygon points="5 3 19 12 5 21 5 3"/>`;
+    document.getElementById("playIcon-" + id).innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
   } else {
     if (state.elapsed >= state.total) state.elapsed = 0;
     state.playing = true;
-    document.getElementById("playIcon-" + id).innerHTML = `<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>`;
-    state.interval = setInterval(() => {
+    document.getElementById("playIcon-" + id).innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+    state.interval = setInterval(function() {
       state.elapsed++;
       if (state.elapsed >= state.total) {
         clearInterval(state.interval);
         state.playing = false;
         state.elapsed = state.total;
-        document.getElementById("playIcon-" + id).innerHTML = `<polygon points="5 3 19 12 5 21 5 3"/>`;
+        document.getElementById("playIcon-" + id).innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
       }
-      const pct = (state.elapsed / state.total * 100).toFixed(1);
-      const prog = document.getElementById("progress-" + id);
+      const pct    = (state.elapsed / state.total * 100).toFixed(1);
+      const prog   = document.getElementById("progress-" + id);
       const timeEl = document.getElementById("audioTime-" + id);
-      if (prog) prog.style.width = pct + "%";
+      if (prog)   prog.style.width = pct + "%";
       if (timeEl) timeEl.textContent = fmtSec(state.elapsed) + " / " + dureeStr;
     }, 1000);
   }
@@ -4309,8 +4343,14 @@ function togglePlay(id, dureeStr, e) {
 
 function seekAudio(id, e) {
   e.stopPropagation();
+  const audioEl = document.getElementById("audioEl-" + id);
   const bar = e.currentTarget;
   const ratio = e.offsetX / bar.offsetWidth;
+
+  if (audioEl && audioEl.duration) {
+    audioEl.currentTime = ratio * audioEl.duration;
+    return;
+  }
   const state = audioState[id];
   if (!state) return;
   state.elapsed = Math.round(ratio * state.total);
