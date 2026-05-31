@@ -3453,10 +3453,9 @@ function buildCharts(days) {
   });
 
   /* --- Donut : statuts automations --- */
-  const _cid    = _getActiveClientId();
-  const actif   = automations.filter(a => a.client_id === _cid && a.statut === "Actif").length;
-  const erreur  = automations.filter(a => a.client_id === _cid && a.statut === "Erreur").length;
-  const inactif = automations.filter(a => a.client_id === _cid && a.statut === "Inactif").length;
+  const actif   = automations.filter(a => _matchesCurrentClient(a.client_id) && a.statut === "Actif").length;
+  const erreur  = automations.filter(a => _matchesCurrentClient(a.client_id) && a.statut === "Erreur").length;
+  const inactif = automations.filter(a => _matchesCurrentClient(a.client_id) && a.statut === "Inactif").length;
 
   chartDonut = new Chart(document.getElementById("chartDonut"), {
     type: "doughnut",
@@ -3676,8 +3675,8 @@ function _initDashboard() {
   buildAutoTable();
   populateScheduleSelect();
   buildCalendar();
-  buildAppelsTable(appels.filter(a => a.client_id === _getActiveClientId()));
-  buildWaTable(conversations_wa.filter(a => a.client_id === _getActiveClientId()));
+  buildAppelsTable(appels.filter(a => _matchesCurrentClient(a.client_id)));
+  buildWaTable(conversations_wa.filter(a => _matchesCurrentClient(a.client_id)));
   loadVoixConfig();
   buildTicketsSummary();
   buildTicketsList();
@@ -4132,7 +4131,7 @@ function updateTicketsNavDot() {
   const dot = document.getElementById("ticketsNavDot");
   if (!dot) return;
   const cid  = _getActiveClientId();
-  const open = tickets.filter(t => t.client_id === cid && (t.statut === "Ouvert" || t.statut === "En cours")).length;
+  const open = tickets.filter(t => _matchesCurrentClient(t.client_id) && (t.statut === "Ouvert" || t.statut === "En cours")).length;
   dot.style.display = open > 0 ? "block" : "none";
 }
 
@@ -4329,7 +4328,7 @@ function filterAppels() {
   const q   = (document.getElementById("appelSearch").value || "").toLowerCase();
   const st  = document.getElementById("appelStatut").value;
   const filtered = appels.filter(a => {
-    if (a.client_id !== cid) return false;
+    if (!_matchesCurrentClient(a.client_id)) return false;
     const matchQ  = !q || a.nom.toLowerCase().includes(q) || a.numero.includes(q);
     const matchSt = st === "all" || a.statut === st;
     return matchQ && matchSt;
@@ -4436,7 +4435,7 @@ function filterWa() {
   const cid = _getActiveClientId();
   const q   = (document.getElementById("waSearch").value || "").toLowerCase();
   const filtered = conversations_wa.filter(c =>
-    c.client_id === cid && (!q || c.nom.toLowerCase().includes(q) || c.numero.includes(q))
+    _matchesCurrentClient(c.client_id) && (!q || c.nom.toLowerCase().includes(q) || c.numero.includes(q))
   );
   buildWaTable(filtered);
 }
@@ -4871,6 +4870,15 @@ function _getActiveEmail() {
   return null;
 }
 
+/* Retourne true si le client_id d'un record appartient au client connecté.
+   Accepte le record ID Airtable (mock) ET l'email (données réelles). */
+function _matchesCurrentClient(clientId) {
+  if (!clientId) return false;
+  const cid   = _getActiveClientId();
+  const email = _getActiveEmail();
+  return clientId === cid || clientId === email || String(clientId) === String(cid);
+}
+
 function statusBadgeHtml(statut) {
   const map = {
     "Actif":   "badge badge-success",
@@ -4903,7 +4911,8 @@ function buildAutoTable() {
   tbody.innerHTML = "";
 
   const cid = _getActiveClientId();
-  automations.filter(a => a.client_id === cid).forEach(a => {
+  console.log('[AkilAI] buildAutoTable — nb automations total:', automations.length, '— email actif:', _getActiveEmail());
+  automations.filter(a => _matchesCurrentClient(a.client_id)).forEach(a => {
     const isActive  = autoState[a.id] === "Actif";
     const isErr     = autoState[a.id] === "Erreur";
     const checked   = isActive ? "checked" : "";
@@ -5001,7 +5010,7 @@ function toggleLogs(id) {
 
 function updateAutoCount() {
   const cid   = _getActiveClientId();
-  const actifs = automations.filter(a => a.client_id === cid && autoState[a.id] === "Actif").length;
+  const actifs = automations.filter(a => _matchesCurrentClient(a.client_id) && autoState[a.id] === "Actif").length;
   const el = document.getElementById("autoActiveCount");
   if (el) el.textContent = actifs;
 }
@@ -5457,7 +5466,7 @@ function buildTicketsSummary() {
   const el  = document.getElementById("ticketsSummary");
   if (!el) return;
   const cid = _getActiveClientId();
-  const myT = tickets.filter(t => t.client_id === cid);
+  const myT = tickets.filter(t => _matchesCurrentClient(t.client_id));
   const counts = {
     ouvert:    myT.filter(t => t.statut === "Ouvert").length,
     "en-cours":myT.filter(t => t.statut === "En cours").length,
@@ -5664,7 +5673,7 @@ function buildAnalyticsKPIs() {
   }).length;
 
   const ticketsResolus = tickets.filter(t =>
-    t.client_id === cid && (t.statut === "Résolu" || t.statut === "Fermé")
+    _matchesCurrentClient(t.client_id) && (t.statut === "Résolu" || t.statut === "Fermé")
   ).length;
 
   const totalAppelsMois30 = kpis.appels_par_jour.slice(-30).reduce((a,b)=>a+b,0);
@@ -5746,7 +5755,7 @@ function buildAnalyticsBar() {
 
   const cid    = _getActiveClientId();
   const cats   = ["Technique","Configuration","Facturation","Fonctionnel"];
-  const counts = cats.map(cat => tickets.filter(t => t.client_id === cid && t.categorie === cat).length);
+  const counts = cats.map(cat => tickets.filter(t => _matchesCurrentClient(t.client_id) && t.categorie === cat).length);
 
   aChartBar = new Chart(ctx, {
     type: "bar",
@@ -5784,7 +5793,7 @@ function buildAutoPerfList() {
 
   const cid  = _getActiveClientId();
   const rows = automations
-    .filter(a => a.client_id === cid && autoState[a.id] !== "Inactif")
+    .filter(a => _matchesCurrentClient(a.client_id) && autoState[a.id] !== "Inactif")
     .map(a => ({
       nom:    a.nom,
       exec:   MOCK_EXEC[a.id] || 0,
@@ -5827,9 +5836,9 @@ function exportAnalytics() {
   const now   = new Date();
   const month = now.getMonth();
   const year  = now.getFullYear();
-  const appelsM = appels.filter(a => { const d=new Date(a.date); return a.client_id===cid&&d.getMonth()===month&&d.getFullYear()===year; }).length;
-  const waM     = conversations_wa.filter(a => { const d=new Date(a.date); return a.client_id===cid&&d.getMonth()===month&&d.getFullYear()===year; }).length;
-  const tktRes  = tickets.filter(t=>t.client_id===cid&&(t.statut==="Résolu"||t.statut==="Fermé")).length;
+  const appelsM = appels.filter(a => { const d=new Date(a.date); return _matchesCurrentClient(a.client_id)&&d.getMonth()===month&&d.getFullYear()===year; }).length;
+  const waM     = conversations_wa.filter(a => { const d=new Date(a.date); return _matchesCurrentClient(a.client_id)&&d.getMonth()===month&&d.getFullYear()===year; }).length;
+  const tktRes  = tickets.filter(t=>_matchesCurrentClient(t.client_id)&&(t.statut==="Résolu"||t.statut==="Fermé")).length;
 
   const lines = [
     "KPIS",
@@ -5845,11 +5854,11 @@ function exportAnalytics() {
     "",
     "TICKETS PAR CATEGORIE",
     "Catégorie,Nombre",
-    ...["Technique","Configuration","Facturation","Fonctionnel"].map(cat => `${cat},${tickets.filter(t=>t.client_id===cid&&t.categorie===cat).length}`),
+    ...["Technique","Configuration","Facturation","Fonctionnel"].map(cat => `${cat},${tickets.filter(t=>_matchesCurrentClient(t.client_id)&&t.categorie===cat).length}`),
     "",
     "PERFORMANCE AUTOMATIONS",
     "Automation,Exécutions ce mois,Taux de succès",
-    ...automations.filter(a=>a.client_id===cid&&autoState[a.id]!=="Inactif").map(a => {
+    ...automations.filter(a=>_matchesCurrentClient(a.client_id)&&autoState[a.id]!=="Inactif").map(a => {
       const EXEC={1:62,2:60,3:4,4:4,5:62,6:8,7:62,8:0,9:3};
       const PCT ={1:96,2:93,3:88,4:null,5:91,6:85,7:97,8:null,9:null};
       const s = autoState[a.id]==="Erreur" ? "Erreur" : PCT[a.id]!=null ? PCT[a.id]+"%" : "—";
