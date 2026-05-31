@@ -4008,9 +4008,11 @@ async function loadAllFromAirtable() {
 }
 
 async function loadClientsFromAirtable() {
+  const em = _getActiveEmail();
+  if (!em) { console.warn("[AkilAI] loadClients ignoré — email non disponible"); return; }
   try {
-    const data = await apiFetch("/.netlify/functions/get-clients");
-    if (data.clients?.length) {
+    const data = await apiFetch(`/.netlify/functions/get-clients?email=${encodeURIComponent(em)}`);
+    if (data.clients && data.clients.length) {
       clients.splice(0, clients.length, ...data.clients);
     }
   } catch (e) {
@@ -4077,10 +4079,10 @@ async function loadAutomationsFromAirtable() {
 }
 
 async function loadHistoriqueFromAirtable() {
+  const em = _getActiveEmail();
+  if (!em) { console.warn("[AkilAI] loadHistorique ignoré — email non disponible"); return; }
   try {
-    const em   = _getActiveEmail();
-    const qs   = em ? `?email=${encodeURIComponent(em)}` : "";
-    const data = await apiFetch(`/.netlify/functions/get-historique${qs}`);
+    const data = await apiFetch(`/.netlify/functions/get-historique?email=${encodeURIComponent(em)}`);
     if (data.appels?.length) {
       appels.splice(0, appels.length, ...data.appels);
       buildAppelsTable(appels);
@@ -4095,10 +4097,10 @@ async function loadHistoriqueFromAirtable() {
 }
 
 async function loadTicketsFromAirtable() {
+  const em = _getActiveEmail();
+  if (!em) { console.warn("[AkilAI] loadTickets ignoré — email non disponible"); return; }
   try {
-    const em   = _getActiveEmail();
-    const qs   = em ? `?email=${encodeURIComponent(em)}` : "";
-    const data = await apiFetch(`/.netlify/functions/get-tickets${qs}`);
+    const data = await apiFetch(`/.netlify/functions/get-tickets?email=${encodeURIComponent(em)}`);
     if (data.tickets?.length) {
       tickets.splice(0, tickets.length, ...data.tickets);
       buildTicketsSummary();
@@ -4111,10 +4113,10 @@ async function loadTicketsFromAirtable() {
 }
 
 async function loadKPIsFromAirtable(days) {
+  const em = _getActiveEmail();
+  if (!em) { console.warn("[AkilAI] loadKPIs ignoré — email non disponible"); return; }
   try {
-    const em   = _getActiveEmail();
-    const qs   = em ? `&email=${encodeURIComponent(em)}` : "";
-    const data = await apiFetch(`/.netlify/functions/get-kpis?days=${days}${qs}`);
+    const data = await apiFetch(`/.netlify/functions/get-kpis?days=${days}&email=${encodeURIComponent(em)}`);
     if (data.kpis) {
       Object.assign(kpis, data.kpis);
       /* Reconstruire les graphiques Vue d'ensemble et Analytics */

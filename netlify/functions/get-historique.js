@@ -5,6 +5,8 @@ exports.handler = async function(event, context) {
 
   try {
     const email  = (event.queryStringParameters && event.queryStringParameters.email) || null;
+    console.log("[get-historique] Email reçu :", email);
+
     const params = new URLSearchParams({
       "sort[0][field]":     "DateHeure",
       "sort[0][direction]": "desc",
@@ -13,10 +15,17 @@ exports.handler = async function(event, context) {
     if (email) params.set("filterByFormula", `{User ID}="${email}"`);
 
     const res = await fetch(`${BASE_URL}/Historique?${params}`, { headers });
-    if (!res.ok) return err(`Airtable ${res.status}`);
+    console.log("[get-historique] Statut Airtable :", res.status);
+
+    if (!res.ok) {
+      const text = await res.text();
+      console.error("[get-historique] Erreur Airtable :", res.status, text);
+      return err(`Airtable ${res.status}`, 502);
+    }
 
     const data    = await res.json();
     const records = data.records || [];
+    console.log("[get-historique] Nb records :", records.length);
 
     const appels           = [];
     const conversations_wa = [];
@@ -73,6 +82,7 @@ exports.handler = async function(event, context) {
 
     return ok({ appels, conversations_wa });
   } catch (e) {
+    console.error("[get-historique] Exception :", e.message, e.stack);
     return err(e.message);
   }
 };
