@@ -5542,8 +5542,8 @@ function buildTicketsList() {
 
   const cid = _getActiveClientId();
   const filtered = tickets.filter(t => {
-    if (t.client_id !== cid) return false;
-    if (q && !t.sujet.toLowerCase().includes(q) && !t.id.toLowerCase().includes(q)) return false;
+    if (!_matchesCurrentClient(t.client_id)) return false;
+    if (q && !(t.sujet || "").toLowerCase().includes(q) && !(t._seq || "").toLowerCase().includes(q)) return false;
     if (statut && t.statut !== statut) return false;
     if (prio   && t.priorite !== prio) return false;
     if (cat    && t.categorie !== cat) return false;
@@ -5568,15 +5568,15 @@ function buildTicketsList() {
     return `
     <div class="ticket-card ${isOpen ? "open-detail" : ""}" id="tktcard-${t.id}" onclick="toggleTicketDetail('${t.id}', event)">
       <div class="ticket-card-header">
-        <span class="ticket-id">${t.id}</span>
-        <span class="ticket-sujet">${t.sujet}</span>
+        <span class="ticket-id">${t._seq || t.id}</span>
+        <span class="ticket-sujet">${t.sujet || "Sans sujet"}</span>
         ${tktStatutBadge(t.statut)}
         <svg style="flex-shrink:0;transition:transform 0.2s;transform:rotate(${isOpen?'90deg':'0deg'})" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
       <div class="ticket-meta">
-        <span>${t.categorie}</span>
-        <span class="dot-sep">${t.date}</span>
-        <span class="dot-sep">${t.messages.length} message${t.messages.length > 1 ? "s" : ""}</span>
+        <span>${t.categorie || "Support"}</span>
+        <span class="dot-sep">${t.date || ""}</span>
+        <span class="dot-sep">${(t.messages || []).length} message${(t.messages || []).length !== 1 ? "s" : ""}</span>
       </div>
       <div class="ticket-detail ${isOpen ? "visible" : ""}" id="tktdetail-${t.id}" onclick="event.stopPropagation()">
         <div class="ticket-thread" id="thread-${t.id}">
@@ -5592,14 +5592,33 @@ function buildTicketsList() {
 }
 
 function renderThread(t) {
-  return t.messages.map(m => `
-    <div class="tkt-msg ${m.role}">
-      <div class="tkt-avatar ${m.role}">${m.role === "support" ? "AI" : initials(m.auteur)}</div>
+  const msgs = t.messages && t.messages.length ? t.messages : [];
+
+  /* Si pas de messages threadés mais un message initial ou une réponse */
+  if (msgs.length === 0) {
+    const lines = [];
+    if (t.message_init) lines.push({ role: "client",  auteur: "Client",       text: t.message_init, heure: t.date || "" });
+    if (t.reponse)      lines.push({ role: "support", auteur: "Support AkilAI", text: t.reponse,      heure: "" });
+    if (lines.length === 0) return `<p style="color:var(--text-faint);font-size:13px;font-style:italic;padding:8px 0">Aucun message.</p>`;
+    return renderMsgs(lines);
+  }
+  return renderMsgs(msgs);
+}
+
+function renderMsgs(msgs) {
+  return msgs.map(function(m) {
+    const role   = m.role   || "client";
+    const auteur = m.auteur || (role === "support" ? "Support AkilAI" : "Client");
+    const heure  = m.heure  || "";
+    return `
+    <div class="tkt-msg ${role}">
+      <div class="tkt-avatar ${role}">${role === "support" ? "AI" : initials(auteur)}</div>
       <div>
-        <div class="tkt-bubble">${m.text}</div>
-        <div class="tkt-bubble-meta">${m.auteur} · ${m.heure}</div>
+        <div class="tkt-bubble">${m.text || ""}</div>
+        <div class="tkt-bubble-meta">${auteur}${heure ? " · " + heure : ""}</div>
       </div>
-    </div>`).join("");
+    </div>`;
+  }).join("");
 }
 
 function toggleTicketDetail(id, e) {
