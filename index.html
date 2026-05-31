@@ -2472,6 +2472,7 @@
         </div>
 
         <!-- 2B — KPIs avancés -->
+        <!-- 2B — KPIs avancés + usage plan (même grille) -->
         <div class="kpi-grid" id="kpiGrid2" style="margin-bottom:20px">
           <div class="kpi-card">
             <div class="kpi-card-top">
@@ -2495,10 +2496,7 @@
             <div class="kpi-label">Taux d'escalade</div>
           </div>
 
-        </div>
-
-        <!-- 2B2 — KPIs usage (Minutes / Messages) — affichage conditionnel selon plan -->
-        <div id="kpiUsageGrid" class="kpi-grid" style="margin-bottom:20px;display:none">
+          <!-- Cards usage plan — affichage conditionnel -->
           <div class="kpi-card" id="kpiUsageVoix" style="display:none">
             <div class="kpi-card-top">
               <div class="kpi-icon accent">
@@ -4194,17 +4192,19 @@ function updateUsageKPIs() {
   const isVocal    = plan.includes("vocal")    || plan.includes("combo");
   const isWa       = plan.includes("whatsapp") || plan.includes("combo");
 
-  /* Limites mensuelles selon plan */
+  /* Limites mensuelles selon plan (9 plans officiels) */
   const limiteVoix = (function() {
-    if (plan.includes("starter"))  return 60;
-    if (plan.includes("business")) return 200;
-    if (plan.includes("premium"))  return 500;
+    if (!isVocal) return null;
+    if (plan.includes("starter"))  return 500;
+    if (plan.includes("business")) return 1000;
+    if (plan.includes("premium"))  return 3000;
     return null;
   })();
   const limiteWa = (function() {
+    if (!isWa) return null;
     if (plan.includes("starter"))  return 500;
     if (plan.includes("business")) return 2000;
-    if (plan.includes("premium"))  return null; /* illimité */
+    if (plan.includes("premium"))  return 5000;
     return null;
   })();
 
@@ -4233,39 +4233,38 @@ function updateUsageKPIs() {
            (a.type === "WhatsApp" || (a.type || "").toLowerCase().includes("whatsapp"));
   }).reduce(function(acc, a) { return acc + (a.messages_traites || 0); }, 0);
 
-  /* Mettre à jour un groupe de KPI usage (overview ou analytics) */
-  function applyUsageGroup(prefix) {
-    const gridEl  = document.getElementById(prefix + "Grid");
-    const voixEl  = document.getElementById(prefix + "Voix");
-    const waEl    = document.getElementById(prefix + "Wa");
-    const voixVal = document.getElementById(prefix + "VoixVal");
-    const waVal   = document.getElementById(prefix + "WaVal");
-    if (!gridEl) return;
+  const showVoix = isVocal && limiteVoix !== null;
+  const showWa   = isWa;
 
-    const showVoix = isVocal && limiteVoix !== undefined;
-    const showWa   = isWa;
+  /* Mettre à jour un jeu de cards usage identifiées par préfixe */
+  function applyUsageGroup(voixId, waId, voixValId, waValId, voixDeltaId, waDeltaId) {
+    const voixEl  = document.getElementById(voixId);
+    const waEl    = document.getElementById(waId);
+    const voixVal = document.getElementById(voixValId);
+    const waVal   = document.getElementById(waValId);
 
-    gridEl.style.display = (showVoix || showWa) ? "" : "none";
     if (voixEl) voixEl.style.display = showVoix ? "" : "none";
     if (waEl)   waEl.style.display   = showWa   ? "" : "none";
 
     if (voixVal) voixVal.textContent = minsVoix + " / " + (limiteVoix !== null ? limiteVoix + " min" : "∞");
     if (waVal)   waVal.textContent   = msgsWa   + " / " + (limiteWa   !== null ? limiteWa   + " msgs" : "∞");
 
-    if (limiteVoix) {
+    if (showVoix && limiteVoix) {
       const pct   = Math.round(minsVoix / limiteVoix * 100);
-      const delta = document.getElementById(prefix + "VoixDelta");
+      const delta = document.getElementById(voixDeltaId);
       if (delta) { delta.textContent = pct + "%"; delta.className = "kpi-delta " + (pct >= 90 ? "neg" : pct >= 70 ? "neu" : "pos"); }
     }
-    if (limiteWa) {
+    if (showWa && limiteWa) {
       const pct   = Math.round(msgsWa / limiteWa * 100);
-      const delta = document.getElementById(prefix + "WaDelta");
+      const delta = document.getElementById(waDeltaId);
       if (delta) { delta.textContent = pct + "%"; delta.className = "kpi-delta " + (pct >= 90 ? "neg" : pct >= 70 ? "neu" : "pos"); }
     }
   }
 
-  applyUsageGroup("kpiUsage");
-  applyUsageGroup("analyticsUsage");
+  /* Vue d'ensemble — cards dans kpiGrid2 */
+  applyUsageGroup("kpiUsageVoix", "kpiUsageWa", "kpiUsageVoixVal", "kpiUsageWaVal", "kpiUsageVoixDelta", "kpiUsageWaDelta");
+  /* Analytics */
+  applyUsageGroup("analyticsUsageVoix", "analyticsUsageWa", "analyticsUsageVoixVal", "analyticsUsageWaVal", "analyticsUsageVoixDelta", "analyticsUsageWaDelta");
 }
 
 async function loadAutomationsFromAirtable() {
@@ -4435,15 +4434,20 @@ function buildAppelsTable(data) {
     let transcriptHtml = "";
     const rawTrans = appel.transcription;
     if (rawTrans && rawTrans.length > 0) {
-      /* rawTrans est déjà un tableau {role, text} depuis get-historique.js */
-      const msgs = parseTranscription(rawTrans);
+      const nomAssistant = (clients[0] && clients[0].nomAssistant) || "Assistant";
+      const msgs = parseTranscription(rawTrans, nomAssistant);
       transcriptHtml = msgs.map(function(msg) {
         const isAssistant = msg.role === "assistant";
+        const label       = isAssistant ? nomAssistant : "Client";
+        const avatar      = isAssistant
+          ? nomAssistant.substring(0, 2).toUpperCase()
+          : "U";
         return `
         <div class="tkt-msg ${isAssistant ? 'support' : 'client'}">
-          <div class="tkt-avatar ${isAssistant ? 'support' : 'client'}">${isAssistant ? 'AI' : 'U'}</div>
+          <div class="tkt-avatar ${isAssistant ? 'support' : 'client'}">${avatar}</div>
           <div>
             <div class="tkt-bubble">${msg.text}</div>
+            <div class="tkt-bubble-meta">${label}</div>
           </div>
         </div>`;
       }).join("");
@@ -4584,7 +4588,7 @@ function seekAudio(id, e) {
  *   - un tableau d'objets {role, text} (déjà parsé)
  *   - un tableau avec un seul item texte brut → parser ligne par ligne
  */
-function parseTranscription(rawArray) {
+function parseTranscription(rawArray, nomAssistant) {
   if (!rawArray || !rawArray.length) return [];
 
   /* Si déjà un tableau structuré avec plus d'un item, retourner tel quel */
@@ -4592,7 +4596,9 @@ function parseTranscription(rawArray) {
 
   /* Sinon, tenter le parsing ligne par ligne */
   const text = (rawArray[0] && rawArray[0].text) ? rawArray[0].text : String(rawArray[0]);
-  const ASSISTANT_RE = /^(Assistant|Sophie|IA|Bot)\s*:/i;
+  const assistantNames = ["Assistant", "Sophie", "IA", "Bot"];
+  if (nomAssistant && nomAssistant !== "Assistant") assistantNames.push(nomAssistant);
+  const ASSISTANT_RE = new RegExp("^(" + assistantNames.map(function(n) { return n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }).join("|") + ")\\s*:", "i");
   const CLIENT_RE    = /^(User|Client|Utilisateur|Caller)\s*:/i;
   const PREFIX_RE    = /^[A-Za-zÀ-ÿ ]+\s*:/;
 
@@ -5846,7 +5852,7 @@ function buildTicketsList() {
       <div class="ticket-meta">
         <span>${t.categorie || "Support"}</span>
         <span class="dot-sep">${t.date || ""}</span>
-        <span class="dot-sep">${(t.messages || []).length} message${(t.messages || []).length !== 1 ? "s" : ""}</span>
+        <span class="dot-sep">${(function(){ const n = (t.conversation||[]).length + (t.message_init ? 1 : 0); return n + " message" + (n !== 1 ? "s" : ""); })()} </span>
       </div>
       <div class="ticket-detail ${isOpen ? "visible" : ""}" id="tktdetail-${t.id}" onclick="event.stopPropagation()">
         <div class="ticket-thread" id="thread-${t.id}">
@@ -5862,12 +5868,12 @@ function buildTicketsList() {
 }
 
 function renderThread(t) {
-  console.log('[AkilAI] renderThread — message_init:', !!t.message_init, '| conversation length:', (t.conversation||[]).length);
+  const clientNom = (clients[0] && clients[0].nom) || "Client";
   const msgs = [];
 
   /* 1. Message initial (champ "Message") — toujours affiché en premier */
   if (t.message_init) {
-    msgs.push({ role: "client", auteur: "Client", text: t.message_init, heure: t.date || "" });
+    msgs.push({ role: "client", auteur: clientNom, text: t.message_init, heure: t.date || "" });
   }
 
   /* 2. Conversation JSON — historique des échanges client + support */
@@ -5875,7 +5881,7 @@ function renderThread(t) {
   conv.forEach(function(m) {
     msgs.push({
       role:   m.role   || "client",
-      auteur: m.role === "support" ? "Support AkilAI" : "Client",
+      auteur: m.role === "support" ? "Akil" : clientNom,
       text:   m.message || m.text || "",
       heure:  m.date ? new Date(m.date).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "",
     });
@@ -5890,11 +5896,12 @@ function renderThread(t) {
 function renderMsgs(msgs) {
   return msgs.map(function(m) {
     const role   = m.role   || "client";
-    const auteur = m.auteur || (role === "support" ? "Support AkilAI" : "Client");
+    const auteur = m.auteur || (role === "support" ? "Akil" : "Client");
     const heure  = m.heure  || "";
+    const avatar = role === "support" ? "AK" : initials(auteur);
     return `
     <div class="tkt-msg ${role}">
-      <div class="tkt-avatar ${role}">${role === "support" ? "AI" : initials(auteur)}</div>
+      <div class="tkt-avatar ${role}">${avatar}</div>
       <div>
         <div class="tkt-bubble">${m.text || ""}</div>
         <div class="tkt-bubble-meta">${auteur}${heure ? " · " + heure : ""}</div>
