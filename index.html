@@ -3253,161 +3253,15 @@
    DONNÉES MOCKÉES — miroir tables Airtable
 ============================================================ */
 
-const clients = [
-  { id:1, nom:"Cabinet Dr. Moreau",   secteur:"Médical",      statut:"Actif",   plan:"Business", date_debut:"2024-01-15", revenus_mensuels:890,  email:"contact@cabinet-moreau.fr",  telephone:"01 42 33 12 45", tags:["VIP","Médical"],        notes:["Client fidèle depuis jan 2024","Souhaite ajouter module prise de RDV"] },
-  { id:2, nom:"Restaurant Le Jardin", secteur:"Restauration", statut:"Actif",   plan:"Starter",  date_debut:"2024-03-01", revenus_mensuels:290,  email:"info@lejardin.fr",            telephone:"04 91 22 44 56", tags:["Restauration"],         notes:["Saisonnier, moins actif en hiver"] },
-  { id:3, nom:"Immo Premium",         secteur:"Immobilier",   statut:"Essai",   plan:"Premium",  date_debut:"2024-06-10", revenus_mensuels:0,    email:"direction@immopremium.fr",    telephone:"06 12 34 56 78", tags:["Essai","À-relancer"],   notes:["Essai 14 jours, décision le 24 juin"] },
-  { id:4, nom:"FormaPro Academy",     secteur:"Formation",    statut:"Actif",   plan:"Business", date_debut:"2023-11-20", revenus_mensuels:690,  email:"tech@formapro.fr",            telephone:"03 88 12 34 56", tags:["Formation","VIP"],      notes:[] },
-  { id:5, nom:"Clinique Beauté Plus", secteur:"Médical",      statut:"Inactif", plan:"Starter",  date_debut:"2024-02-05", revenus_mensuels:0,    email:"contact@beauteplus.fr",       telephone:"05 56 78 90 12", tags:["Médical","Inactif"],    notes:["Pause temporaire, reprend en juillet"] }
-];
+const clients = [];
 
-const automations = [
-  { id:1, nom:"Sophie – Réponse vocale", type:"Voix",     statut:"Actif",   derniere_exec:"2024-06-18 14:22", prochaine_exec:"2024-06-19 08:00", client_id:1, schedule:{ jours:[1,2,3,4,5],   heure:"08:00", recurrence:"quotidien" } },
-  { id:2, nom:"WhatsApp GPT Support",   type:"WhatsApp", statut:"Actif",   derniere_exec:"2024-06-18 16:05", prochaine_exec:"2024-06-19 08:00", client_id:1, schedule:{ jours:[1,2,3,4,5,6], heure:"08:00", recurrence:"quotidien" } },
-  { id:7, nom:"Notifications RDV",      type:"Voix",     statut:"Actif",   derniere_exec:"2024-06-18 07:00", prochaine_exec:"2024-06-19 07:00", client_id:1, schedule:{ jours:[1,2,3,4,5],   heure:"07:00", recurrence:"quotidien" } },
-  { id:3, nom:"Relance J-7",            type:"Relance",  statut:"Actif",   derniere_exec:"2024-06-11 09:00", prochaine_exec:"2024-06-18 09:00", client_id:1, schedule:{ jours:[2],           heure:"09:00", recurrence:"hebdo"     } },
-  { id:4, nom:"Relance J-3",            type:"Relance",  statut:"Erreur",  derniere_exec:"2024-06-15 09:00", prochaine_exec:null,               client_id:1, schedule:{ jours:[6],           heure:"09:00", recurrence:"hebdo"     } },
-];
+const automations = [];
 
-const appels = [
-  { id:1, nom:"Marie Dupont",          numero:"06 12 34 56 78", date:"2024-06-18", heure:"14h22", duree:"2:34", statut:"Traité",  client_id:1,
-    resume:"Patiente souhaite déplacer son RDV du 20 juin. RDV reprogrammé au 25 juin à 10h30.",
-    transcription:[
-      {role:"assistant",text:"Cabinet du Dr Moreau, bonjour ! Sophie à votre service, comment puis-je vous aider ?"},
-      {role:"user",     text:"Bonjour, je voudrais déplacer mon rendez-vous du 20 juin s'il vous plaît."},
-      {role:"assistant",text:"Bien sûr ! Puis-je avoir votre nom s'il vous plaît ?"},
-      {role:"user",     text:"Oui, c'est Marie Dupont."},
-      {role:"assistant",text:"Merci Madame Dupont. Votre RDV du jeudi 20 juin à 9h — quelle date vous conviendrait mieux ?"},
-      {role:"user",     text:"Le 25 juin si c'est possible."},
-      {role:"assistant",text:"J'ai une disponibilité le mardi 25 juin à 10h30. Cela vous convient ?"},
-      {role:"user",     text:"Oui c'est parfait, merci !"},
-      {role:"assistant",text:"C'est noté ! RDV confirmé pour le 25 juin à 10h30. Vous recevrez un rappel la veille. Bonne journée !"}
-    ]},
-  { id:2, nom:"Jean-Pierre Martin",    numero:"07 45 67 89 01", date:"2024-06-18", heure:"11h05", duree:"1:12", statut:"Manqué", client_id:1,
-    resume:"Appel entrant non décroché. Message laissé sur répondeur.", transcription:[] },
-  { id:3, nom:"Isabelle Leroy",        numero:"06 98 76 54 32", date:"2024-06-17", heure:"16h30", duree:"3:45", statut:"Traité",  client_id:1,
-    resume:"Demande de résultats d'analyse. Patiente orientée vers le portail patient en ligne.",
-    transcription:[
-      {role:"assistant",text:"Cabinet Dr Moreau, bonjour, Sophie à l'appareil !"},
-      {role:"user",     text:"Bonjour, j'attends mes résultats d'analyse depuis 5 jours, est-ce normal ?"},
-      {role:"assistant",text:"Les résultats sont généralement disponibles sous 5 à 7 jours ouvrés. Avez-vous accès à votre espace patient ?"},
-      {role:"user",     text:"Non, je ne sais pas comment ça marche."},
-      {role:"assistant",text:"Pas de souci ! Je vous envoie un SMS avec le lien d'accès."}
-    ]},
-  { id:4, nom:"Thomas Bernard",        numero:"06 11 22 33 44", date:"2024-06-17", heure:"09h15", duree:"0:45", statut:"Traité",  client_id:1,
-    resume:"Demande d'information sur les horaires du cabinet. Informations fournies.",
-    transcription:[
-      {role:"assistant",text:"Cabinet Dr Moreau, bonjour !"},
-      {role:"user",     text:"Bonjour, quels sont vos horaires le samedi ?"},
-      {role:"assistant",text:"Le cabinet est ouvert le samedi de 9h à 12h30. Souhaitez-vous prendre un RDV ?"},
-      {role:"user",     text:"Non merci, c'était juste pour savoir. Bonne journée !"},
-      {role:"assistant",text:"Bonne journée à vous !"}
-    ]},
-  { id:5, nom:"Nathalie Petit",        numero:"07 55 66 77 88", date:"2024-06-16", heure:"15h50", duree:"4:20", statut:"Traité",  client_id:1,
-    resume:"Urgence relative — douleurs abdominales. Orientée vers consultation du jour à 17h45.",
-    transcription:[
-      {role:"assistant",text:"Cabinet Dr Moreau, bonjour !"},
-      {role:"user",     text:"J'ai des douleurs abdominales depuis ce matin, c'est assez fort."},
-      {role:"assistant",text:"Ces douleurs sont-elles accompagnées de fièvre ou de nausées ?"},
-      {role:"user",     text:"Un peu de nausées, oui. Pas de fièvre que je sache."},
-      {role:"assistant",text:"Je vérifie si le Dr Moreau peut vous recevoir en urgence aujourd'hui..."},
-      {role:"user",     text:"Merci..."},
-      {role:"assistant",text:"Bonne nouvelle : créneau ce soir à 17h45. Pouvez-vous venir ?"},
-      {role:"user",     text:"Oui oui, je serai là. Merci beaucoup !"}
-    ]},
-  { id:6, nom:"Appel entrant inconnu", numero:"01 23 45 67 89", date:"2024-06-16", heure:"10h00", duree:"0:30", statut:"Manqué", client_id:1,
-    resume:"Numéro non identifié. Raccroché sans message.", transcription:[] },
-  { id:7, nom:"Claire Fontaine",       numero:"06 44 55 66 77", date:"2024-06-15", heure:"13h20", duree:"2:05", statut:"Traité",  client_id:1,
-    resume:"Annulation de RDV. Slot remis dans le planning.",
-    transcription:[
-      {role:"assistant",text:"Cabinet Dr Moreau, bonjour !"},
-      {role:"user",     text:"Je dois annuler mon rendez-vous de vendredi."},
-      {role:"assistant",text:"Pas de problème. Quel est votre nom s'il vous plaît ?"},
-      {role:"user",     text:"Claire Fontaine, RDV vendredi 21 à 11h."},
-      {role:"assistant",text:"C'est noté, votre RDV du vendredi 21 juin à 11h est annulé. Souhaitez-vous en reprendre un ?"},
-      {role:"user",     text:"Pas pour l'instant, merci !"}
-    ]},
-  { id:8, nom:"Paul Girard",           numero:"06 99 88 77 66", date:"2024-06-15", heure:"08h30", duree:"1:55", statut:"Traité",  client_id:1,
-    resume:"Renouvellement d'ordonnance demandé. Dossier transmis au médecin.",
-    transcription:[
-      {role:"assistant",text:"Cabinet Dr Moreau, bonjour !"},
-      {role:"user",     text:"J'ai besoin de renouveler mon ordonnance pour la tension."},
-      {role:"assistant",text:"Je note votre demande et la transmets au Dr Moreau. Il vous rappellera sous 48h."},
-      {role:"user",     text:"Très bien, merci beaucoup."}
-    ]}
-];
+const appels = [];
 
-const conversations_wa = [
-  { id:1, nom:"Lucie Marchand",  numero:"+33 6 11 22 33 44", date:"2024-06-18", nb_messages:6, client_id:1, intention:"🎯 Confirmation RDV",
-    messages:[
-      {role:"user",     text:"Bonjour, j'ai un RDV demain à 10h, c'est bien confirmé ?", heure:"09:12"},
-      {role:"assistant",text:"Bonjour Lucie ! Oui, votre RDV du mercredi 19 juin à 10h00 est bien confirmé. 😊", heure:"09:12"},
-      {role:"user",     text:"Super merci ! Et où est le cabinet exactement ?", heure:"09:14"},
-      {role:"assistant",text:"24 rue des Lilas, 75012 Paris. Métro Reuilly-Diderot (lignes 1 et 8).", heure:"09:14"},
-      {role:"user",     text:"Parfait, merci beaucoup !", heure:"09:15"},
-      {role:"assistant",text:"Avec plaisir ! À demain 🙂", heure:"09:15"}
-    ]},
-  { id:2, nom:"Marc Dubois",     numero:"+33 7 55 44 33 22", date:"2024-06-18", nb_messages:4, client_id:1, intention:"📅 Prise de RDV",
-    messages:[
-      {role:"user",     text:"Bonjour, est-ce que je peux avoir un certificat médical pour le sport ?", heure:"14:30"},
-      {role:"assistant",text:"Bonjour Marc ! Pour un certificat sport, il faut une consultation. Vendredi 21 à 9h30 ou lundi 24 à 11h ?", heure:"14:31"},
-      {role:"user",     text:"Le vendredi c'est parfait", heure:"14:35"},
-      {role:"assistant",text:"✅ RDV confirmé vendredi 21 juin à 9h30. Un rappel vous sera envoyé la veille !", heure:"14:35"}
-    ]},
-  { id:3, nom:"Amina Bensaid",   numero:"+33 6 77 88 99 00", date:"2024-06-17", nb_messages:6, client_id:1, intention:"📋 Demande info",
-    messages:[
-      {role:"user",     text:"Bonjour, je voudrais m'inscrire à la formation Excel avancé", heure:"10:00"},
-      {role:"assistant",text:"Bonjour Amina ! Formation Excel Avancé démarre le 1er juillet, 4 séances de 2h. Tarif : 320€. Inscription ?", heure:"10:01"},
-      {role:"user",     text:"Oui ! Comment je paye ?", heure:"10:05"},
-      {role:"assistant",text:"Par virement ou CB sur formapro.fr/paiement. Code EXCEL-JUL pour votre place.", heure:"10:06"},
-      {role:"user",     text:"", type:"audio", duree:"0:18", heure:"10:10"},
-      {role:"assistant",text:"Votre inscription est enregistrée. Vous recevrez un email de confirmation sous 24h.", heure:"10:11"}
-    ]},
-  { id:4, nom:"Romain Tessier",  numero:"+33 6 23 45 67 89", date:"2024-06-17", nb_messages:4, client_id:1, intention:"📅 Prise de RDV",
-    messages:[
-      {role:"user",     text:"Bonsoir, votre terrasse est disponible ce samedi à 20h pour 4 personnes ?", heure:"18:45"},
-      {role:"assistant",text:"Bonsoir Romain ! Oui, terrasse disponible samedi soir. Réservation pour 4 à 20h. Votre nom ?", heure:"18:46"},
-      {role:"user",     text:"Tessier, merci !", heure:"18:48"},
-      {role:"assistant",text:"Table réservée au nom de Tessier, samedi 22 juin à 20h en terrasse. À samedi ! 🍽️", heure:"18:48"}
-    ]},
-  { id:5, nom:"Sophie Nguyen",   numero:"+33 7 11 22 33 55", date:"2024-06-16", nb_messages:5, client_id:1, intention:"❓ Question",
-    messages:[
-      {role:"user",     text:"Bonjour, je suis enceinte de 3 mois, est-ce que le Dr Moreau fait le suivi de grossesse ?", heure:"11:00"},
-      {role:"assistant",text:"Bonjour Sophie, félicitations ! Oui, le Dr Moreau assure le suivi jusqu'à 6 mois. Souhaitez-vous un premier RDV ?", heure:"11:01"},
-      {role:"user",     text:"Oui s'il vous plaît, le plus tôt possible", heure:"11:03"},
-      {role:"assistant",text:"Créneau disponible jeudi 20 juin à 14h00. Cela vous convient ?", heure:"11:03"},
-      {role:"user",     text:"Oui parfait merci !", heure:"11:05"}
-    ]},
-  { id:6, nom:"Kevin Lambert",   numero:"+33 6 88 77 66 55", date:"2024-06-15", nb_messages:4, client_id:1, intention:"❌ Annulation",
-    messages:[
-      {role:"user",     text:"Bonjour, j'ai un problème pour accéder à la plateforme de cours", heure:"09:30"},
-      {role:"assistant",text:"Bonjour Kevin ! Pouvez-vous préciser le problème ? (Mot de passe oublié, page d'erreur, autre ?)", heure:"09:31"},
-      {role:"user",     text:"", type:"audio", duree:"0:23", heure:"09:33"},
-      {role:"assistant",text:"Problème de connexion après mise à jour. Je transmets au support technique. Ticket #T-2024-089 créé.", heure:"09:34"}
-    ]}
-];
+const conversations_wa = [];
 
-const tickets = [
-  { id:"T-001", sujet:"Erreur automation Relance J-3",  client_id:1, priorite:"Haute",   categorie:"Technique",     statut:"Ouvert",   date:"2024-06-18",
-    messages:[
-      {auteur:"Cabinet Dr. Moreau", role:"client",  text:"La Relance J-3 ne s'exécute plus depuis samedi. Les appels de rappel ne partent plus.", heure:"09:12"},
-      {auteur:"Support AkilAI",     role:"support", text:"Nous analysons le problème. Correction en cours.", heure:"10:30"}
-    ]},
-  { id:"T-002", sujet:"Modifier le script de Sophie",   client_id:1, priorite:"Normale", categorie:"Configuration", statut:"En cours", date:"2024-06-17",
-    messages:[
-      {auteur:"Cabinet Dr. Moreau", role:"client",  text:"Nous souhaiterions que Sophie propose également des créneaux le samedi matin.", heure:"14:00"},
-      {auteur:"Support AkilAI",     role:"support", text:"Bien reçu ! Nous mettons à jour le script. La modification sera active demain matin.", heure:"16:30"}
-    ]},
-  { id:"T-003", sujet:"Demande de facture juillet",     client_id:1, priorite:"Basse",   categorie:"Facturation",   statut:"Résolu",   date:"2024-06-15",
-    messages:[
-      {auteur:"Cabinet Dr. Moreau", role:"client",  text:"Pouvez-vous envoyer la facture de juillet en avance pour notre comptabilité ?", heure:"11:00"},
-      {auteur:"Support AkilAI",     role:"support", text:"Facture juillet envoyée à votre adresse email. Bonne journée !", heure:"11:45"}
-    ]},
-  { id:"T-004", sujet:"Question sur les horaires WhatsApp", client_id:1, priorite:"Normale", categorie:"Fonctionnel", statut:"Ouvert",   date:"2024-06-16",
-    messages:[
-      {auteur:"Cabinet Dr. Moreau", role:"client", text:"À quelles heures le bot WhatsApp répond-il automatiquement ?", heure:"15:30"}
-    ]}
-];
+const tickets = [];
 
 const kpis = {
   appels_par_jour:      [12,18,15,22,19,25,21,17,23,28,24,20,16,19,22,25,18,21,24,27,20,15,18,22,19,23,26,21,17,24],
@@ -5238,7 +5092,7 @@ automations.forEach(a => { autoState[a.id] = a.statut; });
 function _getActiveClientId() {
   const session = _getSession();
   if (session && session.clientId) return session.clientId;
-  return clients[0]?.id || 1;
+  return clients[0]?.id || null;
 }
 
 function _getActiveEmail() {
@@ -5253,7 +5107,10 @@ function _matchesCurrentClient(clientId) {
   if (!clientId) return false;
   const cid   = _getActiveClientId();
   const email = _getActiveEmail();
-  return clientId === cid || clientId === email || String(clientId) === String(cid);
+  if (!cid && !email) return false;
+  if (cid   && (clientId === cid   || String(clientId) === String(cid)))   return true;
+  if (email && (clientId === email || String(clientId) === String(email)))  return true;
+  return false;
 }
 
 function statusBadgeHtml(statut) {
