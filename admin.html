@@ -155,6 +155,19 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .bubble.client{align-self:flex-start;background:var(--surface2);border-bottom-left-radius:3px}
 /* support tabs */
 .support-filters{margin-bottom:0}
+.support-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+@media(max-width:900px){.support-kpis{grid-template-columns:repeat(2,1fr)}}
+.sk-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;cursor:pointer;transition:border-color .15s,transform .1s;display:flex;align-items:center;gap:14px}
+.sk-card:hover{border-color:var(--accent);transform:translateY(-1px)}
+.sk-card.active{border-color:var(--accent);box-shadow:0 0 0 2px rgba(112,178,222,.25)}
+.sk-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.sk-icon.blue{background:rgba(112,178,222,.15);color:#70B2DE}
+.sk-icon.red{background:rgba(248,113,113,.15);color:#f87171}
+.sk-icon.green{background:rgba(74,222,128,.15);color:#4ade80}
+.sk-icon.gray{background:rgba(100,116,139,.15);color:#94a3b8}
+.sk-body{}
+.sk-value{font-size:26px;font-weight:700;line-height:1}
+.sk-label{font-size:12px;color:var(--muted);margin-top:3px}
 .ticket-tabs{display:flex;gap:6px;flex-wrap:wrap}
 .tab-btn{background:transparent;border:1px solid var(--border);border-radius:20px;padding:5px 16px;color:var(--muted);cursor:pointer;font-size:13px;transition:all .15s}
 .tab-btn:hover{border-color:var(--accent);color:var(--accent)}
@@ -304,6 +317,26 @@ input,select,textarea{font-family:inherit;font-size:14px}
 
     <!-- ===== SUPPORT ===== -->
     <section class="page" id="page-support">
+      <!-- KPI Cards -->
+      <div class="support-kpis">
+        <div class="sk-card" id="skAll" onclick="filterByKpi('')">
+          <div class="sk-icon blue">🎫</div>
+          <div class="sk-body"><div class="sk-value" id="skValAll">0</div><div class="sk-label">Total tickets</div></div>
+        </div>
+        <div class="sk-card" id="skOpen" onclick="filterByKpi('Ouvert')">
+          <div class="sk-icon red">◎</div>
+          <div class="sk-body"><div class="sk-value" id="skValOpen">0</div><div class="sk-label">Ouverts</div></div>
+        </div>
+        <div class="sk-card" id="skResolved" onclick="filterByKpi('Résolu')">
+          <div class="sk-icon green">✓</div>
+          <div class="sk-body"><div class="sk-value" id="skValResolved">0</div><div class="sk-label">Résolus</div></div>
+        </div>
+        <div class="sk-card" id="skClosed" onclick="filterByKpi('Fermé')">
+          <div class="sk-icon gray">🔒</div>
+          <div class="sk-body"><div class="sk-value" id="skValClosed">0</div><div class="sk-label">Fermés</div></div>
+        </div>
+      </div>
+      <!-- Filters -->
       <div class="support-filters">
         <div class="ticket-tabs" id="ticketTabs">
           <button class="tab-btn active" data-statut="">Tous</button>
@@ -462,7 +495,8 @@ input,select,textarea{font-family:inherit;font-size:14px}
   <div class="modal-content wide" style="max-width:700px;display:flex;flex-direction:column;gap:0">
     <button type="button" class="modal-close" data-close>&times;</button>
     <h3 id="tkTitle">Ticket</h3>
-    <div id="tkMeta" style="margin-bottom:4px;font-size:12px;color:#64748b"></div>
+    <div id="tkMeta" style="margin-bottom:2px;font-size:12px;color:#64748b"></div>
+    <div id="tkMetaExtra" style="margin-bottom:10px;font-size:12px;color:#64748b;display:flex;flex-wrap:wrap;gap:16px"></div>
     <div class="form-grid" style="margin-bottom:12px">
       <div class="field">
         <label>Statut</label>
@@ -726,6 +760,7 @@ async function loadTickets(){
   console.log('[loadTickets] réponse:', d);
   adminTickets = d.tickets || [];
   console.log('[loadTickets] nb tickets chargés:', adminTickets.length);
+  updateSupportKPIs();
 }
 async function loadPaiements(){ const d = await adminFetch('/.netlify/functions/admin-get-paiements'); adminPaiements = d.paiements || []; }
 async function loadHistorique(){ const d = await adminFetch('/.netlify/functions/admin-get-historique?limit=200'); adminHistorique = d.historique || []; }
@@ -979,12 +1014,38 @@ async function toggleAutomation(id){
    ========================================================= */
 let _ticketTabStatut = '';
 
+function updateSupportKPIs(){
+  const total=adminTickets.length;
+  const ouverts=adminTickets.filter(t=>t.statut==='Ouvert').length;
+  const resolus=adminTickets.filter(t=>t.statut==='Résolu').length;
+  const fermes=adminTickets.filter(t=>t.statut==='Fermé').length;
+  document.getElementById('skValAll').textContent=total;
+  document.getElementById('skValOpen').textContent=ouverts;
+  document.getElementById('skValResolved').textContent=resolus;
+  document.getElementById('skValClosed').textContent=fermes;
+}
+
+function filterByKpi(statut){
+  _ticketTabStatut=statut;
+  // sync tab buttons
+  document.querySelectorAll('#ticketTabs .tab-btn').forEach(b=>{
+    b.classList.toggle('active', (b.dataset.statut||'')===statut);
+  });
+  // sync card highlight
+  const map={'':'skAll','Ouvert':'skOpen','Résolu':'skResolved','Fermé':'skClosed'};
+  document.querySelectorAll('.sk-card').forEach(c=>c.classList.remove('active'));
+  const el=map[statut]?document.getElementById(map[statut]):null;
+  if(el) el.classList.add('active');
+  renderTickets();
+}
+
 function initTicketTabs(){
   document.getElementById('ticketTabs').addEventListener('click', e=>{
     const btn=e.target.closest('.tab-btn'); if(!btn) return;
     document.querySelectorAll('#ticketTabs .tab-btn').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     _ticketTabStatut = btn.dataset.statut||'';
+    document.querySelectorAll('.sk-card').forEach(c=>c.classList.remove('active'));
     renderTickets();
   });
   document.getElementById('ticketFilterPriorite').addEventListener('change',renderTickets);
@@ -1025,6 +1086,8 @@ function openTicket(id){
   const clientName=clientNameById(t.userId)||t.client||t.userId||'';
   document.getElementById('tkMeta').innerHTML=
     `<strong>${esc(clientName)}</strong> · ${fmtDate(t.dateCreation)}${t.dateResolution?' · Résolu le '+fmtDate(t.dateResolution):''}`;
+  document.getElementById('tkMetaExtra').innerHTML=
+    `<span>🤖 <strong>Automatisation :</strong> ${esc(t.automatisation||'Non renseignée')}</span>`;
   document.getElementById('tkStatut').value=t.statut||'Ouvert';
   document.getElementById('tkPriorite').value=t.priorite||'Normale';
   renderThread(t);
@@ -1065,6 +1128,7 @@ async function submitTicketReply(){
     await loadTickets();
     const t=adminTickets.find(x=>x.id===currentTicketId);
     if(t) renderThread(t);
+    updateSupportKPIs();
     renderTickets();
     updateOverview();
   } else toast(res.error||'Erreur envoi','error');
@@ -1081,6 +1145,7 @@ async function saveTicketStatus(){
     toast('Ticket mis à jour','success');
     const t=adminTickets.find(x=>x.id===currentTicketId);
     if(t){ t.statut=statut; t.priorite=priorite; }
+    updateSupportKPIs();
     renderTickets();
     updateOverview();
   } else toast(res.error||'Erreur','error');

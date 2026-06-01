@@ -47,16 +47,20 @@ exports.handler = async (event) => {
       const f = r.fields || {};
       let conversation = [];
       try { conversation = JSON.parse(f.Conversation || "[]"); } catch (e) { conversation = []; }
+      const autoNoms = Array.isArray(f["Nom (from Automatisation concernée)"])
+        ? f["Nom (from Automatisation concernée)"]
+        : [];
       return {
         id: r.id,
         numero: f["N° Ticket"] || i + 1,
-        client: Array.isArray(f.Client) ? f["Nom (from Client)"]?.[0] || "" : f.Client || "",
+        client: Array.isArray(f.Client) ? (f["Nom (from Client)"]?.[0] || "") : (f.Client || ""),
         sujet: f.Sujet || "",
         message: f.Message || "",
         priorite: f.Priorité || "Normale",
         statut: f.Statut || "Ouvert",
         dateCreation: f["Date création"] || r.createdTime,
         dateResolution: f["Date résolution"] || null,
+        automatisation: autoNoms.length ? autoNoms.join(", ") : "",
         conversation,
         userId: f["User ID"] || "",
       };
