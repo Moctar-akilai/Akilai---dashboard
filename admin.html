@@ -673,28 +673,175 @@ input,select,textarea{font-family:inherit;font-size:14px}
 
     <!-- ===== SETTINGS ===== -->
     <section class="page" id="page-settings">
-      <div class="card">
-        <h3>Plans &amp; tarifs</h3>
-        <div class="table-wrap" style="border:none">
-          <table class="hist-table">
-            <thead><tr><th>Plan</th><th>Prix / mois (€)</th></tr></thead>
-            <tbody id="settingsPlansBody"></tbody>
-          </table>
+      <!-- Settings tabs -->
+      <div class="ticket-tabs" id="settingsTabs" style="margin-bottom:20px">
+        <button class="tab-btn active" data-stab="plans">Tarifs &amp; Plans</button>
+        <button class="tab-btn" data-stab="agence">Infos Agence</button>
+        <button class="tab-btn" data-stab="templates">Templates Emails</button>
+        <button class="tab-btn" data-stab="vapi">Configuration Vapi</button>
+        <button class="tab-btn" data-stab="make">Make</button>
+        <button class="tab-btn" data-stab="admins">Administrateurs</button>
+        <button class="tab-btn" data-stab="support">Support</button>
+      </div>
+
+      <!-- TAB: Tarifs & Plans -->
+      <div id="stab-plans">
+        <div class="card">
+          <h3>Plans &amp; tarifs</h3>
+          <div class="table-wrap" style="border:none">
+            <table class="hist-table">
+              <thead><tr><th>Plan</th><th>Montant mensuel (€)</th><th>Limites</th></tr></thead>
+              <tbody id="settingsPlansBody"></tbody>
+            </table>
+          </div>
+          <div class="modal-actions">
+            <button class="btn ghost" id="resetPlansBtn">Réinitialiser</button>
+            <button class="btn" id="savePlansBtn">Sauvegarder tarifs</button>
+          </div>
         </div>
-        <div class="modal-actions"><button class="btn" id="savePlansBtn">Appliquer les tarifs</button></div>
       </div>
-      <div class="card">
-        <h3>Configuration Vapi</h3>
-        <div class="detail-row"><span class="dl">Solde wallet</span><span class="muted">Consultez la console Vapi</span></div>
-        <p class="muted mt16">La clé API Vapi n'est pas exposée au back-office. Rendez-vous sur <strong>dashboard.vapi.ai</strong> pour le solde et la facturation.</p>
-      </div>
-      <div class="card">
-        <h3>Infos générales</h3>
-        <div class="form-grid">
-          <div class="field"><label>Email admin</label><input id="settingsAdminEmail" readonly></div>
-          <div class="field"><label>Nom de l'agence</label><input id="settingsAgency" value="AkilAI"></div>
+
+      <!-- TAB: Infos Agence -->
+      <div id="stab-agence" style="display:none">
+        <div class="card">
+          <h3>Informations agence</h3>
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px">Ces informations sont utilisées dans la génération des factures PDF.</p>
+          <div class="form-grid">
+            <div class="field"><label>Nom agence</label><input id="agNom" value="AkilAI"></div>
+            <div class="field"><label>Email contact</label><input id="agEmail" value="contact@akilai.fr"></div>
+            <div class="field"><label>Site web</label><input id="agSite" placeholder="akilai.fr"></div>
+            <div class="field"><label>Téléphone</label><input id="agTel" placeholder="+33 1 23 45 67 89"></div>
+            <div class="field"><label>SIRET</label><input id="agSiret" placeholder="000 000 000 00000"></div>
+            <div class="field full"><label>Adresse</label><input id="agAdresse" placeholder="1 rue de la Paix, 75001 Paris"></div>
+            <div class="field full"><label>URL Logo (pour PDF)</label><input id="agLogo" placeholder="https://..."></div>
+            <div class="field"><label>Email admin (lecture seule)</label><input id="settingsAdminEmail" readonly></div>
+          </div>
+          <div class="modal-actions"><button class="btn" id="saveAgenceBtn">Sauvegarder</button></div>
         </div>
       </div>
+
+      <!-- TAB: Templates Emails -->
+      <div id="stab-templates" style="display:none">
+        <div class="card">
+          <h3>Templates emails</h3>
+          <!-- Template selector tabs -->
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px" id="tmplTabs"></div>
+          <!-- Variables -->
+          <div style="margin-bottom:12px">
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Variables disponibles (clic pour insérer)</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px" id="tmplVarsBar"></div>
+          </div>
+          <div class="form-grid">
+            <div class="field full"><label>Objet</label><input id="tmplSubject"></div>
+            <div class="field full"><label>Corps HTML</label><textarea id="tmplBody" style="height:220px;resize:vertical;font-family:monospace;font-size:12px"></textarea></div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
+            <button class="btn ghost sm" id="tmplPreviewBtn">👁 Aperçu</button>
+            <button class="btn ghost sm" id="tmplTestBtn">📧 Envoyer test</button>
+            <div class="spacer"></div>
+            <button class="btn" id="tmplSaveBtn">Sauvegarder template</button>
+          </div>
+          <!-- Preview zone -->
+          <div id="tmplPreviewZone" style="display:none;margin-top:16px;border:1px solid var(--border);border-radius:8px;overflow:hidden">
+            <div style="background:var(--surface2);padding:8px 12px;font-size:12px;color:var(--text-muted);display:flex;justify-content:space-between">
+              <span>Aperçu</span><button class="btn ghost sm" onclick="document.getElementById('tmplPreviewZone').style.display='none'">×</button>
+            </div>
+            <iframe id="tmplPreviewFrame" style="width:100%;height:400px;border:none;background:#fff"></iframe>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: Vapi -->
+      <div id="stab-vapi" style="display:none">
+        <div class="card" style="margin-bottom:16px">
+          <h3>Wallet Vapi</h3>
+          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+            <div>
+              <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">Solde actuel</div>
+              <div style="font-size:28px;font-weight:700" id="vapiBalance">—</div>
+            </div>
+            <div style="flex:1;max-width:260px">
+              <div class="field"><label>Seuil alerte solde bas ($)</label>
+                <input type="number" id="vapiSeuil" value="5" min="1" step="1" style="width:120px">
+              </div>
+              <button class="btn sm" id="saveVapiSeuilBtn">Sauvegarder seuil</button>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:16px">
+          <h3>Numéros Vapi</h3>
+          <div class="table-wrap" style="border:none">
+            <table class="hist-table">
+              <thead><tr><th>Numéro</th><th>Label</th><th>Assistant assigné</th><th>Provider</th></tr></thead>
+              <tbody id="vapiNumbersBody"><tr><td colspan="4" style="text-align:center;color:var(--text-muted)">Chargement…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Assistants Vapi</h3>
+          <div class="table-wrap" style="border:none">
+            <table class="hist-table">
+              <thead><tr><th>Nom</th><th>Modèle</th><th>Voix</th><th>Statut</th></tr></thead>
+              <tbody id="vapiAssistantsBody"><tr><td colspan="4" style="text-align:center;color:var(--text-muted)">Chargement…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: Make -->
+      <div id="stab-make" style="display:none">
+        <div class="card">
+          <h3>Make (Integromat)</h3>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
+            <div class="kpi-card"><div class="k-label">Scénarios actifs</div><div class="k-value" id="makeActiveScenarios">—</div></div>
+            <div class="kpi-card"><div class="k-label">Opérations ce mois</div><div class="k-value" id="makeOpsUsed">—</div></div>
+            <div class="kpi-card"><div class="k-label">Quota restant</div><div class="k-value" id="makeOpsLeft">—</div></div>
+          </div>
+          <p style="color:var(--text-muted);font-size:13px">Les données Make sont récupérées via l'API Make. La clé <code>MAKE_API_KEY</code> doit être configurée dans les variables Netlify.</p>
+          <div class="modal-actions">
+            <a href="https://www.make.com/en/dashboard" target="_blank" class="btn ghost">Ouvrir Make Dashboard ↗</a>
+            <button class="btn" id="refreshMakeBtn">Actualiser</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: Admins -->
+      <div id="stab-admins" style="display:none">
+        <div class="card">
+          <h3>Gestion des administrateurs</h3>
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Les admins secondaires peuvent se connecter avec le même mot de passe que l'admin principal.</p>
+          <div class="table-wrap" style="border:none;margin-bottom:16px">
+            <table class="hist-table">
+              <thead><tr><th>Email</th><th>Rôle</th><th>Actions</th></tr></thead>
+              <tbody id="adminsBody"></tbody>
+            </table>
+          </div>
+          <div style="display:flex;gap:8px">
+            <input id="newAdminEmail" type="email" placeholder="Nouvel email admin…" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text)">
+            <button class="btn" id="addAdminBtn">Ajouter</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: Support -->
+      <div id="stab-support" style="display:none">
+        <div class="card" style="margin-bottom:16px">
+          <h3>Paramètres support</h3>
+          <div class="form-grid">
+            <div class="field"><label>Délai alerte ticket sans réponse (heures)</label>
+              <input type="number" id="suppDelai" value="24" min="1" max="168">
+            </div>
+            <div class="field"><label>Horaires support (affiché aux clients)</label>
+              <input id="suppHoraires" value="Lundi–Vendredi, 9h–18h">
+            </div>
+            <div class="field full"><label>Message bandeau suspension client</label>
+              <textarea id="suppBandeau" style="height:80px" placeholder="Votre compte est suspendu. Contactez-nous pour régulariser votre situation."></textarea>
+            </div>
+          </div>
+          <div class="modal-actions"><button class="btn" id="saveSupportBtn">Sauvegarder</button></div>
+        </div>
+      </div>
+
     </section>
   </main>
 </div>
@@ -1002,6 +1149,9 @@ let adminPaiements = [];
 let adminHistorique = [];
 let adminAutomations = [];
 let adminFinances = { couts: { vapi:0, elevenlabs:0, make:0, twilio:0, netlify:0, openai:0, autres:0 }, cac:0 };
+let adminConfig = { recordId:null, tarifsPlans:null, infosAgence:{}, templatesEmails:{}, seuilVapi:5, adminsSecondaires:[], delaiTicketAlerte:24, bandeauSuspension:'', horaireSupport:'Lundi–Vendredi, 9h–18h' };
+let _settingsTab = 'plans';
+let _tmplKey = 'bienvenue';
 
 const charts = {};
 const NAV = [
@@ -1121,6 +1271,7 @@ function navigate(id) {
   document.getElementById('pageTitle').textContent = TITLES[id] || '';
   localStorage.setItem('adminActiveSection', id);
   if (id==='notifications'){ renderNotifications(); updateSidebarBadges(); }
+  if (id==='settings'){ renderSettings(); }
   if (id==='automations') ensureRealAutomations().then(()=>{ populateAutoClientFilter(); renderAutomations(); });
 }
 
@@ -1182,8 +1333,7 @@ function initStaticUI() {
   document.getElementById('saveCostsBtn').onclick = saveCosts;
 
   // settings
-  document.getElementById('savePlansBtn').onclick = savePlanPrices;
-  renderSettingsPlans();
+  initSettingsTabs();
 
   // notifications
   document.getElementById('markAllReadBtn').onclick = markAllNotifsRead;
@@ -1218,7 +1368,7 @@ function skeletonRows(tbodyId, cols, n=5){
 async function loadAllAdminData() {
   skeletonRows('clientsBody',8); skeletonRows('ticketsBody',7);
   skeletonRows('billingBody',7); skeletonRows('autoBody',5);
-  await Promise.all([ loadClients(), loadTickets(), loadPaiements(), loadHistorique(), loadFinances() ]);
+  await Promise.all([ loadClients(), loadTickets(), loadPaiements(), loadHistorique(), loadFinances(), loadAdminConfig() ]);
   buildAutomationsFromHistorique();
   populateFilters();
   renderClients(); renderTickets(); renderBilling(); renderAutomations(); renderFinances();
@@ -2762,14 +2912,324 @@ async function saveCosts(){
 /* =========================================================
    SETTINGS — plans
    ========================================================= */
+/* =========================================================
+   SETTINGS — tabs + all sections
+   ========================================================= */
+const DEFAULT_PLAN_LIMITS = {
+  "Starter WhatsApp":"500 msg", "Business WhatsApp":"2 000 msg", "Premium WhatsApp":"5 000 msg",
+  "Starter Vocal":"500 min", "Business Vocal":"1 000 min", "Premium Vocal":"3 000 min",
+  "Starter Combo":"500 min + 500 msg", "Business Combo":"1 000 min + 2 000 msg", "Premium Combo":"3 000 min + 5 000 msg",
+};
+let PLAN_LIMIT_LABELS = { ...DEFAULT_PLAN_LIMITS };
+
+const EMAIL_TEMPLATES_DEFAULT = {
+  bienvenue: { label:"Bienvenue nouveau client", subject:"Bienvenue chez AkilAI 🎉", body:`<p>Bonjour <strong>{Nom}</strong>,</p><p>Bienvenue chez <strong>AkilAI</strong> ! Votre compte <strong>{Plan}</strong> est maintenant actif.</p><p>L'équipe AkilAI</p>` },
+  j7:        { label:"Rappel paiement J-7",      subject:"Votre abonnement AkilAI expire dans 7 jours", body:`<p>Bonjour <strong>{Nom}</strong>,</p><p>Votre abonnement <strong>{Plan}</strong> expire le <strong>{DateEcheance}</strong>.</p><p><a href="{LienPaiement}">Renouveler mon abonnement</a></p>` },
+  j3:        { label:"Rappel paiement J-3",      subject:"⚠️ Votre abonnement expire dans 3 jours", body:`<p>Bonjour <strong>{Nom}</strong>,</p><p>Rappel urgent — échéance le <strong>{DateEcheance}</strong>. Montant : <strong>{Montant} €</strong>.</p><p><a href="{LienPaiement}">Renouveler maintenant</a></p>` },
+  suspension:{ label:"Suspension compte J+1",    subject:"🔴 Votre compte AkilAI a été suspendu", body:`<p>Bonjour <strong>{Nom}</strong>,</p><p>Votre abonnement <strong>{Plan}</strong> n'a pas été renouvelé. Vos automatisations ont été désactivées.</p><p><a href="{LienPaiement}">Régulariser mon abonnement</a></p>` },
+  reactivation:{label:"Réactivation compte",     subject:"✅ Votre compte AkilAI est réactivé", body:`<p>Bonjour <strong>{Nom}</strong>,</p><p>Votre compte et vos automatisations ont été <strong>réactivés avec succès</strong>.</p><p>L'équipe AkilAI</p>` },
+  facture:   { label:"Facture PDF",              subject:"Votre facture AkilAI — {NFacture}", body:`<p>Bonjour <strong>{Nom}</strong>,</p><p>Veuillez trouver ci-joint votre facture.</p><p>Merci de votre confiance,<br/>L'équipe AkilAI</p>` },
+  ticket_resolu:{ label:"Ticket résolu",         subject:"✅ Votre ticket #{NTicket} est résolu", body:`<p>Bonjour <strong>{Nom}</strong>,</p><p>Votre demande a été traitée. N'hésitez pas à nous contacter si besoin.</p><p>L'équipe AkilAI</p>` },
+};
+let EMAIL_TEMPLATES = JSON.parse(JSON.stringify(EMAIL_TEMPLATES_DEFAULT));
+const TMPL_VARS = ['{Nom}','{Entreprise}','{Plan}','{Montant}','{DateEcheance}','{LienPaiement}','{NomAssistant}','{NFacture}','{NTicket}'];
+
+function initSettingsTabs(){
+  document.querySelectorAll('#settingsTabs .tab-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      _settingsTab=btn.dataset.stab;
+      document.querySelectorAll('#settingsTabs .tab-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('[id^="stab-"]').forEach(el=>el.style.display='none');
+      const el=document.getElementById('stab-'+_settingsTab); if(el) el.style.display='';
+      if(_settingsTab==='vapi') loadVapiSettings();
+      if(_settingsTab==='make') loadMakeSettings();
+    });
+  });
+  // Plans
+  document.getElementById('savePlansBtn').onclick = savePlanPrices;
+  document.getElementById('resetPlansBtn').onclick = ()=>{ PLAN_PRICES={...{"Starter WhatsApp":97,"Business WhatsApp":197,"Premium WhatsApp":397,"Starter Vocal":97,"Business Vocal":197,"Premium Vocal":397,"Starter Combo":147,"Business Combo":297,"Premium Combo":497}}; PLAN_LIMIT_LABELS={...DEFAULT_PLAN_LIMITS}; renderSettingsPlans(); toast('Tarifs réinitialisés'); };
+  renderSettingsPlans();
+  // Agency
+  document.getElementById('saveAgenceBtn').onclick = saveAgencyInfo;
+  // Templates
+  initTemplateEditor();
+  // Vapi seuil
+  document.getElementById('saveVapiSeuilBtn').onclick = saveVapiSeuil;
+  // Make
+  document.getElementById('refreshMakeBtn').onclick = loadMakeSettings;
+  // Admins
+  document.getElementById('addAdminBtn').onclick = addSecondaryAdmin;
+  // Support
+  document.getElementById('saveSupportBtn').onclick = saveSupportSettings;
+}
+
+function renderSettings(){
+  renderSettingsPlans();
+  renderAgencyForm();
+  renderAdminsTable();
+  renderSupportSettings();
+  updateTemplateEditor();
+}
+
+async function loadAdminConfig(){
+  const d=await adminFetch('/.netlify/functions/admin-get-config');
+  if(!d||d.ok===false) return;
+  adminConfig={ ...adminConfig, recordId:d.recordId, ...d.config };
+  // Apply plan prices from Airtable if available
+  if(adminConfig.tarifsPlans){
+    Object.entries(adminConfig.tarifsPlans).forEach(([k,v])=>{
+      if(PLAN_PRICES[k]!==undefined) PLAN_PRICES[k]=Number(v.prix||v)||0;
+      if(v.limites) PLAN_LIMIT_LABELS[k]=v.limites;
+    });
+  }
+  if(adminConfig.templatesEmails){
+    Object.entries(adminConfig.templatesEmails).forEach(([k,v])=>{ if(EMAIL_TEMPLATES[k]) EMAIL_TEMPLATES[k]={...EMAIL_TEMPLATES[k],...v}; });
+  }
+}
+
+async function saveConfig(champ, valeur){
+  return adminFetch('/.netlify/functions/admin-save-config',{
+    method:'POST',
+    body:JSON.stringify({ champ, valeur, recordId:adminConfig.recordId })
+  });
+}
+
+/* ── Plans ── */
 function renderSettingsPlans(){
   const tb=document.getElementById('settingsPlansBody');
-  tb.innerHTML=PLAN_LIST.map(p=>`<tr><td>${p}</td><td><input type="number" data-plan="${p}" value="${PLAN_PRICES[p]}" style="width:120px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 8px;color:var(--text)"></td></tr>`).join('');
+  if(!tb) return;
+  const inStyle='background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text)';
+  tb.innerHTML=PLAN_LIST.map(p=>`<tr>
+    <td><strong>${p}</strong></td>
+    <td><input type="number" data-plan="${p}" value="${PLAN_PRICES[p]}" style="width:100px;${inStyle}"> €</td>
+    <td><input type="text" data-limits="${p}" value="${esc(PLAN_LIMIT_LABELS[p]||'')}" style="width:180px;${inStyle}" placeholder="Ex: 500 min"></td>
+  </tr>`).join('');
 }
-function savePlanPrices(){
+
+async function savePlanPrices(){
   document.querySelectorAll('#settingsPlansBody input[data-plan]').forEach(inp=>{ PLAN_PRICES[inp.dataset.plan]=+inp.value||0; });
-  toast('Tarifs appliqués','success');
-  renderFinances(); updateOverview();
+  document.querySelectorAll('#settingsPlansBody input[data-limits]').forEach(inp=>{ PLAN_LIMIT_LABELS[inp.dataset.limits]=inp.value; });
+  const tarifs={};
+  PLAN_LIST.forEach(p=>{ tarifs[p]={ prix:PLAN_PRICES[p], limites:PLAN_LIMIT_LABELS[p]||'' }; });
+  adminConfig.tarifsPlans=tarifs;
+  const res=await saveConfig('Tarifs Plans', tarifs);
+  if(res.ok!==false){ toast('Tarifs sauvegardés','success'); renderFinances(); updateOverview(); }
+  else toast(res.error||'Erreur','error');
+}
+
+/* ── Agency ── */
+function renderAgencyForm(){
+  const a=adminConfig.infosAgence||{};
+  if(document.getElementById('agNom')) document.getElementById('agNom').value=a.nom||'AkilAI';
+  if(document.getElementById('agEmail')) document.getElementById('agEmail').value=a.email||'contact@akilai.fr';
+  if(document.getElementById('agSite')) document.getElementById('agSite').value=a.site||'';
+  if(document.getElementById('agTel')) document.getElementById('agTel').value=a.tel||'';
+  if(document.getElementById('agSiret')) document.getElementById('agSiret').value=a.siret||'';
+  if(document.getElementById('agAdresse')) document.getElementById('agAdresse').value=a.adresse||'';
+  if(document.getElementById('agLogo')) document.getElementById('agLogo').value=a.logo||'';
+}
+async function saveAgencyInfo(){
+  const info={
+    nom: document.getElementById('agNom').value,
+    email: document.getElementById('agEmail').value,
+    site: document.getElementById('agSite').value,
+    tel: document.getElementById('agTel').value,
+    siret: document.getElementById('agSiret').value,
+    adresse: document.getElementById('agAdresse').value,
+    logo: document.getElementById('agLogo').value,
+  };
+  adminConfig.infosAgence=info;
+  const res=await saveConfig('Infos Agence', info);
+  if(res.ok!==false) toast('Informations agence sauvegardées','success');
+  else toast(res.error||'Erreur','error');
+}
+
+/* ── Email Templates ── */
+function initTemplateEditor(){
+  const tabsEl=document.getElementById('tmplTabs'); if(!tabsEl) return;
+  tabsEl.innerHTML=Object.entries(EMAIL_TEMPLATES).map(([k,t])=>
+    `<button class="btn sm ghost tmpl-tab-btn${k===_tmplKey?' active':''}" data-tkey="${k}">${esc(t.label)}</button>`
+  ).join('');
+  tabsEl.querySelectorAll('.tmpl-tab-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      _tmplKey=btn.dataset.tkey;
+      tabsEl.querySelectorAll('.tmpl-tab-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      updateTemplateEditor();
+    });
+  });
+
+  const varsEl=document.getElementById('tmplVarsBar'); if(!varsEl) return;
+  varsEl.innerHTML=TMPL_VARS.map(v=>
+    `<span class="badge badge-accent" style="cursor:pointer" onclick="insertTmplVar('${v}')">${v}</span>`
+  ).join('');
+
+  document.getElementById('tmplPreviewBtn').onclick=()=>{
+    const html=document.getElementById('tmplBody').value;
+    const frame=document.getElementById('tmplPreviewFrame');
+    const zone=document.getElementById('tmplPreviewZone');
+    frame.srcdoc=html; zone.style.display='';
+  };
+  document.getElementById('tmplSaveBtn').onclick=saveEmailTemplate;
+  document.getElementById('tmplTestBtn').onclick=sendTestEmail;
+  updateTemplateEditor();
+}
+
+function updateTemplateEditor(){
+  const t=EMAIL_TEMPLATES[_tmplKey]; if(!t) return;
+  const subj=document.getElementById('tmplSubject'); if(subj) subj.value=t.subject||'';
+  const body=document.getElementById('tmplBody'); if(body) body.value=t.body||'';
+}
+
+function insertTmplVar(v){
+  const ta=document.getElementById('tmplBody'); if(!ta) return;
+  const s=ta.selectionStart, e=ta.selectionEnd;
+  ta.value=ta.value.slice(0,s)+v+ta.value.slice(e);
+  ta.selectionStart=ta.selectionEnd=s+v.length;
+  ta.focus();
+}
+
+async function saveEmailTemplate(){
+  EMAIL_TEMPLATES[_tmplKey].subject=document.getElementById('tmplSubject').value;
+  EMAIL_TEMPLATES[_tmplKey].body=document.getElementById('tmplBody').value;
+  adminConfig.templatesEmails=EMAIL_TEMPLATES;
+  const res=await saveConfig('Templates Emails', EMAIL_TEMPLATES);
+  if(res.ok!==false) toast('Template sauvegardé','success');
+  else toast(res.error||'Erreur','error');
+}
+
+async function sendTestEmail(){
+  const subject=document.getElementById('tmplSubject').value;
+  const body=document.getElementById('tmplBody').value;
+  const adminEmail=sessionStorage.getItem('akilai_admin_email')||'';
+  if(!adminEmail){ toast('Email admin non disponible','error'); return; }
+  const res=await adminFetch('/.netlify/functions/send-relance',{
+    method:'POST',
+    body:JSON.stringify({ email:adminEmail, subject, html:body, isTest:true })
+  });
+  if(res.ok!==false) toast(`Email test envoyé à ${adminEmail}`,'success');
+  else toast(res.error||'Erreur envoi test','error');
+}
+
+/* ── Vapi ── */
+async function loadVapiSettings(){
+  document.getElementById('vapiNumbersBody').innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--text-muted)">Chargement…</td></tr>';
+  document.getElementById('vapiAssistantsBody').innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--text-muted)">Chargement…</td></tr>';
+  if(adminConfig.seuilVapi) document.getElementById('vapiSeuil').value=adminConfig.seuilVapi;
+
+  // Wallet
+  const w=await adminFetch('/.netlify/functions/check-vapi-wallet');
+  if(w.balance!=null){
+    const b=Number(w.balance);
+    const col=b>=10?'#22c55e':b>=5?'#f59e0b':'#ef4444';
+    document.getElementById('vapiBalance').innerHTML=`<span style="color:${col}">$${b.toFixed(2)}</span>`;
+  } else { document.getElementById('vapiBalance').textContent='N/A'; }
+
+  // Numbers + Assistants
+  const d=await adminFetch('/.netlify/functions/admin-get-vapi-numbers');
+  const inStyle='display:inline-block;padding:2px 0;';
+  const nbTb=document.getElementById('vapiNumbersBody');
+  if(!d.numbers?.length){ nbTb.innerHTML='<tr class="empty-row"><td colspan="4">Aucun numéro configuré</td></tr>'; }
+  else {
+    const asstMap=Object.fromEntries((d.assistants||[]).map(a=>[a.id,a.nom]));
+    nbTb.innerHTML=d.numbers.map(n=>`<tr>
+      <td style="${inStyle}">${esc(n.numero)}</td>
+      <td>${esc(n.label||'—')}</td>
+      <td>${n.assistantId?esc(asstMap[n.assistantId]||n.assistantId):'—'}</td>
+      <td style="font-size:11px;color:var(--text-muted)">${esc(n.provider||'—')}</td>
+    </tr>`).join('');
+  }
+
+  const asTb=document.getElementById('vapiAssistantsBody');
+  if(!d.assistants?.length){ asTb.innerHTML='<tr class="empty-row"><td colspan="4">Aucun assistant trouvé</td></tr>'; }
+  else asTb.innerHTML=d.assistants.map(a=>`<tr>
+    <td><strong>${esc(a.nom)}</strong></td>
+    <td style="font-size:12px;color:var(--text-muted)">${esc(a.modele||'—')}</td>
+    <td style="font-size:12px;color:var(--text-muted)">${esc(a.voix||'—')}</td>
+    <td>${statutBadge(a.statut)}</td>
+  </tr>`).join('');
+}
+
+async function saveVapiSeuil(){
+  const v=+document.getElementById('vapiSeuil').value||5;
+  adminConfig.seuilVapi=v;
+  const res=await saveConfig('Seuil Vapi', String(v));
+  if(res.ok!==false) toast('Seuil sauvegardé','success');
+  else toast(res.error||'Erreur','error');
+}
+
+/* ── Make ── */
+async function loadMakeSettings(){
+  document.getElementById('makeActiveScenarios').textContent='…';
+  document.getElementById('makeOpsUsed').textContent='…';
+  document.getElementById('makeOpsLeft').textContent='…';
+  const d=await adminFetch('/.netlify/functions/make-get-stats').catch(()=>null);
+  if(d&&d.scenarios!=null){
+    document.getElementById('makeActiveScenarios').textContent=d.scenarios;
+    document.getElementById('makeOpsUsed').textContent=d.opsUsed!=null?d.opsUsed.toLocaleString('fr-FR'):'—';
+    document.getElementById('makeOpsLeft').textContent=d.opsLeft!=null?d.opsLeft.toLocaleString('fr-FR'):'—';
+  } else {
+    document.getElementById('makeActiveScenarios').textContent='—';
+    document.getElementById('makeOpsUsed').textContent='—';
+    document.getElementById('makeOpsLeft').textContent='—';
+  }
+}
+
+/* ── Admins ── */
+function renderAdminsTable(){
+  const tb=document.getElementById('adminsBody'); if(!tb) return;
+  const adminEmail=sessionStorage.getItem('akilai_admin_email')||'Admin principal';
+  const secondary=adminConfig.adminsSecondaires||[];
+  const rows=[`<tr><td>${esc(adminEmail)}</td><td><span class="badge badge-accent">Principal</span></td><td>—</td></tr>`];
+  secondary.forEach((em,i)=>{
+    rows.push(`<tr><td>${esc(em)}</td><td><span class="badge badge-muted">Secondaire</span></td>
+      <td><button class="btn sm danger" onclick="removeSecondaryAdmin(${i})">Supprimer</button></td></tr>`);
+  });
+  tb.innerHTML=rows.join('');
+}
+
+async function addSecondaryAdmin(){
+  const em=document.getElementById('newAdminEmail').value.trim();
+  if(!em||!em.includes('@')){ toast('Email invalide','error'); return; }
+  const list=[...(adminConfig.adminsSecondaires||[])];
+  if(list.includes(em)){ toast('Cet email est déjà admin','error'); return; }
+  list.push(em);
+  adminConfig.adminsSecondaires=list;
+  const res=await saveConfig('Admins Secondaires', list);
+  if(res.ok!==false){ document.getElementById('newAdminEmail').value=''; renderAdminsTable(); toast('Admin ajouté','success'); }
+  else toast(res.error||'Erreur','error');
+}
+
+async function removeSecondaryAdmin(idx){
+  const list=[...(adminConfig.adminsSecondaires||[])];
+  list.splice(idx,1);
+  adminConfig.adminsSecondaires=list;
+  const res=await saveConfig('Admins Secondaires', list);
+  if(res.ok!==false){ renderAdminsTable(); toast('Admin supprimé'); }
+  else toast(res.error||'Erreur','error');
+}
+
+/* ── Support settings ── */
+function renderSupportSettings(){
+  if(document.getElementById('suppDelai')) document.getElementById('suppDelai').value=adminConfig.delaiTicketAlerte||24;
+  if(document.getElementById('suppHoraires')) document.getElementById('suppHoraires').value=adminConfig.horaireSupport||'Lundi–Vendredi, 9h–18h';
+  if(document.getElementById('suppBandeau')) document.getElementById('suppBandeau').value=adminConfig.bandeauSuspension||'';
+}
+
+async function saveSupportSettings(){
+  const delai=+document.getElementById('suppDelai').value||24;
+  const horaires=document.getElementById('suppHoraires').value;
+  const bandeau=document.getElementById('suppBandeau').value;
+  adminConfig.delaiTicketAlerte=delai;
+  adminConfig.horaireSupport=horaires;
+  adminConfig.bandeauSuspension=bandeau;
+  await Promise.all([
+    saveConfig('Delai Ticket Alerte', String(delai)),
+    saveConfig('Horaire Support', horaires),
+    saveConfig('Bandeau Suspension', bandeau),
+  ]);
+  toast('Paramètres support sauvegardés','success');
 }
 
 /* =========================================================
