@@ -41,6 +41,7 @@ exports.handler = async (event) => {
         numeroVapi: f["Numéro Vapi"] || "",
         numeroTwilio: f["Numéro Twilio"] || "",
         notes: f.Notes || "",
+        montantMensuel: f["Montant mensuel"] || null,
       };
     });
 

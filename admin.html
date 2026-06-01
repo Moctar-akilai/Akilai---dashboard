@@ -660,6 +660,24 @@ input,select,textarea{font-family:inherit;font-size:14px}
   </div>
 </div>
 
+<!-- ===== MODAL: CONFIRM AMOUNT ===== -->
+<div class="modal-overlay" id="modalConfirmAmount">
+  <div class="modal-content" style="max-width:420px">
+    <button type="button" class="modal-close" id="camCancelBtn">&times;</button>
+    <h3>Confirmer la modification du montant</h3>
+    <p id="camMsg" style="font-size:13px;color:var(--text-muted);margin-bottom:16px"></p>
+    <div class="field">
+      <label>Confirmez le montant (€)</label>
+      <input type="number" id="camConfirm" step="0.01" placeholder="Retapez le montant pour confirmer">
+      <div id="camError" style="color:#f87171;font-size:12px;margin-top:6px;display:none">Les montants ne correspondent pas.</div>
+    </div>
+    <div class="modal-actions" style="margin-top:16px">
+      <button type="button" class="btn ghost" id="camCancelBtn2">Annuler</button>
+      <button type="button" class="btn" id="camConfirmBtn" disabled>Confirmer</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== MODAL: AJOUTER PAIEMENT ===== -->
 <div class="modal-overlay" id="modalAddPaiement">
   <form class="modal-content" id="addPaiementForm" style="max-width:480px">
@@ -902,7 +920,10 @@ function enterApp() {
   document.getElementById('settingsAdminEmail').value = email;
   buildNav();
   initStaticUI();
-  loadAllAdminData();
+  loadAllAdminData().then(()=>{
+    const saved = localStorage.getItem('adminActiveSection');
+    navigate(saved || 'overview');
+  });
 }
 
 /* =========================================================
@@ -926,6 +947,7 @@ function navigate(id) {
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.section===id));
   document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active', p.id==='page-'+id));
   document.getElementById('pageTitle').textContent = TITLES[id] || '';
+  localStorage.setItem('adminActiveSection', id);
   if (id==='notifications') renderNotifications();
   if (id==='automations') ensureRealAutomations().then(()=>{ populateAutoClientFilter(); renderAutomations(); });
 }
@@ -1905,32 +1927,73 @@ function paiementStatutBadge(s){
   return `<span class="badge" style="background:${bg};color:${col}">${esc(s||'—')}</span>`;
 }
 
-/* ── Inline amount editing ── */
-const _customAmounts={};
+/* ── Inline amount editing with confirmation modal ── */
+function clientMontant(c){
+  return (c.montantMensuel && c.montantMensuel > 0) ? c.montantMensuel : (PLAN_PRICES[c.plan] ?? 0);
+}
+
 function startEditAmount(clientId, span){
-  const current=_customAmounts[clientId]??PLAN_PRICES[adminClients.find(c=>c.id===clientId)?.plan]??0;
+  const c=adminClients.find(x=>x.id===clientId); if(!c) return;
+  const original=clientMontant(c);
   const input=document.createElement('input');
-  input.type='number'; input.value=current; input.style.cssText='width:80px;background:var(--bg);border:1px solid var(--accent);border-radius:6px;padding:4px 6px;color:var(--text);font-size:13px';
+  input.type='number'; input.value=original; input.step='0.01';
+  input.style.cssText='width:80px;background:var(--bg);border:1px solid var(--accent);border-radius:6px;padding:4px 6px;color:var(--text);font-size:13px';
   span.replaceWith(input); input.focus(); input.select();
-  const save=async()=>{
-    const val=Number(input.value);
-    const newSpan=document.createElement('span');
-    newSpan.style.cssText='cursor:pointer;border-bottom:1px dashed var(--muted)';
-    newSpan.title='Cliquer pour modifier';
-    newSpan.onclick=()=>startEditAmount(clientId,newSpan);
-    newSpan.textContent=fmtEur(val);
-    input.replaceWith(newSpan);
-    // Persist: try PATCH via admin-update-client (requires "Montant mensuel" field in Airtable)
-    _customAmounts[clientId]=val;
-    try{
-      await adminFetch('/.netlify/functions/admin-update-client',{method:'PATCH',body:JSON.stringify({id:clientId,fields:{"Montant mensuel":val}})});
-      const tick=document.createElement('span');tick.textContent=' ✓';tick.style.color='#4ade80';newSpan.after(tick);setTimeout(()=>tick.remove(),2000);
-    } catch(e){
-      const tick=document.createElement('span');tick.textContent=' ✓';tick.style.color='#4ade80';newSpan.after(tick);setTimeout(()=>tick.remove(),2000);
+
+  let committed=false;
+  const restoreSpan=()=>{ if(!committed){ input.replaceWith(span); } };
+  const openConfirm=(val)=>{
+    committed=true;
+    // Restore span with original value while modal is open
+    input.replaceWith(span);
+    openAmountConfirmModal(c, val, span);
+  };
+
+  input.addEventListener('blur',()=>{ setTimeout(()=>{ if(!committed) openConfirm(Number(input.value)); },100); });
+  input.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){ e.preventDefault(); committed=true; openConfirm(Number(input.value)); }
+    if(e.key==='Escape'){ committed=true; restoreSpan(); }
+  });
+}
+
+function openAmountConfirmModal(c, newVal, span){
+  const ov=document.getElementById('modalConfirmAmount');
+  document.getElementById('camMsg').textContent=`Nouveau montant pour ${c.entreprise||c.nom} : ${fmtEur(newVal)}/mois`;
+  const confirmInput=document.getElementById('camConfirm');
+  const confirmBtn=document.getElementById('camConfirmBtn');
+  const errorEl=document.getElementById('camError');
+  confirmInput.value='';
+  confirmBtn.disabled=true;
+  errorEl.style.display='none';
+  ov.classList.add('show');
+
+  const checkMatch=()=>{
+    const v=Number(confirmInput.value);
+    if(confirmInput.value===''){ errorEl.style.display='none'; confirmBtn.disabled=true; return; }
+    const match=Math.abs(v-newVal)<0.001;
+    errorEl.style.display=match?'none':'block';
+    confirmBtn.disabled=!match;
+  };
+  confirmInput.oninput=checkMatch;
+
+  const cancel=()=>{ ov.classList.remove('show'); confirmInput.oninput=null; confirmBtn.onclick=null; };
+  document.getElementById('camCancelBtn').onclick=cancel;
+  document.getElementById('camCancelBtn2').onclick=cancel;
+
+  confirmBtn.onclick=async()=>{
+    cancel();
+    span.textContent='…';
+    const res=await adminFetch('/.netlify/functions/admin-update-client',{method:'PATCH',body:JSON.stringify({id:c.id,fields:{"Montant mensuel":newVal}})});
+    if(res.ok!==false){
+      c.montantMensuel=newVal;
+      span.textContent=fmtEur(newVal);
+      const tick=document.createElement('span');tick.textContent=' ✓';tick.style.color='#4ade80';span.after(tick);setTimeout(()=>tick.remove(),2500);
+      toast('Montant mis à jour','success');
+    } else {
+      span.textContent=fmtEur(clientMontant(c));
+      toast(res.error||'Erreur lors de la sauvegarde','error');
     }
   };
-  input.addEventListener('blur',save);
-  input.addEventListener('keydown',e=>{ if(e.key==='Enter'){e.preventDefault();save();} if(e.key==='Escape'){input.replaceWith(span);} });
 }
 
 function renderBilling(){
@@ -1948,7 +2011,7 @@ function renderBilling(){
 
   tb.innerHTML=''; // will fill via DOM to support inline edit spans
   active.forEach(c=>{
-    const montant=_customAmounts[c.id]??PLAN_PRICES[c.plan]??0;
+    const montant=clientMontant(c);
     const tr=document.createElement('tr'); tr.style.cursor='pointer';
     tr.onclick=(e)=>{ if(e.target.tagName==='BUTTON'||e.target.tagName==='INPUT') return; openBillingDetail(c.id); };
     tr.innerHTML=`
@@ -1982,7 +2045,7 @@ async function openBillingDetail(clientId){
   _bdClientId=clientId;
   document.getElementById('bdTitle').textContent=`${c.entreprise||c.nom} — Historique paiements`;
   document.getElementById('bdSub').textContent=`${c.email} · Plan ${c.plan||'—'}`;
-  document.getElementById('bdNext').textContent=c.prochainPaiement?`${fmtDate(c.prochainPaiement)} · ${fmtEur(_customAmounts[clientId]??PLAN_PRICES[c.plan]??0)}`:'—';
+  document.getElementById('bdNext').textContent=c.prochainPaiement?`${fmtDate(c.prochainPaiement)} · ${fmtEur(clientMontant(c))}`:'—';
   document.getElementById('bdHistBody').innerHTML='<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted)">Chargement…</td></tr>';
   document.getElementById('modalBillingDetail').classList.add('show');
 
@@ -2020,7 +2083,7 @@ async function markPaidById(id, btn){
 
 function openAddPaiement(c){
   document.getElementById('apDate').value=new Date().toISOString().split('T')[0];
-  document.getElementById('apMontant').value=_customAmounts[c.id]??PLAN_PRICES[c.plan]??0;
+  document.getElementById('apMontant').value=clientMontant(c);
   document.getElementById('apStatut').value='Payé';
   document.getElementById('apPeriode').value='';
   document.getElementById('apReference').value='';
