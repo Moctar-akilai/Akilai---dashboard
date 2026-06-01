@@ -502,6 +502,38 @@
 
     /* Toggle switch CSS */
     .toggle-wrap { display: flex; align-items: center; gap: 8px; }
+    /* Suspension banner */
+    #suspension-banner {
+      display: none;
+      background: #7f1d1d;
+      color: #fff;
+      padding: 12px 20px;
+      font-size: 13px;
+      font-weight: 500;
+      line-height: 1.5;
+      position: sticky;
+      top: 0;
+      z-index: 90;
+      border-bottom: 1px solid rgba(239,68,68,.4);
+    }
+    #suspension-banner.show { display: flex; align-items: center; gap: 10px; }
+
+    /* Suspended overlay on sections */
+    .suspended-section {
+      position: relative;
+      pointer-events: none;
+      opacity: 0.45;
+      user-select: none;
+    }
+    .suspended-msg {
+      display: none;
+      color: #f87171;
+      font-size: 12px;
+      margin-top: 8px;
+      font-weight: 500;
+    }
+    .suspended-msg.show { display: block; }
+
     .toggle {
       position: relative; width: 36px; height: 20px;
       cursor: pointer; flex-shrink: 0;
@@ -2417,6 +2449,12 @@
       </div>
     </header>
 
+    <!-- Suspension banner (shown if client.statut === "Suspendu") -->
+    <div id="suspension-banner">
+      <span style="font-size:18px">⚠️</span>
+      <span>Votre compte est suspendu. Vos automatisations ont été désactivées. Contactez AkilAI pour régulariser votre situation.</span>
+    </div>
+
     <!-- Bandeau alerte critique -->
     <div id="alertBanner">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" flex-shrink="0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -4189,6 +4227,44 @@ async function loadClientsFromAirtable() {
   }
   applyPlanFilter();
   updateSidebarUser();
+  if (clients.length) checkSuspensionState(clients[0]);
+}
+
+function checkSuspensionState(client) {
+  const suspended = client && client.statut === "Suspendu";
+  const banner = document.getElementById("suspension-banner");
+  if (banner) banner.classList.toggle("show", suspended);
+
+  // Automations section
+  const autoWrap = document.querySelector("#page-automations .auto-table-wrap");
+  if (autoWrap) autoWrap.classList.toggle("suspended-section", suspended);
+  const autoProgBtn = document.querySelector("#page-automations .btn-secondary");
+  if (autoProgBtn) { autoProgBtn.disabled = suspended; autoProgBtn.style.opacity = suspended ? "0.45" : ""; autoProgBtn.style.pointerEvents = suspended ? "none" : ""; }
+  document.querySelectorAll("#page-automations .toggle input").forEach(t => { t.disabled = suspended; });
+
+  // Programmation section
+  const progPage = document.getElementById("page-programmation");
+  if (progPage) {
+    progPage.querySelectorAll("button").forEach(b => { b.disabled = suspended; b.style.opacity = suspended ? "0.45" : ""; b.style.pointerEvents = suspended ? "none" : ""; });
+    let progMsg = progPage.querySelector(".suspended-msg");
+    if (!progMsg) { progMsg = document.createElement("div"); progMsg.className = "suspended-msg"; progMsg.textContent = "Fonctionnalité indisponible — compte suspendu."; progPage.querySelector(".page-header")?.appendChild(progMsg); }
+    progMsg.classList.toggle("show", suspended);
+  }
+
+  // Voix & IA section
+  const voixActions = document.getElementById("voixIaActions");
+  if (voixActions) {
+    voixActions.querySelectorAll("button").forEach(b => { b.disabled = suspended; b.style.opacity = suspended ? "0.45" : ""; b.style.pointerEvents = suspended ? "none" : ""; });
+    let voixMsg = document.getElementById("voixSuspendedMsg");
+    if (!voixMsg) {
+      voixMsg = document.createElement("div");
+      voixMsg.id = "voixSuspendedMsg";
+      voixMsg.className = "suspended-msg";
+      voixMsg.textContent = "Fonctionnalité indisponible — compte suspendu.";
+      voixActions.parentElement?.appendChild(voixMsg);
+    }
+    voixMsg.classList.toggle("show", suspended);
+  }
 }
 
 function applyPlanFilterFromSession(rawPlan) {
