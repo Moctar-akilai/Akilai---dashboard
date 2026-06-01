@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AkilAI — Back-office Admin</title>
+<link rel="icon" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#0f1117; --surface:#181c27; --surface2:#1e2535; --border:#1e2535;
+  --text:#e2e8f0; --text-muted:#94a3b8; --text-faint:#475569;
+  --accent:#70B2DE; --accent-dim:rgba(112,178,222,0.1); --accent-border:rgba(112,178,222,0.2);
+  --success:#22c55e; --warning:#f59e0b; --danger:#ef4444;
+  --radius:12px; --sidebar-w:240px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit;font-size:14px}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:var(--surface2);border-radius:4px}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ---------- LOGIN ---------- */
+#loginPage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 0%, #141a28, var(--bg));z-index:100}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:40px;width:380px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.login-card img{height:48px;display:block;margin:0 auto 8px}
+.login-card h1{font-size:18px;font-weight:600;text-align:center;margin-bottom:4px}
+.login-card p.sub{text-align:center;color:var(--text-muted);font-size:13px;margin-bottom:24px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:12px;color:var(--text-muted);margin-bottom:6px}
+.field input,.field select,.field textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);outline:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:#08131c;border:none;border-radius:8px;padding:10px 16px;font-weight:600;transition:opacity .15s}
+.btn:hover{opacity:.9}
+.btn.full{width:100%}
+.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--border)}
+.btn.ghost:hover{background:var(--surface2);opacity:1}
+.btn.sm{padding:6px 10px;font-size:12px}
+.btn.danger{background:var(--danger);color:#fff}
+.error-msg{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:#fca5a5;padding:10px 12px;border-radius:8px;font-size:13px;margin-bottom:14px;display:none}
+.error-msg.show{display:block}
+
+/* ---------- APP ---------- */
+#app{display:none;min-height:100vh}
+#app.show{display:flex}
+.sidebar{width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;bottom:0;left:0;transition:width .2s;z-index:30}
+.sidebar.collapsed{width:64px}
+.sidebar-top{padding:18px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+.sidebar-top img{height:40px}
+.collapse-btn{margin-left:auto;background:transparent;border:none;color:var(--text-muted);font-size:18px;padding:4px}
+.sidebar.collapsed .sidebar-top img{display:none}
+.nav{flex:1;padding:12px 8px;overflow-y:auto}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;color:var(--text-muted);font-weight:500;cursor:pointer;position:relative;margin-bottom:2px}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:var(--accent-dim);color:var(--accent)}
+.nav-item svg{width:18px;height:18px;flex-shrink:0}
+.sidebar.collapsed .nav-item span.label{display:none}
+.nav-badge{margin-left:auto;background:var(--danger);color:#fff;font-size:11px;font-weight:600;border-radius:10px;padding:1px 7px;display:none}
+.nav-badge.show{display:inline-block}
+.sidebar.collapsed .nav-badge{position:absolute;top:6px;right:6px;margin:0}
+.sidebar-bottom{padding:14px 12px;border-top:1px solid var(--border)}
+.admin-email{font-size:12px;color:var(--text-muted);margin-bottom:8px;word-break:break-all}
+.sidebar.collapsed .admin-email{display:none}
+.sidebar.collapsed .sidebar-bottom .btn span{display:none}
+
+.main{margin-left:var(--sidebar-w);flex:1;min-height:100vh;transition:margin-left .2s}
+.sidebar.collapsed ~ .main{margin-left:64px}
+.topbar{padding:18px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;background:var(--bg);position:sticky;top:0;z-index:20}
+.topbar h2{font-size:18px;font-weight:600}
+.topbar .spacer{flex:1}
+.page{display:none;padding:28px}
+.page.active{display:block}
+
+/* ---------- GRID / CARDS ---------- */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-bottom:24px}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px}
+.kpi-card .k-label{font-size:12px;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em}
+.kpi-card .k-value{font-size:26px;font-weight:600}
+.kpi-card .k-sub{font-size:12px;color:var(--text-faint);margin-top:4px}
+.kpi-card.big .k-value{font-size:30px}
+.kpi-card.accent{border-color:var(--accent-border)}
+.kpi-card.accent .k-value{color:var(--accent)}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px}
+.card h3{font-size:15px;font-weight:600;margin-bottom:14px}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px}
+.chart-card h3{font-size:14px;font-weight:600;margin-bottom:12px}
+.chart-wrap{position:relative;height:240px}
+@media(max-width:900px){.charts-grid{grid-template-columns:1fr}}
+
+/* ---------- TABLES ---------- */
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface)}
+.hist-table{width:100%;border-collapse:collapse;font-size:13px}
+.hist-table thead th{background:var(--surface2);text-align:left;padding:11px 14px;color:var(--text-muted);font-weight:500;font-size:12px;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap}
+.hist-table tbody td{padding:11px 14px;border-top:1px solid var(--border);white-space:nowrap}
+.hist-table tbody tr:hover{background:var(--surface2)}
+.hist-table tbody tr.clickable{cursor:pointer}
+.empty-row td{text-align:center;color:var(--text-faint);padding:30px}
+
+/* ---------- BADGES ---------- */
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge-success{background:rgba(34,197,94,.14);color:#4ade80}
+.badge-warning{background:rgba(245,158,11,.14);color:#fbbf24}
+.badge-danger{background:rgba(239,68,68,.14);color:#f87171}
+.badge-accent{background:var(--accent-dim);color:var(--accent)}
+.badge-muted{background:rgba(148,163,184,.14);color:var(--text-muted)}
+
+/* ---------- TOOLBAR ---------- */
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px}
+.toolbar input,.toolbar select{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);outline:none}
+.toolbar input:focus,.toolbar select:focus{border-color:var(--accent)}
+.toolbar .search{min-width:220px;flex:1;max-width:320px}
+.toolbar .spacer{flex:1}
+.stats-bar{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:18px}
+.stat-pill{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 18px;min-width:150px}
+.stat-pill .s-label{font-size:11px;color:var(--text-muted);text-transform:uppercase}
+.stat-pill .s-value{font-size:20px;font-weight:600;margin-top:2px}
+
+/* ---------- DROPDOWN ---------- */
+.dd{position:relative;display:inline-block}
+.dd-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 10px;font-weight:600}
+.dd-menu{position:absolute;right:0;top:calc(100% + 4px);background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:0 12px 30px rgba(0,0,0,.5);min-width:200px;z-index:50;display:none;overflow:hidden}
+.dd-menu.show{display:block}
+.dd-menu button{display:block;width:100%;text-align:left;background:transparent;border:none;color:var(--text);padding:9px 14px;font-size:13px}
+.dd-menu button:hover{background:var(--surface2)}
+
+/* ---------- MODAL ---------- */
+.modal-overlay{position:fixed;inset:0;background:rgba(5,8,14,.7);backdrop-filter:blur(2px);display:none;align-items:flex-start;justify-content:center;z-index:80;padding:40px 16px;overflow-y:auto}
+.modal-overlay.show{display:flex}
+.modal-content{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);width:560px;max-width:100%;padding:24px;position:relative;animation:pop .15s ease}
+.modal-content.wide{width:680px}
+@keyframes pop{from{transform:translateY(8px);opacity:0}to{transform:none;opacity:1}}
+.modal-content h3{font-size:16px;font-weight:600;margin-bottom:16px;padding-right:30px}
+.modal-close{position:absolute;top:16px;right:16px;background:transparent;border:none;color:var(--text-muted);font-size:22px;line-height:1}
+.modal-close:hover{color:var(--text)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-grid .field.full{grid-column:1/-1}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+.detail-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.detail-row .dl{color:var(--text-muted)}
+
+/* ---------- CHAT ---------- */
+.chat-thread{max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:6px;margin-bottom:14px}
+.bubble{max-width:80%;padding:9px 13px;border-radius:12px;font-size:13px;line-height:1.45}
+.bubble .meta{font-size:10px;opacity:.6;margin-top:4px}
+.bubble.admin{align-self:flex-end;background:var(--accent);color:#08131c;border-bottom-right-radius:3px}
+.bubble.client{align-self:flex-start;background:var(--surface2);border-bottom-left-radius:3px}
+
+/* ---------- RELANCES ---------- */
+.relance-cols{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:900px){.relance-cols{grid-template-columns:1fr}}
+.relance-list{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.relance-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px}
+.relance-card .rc-name{font-weight:600;font-size:13px}
+.relance-card .rc-sub{font-size:12px;color:var(--text-muted);margin:4px 0 8px}
+
+/* ---------- NOTIFICATIONS ---------- */
+.notif-list{display:flex;flex-direction:column;gap:10px;max-width:760px}
+.notif-card{background:var(--surface);border:1px solid var(--border);border-left-width:4px;border-radius:8px;padding:14px 16px;display:flex;gap:14px;align-items:flex-start}
+.notif-card.read{opacity:.55}
+.notif-card .n-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.notif-card .n-body{flex:1}
+.notif-card .n-msg{font-size:13px}
+.notif-card .n-date{font-size:11px;color:var(--text-faint);margin-top:3px}
+
+/* ---------- ALERTS ---------- */
+.alert-list{display:flex;flex-direction:column;gap:8px}
+.alert-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:var(--surface2);font-size:13px}
+.alert-item .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* ---------- SKELETON ---------- */
+.skel{background:linear-gradient(90deg,var(--surface2) 25%,#262d40 50%,var(--surface2) 75%);background-size:200% 100%;animation:shimmer 1.2s infinite;border-radius:4px;height:12px;width:100%}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* ---------- TOAST ---------- */
+#toasts{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:10px;z-index:200}
+.toast{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:8px;padding:12px 16px;font-size:13px;min-width:240px;box-shadow:0 12px 30px rgba(0,0,0,.4);animation:slidein .2s}
+.toast.success{border-left-color:var(--success)}
+.toast.error{border-left-color:var(--danger)}
+@keyframes slidein{from{transform:translateX(40px);opacity:0}to{transform:none;opacity:1}}
+
+.muted{color:var(--text-muted)}
+.row-flex{display:flex;gap:10px;align-items:center}
+.mt16{margin-top:16px}
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<div id="loginPage">
+  <form class="login-card" id="loginForm">
+    <img src="/logo.png" alt="AkilAI">
+    <h1>Back-office Admin</h1>
+    <p class="sub">Connectez-vous pour accéder au tableau de bord</p>
+    <div class="error-msg" id="loginError"></div>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="loginEmail" required autocomplete="username">
+    </div>
+    <div class="field">
+      <label>Mot de passe</label>
+      <input type="password" id="loginPassword" required autocomplete="current-password">
+    </div>
+    <button class="btn full" type="submit" id="loginBtn">Se connecter</button>
+  </form>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+      <img src="/logo.png" alt="AkilAI">
+      <button class="collapse-btn" id="collapseBtn" title="Réduire">&#9776;</button>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="sidebar-bottom">
+      <div class="admin-email" id="adminEmail">—</div>
+      <button class="btn ghost full sm" id="logoutBtn"><span>Déconnexion</span></button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <h2 id="pageTitle">Vue d'ensemble</h2>
+      <div class="spacer"></div>
+      <button class="btn ghost sm" id="refreshBtn">Rafraîchir</button>
+    </div>
+
+    <!-- ===== OVERVIEW ===== -->
+    <section class="page active" id="page-overview">
+      <div class="kpi-grid">
+        <div class="kpi-card accent"><div class="k-label">Clients actifs</div><div class="k-value"><span id="kpiClientsActifs">0</span></div><div class="k-sub">sur <span id="kpiClientsTotal">0</span> au total</div></div>
+        <div class="kpi-card accent"><div class="k-label">MRR calculé</div><div class="k-value" id="kpiMRR">0 €</div><div class="k-sub">revenu mensuel récurrent</div></div>
+        <div class="kpi-card"><div class="k-label">Churn du mois</div><div class="k-value" id="kpiChurn">0</div><div class="k-sub">clients suspendus</div></div>
+        <div class="kpi-card"><div class="k-label">Tickets ouverts</div><div class="k-value" id="kpiTicketsOuverts">0</div><div class="k-sub">à traiter</div></div>
+        <div class="kpi-card"><div class="k-label">Coûts infra / mois</div><div class="k-value" id="kpiCouts">0 €</div><div class="k-sub">infrastructure</div></div>
+        <div class="kpi-card accent"><div class="k-label">Marge brute</div><div class="k-value" id="kpiMarge">0 €</div><div class="k-sub">MRR - coûts</div></div>
+      </div>
+      <div class="charts-grid">
+        <div class="chart-card"><h3>MRR — 6 derniers mois</h3><div class="chart-wrap"><canvas id="chartMRR"></canvas></div></div>
+        <div class="chart-card"><h3>Répartition par plan</h3><div class="chart-wrap"><canvas id="chartPlansDist"></canvas></div></div>
+        <div class="chart-card"><h3>Volume appels + WhatsApp (30j)</h3><div class="chart-wrap"><canvas id="chartVolume"></canvas></div></div>
+        <div class="chart-card"><h3>Résolution des tickets</h3><div class="chart-wrap"><canvas id="chartTickets"></canvas></div></div>
+      </div>
+      <div class="card">
+        <h3>Alertes</h3>
+        <div class="alert-list" id="alertList"><div class="muted">Aucune alerte.</div></div>
+      </div>
+    </section>
+
+    <!-- ===== CLIENTS ===== -->
+    <section class="page" id="page-clients">
+      <div class="toolbar">
+        <input class="search" id="clientSearch" placeholder="Rechercher (entreprise, nom, email)…">
+        <select id="clientFilterStatut"><option value="">Tous statuts</option><option>Actif</option><option>Suspendu</option><option>Essai</option></select>
+        <select id="clientFilterPlan"><option value="">Tous plans</option></select>
+        <select id="clientFilterPays"><option value="">Tous pays</option></select>
+        <div class="spacer"></div>
+        <button class="btn" id="btnNewClient">+ Nouveau client</button>
+      </div>
+      <div class="table-wrap">
+        <table class="hist-table">
+          <thead><tr><th>Entreprise</th><th>Nom</th><th>Email</th><th>Plan</th><th>Statut</th><th>Inscription</th><th>Prochain paiement</th><th>Actions</th></tr></thead>
+          <tbody id="clientsBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===== AUTOMATIONS ===== -->
+    <section class="page" id="page-automations">
+      <div class="stats-bar">
+        <div class="stat-pill"><div class="s-label">Total appels</div><div class="s-value" id="autoTotalCalls">0</div></div>
+        <div class="stat-pill"><div class="s-label">Total messages WA</div><div class="s-value" id="autoTotalWA">0</div></div>
+        <div class="stat-pill"><div class="s-label">En erreur</div><div class="s-value" id="autoErrors">0</div></div>
+      </div>
+      <div class="toolbar">
+        <select id="autoFilterClient"><option value="">Tous clients</option></select>
+        <select id="autoFilterType"><option value="">Tous types</option><option>Appel</option><option>WhatsApp</option></select>
+        <select id="autoFilterStatut"><option value="">Tous statuts</option><option>Actif</option><option>Inactif</option><option>Erreur</option></select>
+      </div>
+      <div class="table-wrap">
+        <table class="hist-table">
+          <thead><tr><th>Nom</th><th>Client</th><th>Type</th><th>Statut</th><th>Actions</th></tr></thead>
+          <tbody id="autoBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===== SUPPORT ===== -->
+    <section class="page" id="page-support">
+      <div class="toolbar">
+        <select id="ticketFilterStatut"><option value="">Tous statuts</option><option>Ouvert</option><option>En cours</option><option>Résolu</option></select>
+        <select id="ticketFilterPriorite"><option value="">Toutes priorités</option><option>Haute</option><option>Normal</option><option>Basse</option></select>
+        <select id="ticketFilterClient"><option value="">Tous clients</option></select>
+      </div>
+      <div class="table-wrap">
+        <table class="hist-table">
+          <thead><tr><th>N°</th><th>Client</th><th>Sujet</th><th>Priorité</th><th>Statut</th><th>Création</th><th>Actions</th></tr></thead>
+          <tbody id="ticketsBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===== BILLING ===== -->
+    <section class="page" id="page-billing">
+      <div class="stats-bar">
+        <div class="stat-pill"><div class="s-label">Payé ce mois</div><div class="s-value" id="billPaid">0 €</div></div>
+        <div class="stat-pill"><div class="s-label">En attente</div><div class="s-value" id="billPending">0 €</div></div>
+        <div class="stat-pill"><div class="s-label">Échoué</div><div class="s-value" id="billFailed">0 €</div></div>
+      </div>
+      <div class="table-wrap">
+        <table class="hist-table">
+          <thead><tr><th>Client</th><th>Montant</th><th>Plan</th><th>Statut</th><th>Date</th><th>Méthode</th><th>Actions</th></tr></thead>
+          <tbody id="billingBody"></tbody>
+        </table>
+      </div>
+      <div class="card mt16">
+        <h3>Relances</h3>
+        <div class="relance-cols">
+          <div><strong>J-7</strong><div class="relance-list" id="relanceJ7"></div></div>
+          <div><strong>J-3</strong><div class="relance-list" id="relanceJ3"></div></div>
+          <div><strong>En retard</strong><div class="relance-list" id="relanceLate"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== FINANCES ===== -->
+    <section class="page" id="page-finances">
+      <div class="kpi-grid">
+        <div class="kpi-card big accent"><div class="k-label">MRR</div><div class="k-value" id="finMRR">0 €</div></div>
+        <div class="kpi-card big accent"><div class="k-label">ARR</div><div class="k-value" id="finARR">0 €</div></div>
+        <div class="kpi-card big"><div class="k-label">Coûts totaux</div><div class="k-value" id="finCouts">0 €</div></div>
+        <div class="kpi-card big accent"><div class="k-label">Marge brute</div><div class="k-value" id="finMarge">0 €</div></div>
+      </div>
+      <div class="card">
+        <h3>MRR par plan</h3>
+        <div class="table-wrap" style="border:none">
+          <table class="hist-table">
+            <thead><tr><th>Plan</th><th>Nb clients</th><th>Tarif / mois</th><th>MRR partiel</th></tr></thead>
+            <tbody id="mrrByPlanBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Coûts infrastructure</h3>
+        <div class="form-grid">
+          <div class="field"><label>Vapi (€)</label><input type="number" id="costVapi"></div>
+          <div class="field"><label>ElevenLabs (€)</label><input type="number" id="costElevenlabs"></div>
+          <div class="field"><label>Make (€)</label><input type="number" id="costMake"></div>
+          <div class="field"><label>Twilio (€)</label><input type="number" id="costTwilio"></div>
+          <div class="field"><label>Netlify (€)</label><input type="number" id="costNetlify"></div>
+          <div class="field"><label>OpenAI (€)</label><input type="number" id="costOpenai"></div>
+          <div class="field"><label>Autres (€)</label><input type="number" id="costAutres"></div>
+        </div>
+        <div class="modal-actions"><button class="btn" id="saveCostsBtn">Sauvegarder</button></div>
+      </div>
+      <div class="chart-card"><h3>MRR vs Coûts (6 mois)</h3><div class="chart-wrap"><canvas id="chartFinances"></canvas></div></div>
+    </section>
+
+    <!-- ===== NOTIFICATIONS ===== -->
+    <section class="page" id="page-notifications">
+      <div class="toolbar"><div class="spacer"></div><button class="btn ghost sm" id="markAllReadBtn">Tout marquer comme lu</button></div>
+      <div class="notif-list" id="notifList"></div>
+    </section>
+
+    <!-- ===== SETTINGS ===== -->
+    <section class="page" id="page-settings">
+      <div class="card">
+        <h3>Plans &amp; tarifs</h3>
+        <div class="table-wrap" style="border:none">
+          <table class="hist-table">
+            <thead><tr><th>Plan</th><th>Prix / mois (€)</th></tr></thead>
+            <tbody id="settingsPlansBody"></tbody>
+          </table>
+        </div>
+        <div class="modal-actions"><button class="btn" id="savePlansBtn">Appliquer les tarifs</button></div>
+      </div>
+      <div class="card">
+        <h3>Configuration Vapi</h3>
+        <div class="detail-row"><span class="dl">Solde wallet</span><span class="muted">Consultez la console Vapi</span></div>
+        <p class="muted mt16">La clé API Vapi n'est pas exposée au back-office. Rendez-vous sur <strong>dashboard.vapi.ai</strong> pour le solde et la facturation.</p>
+      </div>
+      <div class="card">
+        <h3>Infos générales</h3>
+        <div class="form-grid">
+          <div class="field"><label>Email admin</label><input id="settingsAdminEmail" readonly></div>
+          <div class="field"><label>Nom de l'agence</label><input id="settingsAgency" value="AkilAI"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ===== MODAL: NEW CLIENT ===== -->
+<div class="modal-overlay" id="modalNewClient">
+  <form class="modal-content" id="newClientForm">
+    <button type="button" class="modal-close" data-close>&times;</button>
+    <h3>Nouveau client</h3>
+    <div class="form-grid">
+      <div class="field"><label>Entreprise</label><input id="ncEntreprise" required></div>
+      <div class="field"><label>Nom</label><input id="ncNom" required></div>
+      <div class="field"><label>Email</label><input type="email" id="ncEmail" required></div>
+      <div class="field"><label>Téléphone</label><input id="ncTelephone"></div>
+      <div class="field"><label>Secteur</label><input id="ncSecteur"></div>
+      <div class="field"><label>Plan</label><select id="ncPlan"></select></div>
+      <div class="field full"><label>Pays</label><input id="ncPays"></div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn ghost" data-close>Annuler</button>
+      <button type="submit" class="btn">Créer le client</button>
+    </div>
+  </form>
+</div>
+
+<!-- ===== MODAL: CLIENT DETAIL ===== -->
+<div class="modal-overlay" id="modalClientDetail">
+  <div class="modal-content wide">
+    <button type="button" class="modal-close" data-close>&times;</button>
+    <h3 id="cdTitle">Fiche client</h3>
+    <div id="cdDetails"></div>
+    <div class="form-grid mt16">
+      <div class="field"><label>Plan</label><select id="cdPlan"></select></div>
+      <div class="field"><label>Statut</label><select id="cdStatut"><option>Actif</option><option>Suspendu</option><option>Essai</option></select></div>
+      <div class="field"><label>Numéro Vapi</label><input id="cdVapi"></div>
+      <div class="field"><label>Numéro Twilio</label><input id="cdTwilio"></div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn ghost" data-close>Fermer</button>
+      <button type="button" class="btn" id="cdSaveBtn">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: TICKET ===== -->
+<div class="modal-overlay" id="modalTicket">
+  <div class="modal-content wide">
+    <button type="button" class="modal-close" data-close>&times;</button>
+    <h3 id="tkTitle">Ticket</h3>
+    <div class="form-grid">
+      <div class="field"><label>Statut</label><select id="tkStatut"><option>Ouvert</option><option>En cours</option><option>Résolu</option></select></div>
+      <div class="field"><label>Priorité</label><select id="tkPriorite"><option>Haute</option><option>Normal</option><option>Basse</option></select></div>
+    </div>
+    <div class="chat-thread mt16" id="tkThread"></div>
+    <div class="field"><textarea id="tkReply" rows="3" placeholder="Votre réponse…"></textarea></div>
+    <div class="modal-actions">
+      <button type="button" class="btn ghost" id="tkSaveStatusBtn">Mettre à jour statut/priorité</button>
+      <button type="button" class="btn" id="tkReplyBtn">Répondre</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: RELANCE / EMAIL ===== -->
+<div class="modal-overlay" id="modalRelance">
+  <form class="modal-content" id="relanceForm">
+    <button type="button" class="modal-close" data-close>&times;</button>
+    <h3 id="relTitle">Envoyer une relance</h3>
+    <div class="field"><label>Destinataire</label><input id="relEmail" required></div>
+    <div class="field"><label>Nom</label><input id="relNom"></div>
+    <div class="form-grid">
+      <div class="field"><label>Montant (€)</label><input id="relMontant" type="number"></div>
+      <div class="field"><label>Date échéance</label><input id="relDate" type="date"></div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn ghost" data-close>Annuler</button>
+      <button type="submit" class="btn">Lancer relance</button>
+    </div>
+  </form>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+/* =========================================================
+   CONSTANTS & STATE
+   ========================================================= */
+let PLAN_PRICES = {
+  "Starter WhatsApp": 97, "Business WhatsApp": 197, "Premium WhatsApp": 397,
+  "Starter Vocal": 97, "Business Vocal": 197, "Premium Vocal": 397,
+  "Starter Combo": 147, "Business Combo": 297, "Premium Combo": 497
+};
+const PLAN_LIST = Object.keys(PLAN_PRICES);
+
+let adminClients = [];
+let adminTickets = [];
+let adminPaiements = [];
+let adminHistorique = [];
+let adminAutomations = [];
+let adminFinances = { couts: { vapi:0, elevenlabs:0, make:0, twilio:0, netlify:0, openai:0, autres:0 } };
+
+const charts = {};
+const NAV = [
+  ["overview","Vue d'ensemble",'<path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>'],
+  ["clients","Clients",'<path d="M16 11c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 3-1.34 3-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>'],
+  ["automations","Automatisations",'<path d="M13 2L3 14h7v8l10-12h-7V2z"/>'],
+  ["support","Support",'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10z"/>'],
+  ["billing","Facturation",'<path d="M3 6h18v12H3z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 10h18" stroke="currentColor" stroke-width="2"/>'],
+  ["finances","Finances",'<path d="M3 3v18h18M7 14l4-4 3 3 5-6" fill="none" stroke="currentColor" stroke-width="2"/>'],
+  ["notifications","Notifications",'<path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4a1.5 1.5 0 0 0-3 0v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>'],
+  ["settings","Paramètres",'<path d="M19.14 12.94a7.49 7.49 0 0 0 0-1.88l2.03-1.58-2-3.46-2.39.96a7.03 7.03 0 0 0-1.62-.94l-.36-2.54h-4l-.36 2.54c-.58.24-1.12.56-1.62.94l-2.39-.96-2 3.46 2.03 1.58a7.49 7.49 0 0 0 0 1.88L2.05 14.5l2 3.46 2.39-.96c.5.38 1.04.7 1.62.94l.36 2.56h4l.36-2.54c.58-.24 1.12-.56 1.62-.94l2.39.96 2-3.46-2.06-1.58zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/>']
+];
+const TITLES = Object.fromEntries(NAV.map(n=>[n[0],n[1]]));
+
+/* =========================================================
+   API HELPER
+   ========================================================= */
+async function adminFetch(url, options = {}) {
+  const token = sessionStorage.getItem('akilai_admin_token') || '';
+  try {
+    const res = await fetch(url, {
+      ...options,
+      headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${token}`, ...(options.headers||{}) }
+    });
+    if (res.status === 401) { logout(); return {}; }
+    return await res.json();
+  } catch(e){ return { error: e.message }; }
+}
+
+/* =========================================================
+   TOAST
+   ========================================================= */
+function toast(msg, type='') {
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.textContent = msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(()=>el.remove(),300); }, 3000);
+}
+
+/* =========================================================
+   AUTH
+   ========================================================= */
+document.getElementById('loginForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const errEl = document.getElementById('loginError');
+  errEl.classList.remove('show');
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true; btn.textContent = 'Connexion…';
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  try {
+    const res = await fetch('/.netlify/functions/admin-auth', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if (data.ok && data.token) {
+      sessionStorage.setItem('akilai_admin_token', data.token);
+      sessionStorage.setItem('akilai_admin_email', email);
+      enterApp();
+    } else {
+      errEl.textContent = data.message || 'Identifiants invalides';
+      errEl.classList.add('show');
+    }
+  } catch(err) {
+    errEl.textContent = 'Erreur de connexion au serveur';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Se connecter';
+  }
+});
+
+function logout() {
+  sessionStorage.removeItem('akilai_admin_token');
+  sessionStorage.removeItem('akilai_admin_email');
+  document.getElementById('app').classList.remove('show');
+  document.getElementById('loginPage').style.display = 'flex';
+}
+
+function enterApp() {
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('app').classList.add('show');
+  const email = sessionStorage.getItem('akilai_admin_email') || 'admin';
+  document.getElementById('adminEmail').textContent = email;
+  document.getElementById('settingsAdminEmail').value = email;
+  buildNav();
+  initStaticUI();
+  loadAllAdminData();
+}
+
+/* =========================================================
+   NAV
+   ========================================================= */
+function buildNav() {
+  const nav = document.getElementById('nav');
+  nav.innerHTML = '';
+  NAV.forEach(([id,label,icon])=>{
+    const div = document.createElement('div');
+    div.className = 'nav-item' + (id==='overview'?' active':'');
+    div.dataset.section = id;
+    div.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor">${icon}</svg><span class="label">${label}</span>` +
+      (id==='support' ? `<span class="nav-badge" id="supportBadge">0</span>`:'');
+    div.addEventListener('click', ()=>navigate(id));
+    nav.appendChild(div);
+  });
+}
+
+function navigate(id) {
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.section===id));
+  document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active', p.id==='page-'+id));
+  document.getElementById('pageTitle').textContent = TITLES[id] || '';
+  if (id==='notifications') renderNotifications();
+}
+
+/* =========================================================
+   STATIC UI INIT
+   ========================================================= */
+function initStaticUI() {
+  document.getElementById('collapseBtn').onclick = ()=>document.getElementById('sidebar').classList.toggle('collapsed');
+  document.getElementById('logoutBtn').onclick = logout;
+  document.getElementById('refreshBtn').onclick = ()=>{ loadAllAdminData(); toast('Données rafraîchies'); };
+
+  // populate plan selects
+  const planOpts = PLAN_LIST.map(p=>`<option>${p}</option>`).join('');
+  document.getElementById('ncPlan').innerHTML = planOpts;
+  document.getElementById('cdPlan').innerHTML = planOpts;
+  const planFilter = document.getElementById('clientFilterPlan');
+  planFilter.innerHTML = '<option value="">Tous plans</option>'+planOpts;
+
+  // modal close handlers
+  document.querySelectorAll('.modal-overlay').forEach(ov=>{
+    ov.addEventListener('click', e=>{ if(e.target===ov) ov.classList.remove('show'); });
+    ov.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click', ()=>ov.classList.remove('show')));
+  });
+
+  // clients
+  document.getElementById('btnNewClient').onclick = ()=>document.getElementById('modalNewClient').classList.add('show');
+  document.getElementById('clientSearch').addEventListener('input', renderClients);
+  document.getElementById('clientFilterStatut').addEventListener('change', renderClients);
+  document.getElementById('clientFilterPlan').addEventListener('change', renderClients);
+  document.getElementById('clientFilterPays').addEventListener('change', renderClients);
+  document.getElementById('newClientForm').addEventListener('submit', submitNewClient);
+  document.getElementById('cdSaveBtn').onclick = saveClientDetail;
+
+  // automations
+  document.getElementById('autoFilterClient').addEventListener('change', renderAutomations);
+  document.getElementById('autoFilterType').addEventListener('change', renderAutomations);
+  document.getElementById('autoFilterStatut').addEventListener('change', renderAutomations);
+
+  // support
+  document.getElementById('ticketFilterStatut').addEventListener('change', renderTickets);
+  document.getElementById('ticketFilterPriorite').addEventListener('change', renderTickets);
+  document.getElementById('ticketFilterClient').addEventListener('change', renderTickets);
+  document.getElementById('tkReplyBtn').onclick = submitTicketReply;
+  document.getElementById('tkSaveStatusBtn').onclick = saveTicketStatus;
+
+  // finances
+  document.getElementById('saveCostsBtn').onclick = saveCosts;
+
+  // settings
+  document.getElementById('savePlansBtn').onclick = savePlanPrices;
+  renderSettingsPlans();
+
+  // notifications
+  document.getElementById('markAllReadBtn').onclick = markAllNotifsRead;
+
+  // relance form
+  document.getElementById('relanceForm').addEventListener('submit', submitRelance);
+
+  // close dropdowns on outside click
+  document.addEventListener('click', e=>{
+    if(!e.target.closest('.dd')) document.querySelectorAll('.dd-menu.show').forEach(m=>m.classList.remove('show'));
+  });
+}
+
+/* =========================================================
+   DATA LOADING
+   ========================================================= */
+function skeletonRows(tbodyId, cols, n=5){
+  const tb = document.getElementById(tbodyId);
+  tb.innerHTML = Array.from({length:n}).map(()=>`<tr>${Array.from({length:cols}).map(()=>'<td><div class="skel"></div></td>').join('')}</tr>`).join('');
+}
+
+async function loadAllAdminData() {
+  skeletonRows('clientsBody',8); skeletonRows('ticketsBody',7);
+  skeletonRows('billingBody',7); skeletonRows('autoBody',5); skeletonRows('mrrByPlanBody',4,3);
+  await Promise.all([ loadClients(), loadTickets(), loadPaiements(), loadHistorique(), loadFinances() ]);
+  buildAutomationsFromHistorique();
+  populateFilters();
+  renderClients(); renderTickets(); renderBilling(); renderAutomations(); renderFinances();
+  updateOverview();
+}
+
+async function loadClients(){ const d = await adminFetch('/.netlify/functions/admin-get-clients'); adminClients = d.clients || []; }
+async function loadTickets(){ const d = await adminFetch('/.netlify/functions/admin-get-tickets'); adminTickets = d.tickets || []; }
+async function loadPaiements(){ const d = await adminFetch('/.netlify/functions/admin-get-paiements'); adminPaiements = d.paiements || []; }
+async function loadHistorique(){ const d = await adminFetch('/.netlify/functions/admin-get-historique?limit=200'); adminHistorique = d.historique || []; }
+async function loadFinances(){
+  const d = await adminFetch('/.netlify/functions/admin-get-finances');
+  if (d.couts) adminFinances.couts = { vapi:0,elevenlabs:0,make:0,twilio:0,netlify:0,openai:0,autres:0, ...d.couts };
+  const c = adminFinances.couts;
+  document.getElementById('costVapi').value=c.vapi; document.getElementById('costElevenlabs').value=c.elevenlabs;
+  document.getElementById('costMake').value=c.make; document.getElementById('costTwilio').value=c.twilio;
+  document.getElementById('costNetlify').value=c.netlify; document.getElementById('costOpenai').value=c.openai;
+  document.getElementById('costAutres').value=c.autres;
+}
+
+function buildAutomationsFromHistorique(){
+  // Derive automations grouped by client + canal
+  const map = {};
+  adminHistorique.forEach(h=>{
+    const canal = (h.canal||'').toLowerCase();
+    const type = canal.includes('whats')||canal.includes('wa') ? 'WhatsApp' : 'Appel';
+    const clientName = clientNameById(h.userId) || h.userId || 'Inconnu';
+    const key = clientName+'|'+type;
+    if(!map[key]) map[key]={ id:key, nom:type+' — '+clientName, client:clientName, type, statut:'Actif', count:0, errors:0 };
+    map[key].count++;
+    if((h.statut||'').toLowerCase().includes('erreur')||(h.statut||'').toLowerCase().includes('échou')) map[key].errors++;
+  });
+  adminAutomations = Object.values(map).map(a=>({ ...a, statut: a.errors>0 ? 'Erreur' : 'Actif', recordId:null }));
+}
+
+/* =========================================================
+   UTILS
+   ========================================================= */
+function clientNameById(id){ const c = adminClients.find(c=>c.id===id || c.email===id); return c ? (c.entreprise||c.nom) : ''; }
+function fmtEur(n){ return (Math.round((n||0)*100)/100).toLocaleString('fr-FR')+' €'; }
+function fmtDate(d){ if(!d) return '—'; const dt=new Date(d); return isNaN(dt)?d:dt.toLocaleDateString('fr-FR'); }
+function statutBadge(s){
+  const map={'Actif':'success','Suspendu':'danger','Essai':'warning','Ouvert':'danger','En cours':'warning','Résolu':'success','Payé':'success','En attente':'warning','Échoué':'danger','Erreur':'danger','Inactif':'muted'};
+  return `<span class="badge badge-${map[s]||'muted'}">${s||'—'}</span>`;
+}
+function prioriteBadge(p){ const m={'Haute':'danger','Normal':'accent','Basse':'muted'}; return `<span class="badge badge-${m[p]||'muted'}">${p||'Normal'}</span>`; }
+function esc(s){ return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function populateFilters(){
+  const pays=[...new Set(adminClients.map(c=>c.pays).filter(Boolean))].sort();
+  document.getElementById('clientFilterPays').innerHTML='<option value="">Tous pays</option>'+pays.map(p=>`<option>${esc(p)}</option>`).join('');
+  const clients=[...new Set(adminClients.map(c=>c.entreprise||c.nom).filter(Boolean))].sort();
+  const opt='<option value="">Tous clients</option>'+clients.map(c=>`<option>${esc(c)}</option>`).join('');
+  document.getElementById('autoFilterClient').innerHTML=opt;
+  document.getElementById('ticketFilterClient').innerHTML=opt;
+}
+
+/* =========================================================
+   OVERVIEW
+   ========================================================= */
+function monthOf(d){ const dt=new Date(d); return isNaN(dt)?'':dt.getFullYear()+'-'+(dt.getMonth()+1); }
+function thisMonth(){ const n=new Date(); return n.getFullYear()+'-'+(n.getMonth()+1); }
+
+function computeMRR(){
+  return adminClients.filter(c=>c.statut==='Actif').reduce((s,c)=>s+(PLAN_PRICES[c.plan]||0),0);
+}
+function totalCosts(){ return Object.values(adminFinances.couts).reduce((s,n)=>s+Number(n||0),0); }
+
+function updateOverview(){
+  const actifs=adminClients.filter(c=>c.statut==='Actif').length;
+  document.getElementById('kpiClientsActifs').textContent=actifs;
+  document.getElementById('kpiClientsTotal').textContent=adminClients.length;
+  const mrr=computeMRR();
+  document.getElementById('kpiMRR').textContent=fmtEur(mrr);
+  const churn=adminClients.filter(c=>c.statut==='Suspendu').length;
+  document.getElementById('kpiChurn').textContent=churn;
+  const openT=adminTickets.filter(t=>t.statut==='Ouvert').length;
+  document.getElementById('kpiTicketsOuverts').textContent=openT;
+  const costs=totalCosts();
+  document.getElementById('kpiCouts').textContent=fmtEur(costs);
+  document.getElementById('kpiMarge').textContent=fmtEur(mrr-costs);
+
+  // support badge
+  const badge=document.getElementById('supportBadge');
+  if(badge){ badge.textContent=openT; badge.classList.toggle('show', openT>0); }
+
+  renderAlerts();
+  renderCharts(mrr,costs);
+}
+
+function renderAlerts(){
+  const list=document.getElementById('alertList'); const alerts=[];
+  const now=new Date();
+  adminClients.forEach(c=>{
+    if(c.prochainPaiement){ const d=new Date(c.prochainPaiement); const days=(d-now)/86400000;
+      if(days>=0&&days<=7) alerts.push(['var(--warning)',`Paiement de ${c.entreprise||c.nom} expire dans ${Math.ceil(days)}j`]); }
+  });
+  adminTickets.forEach(t=>{ if(t.statut==='Ouvert'){ const d=new Date(t.dateCreation); const h=(now-d)/3600000;
+    if(h>48) alerts.push(['var(--danger)',`Ticket #${t.numero} (${t.sujet}) ouvert depuis >48h`]); } });
+  adminAutomations.filter(a=>a.statut==='Erreur').forEach(a=>alerts.push(['var(--danger)',`Automatisation en erreur : ${a.nom}`]));
+  list.innerHTML = alerts.length ? alerts.map(([c,m])=>`<div class="alert-item"><span class="dot" style="background:${c}"></span>${esc(m)}</div>`).join('') : '<div class="muted">Aucune alerte.</div>';
+}
+
+function renderCharts(mrr,costs){
+  // distribution by plan
+  const planCounts={}; PLAN_LIST.forEach(p=>planCounts[p]=0);
+  adminClients.filter(c=>c.statut==='Actif').forEach(c=>{ if(planCounts[c.plan]!=null) planCounts[c.plan]++; });
+  const labels=PLAN_LIST.filter(p=>planCounts[p]>0); const data=labels.map(p=>planCounts[p]);
+  // volume 30j
+  const days=[]; const callVals=[]; const waVals=[];
+  for(let i=29;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); days.push(d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'})); callVals.push(0); waVals.push(0); }
+  const idxFor=d=>{ const dt=new Date(d); const diff=Math.floor((new Date().setHours(0,0,0,0)-dt.setHours(0,0,0,0))/86400000); return 29-diff; };
+  adminHistorique.forEach(h=>{ const i=idxFor(h.date); if(i>=0&&i<30){ const c=(h.canal||'').toLowerCase(); if(c.includes('whats')||c.includes('wa')) waVals[i]++; else callVals[i]++; } });
+  // tickets resolution
+  const tOpen=adminTickets.filter(t=>t.statut==='Ouvert').length;
+  const tProg=adminTickets.filter(t=>t.statut==='En cours').length;
+  const tRes=adminTickets.filter(t=>t.statut==='Résolu').length;
+  // mock 6 month MRR
+  const months=['Jan','Fév','Mar','Avr','Mai','Juin'];
+  const mrrSeries=[Math.round(mrr*0.7),Math.round(mrr*0.78),Math.round(mrr*0.85),Math.round(mrr*0.9),Math.round(mrr*0.96),mrr];
+
+  drawChart('chartMRR','line',{labels:months,datasets:[{label:'MRR (€)',data:mrrSeries,borderColor:'#70B2DE',backgroundColor:'rgba(112,178,222,.15)',fill:true,tension:.35}]});
+  drawChart('chartPlansDist','doughnut',{labels,datasets:[{data,backgroundColor:['#70B2DE','#4ade80','#fbbf24','#f87171','#a78bfa','#34d399','#fb923c','#60a5fa','#f472b6']}]},true);
+  drawChart('chartVolume','bar',{labels:days,datasets:[{label:'Appels',data:callVals,backgroundColor:'#70B2DE'},{label:'WhatsApp',data:waVals,backgroundColor:'#4ade80'}]});
+  drawChart('chartTickets','doughnut',{labels:['Ouvert','En cours','Résolu'],datasets:[{data:[tOpen,tProg,tRes],backgroundColor:['#f87171','#fbbf24','#4ade80']}]},true);
+}
+
+function drawChart(id,type,data,isDonut){
+  const el=document.getElementById(id); if(!el) return;
+  if(charts[id]) charts[id].destroy();
+  Chart.defaults.color='#94a3b8'; Chart.defaults.font.family="'Space Grotesk',sans-serif";
+  charts[id]=new Chart(el,{type,data,options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:isDonut?true:(type!=='line'||data.datasets.length>1),position:isDonut?'bottom':'top',labels:{boxWidth:12,padding:10}}},
+    scales:isDonut?{}:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{maxTicksLimit:12}},y:{grid:{color:'rgba(255,255,255,.04)'},beginAtZero:true}}
+  }});
+}
+
+/* =========================================================
+   CLIENTS
+   ========================================================= */
+function renderClients(){
+  const q=document.getElementById('clientSearch').value.toLowerCase();
+  const fs=document.getElementById('clientFilterStatut').value;
+  const fp=document.getElementById('clientFilterPlan').value;
+  const fpays=document.getElementById('clientFilterPays').value;
+  let rows=adminClients.filter(c=>{
+    if(fs&&c.statut!==fs) return false;
+    if(fp&&c.plan!==fp) return false;
+    if(fpays&&c.pays!==fpays) return false;
+    if(q&&!((c.entreprise+' '+c.nom+' '+c.email).toLowerCase().includes(q))) return false;
+    return true;
+  });
+  const tb=document.getElementById('clientsBody');
+  if(!rows.length){ tb.innerHTML='<tr class="empty-row"><td colspan="8">Aucun client</td></tr>'; return; }
+  tb.innerHTML=rows.map(c=>`<tr>
+    <td>${esc(c.entreprise)}</td><td>${esc(c.nom)}</td><td>${esc(c.email)}</td>
+    <td><span class="badge badge-accent">${esc(c.plan||'—')}</span></td>
+    <td>${statutBadge(c.statut)}</td>
+    <td>${fmtDate(c.dateInscription)}</td><td>${fmtDate(c.prochainPaiement)}</td>
+    <td>${clientActionsDD(c.id)}</td>
+  </tr>`).join('');
+}
+
+function clientActionsDD(id){
+  return `<div class="dd">
+    <button class="dd-btn" onclick="toggleDD(this)">...</button>
+    <div class="dd-menu">
+      <button onclick="openClientDetail('${id}')">Voir fiche</button>
+      <button onclick="openClientDetail('${id}')">Modifier plan</button>
+      <button onclick="openClientDetail('${id}')">Modifier statut</button>
+      <button onclick="openClientDetail('${id}')">Assigner numéro Vapi</button>
+      <button onclick="openClientDetail('${id}')">Assigner numéro Twilio</button>
+      <button onclick="emailClient('${id}')">Envoyer email</button>
+      <button onclick="relanceClient('${id}')">Envoyer relance</button>
+    </div></div>`;
+}
+function toggleDD(btn){
+  const menu=btn.nextElementSibling; const open=menu.classList.contains('show');
+  document.querySelectorAll('.dd-menu.show').forEach(m=>m.classList.remove('show'));
+  if(!open) menu.classList.add('show');
+}
+
+let currentClientId=null;
+function openClientDetail(id){
+  document.querySelectorAll('.dd-menu.show').forEach(m=>m.classList.remove('show'));
+  const c=adminClients.find(x=>x.id===id); if(!c) return;
+  currentClientId=id;
+  document.getElementById('cdTitle').textContent='Fiche — '+(c.entreprise||c.nom);
+  document.getElementById('cdDetails').innerHTML=`
+    <div class="detail-row"><span class="dl">Entreprise</span><span>${esc(c.entreprise)}</span></div>
+    <div class="detail-row"><span class="dl">Nom</span><span>${esc(c.nom)}</span></div>
+    <div class="detail-row"><span class="dl">Email</span><span>${esc(c.email)}</span></div>
+    <div class="detail-row"><span class="dl">Téléphone</span><span>${esc(c.telephone||'—')}</span></div>
+    <div class="detail-row"><span class="dl">Secteur</span><span>${esc(c.secteur||'—')}</span></div>
+    <div class="detail-row"><span class="dl">Pays</span><span>${esc(c.pays||'—')}</span></div>
+    <div class="detail-row"><span class="dl">Inscription</span><span>${fmtDate(c.dateInscription)}</span></div>
+    <div class="detail-row"><span class="dl">Prochain paiement</span><span>${fmtDate(c.prochainPaiement)}</span></div>
+    <div class="detail-row"><span class="dl">Onboarding</span><span>${esc(c.onboarding||'—')}</span></div>`;
+  document.getElementById('cdPlan').value=c.plan||PLAN_LIST[0];
+  document.getElementById('cdStatut').value=c.statut||'Actif';
+  document.getElementById('cdVapi').value=c.numeroVapi||'';
+  document.getElementById('cdTwilio').value=c.numeroTwilio||'';
+  document.getElementById('modalClientDetail').classList.add('show');
+}
+
+async function saveClientDetail(){
+  if(!currentClientId) return;
+  const fields={ Plan:document.getElementById('cdPlan').value, Statut:document.getElementById('cdStatut').value,
+    "Numéro Vapi":document.getElementById('cdVapi').value, "Numéro Twilio":document.getElementById('cdTwilio').value };
+  const btn=document.getElementById('cdSaveBtn'); btn.disabled=true;
+  const res=await adminFetch('/.netlify/functions/admin-update-client',{method:'PATCH',body:JSON.stringify({id:currentClientId,fields})});
+  btn.disabled=false;
+  if(res.ok){ toast('Client mis à jour','success'); document.getElementById('modalClientDetail').classList.remove('show'); await loadClients(); renderClients(); updateOverview(); }
+  else toast(res.error||'Erreur de mise à jour','error');
+}
+
+async function submitNewClient(e){
+  e.preventDefault();
+  const payload={ entreprise:document.getElementById('ncEntreprise').value, nom:document.getElementById('ncNom').value,
+    email:document.getElementById('ncEmail').value, telephone:document.getElementById('ncTelephone').value,
+    secteur:document.getElementById('ncSecteur').value, plan:document.getElementById('ncPlan').value, pays:document.getElementById('ncPays').value };
+  const res=await adminFetch('/.netlify/functions/admin-create-client',{method:'POST',body:JSON.stringify(payload)});
+  if(res.ok){ toast('Client créé','success'); document.getElementById('modalNewClient').classList.remove('show'); e.target.reset(); await loadClients(); populateFilters(); renderClients(); updateOverview(); }
+  else toast(res.error||'Erreur création','error');
+}
+
+function emailClient(id){ const c=adminClients.find(x=>x.id===id); if(c) window.location.href='mailto:'+c.email; document.querySelectorAll('.dd-menu.show').forEach(m=>m.classList.remove('show')); }
+
+/* =========================================================
+   AUTOMATIONS
+   ========================================================= */
+function renderAutomations(){
+  document.getElementById('autoTotalCalls').textContent=adminAutomations.filter(a=>a.type==='Appel').reduce((s,a)=>s+a.count,0);
+  document.getElementById('autoTotalWA').textContent=adminAutomations.filter(a=>a.type==='WhatsApp').reduce((s,a)=>s+a.count,0);
+  document.getElementById('autoErrors').textContent=adminAutomations.filter(a=>a.statut==='Erreur').length;
+  const fc=document.getElementById('autoFilterClient').value, ft=document.getElementById('autoFilterType').value, fst=document.getElementById('autoFilterStatut').value;
+  let rows=adminAutomations.filter(a=>(!fc||a.client===fc)&&(!ft||a.type===ft)&&(!fst||a.statut===fst));
+  const tb=document.getElementById('autoBody');
+  if(!rows.length){ tb.innerHTML='<tr class="empty-row"><td colspan="5">Aucune automatisation</td></tr>'; return; }
+  tb.innerHTML=rows.map((a,i)=>`<tr>
+    <td>${esc(a.nom)}</td><td>${esc(a.client)}</td><td>${esc(a.type)}</td><td>${statutBadge(a.statut)}</td>
+    <td><button class="btn sm ${a.statut==='Inactif'?'':'ghost'}" onclick="toggleAutomation('${a.id}')">${a.statut==='Inactif'?'Activer':'Désactiver'}</button></td>
+  </tr>`).join('');
+}
+async function toggleAutomation(id){
+  const a=adminAutomations.find(x=>x.id===id); if(!a) return;
+  const newStatut=a.statut==='Inactif'?'Actif':'Inactif';
+  if(a.recordId){
+    const res=await adminFetch('/.netlify/functions/update-automation',{method:'PATCH',body:JSON.stringify({id:a.recordId,statut:newStatut})});
+    if(!res.ok){ toast(res.error||'Erreur','error'); return; }
+  }
+  a.statut=newStatut; renderAutomations(); toast('Automatisation '+(newStatut==='Actif'?'activée':'désactivée'),'success');
+}
+
+/* =========================================================
+   SUPPORT
+   ========================================================= */
+function renderTickets(){
+  const fs=document.getElementById('ticketFilterStatut').value, fp=document.getElementById('ticketFilterPriorite').value, fc=document.getElementById('ticketFilterClient').value;
+  let rows=adminTickets.filter(t=>{
+    if(fs&&t.statut!==fs) return false;
+    if(fp&&t.priorite!==fp) return false;
+    if(fc && clientNameById(t.userId)!==fc && t.client!==fc) return false;
+    return true;
+  });
+  const tb=document.getElementById('ticketsBody');
+  if(!rows.length){ tb.innerHTML='<tr class="empty-row"><td colspan="7">Aucun ticket</td></tr>'; return; }
+  tb.innerHTML=rows.map(t=>`<tr class="clickable" onclick="openTicket('${t.id}')">
+    <td>#${esc(t.numero)}</td><td>${esc(clientNameById(t.userId)||t.client||'—')}</td><td>${esc(t.sujet)}</td>
+    <td>${prioriteBadge(t.priorite)}</td><td>${statutBadge(t.statut)}</td><td>${fmtDate(t.dateCreation)}</td>
+    <td><button class="btn sm ghost" onclick="event.stopPropagation();openTicket('${t.id}')">Ouvrir</button></td>
+  </tr>`).join('');
+}
+
+let currentTicketId=null;
+function openTicket(id){
+  const t=adminTickets.find(x=>x.id===id); if(!t) return;
+  currentTicketId=id;
+  document.getElementById('tkTitle').textContent=`Ticket #${t.numero} — ${t.sujet}`;
+  document.getElementById('tkStatut').value=t.statut||'Ouvert';
+  document.getElementById('tkPriorite').value=t.priorite||'Normal';
+  renderThread(t);
+  document.getElementById('tkReply').value='';
+  document.getElementById('modalTicket').classList.add('show');
+}
+function renderThread(t){
+  const thread=document.getElementById('tkThread');
+  const conv=t.conversation||[];
+  if(!conv.length){ thread.innerHTML='<div class="muted">Aucun message dans ce ticket.</div>'; return; }
+  thread.innerHTML=conv.map(m=>{
+    const isAdmin=(m.author||m.role||m.from||'')+''.toLowerCase()==='admin' || (m.author||m.role||m.from||'').toString().toLowerCase().includes('admin') || m.sender==='admin';
+    const side=isAdmin?'admin':'client';
+    const txt=m.text||m.message||m.content||'';
+    const when=m.date||m.timestamp||m.createdAt||'';
+    return `<div class="bubble ${side}">${esc(txt)}<div class="meta">${when?fmtDate(when):''}</div></div>`;
+  }).join('');
+  thread.scrollTop=thread.scrollHeight;
+}
+
+async function submitTicketReply(){
+  if(!currentTicketId) return;
+  const msg=document.getElementById('tkReply').value.trim();
+  if(!msg){ toast('Message vide','error'); return; }
+  const btn=document.getElementById('tkReplyBtn'); btn.disabled=true;
+  const res=await adminFetch('/.netlify/functions/admin-reply-ticket',{method:'POST',body:JSON.stringify({ticketId:currentTicketId,message:msg})});
+  btn.disabled=false;
+  if(res.ok){ toast('Réponse envoyée','success'); document.getElementById('tkReply').value=''; await loadTickets(); const t=adminTickets.find(x=>x.id===currentTicketId); if(t) renderThread(t); renderTickets(); }
+  else toast(res.error||'Erreur envoi','error');
+}
+async function saveTicketStatus(){
+  if(!currentTicketId) return;
+  const statut=document.getElementById('tkStatut').value;
+  const priorite=document.getElementById('tkPriorite').value;
+  const res=await adminFetch('/.netlify/functions/update-ticket',{method:'PATCH',body:JSON.stringify({id:currentTicketId,statut,priorite})});
+  if(res.ok!==false){ toast('Ticket mis à jour','success'); await loadTickets(); renderTickets(); updateOverview(); document.getElementById('modalTicket').classList.remove('show'); }
+  else toast(res.error||'Erreur','error');
+}
+
+/* =========================================================
+   BILLING
+   ========================================================= */
+function renderBilling(){
+  const tm=thisMonth();
+  const paid=adminPaiements.filter(p=>p.statut==='Payé'&&monthOf(p.date)===tm).reduce((s,p)=>s+Number(p.montant||0),0);
+  const pending=adminPaiements.filter(p=>p.statut==='En attente').reduce((s,p)=>s+Number(p.montant||0),0);
+  const failed=adminPaiements.filter(p=>p.statut==='Échoué').reduce((s,p)=>s+Number(p.montant||0),0);
+  document.getElementById('billPaid').textContent=fmtEur(paid);
+  document.getElementById('billPending').textContent=fmtEur(pending);
+  document.getElementById('billFailed').textContent=fmtEur(failed);
+
+  const tb=document.getElementById('billingBody');
+  if(!adminPaiements.length){ tb.innerHTML='<tr class="empty-row"><td colspan="7">Aucun paiement</td></tr>'; }
+  else tb.innerHTML=adminPaiements.map(p=>`<tr>
+    <td>${esc(clientNameById(p.userId)||p.client||'—')}</td><td>${fmtEur(p.montant)}</td><td>${esc(p.plan||'—')}</td>
+    <td>${statutBadge(p.statut)}</td><td>${fmtDate(p.date)}</td><td>${esc(p.methode||'—')}</td>
+    <td>${billingActionsDD(p.id)}</td>
+  </tr>`).join('');
+
+  renderRelances();
+}
+function billingActionsDD(id){
+  return `<div class="dd"><button class="dd-btn" onclick="toggleDD(this)">...</button>
+    <div class="dd-menu">
+      <button onclick="markPaid('${id}')">Marquer payé</button>
+      <button onclick="relancePaiement('${id}')">Envoyer relance</button>
+    </div></div>`;
+}
+async function markPaid(id){
+  document.querySelectorAll('.dd-menu.show').forEach(m=>m.classList.remove('show'));
+  const p=adminPaiements.find(x=>x.id===id); if(p){ p.statut='Payé'; renderBilling(); toast('Paiement marqué comme payé','success'); }
+}
+function relancePaiement(id){
+  document.querySelectorAll('.dd-menu.show').forEach(m=>m.classList.remove('show'));
+  const p=adminPaiements.find(x=>x.id===id); if(!p) return;
+  const c=adminClients.find(x=>x.id===p.userId||x.email===p.userId);
+  openRelanceModal(c?c.email:p.userId, c?(c.nom):'', p.montant, c?c.prochainPaiement:'');
+}
+function relanceClient(id){
+  document.querySelectorAll('.dd-menu.show').forEach(m=>m.classList.remove('show'));
+  const c=adminClients.find(x=>x.id===id); if(!c) return;
+  openRelanceModal(c.email,c.nom,PLAN_PRICES[c.plan]||0,c.prochainPaiement);
+}
+function openRelanceModal(email,nom,montant,date){
+  document.getElementById('relEmail').value=email||'';
+  document.getElementById('relNom').value=nom||'';
+  document.getElementById('relMontant').value=montant||'';
+  document.getElementById('relDate').value=date?(new Date(date).toISOString().split('T')[0]):'';
+  document.getElementById('modalRelance').classList.add('show');
+}
+async function submitRelance(e){
+  e.preventDefault();
+  const payload={ email:document.getElementById('relEmail').value, nom:document.getElementById('relNom').value,
+    montant:document.getElementById('relMontant').value, dateEcheance:document.getElementById('relDate').value };
+  const res=await adminFetch('/.netlify/functions/send-relance',{method:'POST',body:JSON.stringify(payload)});
+  if(res.ok!==false){ toast('Relance envoyée','success'); document.getElementById('modalRelance').classList.remove('show'); }
+  else toast(res.error||'Erreur relance','error');
+}
+
+function renderRelances(){
+  const now=new Date();
+  const j7=[],j3=[],late=[];
+  adminClients.forEach(c=>{
+    if(!c.prochainPaiement) return;
+    const d=new Date(c.prochainPaiement); if(isNaN(d)) return;
+    const days=Math.ceil((d-now)/86400000);
+    if(days<0) late.push(c); else if(days<=3) j3.push(c); else if(days<=7) j7.push(c);
+  });
+  const card=c=>`<div class="relance-card"><div class="rc-name">${esc(c.entreprise||c.nom)}</div>
+    <div class="rc-sub">${esc(c.email)} · ${fmtDate(c.prochainPaiement)}</div>
+    <button class="btn sm" onclick="relanceClient('${c.id}')">Lancer relance</button></div>`;
+  const fill=(elId,arr)=>{ const el=document.getElementById(elId); el.innerHTML=arr.length?arr.map(card).join(''):'<div class="muted">Aucun</div>'; };
+  fill('relanceJ7',j7); fill('relanceJ3',j3); fill('relanceLate',late);
+}
+
+/* =========================================================
+   FINANCES
+   ========================================================= */
+function renderFinances(){
+  const mrr=computeMRR(); const costs=totalCosts();
+  document.getElementById('finMRR').textContent=fmtEur(mrr);
+  document.getElementById('finARR').textContent=fmtEur(mrr*12);
+  document.getElementById('finCouts').textContent=fmtEur(costs);
+  document.getElementById('finMarge').textContent=fmtEur(mrr-costs);
+
+  const tb=document.getElementById('mrrByPlanBody');
+  tb.innerHTML=PLAN_LIST.map(p=>{
+    const n=adminClients.filter(c=>c.statut==='Actif'&&c.plan===p).length;
+    const partial=n*PLAN_PRICES[p];
+    return `<tr><td>${p}</td><td>${n}</td><td>${fmtEur(PLAN_PRICES[p])}</td><td>${fmtEur(partial)}</td></tr>`;
+  }).join('');
+
+  const months=['Jan','Fév','Mar','Avr','Mai','Juin'];
+  const mrrS=[Math.round(mrr*0.7),Math.round(mrr*0.78),Math.round(mrr*0.85),Math.round(mrr*0.9),Math.round(mrr*0.96),mrr];
+  const cS=[Math.round(costs*0.8),Math.round(costs*0.85),Math.round(costs*0.88),Math.round(costs*0.92),Math.round(costs*0.96),costs];
+  drawChart('chartFinances','line',{labels:months,datasets:[
+    {label:'MRR (€)',data:mrrS,borderColor:'#70B2DE',backgroundColor:'rgba(112,178,222,.15)',fill:true,tension:.35},
+    {label:'Coûts (€)',data:cS,borderColor:'#f87171',backgroundColor:'rgba(248,113,113,.12)',fill:true,tension:.35}
+  ]});
+}
+async function saveCosts(){
+  const couts={ vapi:+document.getElementById('costVapi').value||0, elevenlabs:+document.getElementById('costElevenlabs').value||0,
+    make:+document.getElementById('costMake').value||0, twilio:+document.getElementById('costTwilio').value||0,
+    netlify:+document.getElementById('costNetlify').value||0, openai:+document.getElementById('costOpenai').value||0,
+    autres:+document.getElementById('costAutres').value||0 };
+  adminFinances.couts=couts;
+  const res=await adminFetch('/.netlify/functions/admin-get-finances',{method:'POST',body:JSON.stringify({couts})});
+  if(res.ok){ toast('Coûts sauvegardés','success'); renderFinances(); updateOverview(); }
+  else toast(res.error||'Erreur sauvegarde','error');
+}
+
+/* =========================================================
+   SETTINGS — plans
+   ========================================================= */
+function renderSettingsPlans(){
+  const tb=document.getElementById('settingsPlansBody');
+  tb.innerHTML=PLAN_LIST.map(p=>`<tr><td>${p}</td><td><input type="number" data-plan="${p}" value="${PLAN_PRICES[p]}" style="width:120px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 8px;color:var(--text)"></td></tr>`).join('');
+}
+function savePlanPrices(){
+  document.querySelectorAll('#settingsPlansBody input[data-plan]').forEach(inp=>{ PLAN_PRICES[inp.dataset.plan]=+inp.value||0; });
+  toast('Tarifs appliqués','success');
+  renderFinances(); updateOverview();
+}
+
+/* =========================================================
+   NOTIFICATIONS
+   ========================================================= */
+function notifTypeStyle(type){
+  return ({
+    'new client':['#22c55e','rgba(34,197,94,.15)','👤'],
+    'new ticket':['#f59e0b','rgba(245,158,11,.15)','🎫'],
+    'payment':['#70B2DE','rgba(112,178,222,.15)','💳'],
+    'error':['#ef4444','rgba(239,68,68,.15)','⚠'],
+    'suspended':['#eab308','rgba(234,179,8,.15)','⏸']
+  })[type]||['#94a3b8','rgba(148,163,184,.15)','•'];
+}
+function buildNotifications(){
+  const notifs=[];
+  adminClients.forEach(c=>{ if(c.dateInscription) notifs.push({id:'cl-'+c.id,type:'new client',msg:`Nouveau client : ${c.entreprise||c.nom}`,date:c.dateInscription}); });
+  adminTickets.forEach(t=>{ if(t.statut==='Ouvert') notifs.push({id:'tk-'+t.id,type:'new ticket',msg:`Ticket ouvert #${t.numero} : ${t.sujet}`,date:t.dateCreation}); });
+  adminPaiements.forEach(p=>{ if(p.statut==='Payé') notifs.push({id:'pa-'+p.id,type:'payment',msg:`Paiement reçu : ${fmtEur(p.montant)} (${clientNameById(p.userId)||p.client})`,date:p.date});
+    if(p.statut==='Échoué') notifs.push({id:'pf-'+p.id,type:'error',msg:`Paiement échoué : ${clientNameById(p.userId)||p.client}`,date:p.date}); });
+  adminClients.forEach(c=>{ if(c.statut==='Suspendu') notifs.push({id:'su-'+c.id,type:'suspended',msg:`Client suspendu : ${c.entreprise||c.nom}`,date:c.dateInscription}); });
+  adminAutomations.filter(a=>a.statut==='Erreur').forEach(a=>notifs.push({id:'er-'+a.id,type:'error',msg:`Automatisation en erreur : ${a.nom}`,date:new Date().toISOString()}));
+  notifs.sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
+  return notifs;
+}
+function getReadIds(){ try{ return JSON.parse(localStorage.getItem('akilai_notif_read')||'[]'); }catch(e){ return []; } }
+function setReadIds(ids){ localStorage.setItem('akilai_notif_read',JSON.stringify(ids)); }
+function renderNotifications(){
+  const notifs=buildNotifications(); const read=getReadIds();
+  const list=document.getElementById('notifList');
+  if(!notifs.length){ list.innerHTML='<div class="muted">Aucune notification.</div>'; return; }
+  list.innerHTML=notifs.map(n=>{
+    const [color,bg,icon]=notifTypeStyle(n.type);
+    const isRead=read.includes(n.id);
+    return `<div class="notif-card ${isRead?'read':''}" style="border-left-color:${color}">
+      <div class="n-icon" style="background:${bg};color:${color}">${icon}</div>
+      <div class="n-body"><div class="n-msg">${esc(n.msg)}</div><div class="n-date">${fmtDate(n.date)}</div></div>
+      ${isRead?'':`<button class="btn ghost sm" onclick="markNotifRead('${n.id}')">Marquer comme lu</button>`}
+    </div>`;
+  }).join('');
+}
+function markNotifRead(id){ const r=getReadIds(); if(!r.includes(id)){ r.push(id); setReadIds(r);} renderNotifications(); }
+function markAllNotifsRead(){ const ids=buildNotifications().map(n=>n.id); setReadIds(ids); renderNotifications(); toast('Toutes les notifications marquées comme lues'); }
+
+/* =========================================================
+   BOOT
+   ========================================================= */
+if (sessionStorage.getItem('akilai_admin_token')) { enterApp(); }
+</script>
+</body>
+</html>
