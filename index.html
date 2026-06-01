@@ -3550,20 +3550,24 @@ function updateRealKPIs() {
   const totalWa  = waAutos.reduce(function(acc, a) { return acc + (a.messages_traites || 0); }, 0);
   const _planLow = ((_getSession() && _getSession().plan) || (clients[0] && clients[0].plan) || "").toLowerCase();
   const _isWaPlan = _planLow.includes("whatsapp") || _planLow.includes("combo");
-  /* Ligne 1 — swap Appels ↔ Messages WA pour plans WhatsApp-only */
+  /* Ligne 1 — gestion par plan */
   const _isWaOnly = _planLow.includes("whatsapp") && !_planLow.includes("combo");
+  const _isCombo  = _planLow.includes("combo");
   const _cardAppels   = document.getElementById("kpiCardAppels");
   const _cardWaGrid1  = document.getElementById("kpiCardWaGrid1");
+  const _grid1        = document.getElementById("kpiGrid1");
+  /* WA-only : swap Appels → Messages WA | Combo : afficher les deux (4 cols) | Vocal : Appels seul */
   if (_cardAppels)  _cardAppels.style.display  = _isWaOnly ? "none" : "";
-  if (_cardWaGrid1) _cardWaGrid1.style.display = _isWaOnly ? "" : "none";
+  if (_cardWaGrid1) _cardWaGrid1.style.display = (_isWaOnly || _isCombo) ? "" : "none";
+  if (_grid1)       _grid1.style.gridTemplateColumns = _isCombo ? "repeat(4,1fr)" : "repeat(3,1fr)";
   /* Sync valeurs WA grid1 */
   setText("kpiWaGrid1Val",   automations.length > 0 ? totalWa.toLocaleString("fr-FR") : "—");
   setText("kpiWaGrid1Delta", "total");
   setClass("kpiWaGrid1Delta", "kpi-delta neu");
-  /* Ligne 2 — masquer Durée moy pour plans WA (non pertinent) */
+  /* Ligne 2 — masquer Durée moy pour plans WA-only (non pertinent) */
   const _cardDuree = document.getElementById("kpiCardDuree");
   if (_cardDuree) _cardDuree.style.display = _isWaOnly ? "none" : "";
-  /* Ligne 3 — masquer graphique Appels pour plans WA, afficher résumé en pleine largeur */
+  /* Ligne 3 — masquer graphique Appels pour plans WA-only, résumé pleine largeur */
   const _chartCardCalls = document.getElementById("chartCardCalls");
   const _overviewRow3   = document.getElementById("overviewRow3");
   if (_chartCardCalls) _chartCardCalls.style.display = _isWaOnly ? "none" : "";
@@ -3641,13 +3645,22 @@ function updateRealKPIs() {
   /* ── Usage plan (minutes / messages) ── */
   updateUsageKPIs();
 
-  /* Ajuster kpiGrid2 selon plan : 2 cols si Durée masquée (WA-only), 3 cols sinon */
+  /* Ajuster kpiGrid2 selon plan */
   const _grid2 = document.getElementById("kpiGrid2");
   if (_grid2) {
     const _voixVisible = document.getElementById("kpiUsageVoix")?.style.display !== "none";
     const _waVisible   = document.getElementById("kpiUsageWa")?.style.display   !== "none";
-    const _hasThird    = _voixVisible || _waVisible;
-    const _cols = _isWaOnly ? (_hasThird ? "repeat(2,1fr)" : "1fr") : (_hasThird ? "repeat(3,1fr)" : "repeat(2,1fr)");
+    let _cols;
+    if (_isCombo) {
+      /* Combo : Durée + Escalade + Minutes + Messages → 4 cols */
+      _cols = "repeat(4,1fr)";
+    } else if (_isWaOnly) {
+      /* WA-only : Escalade + Usage WA → 2 cols (Durée masquée) */
+      _cols = _waVisible ? "repeat(2,1fr)" : "1fr";
+    } else {
+      /* Vocal : Durée + Escalade + Minutes → 3 cols */
+      _cols = _voixVisible ? "repeat(3,1fr)" : "repeat(2,1fr)";
+    }
     _grid2.style.gridTemplateColumns = _cols;
   }
 }
