@@ -514,35 +514,146 @@ input,select,textarea{font-family:inherit;font-size:14px}
 
     <!-- ===== FINANCES ===== -->
     <section class="page" id="page-finances">
-      <div class="kpi-grid">
-        <div class="kpi-card big accent"><div class="k-label">MRR</div><div class="k-value" id="finMRR">0 €</div></div>
-        <div class="kpi-card big accent"><div class="k-label">ARR</div><div class="k-value" id="finARR">0 €</div></div>
-        <div class="kpi-card big"><div class="k-label">Coûts totaux</div><div class="k-value" id="finCouts">0 €</div></div>
-        <div class="kpi-card big accent"><div class="k-label">Marge brute</div><div class="k-value" id="finMarge">0 €</div></div>
+
+      <!-- KPI row 1 -->
+      <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:12px">
+        <div class="kpi-card big" style="border-color:rgba(34,197,94,.3)">
+          <div class="k-label">MRR total</div>
+          <div class="k-value" id="finMRR" style="color:#22c55e">0 €</div>
+          <div class="k-sub" id="finMRRBadge" style="font-size:11px;margin-top:4px"></div>
+        </div>
+        <div class="kpi-card big" style="border-color:rgba(112,178,222,.3)">
+          <div class="k-label">ARR projeté</div>
+          <div class="k-value" id="finARR" style="color:#70B2DE">0 €</div>
+          <div class="k-sub">MRR × 12</div>
+        </div>
+        <div class="kpi-card big" style="border-color:rgba(239,68,68,.3)">
+          <div class="k-label">Coûts infrastructure</div>
+          <div class="k-value" id="finCouts" style="color:#ef4444">0 €</div>
+          <div class="k-sub">ce mois</div>
+        </div>
       </div>
+
+      <!-- KPI row 2 -->
+      <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px">
+        <div class="kpi-card big">
+          <div class="k-label">Marge brute</div>
+          <div class="k-value" id="finMarge">0 €</div>
+        </div>
+        <div class="kpi-card big">
+          <div class="k-label">Taux de marge</div>
+          <div class="k-value" id="finTauxMarge">— %</div>
+        </div>
+        <div class="kpi-card big">
+          <div class="k-label">Churn rate</div>
+          <div class="k-value" id="finChurn">— %</div>
+          <div class="k-sub" id="finChurnSub"></div>
+        </div>
+      </div>
+
+      <!-- Charts row -->
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:20px">
+        <div class="chart-card"><h3>Évolution MRR — 6 mois</h3><div class="chart-wrap"><canvas id="chartMRR"></canvas></div></div>
+        <div class="chart-card"><h3>CA par plan</h3><div class="chart-wrap" style="max-height:220px"><canvas id="chartDonut"></canvas></div></div>
+      </div>
+      <div class="chart-card" style="margin-bottom:20px"><h3>MRR vs Coûts (6 mois)</h3><div class="chart-wrap"><canvas id="chartFinances"></canvas></div></div>
+
+      <!-- Costs form -->
+      <div class="card" style="margin-bottom:20px">
+        <h3>Coûts infrastructure — <span id="costMonthLabel"></span></h3>
+        <div class="form-grid">
+          <div class="field"><label>Vapi (€)</label><input type="number" id="costVapi" min="0" step="0.01" oninput="updateCostTotal()"></div>
+          <div class="field"><label>ElevenLabs (€)</label><input type="number" id="costElevenlabs" min="0" step="0.01" oninput="updateCostTotal()"></div>
+          <div class="field"><label>Make (€)</label><input type="number" id="costMake" min="0" step="0.01" oninput="updateCostTotal()"></div>
+          <div class="field"><label>Twilio (€)</label><input type="number" id="costTwilio" min="0" step="0.01" oninput="updateCostTotal()"></div>
+          <div class="field"><label>Netlify (€)</label><input type="number" id="costNetlify" min="0" step="0.01" oninput="updateCostTotal()"></div>
+          <div class="field"><label>OpenAI (€)</label><input type="number" id="costOpenai" min="0" step="0.01" oninput="updateCostTotal()"></div>
+          <div class="field"><label>Autres (€)</label><input type="number" id="costAutres" min="0" step="0.01" oninput="updateCostTotal()"></div>
+          <div class="field"><label>CAC — Prospection/Marketing (€)</label><input type="number" id="costCAC" min="0" step="0.01"></div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px">
+          <div style="font-size:14px;color:var(--text-muted)">Total : <strong id="costTotal" style="color:var(--text)">0 €</strong></div>
+          <button class="btn" id="saveCostsBtn">Sauvegarder</button>
+        </div>
+      </div>
+
+      <!-- France vs Afrique -->
+      <div class="card" style="margin-bottom:20px">
+        <h3>Répartition géographique</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:16px">
+          <div style="background:var(--surface2);border-radius:10px;padding:18px">
+            <div style="font-size:13px;font-weight:700;color:var(--accent);margin-bottom:10px">🇫🇷 France / Europe</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">
+              <div><div class="k-label">Clients actifs</div><div style="font-size:20px;font-weight:700" id="geoFrClients">—</div></div>
+              <div><div class="k-label">MRR</div><div style="font-size:20px;font-weight:700;color:#22c55e" id="geoFrMRR">—</div></div>
+              <div><div class="k-label">% MRR total</div><div style="font-size:20px;font-weight:700" id="geoFrPct">—</div></div>
+            </div>
+          </div>
+          <div style="background:var(--surface2);border-radius:10px;padding:18px">
+            <div style="font-size:13px;font-weight:700;color:#f59e0b;margin-bottom:10px">🌍 Sénégal / Afrique</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">
+              <div><div class="k-label">Clients actifs</div><div style="font-size:20px;font-weight:700" id="geoAfClients">—</div></div>
+              <div><div class="k-label">MRR</div><div style="font-size:20px;font-weight:700;color:#22c55e" id="geoAfMRR">—</div></div>
+              <div><div class="k-label">% MRR total</div><div style="font-size:20px;font-weight:700" id="geoAfPct">—</div></div>
+            </div>
+            <div style="margin-top:8px;font-size:11px;color:var(--text-muted)" id="geoAfFCFA"></div>
+          </div>
+        </div>
+        <div class="chart-wrap" style="height:80px"><canvas id="chartGeo"></canvas></div>
+      </div>
+
+      <!-- LTV / CAC / Churn -->
+      <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px">
+        <div class="kpi-card big">
+          <div class="k-label">LTV estimée</div>
+          <div class="k-value" id="finLTV">— €</div>
+          <div class="k-sub">MRR moyen / churn mensuel</div>
+        </div>
+        <div class="kpi-card big">
+          <div class="k-label">CAC ce mois</div>
+          <div class="k-value" id="finCAC">— €</div>
+          <div class="k-sub">Saisi dans les coûts</div>
+        </div>
+        <div class="kpi-card big">
+          <div class="k-label">Ratio LTV / CAC</div>
+          <div class="k-value" id="finLTVCAC">—</div>
+          <div class="k-sub">≥ 3 recommandé</div>
+        </div>
+      </div>
+
+      <!-- Projections fin d'année -->
+      <div class="card" style="margin-bottom:20px">
+        <h3>Projections fin d'année</h3>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+          <div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:16px;text-align:center">
+            <div class="k-label">Meilleur cas (+20%)</div>
+            <div style="font-size:22px;font-weight:700;color:#22c55e;margin:8px 0" id="projBest">—</div>
+            <div style="font-size:11px;color:var(--text-muted)">ARR</div>
+          </div>
+          <div style="background:rgba(112,178,222,.08);border:1px solid rgba(112,178,222,.2);border-radius:10px;padding:16px;text-align:center">
+            <div class="k-label">Scénario actuel</div>
+            <div style="font-size:22px;font-weight:700;color:#70B2DE;margin:8px 0" id="projBase">—</div>
+            <div style="font-size:11px;color:var(--text-muted)">ARR</div>
+          </div>
+          <div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:16px;text-align:center">
+            <div class="k-label">Pire cas (-20%)</div>
+            <div style="font-size:22px;font-weight:700;color:#ef4444;margin:8px 0" id="projWorst">—</div>
+            <div style="font-size:11px;color:var(--text-muted)">ARR</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Marge par client -->
       <div class="card">
-        <h3>MRR par plan</h3>
+        <h3>Marge par client</h3>
         <div class="table-wrap" style="border:none">
           <table class="hist-table">
-            <thead><tr><th>Plan</th><th>Nb clients</th><th>Tarif / mois</th><th>MRR partiel</th></tr></thead>
-            <tbody id="mrrByPlanBody"></tbody>
+            <thead><tr><th>Entreprise</th><th>Plan</th><th>MRR client</th><th>Coût estimé</th><th>Marge</th><th>Taux</th><th>Santé</th></tr></thead>
+            <tbody id="margeByClientBody"></tbody>
           </table>
         </div>
       </div>
-      <div class="card">
-        <h3>Coûts infrastructure</h3>
-        <div class="form-grid">
-          <div class="field"><label>Vapi (€)</label><input type="number" id="costVapi"></div>
-          <div class="field"><label>ElevenLabs (€)</label><input type="number" id="costElevenlabs"></div>
-          <div class="field"><label>Make (€)</label><input type="number" id="costMake"></div>
-          <div class="field"><label>Twilio (€)</label><input type="number" id="costTwilio"></div>
-          <div class="field"><label>Netlify (€)</label><input type="number" id="costNetlify"></div>
-          <div class="field"><label>OpenAI (€)</label><input type="number" id="costOpenai"></div>
-          <div class="field"><label>Autres (€)</label><input type="number" id="costAutres"></div>
-        </div>
-        <div class="modal-actions"><button class="btn" id="saveCostsBtn">Sauvegarder</button></div>
-      </div>
-      <div class="chart-card"><h3>MRR vs Coûts (6 mois)</h3><div class="chart-wrap"><canvas id="chartFinances"></canvas></div></div>
+
     </section>
 
     <!-- ===== NOTIFICATIONS ===== -->
@@ -881,7 +992,7 @@ let adminTickets = [];
 let adminPaiements = [];
 let adminHistorique = [];
 let adminAutomations = [];
-let adminFinances = { couts: { vapi:0, elevenlabs:0, make:0, twilio:0, netlify:0, openai:0, autres:0 } };
+let adminFinances = { couts: { vapi:0, elevenlabs:0, make:0, twilio:0, netlify:0, openai:0, autres:0 }, cac:0 };
 
 const charts = {};
 const NAV = [
@@ -1110,11 +1221,16 @@ async function loadHistorique(){ const d = await adminFetch('/.netlify/functions
 async function loadFinances(){
   const d = await adminFetch('/.netlify/functions/admin-get-finances');
   if (d.couts) adminFinances.couts = { vapi:0,elevenlabs:0,make:0,twilio:0,netlify:0,openai:0,autres:0, ...d.couts };
+  if (d.cac != null) adminFinances.cac = d.cac;
   const c = adminFinances.couts;
-  document.getElementById('costVapi').value=c.vapi; document.getElementById('costElevenlabs').value=c.elevenlabs;
-  document.getElementById('costMake').value=c.make; document.getElementById('costTwilio').value=c.twilio;
-  document.getElementById('costNetlify').value=c.netlify; document.getElementById('costOpenai').value=c.openai;
-  document.getElementById('costAutres').value=c.autres;
+  document.getElementById('costVapi').value=c.vapi||''; document.getElementById('costElevenlabs').value=c.elevenlabs||'';
+  document.getElementById('costMake').value=c.make||''; document.getElementById('costTwilio').value=c.twilio||'';
+  document.getElementById('costNetlify').value=c.netlify||''; document.getElementById('costOpenai').value=c.openai||'';
+  document.getElementById('costAutres').value=c.autres||'';
+  document.getElementById('costCAC').value=adminFinances.cac||'';
+  const now=new Date();
+  document.getElementById('costMonthLabel').textContent=now.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+  updateCostTotal();
 }
 
 function buildAutomationsFromHistorique(){
@@ -2177,10 +2293,22 @@ async function openBillingDetail(clientId){
   }
 }
 
+async function updateClientNextPayment(clientId){
+  const d=new Date(); d.setDate(d.getDate()+30);
+  const newDate=d.toISOString().split('T')[0];
+  await adminFetch('/.netlify/functions/admin-update-client',{
+    method:'PATCH',
+    body:JSON.stringify({id:clientId,fields:{"Date prochain paiement":newDate}})
+  });
+  const c=adminClients.find(x=>x.id===clientId);
+  if(c) c.prochainPaiement=newDate;
+  renderBilling();
+}
+
 async function markPaidById(id, btn){
   btn.disabled=true; btn.textContent='…';
   const res=await adminFetch('/.netlify/functions/admin-update-paiement',{method:'PATCH',body:JSON.stringify({id,statut:'Payé'})});
-  if(res.ok!==false){ toast('Paiement marqué comme payé','success'); if(_bdClientId) openBillingDetail(_bdClientId); }
+  if(res.ok!==false){ toast('Paiement marqué comme payé','success'); if(_bdClientId) openBillingDetail(_bdClientId); if(_bdClientId) updateClientNextPayment(_bdClientId); }
   else { btn.disabled=false; btn.textContent='✓ Payé'; toast(res.error||'Erreur','error'); }
 }
 
@@ -2276,6 +2404,7 @@ function openAddPaiement(c){
       toast('Paiement ajouté','success');
       document.getElementById('modalAddPaiement').classList.remove('show');
       if(_bdClientId) openBillingDetail(_bdClientId);
+      if(body.statut==='Payé' && _bdClientId) updateClientNextPayment(_bdClientId);
     } else toast(res.error||'Erreur','error');
   };
 }
