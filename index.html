@@ -5190,7 +5190,19 @@ async function createOrUpdateVapiAssistant() {
       /* Mettre à jour le cache local */
       if (client) client.vapiAssistantId = data.assistantId;
       _updateVapiButton();
-      showToast(data.created ? "Assistant créé avec succès ✓" : "Assistant mis à jour ✓", "success");
+      let msg;
+      if (data.created && data.phoneAssigned) {
+        msg = "Assistant créé et numéro de téléphone assigné avec succès !";
+      } else if (data.created && !data.hasPhone) {
+        msg = "Assistant créé. Contactez AkilAI pour l'assignation de votre numéro de téléphone.";
+      } else if (data.created) {
+        msg = "Assistant créé. Contactez AkilAI pour l'assignation de votre numéro de téléphone.";
+      } else if (data.phoneAssigned) {
+        msg = "Assistant mis à jour et numéro de téléphone assigné ✓";
+      } else {
+        msg = "Assistant mis à jour ✓";
+      }
+      showToast(msg, "success");
     } else {
       showToast("Erreur : " + (data.error || "inconnue"), "error");
     }

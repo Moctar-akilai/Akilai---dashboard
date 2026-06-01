@@ -23,18 +23,21 @@ exports.handler = async function(event, context) {
 
   console.log("[create-vapi-assistant] clientId:", clientId, "nom:", nomAssistant, "voiceId:", voiceId, "langue:", langue);
 
-  /* Lire le VapiAssistantId existant depuis Airtable */
+  /* Lire le record client depuis Airtable (VapiAssistantId + Numéro Vapi) */
   let existingAssistantId = null;
+  let vapiPhoneNumberId   = null;
   if (clientId) {
     try {
       const clientRes = await fetch(`${BASE_URL}/Clients/${clientId}`, { headers });
       if (clientRes.ok) {
-        const clientData = await clientRes.json();
-        existingAssistantId = clientData.fields?.VapiAssistantId || null;
+        const clientData    = await clientRes.json();
+        existingAssistantId = clientData.fields?.VapiAssistantId  || null;
+        vapiPhoneNumberId   = clientData.fields?.["Numéro Vapi"]  || null;
         console.log("[create-vapi-assistant] VapiAssistantId existant :", existingAssistantId || "aucun");
+        console.log("[create-vapi-assistant] Numéro Vapi (phoneNumberId) :", vapiPhoneNumberId || "aucun");
       }
     } catch (e) {
-      console.warn("[create-vapi-assistant] Airtable fetch:", e.message);
+      console.warn("[create-vapi-assistant] Airtable fetch client:", e.message);
     }
   }
 
@@ -116,7 +119,31 @@ exports.handler = async function(event, context) {
       }
     }
 
-    return ok({ ok: true, assistantId, created });
+    /* ── Assigner le numéro de téléphone Vapi à l'assistant ── */
+    let phoneAssigned = false;
+    if (vapiPhoneNumberId && assistantId) {
+      try {
+        console.log("[create-vapi-assistant] PATCH /phone-number/" + vapiPhoneNumberId + " → assistantId:", assistantId);
+        const phoneRes = await fetch(`https://api.vapi.ai/phone-number/${vapiPhoneNumberId}`, {
+          method:  "PATCH",
+          headers: vapiHeaders,
+          body:    JSON.stringify({ assistantId }),
+        });
+        console.log("[create-vapi-assistant] Vapi phone-number PATCH status:", phoneRes.status);
+        if (phoneRes.ok) {
+          phoneAssigned = true;
+        } else {
+          const text = await phoneRes.text();
+          console.warn("[create-vapi-assistant] Vapi phone-number PATCH error:", phoneRes.status, text);
+        }
+      } catch (e) {
+        console.warn("[create-vapi-assistant] phone-number PATCH exception:", e.message);
+      }
+    } else {
+      console.warn("[create-vapi-assistant] Aucun numéro Vapi configuré pour ce client — assignation ignorée");
+    }
+
+    return ok({ ok: true, assistantId, created, phoneAssigned, hasPhone: !!vapiPhoneNumberId });
   } catch (e) {
     console.error("[create-vapi-assistant] Exception:", e.message);
     return err(e.message);
