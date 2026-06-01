@@ -78,15 +78,17 @@ exports.handler = async function(event, context) {
         });
 
         conversations_wa.push({
-          id:          r.id,
-          _seq:        i + 1,
-          nom:         f.Titre             || "Inconnu",
-          numero:      f["Numéro client"]  || "",
+          id:            r.id,
+          _seq:          i + 1,
+          nom:           f.Titre             || "Inconnu",
+          numero:        f["Numéro client"]  || "",
           date,
-          nb_messages: messages.length,
-          client_id:   f["User ID"]        || null,
-          statut:            f.Statut            || "Traité",
-          intention:         f.Intention         || null,
+          heure,
+          nb_messages:   messages.length || (f["Message entrant"] ? 1 : 0),
+          client_id:     f["User ID"]        || null,
+          statut:        f.Statut            || "Traité",
+          intention:     f.Intention         || null,
+          messageEntrant: f["Message entrant"] || "",
           messages,
           automatisationIds: Array.isArray(f["Automatisation"]) ? f["Automatisation"] : [],
         });

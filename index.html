@@ -4318,14 +4318,10 @@ async function loadHistoriqueFromAirtable() {
   if (!em) { console.warn("[AkilAI] loadHistorique ignoré — email non disponible"); return; }
   try {
     const data = await apiFetch(`/.netlify/functions/get-historique?email=${encodeURIComponent(em)}`);
-    if (data.appels?.length) {
-      appels.splice(0, appels.length, ...data.appels);
-      buildAppelsTable(appels);
-    }
-    if (data.conversations_wa?.length) {
-      conversations_wa.splice(0, conversations_wa.length, ...data.conversations_wa);
-      buildWaTable(conversations_wa);
-    }
+    appels.splice(0, appels.length, ...(data.appels || []));
+    conversations_wa.splice(0, conversations_wa.length, ...(data.conversations_wa || []));
+    buildAppelsTable(appels.filter(a => _matchesCurrentClient(a.client_id)));
+    buildWaTable(conversations_wa.filter(c => _matchesCurrentClient(c.client_id)));
     updateRealKPIs();
   } catch (e) {
     console.warn("[AkilAI] get-historique fallback:", e.message);
@@ -4725,29 +4721,41 @@ function buildWaTable(data) {
     const trDetail = document.createElement("tr");
     trDetail.className = "detail-row";
 
-    const chatHtml = conv.messages.map((msg, i) => {
-      const isUser = msg.role === "user";
-      const isAudio = msg.type === "audio";
-
-      let contentHtml;
-      if (isAudio) {
-        contentHtml = `<div class="wa-audio-msg"><span>🎤</span><span>Message vocal — ${msg.duree}</span></div>`;
-      } else {
-        contentHtml = `<div class="bubble-text ${isUser ? 'wa-bubble' : ''}">${msg.text}</div>`;
-      }
-
-      const readTick = (!isUser && i === conv.messages.length - 1) ? `<span class="msg-read">✓✓</span>` : "";
-
-      return `
-        <div class="bubble ${isUser ? 'user' : 'assistant'}">
-          <div class="bubble-avatar">${isUser ? msg.nom ? msg.nom[0] : "U" : "AI"}</div>
+    let chatHtml;
+    if (conv.messages && conv.messages.length > 0) {
+      chatHtml = conv.messages.map((msg, i) => {
+        const isUser = msg.role === "user";
+        const isAudio = msg.type === "audio";
+        let contentHtml;
+        if (isAudio) {
+          contentHtml = `<div class="wa-audio-msg"><span>🎤</span><span>Message vocal — ${msg.duree}</span></div>`;
+        } else {
+          contentHtml = `<div class="bubble-text ${isUser ? 'wa-bubble' : ''}">${msg.text}</div>`;
+        }
+        const readTick = (!isUser && i === conv.messages.length - 1) ? `<span class="msg-read">✓✓</span>` : "";
+        return `
+          <div class="bubble ${isUser ? 'user' : 'assistant'}">
+            <div class="bubble-avatar">${isUser ? (msg.nom ? msg.nom[0] : "U") : "AI"}</div>
+            <div>
+              ${contentHtml}
+              <div class="msg-time">${msg.heure} ${readTick}</div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    } else if (conv.messageEntrant) {
+      chatHtml = `
+        <div class="bubble user">
+          <div class="bubble-avatar">U</div>
           <div>
-            ${contentHtml}
-            <div class="msg-time">${msg.heure} ${readTick}</div>
+            <div class="bubble-text wa-bubble">${conv.messageEntrant}</div>
+            <div class="msg-time">${conv.heure || ""}</div>
           </div>
         </div>
       `;
-    }).join("");
+    } else {
+      chatHtml = `<div style="color:var(--text-faint);font-size:13px;padding:8px 0">Aucun contenu disponible.</div>`;
+    }
 
     trDetail.innerHTML = `
       <td colspan="7">
@@ -4773,11 +4781,22 @@ function toggleWaDetail(id) {
 }
 
 function filterWa() {
-  const cid = _getActiveClientId();
-  const q   = (document.getElementById("waSearch").value || "").toLowerCase();
-  const filtered = conversations_wa.filter(c =>
-    _matchesCurrentClient(c.client_id) && (!q || c.nom.toLowerCase().includes(q) || c.numero.includes(q))
-  );
+  const q      = (document.getElementById("waSearch").value || "").toLowerCase();
+  const period = document.getElementById("waPeriod")?.value || "all";
+  const now    = new Date();
+  const filtered = conversations_wa.filter(c => {
+    if (!_matchesCurrentClient(c.client_id)) return false;
+    if (q && !c.nom.toLowerCase().includes(q) && !c.numero.includes(q)) return false;
+    if (period === "today") {
+      const d = new Date(c.date);
+      if (d.toDateString() !== now.toDateString()) return false;
+    } else if (period === "week") {
+      const d = new Date(c.date);
+      const weekAgo = new Date(now); weekAgo.setDate(now.getDate() - 7);
+      if (d < weekAgo) return false;
+    }
+    return true;
+  });
   buildWaTable(filtered);
 }
 
