@@ -12,23 +12,29 @@ exports.handler = async (event) => {
     const { entreprise, nom, email, telephone, secteur, plan, pays } = JSON.parse(event.body || "{}");
 
     // 1. Create client in Airtable
+    const SINGLE_SELECT_FIELDS = ["Secteur", "Plan", "Pays", "Statut", "Onboarding"];
+    const rawFields = {
+      Entreprise: entreprise || "",
+      Nom: nom || "",
+      Email: email || "",
+      "Numéro de téléphone": telephone || "",
+      Secteur: secteur || "",
+      Plan: plan || "",
+      Pays: pays || "",
+      Statut: "Actif",
+      "Date inscription": new Date().toISOString().split("T")[0],
+      "User ID": email || "",
+    };
+    const fields = Object.fromEntries(
+      Object.entries(rawFields).filter(([k, v]) =>
+        SINGLE_SELECT_FIELDS.includes(k) ? (v !== "" && v != null) : true
+      )
+    );
+
     const airtableRes = await fetch(`${BASE_URL}/Clients`, {
       method: "POST",
       headers,
-      body: JSON.stringify({
-        fields: {
-          Entreprise: entreprise || "",
-          Nom: nom || "",
-          Email: email || "",
-          "Numéro de téléphone": telephone || "",
-          Secteur: secteur || "",
-          Plan: plan || "",
-          Pays: pays || "",
-          Statut: "Actif",
-          "Date inscription": new Date().toISOString().split("T")[0],
-          "User ID": email || "",
-        },
-      }),
+      body: JSON.stringify({ fields }),
     });
     const data = await airtableRes.json();
 

@@ -517,9 +517,9 @@ input,select,textarea{font-family:inherit;font-size:14px}
       <div class="field"><label>Nom</label><input id="ncNom" required></div>
       <div class="field"><label>Email</label><input type="email" id="ncEmail" required></div>
       <div class="field"><label>Téléphone</label><input id="ncTelephone"></div>
-      <div class="field"><label>Secteur</label><input id="ncSecteur"></div>
-      <div class="field"><label>Plan</label><select id="ncPlan"></select></div>
-      <div class="field full"><label>Pays</label><input id="ncPays"></div>
+      <div class="field"><label>Secteur</label><select id="ncSecteur"><option value="">— Secteur —</option><option>Médical</option><option>Immobilier</option><option>Restaurant</option><option>Formation</option><option>Hôtellerie / Conciergerie</option><option>E-commerce</option><option>Juridique</option><option>Autre</option></select></div>
+      <div class="field"><label>Plan</label><select id="ncPlan"><option value="">— Plan —</option><option>Starter WhatsApp</option><option>Business WhatsApp</option><option>Premium WhatsApp</option><option>Starter Vocal</option><option>Business Vocal</option><option>Premium Vocal</option><option>Starter Combo</option><option>Business Combo</option><option>Premium Combo</option></select></div>
+      <div class="field full"><label>Pays</label><select id="ncPays"><option value="">— Pays —</option><option>France</option><option>Sénégal</option><option>Côte d'Ivoire</option><option>Maroc</option><option>Belgique</option><option>Suisse</option><option>Canada</option><option>Autre</option></select></div>
     </div>
     <div class="modal-actions">
       <button type="button" class="btn ghost" data-close>Annuler</button>
@@ -607,11 +607,11 @@ input,select,textarea{font-family:inherit;font-size:14px}
       <div class="field"><label>Entreprise</label><input id="ecEntreprise"></div>
       <div class="field"><label>Nom contact</label><input id="ecNom"></div>
       <div class="field"><label>Téléphone</label><input id="ecTelephone"></div>
-      <div class="field"><label>Secteur</label><input id="ecSecteur"></div>
-      <div class="field"><label>Plan</label><select id="ecPlan"></select></div>
+      <div class="field"><label>Secteur</label><select id="ecSecteur"><option value="">— Secteur —</option><option>Médical</option><option>Immobilier</option><option>Restaurant</option><option>Formation</option><option>Hôtellerie / Conciergerie</option><option>E-commerce</option><option>Juridique</option><option>Autre</option></select></div>
+      <div class="field"><label>Plan</label><select id="ecPlan"><option value="">— Plan —</option><option>Starter WhatsApp</option><option>Business WhatsApp</option><option>Premium WhatsApp</option><option>Starter Vocal</option><option>Business Vocal</option><option>Premium Vocal</option><option>Starter Combo</option><option>Business Combo</option><option>Premium Combo</option></select></div>
       <div class="field"><label>Statut</label><select id="ecStatut"><option>Actif</option><option>Suspendu</option><option>Essai</option></select></div>
-      <div class="field"><label>Pays</label><input id="ecPays"></div>
-      <div class="field"><label>Onboarding</label><select id="ecOnboarding"><option value="">—</option><option>En attente</option><option>En cours</option><option>Terminé</option></select></div>
+      <div class="field"><label>Pays</label><select id="ecPays"><option value="">— Pays —</option><option>France</option><option>Sénégal</option><option>Côte d'Ivoire</option><option>Maroc</option><option>Belgique</option><option>Suisse</option><option>Canada</option><option>Autre</option></select></div>
+      <div class="field"><label>Onboarding</label><select id="ecOnboarding"><option value="">—</option><option>À configurer</option><option>En cours</option><option>Terminé</option></select></div>
       <div class="field"><label>Numéro Vapi</label><input id="ecVapi"></div>
       <div class="field"><label>Date prochain paiement</label><input type="date" id="ecProchainPaiement"></div>
     </div>
@@ -858,7 +858,7 @@ function initStaticUI() {
 
   // populate plan selects
   const planOpts = PLAN_LIST.map(p=>`<option>${p}</option>`).join('');
-  document.getElementById('ncPlan').innerHTML = planOpts;
+  document.getElementById('ncPlan').innerHTML = '<option value="">— Plan —</option>' + planOpts;
   document.getElementById('cdPlan').innerHTML = planOpts;
   const planFilter = document.getElementById('clientFilterPlan');
   planFilter.innerHTML = '<option value="">Tous plans</option>'+planOpts;
@@ -1453,7 +1453,7 @@ function openEditClientModal(id){
   currentClientId=id;
   // Populate plan select
   const ecPlan=document.getElementById('ecPlan');
-  ecPlan.innerHTML=PLAN_LIST.map(p=>`<option${c.plan===p?' selected':''}>${p}</option>`).join('');
+  ecPlan.innerHTML='<option value="">— Plan —</option>'+PLAN_LIST.map(p=>`<option${c.plan===p?' selected':''}>${p}</option>`).join('');
   document.getElementById('ecEntreprise').value=c.entreprise||'';
   document.getElementById('ecNom').value=c.nom||'';
   document.getElementById('ecTelephone').value=c.telephone||'';
