@@ -2744,7 +2744,7 @@
             <h1 class="page-title">Voix &amp; IA</h1>
             <p class="page-subtitle">Personnalisez votre assistant vocal — configuration sauvegardée automatiquement.</p>
           </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <div style="display:flex;gap:8px;flex-wrap:wrap" id="voixIaActions">
             <button class="btn btn-ghost btn-sm" onclick="resetVoixConfig()">Réinitialiser</button>
             <button class="btn btn-primary" onclick="saveVoixConfig()">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
@@ -2757,7 +2757,16 @@
           </div>
         </div>
 
-        <div class="config-layout">
+        <!-- Message plan non compatible -->
+        <div id="voixIaPlanMsg" style="display:none">
+          <div class="card" style="text-align:center;padding:40px 24px;color:var(--text-muted)">
+            <div style="font-size:36px;margin-bottom:12px">🎙️</div>
+            <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:8px">Fonctionnalité non disponible</div>
+            <div style="font-size:13px;line-height:1.6">Cette fonctionnalité est disponible avec un plan incluant l'assistant vocal.</div>
+          </div>
+        </div>
+
+        <div class="config-layout" id="voixIaForm">
 
           <!-- ── Colonne formulaire ── -->
           <div style="display:flex;flex-direction:column;gap:16px">
@@ -2850,17 +2859,27 @@
               </div>
             </div>
 
-            <!-- Langues -->
+            <!-- Langue + Tonalité -->
             <div class="card">
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
                 <div>
-                  <div class="form-label" style="margin-bottom:8px">Langue principale</div>
+                  <div class="form-label" style="margin-bottom:8px">Langue</div>
                   <select class="form-select" id="cfgLangPrimaire" onchange="updatePreview()">
                     <option value="fr">🇫🇷 Français</option>
-                    <option value="en">🇬🇧 Anglais</option>
-                    <option value="es">🇪🇸 Espagnol</option>
-                    <option value="ar">🇸🇦 Arabe</option>
+                    <option value="en">🇬🇧 English</option>
+                    <option value="es">🇪🇸 Español</option>
                     <option value="pt">🇧🇷 Portugais</option>
+                    <option value="ar">🇸🇦 Arabe</option>
+                  </select>
+                </div>
+                <div>
+                  <div class="form-label" style="margin-bottom:8px">Tonalité</div>
+                  <select class="form-select" id="cfgTonaliteSelect" onchange="updatePreview()">
+                    <option value="Professionnel">Professionnel</option>
+                    <option value="Amical">Amical</option>
+                    <option value="Formel">Formel</option>
+                    <option value="Dynamique">Dynamique</option>
+                    <option value="Empathique">Empathique</option>
                   </select>
                 </div>
                 <div>
@@ -2915,10 +2934,14 @@
 
             <!-- Prompt système -->
             <div class="card">
-              <div class="form-label" style="margin-bottom:10px">Prompt système</div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+                <div class="form-label" style="margin-bottom:0">Instructions de l'assistant</div>
+                <span style="font-size:11px;color:var(--text-faint)"><span id="cfgPromptCount">0</span> caractères</span>
+              </div>
               <textarea class="form-input form-textarea" id="cfgPrompt" rows="8"
                 style="resize:vertical;min-height:160px;line-height:1.6"
-                placeholder="Tu es Sophie, l'assistante vocale du Cabinet Dr. Moreau. Tu réponds toujours en français, avec un ton professionnel et chaleureux. Ton rôle est de gérer les prises de rendez-vous, les annulations, et de répondre aux questions courantes des patients. Tu ne donnes jamais de conseils médicaux. En cas de demande urgente, tu orientes immédiatement vers le médecin."></textarea>
+                placeholder="Ex: Tu es Sophie, assistante du cabinet médical Dr. Martin. Tu réponds en français, tu prends des rendez-vous…"
+                oninput="document.getElementById('cfgPromptCount').textContent=this.value.length;updatePreview()"></textarea>
               <div style="font-size:11px;color:var(--text-faint);margin-top:6px">
                 Le prompt système définit le comportement et le contexte de votre assistant.
               </div>
@@ -3643,6 +3666,7 @@ function navigate(sectionId) {
   if (sectionId === 'automations') { loadAutomationsFromAirtable(); }
   if (sectionId === 'appels')      { loadHistoriqueFromAirtable(); }
   if (sectionId === 'whatsapp')    { loadHistoriqueFromAirtable(); }
+  if (sectionId === 'voix-ia')     { loadVoixConfig(); }
 
   currentSection = sectionId;
   try { localStorage.setItem('akilai_section', sectionId); } catch(e) {}
@@ -4792,7 +4816,9 @@ function getVoixFormValues() {
     voix:         voiceId,
     voiceId:      voiceId,
     voiceName:    voice?.name || voiceId,
-    tonalite:     document.querySelector("input[name='tonalite']:checked")?.value || "neutre",
+    /* cfgTonaliteSelect = select Airtable ; radio cards = UI visuel complémentaire */
+    tonalite:     (document.getElementById("cfgTonaliteSelect") && document.getElementById("cfgTonaliteSelect").value)
+                    || document.querySelector("input[name='tonalite']:checked")?.value || "Professionnel",
     personnalite: document.querySelector("input[name='personnalite']:checked")?.value || "efficace",
     langPrimaire: document.getElementById("cfgLangPrimaire").value,
     langSecours:  document.getElementById("cfgLangSecours").value,
@@ -4842,48 +4868,32 @@ async function loadVoixConfig() {
   /* Charger les voix ElevenLabs en parallèle */
   loadElevenLabsVoices();
 
+  /* Vérification restriction plan */
+  _checkVoixIaPlan();
+
   let cfg = VOIX_CONFIG_DEFAULT;
 
-  /* 1. Essayer Airtable si connecté */
-  if (window._airtableConnected) {
-    try {
-      const data = await apiFetch("/.netlify/functions/save-config");
-      if (data.config) {
-        cfg = {
-          nom:          data.config.nomAssistant,
-          voix:         data.config.voix,
-          voiceId:      data.config.voix,
-          voiceName:    data.config.voiceName || data.config.voix,
-          tonalite:     data.config.tonalite,
-          personnalite: data.config.personnalite,
-          langPrimaire: data.config.langue,
-          langSecours:  data.config.langueSecours,
-          vitesse:      String(data.config.vitesseParole),
-          silence:      String(data.config.silenceMax),
-          interruptions:data.config.interruptions,
-          prompt:       data.config.promptSysteme,
-          _id:          data.config._id,
-        };
-      }
-    } catch (e) {
-      console.warn("[AkilAI] save-config GET fallback:", e.message);
-    }
-
-    /* Charger VapiAssistantId du client courant */
-    try {
-      const clientId = window._currentClientId;
-      if (clientId) {
-        const cData  = await apiFetch("/.netlify/functions/get-clients");
-        const client = (cData.clients || []).find(c => c.id === clientId);
-        _vapiAssistantId = client?.vapiAssistantId || null;
-      }
-    } catch (e) {
-      console.warn("[AkilAI] load VapiAssistantId:", e.message);
-    }
-  }
-
-  /* 2. Fallback localStorage */
-  if (!window._airtableConnected) {
+  /* 1. Utiliser clients[0] déjà en mémoire (chargé via get-clients) */
+  const client = clients[0] || null;
+  if (client) {
+    _vapiAssistantId = client.vapiAssistantId || null;
+    cfg = {
+      nom:          client.nomAssistant     || VOIX_CONFIG_DEFAULT.nom,
+      voix:         client.voiceId          || "",
+      voiceId:      client.voiceId          || "",
+      voiceName:    "",
+      tonalite:     client.tonalite         || VOIX_CONFIG_DEFAULT.tonalite,
+      personnalite: VOIX_CONFIG_DEFAULT.personnalite,
+      langPrimaire: client.langue           || VOIX_CONFIG_DEFAULT.langPrimaire,
+      langSecours:  VOIX_CONFIG_DEFAULT.langSecours,
+      vitesse:      String(client.vitesseParole || VOIX_CONFIG_DEFAULT.vitesse),
+      silence:      VOIX_CONFIG_DEFAULT.silence,
+      interruptions:VOIX_CONFIG_DEFAULT.interruptions,
+      prompt:       client.promptSysteme    || VOIX_CONFIG_DEFAULT.prompt,
+    };
+    console.log("[loadVoixConfig] Pré-remplissage depuis clients[0] :", client.nom, "voiceId:", client.voiceId, "tonalite:", client.tonalite);
+  } else if (!window._airtableConnected) {
+    /* Fallback localStorage si Airtable non connecté */
     const stored = localStorage.getItem("voixConfig");
     if (stored) try { cfg = JSON.parse(stored); } catch {}
   }
@@ -4892,20 +4902,39 @@ async function loadVoixConfig() {
   _updateVapiButton();
 }
 
+function _checkVoixIaPlan() {
+  const plan    = ((_getSession() && _getSession().plan) || (clients[0] && clients[0].plan) || "").toLowerCase();
+  const hasVoix = plan.includes("vocal") || plan.includes("combo") || plan === "";
+  const formEl  = document.getElementById("voixIaForm");
+  const msgEl   = document.getElementById("voixIaPlanMsg");
+  const actEl   = document.getElementById("voixIaActions");
+  if (formEl) formEl.style.display = hasVoix ? "" : "none";
+  if (msgEl)  msgEl.style.display  = hasVoix ? "none" : "";
+  if (actEl)  actEl.style.display  = hasVoix ? "" : "none";
+}
+
 function _applyVoixConfig(cfg) {
   document.getElementById("cfgNom").value          = cfg.nom          || "";
   document.getElementById("cfgVoix").value         = cfg.voiceId || cfg.voix || "";
-  /* Mettre à jour la sélection dans les cartes */
+  /* Mettre à jour la sélection dans les cartes voix */
   _highlightVoiceCard(cfg.voiceId || cfg.voix || "");
   document.getElementById("cfgLangPrimaire").value = cfg.langPrimaire || "fr";
   document.getElementById("cfgLangSecours").value  = cfg.langSecours  || "none";
   document.getElementById("cfgVitesse").value      = cfg.vitesse      || "1.0";
   document.getElementById("cfgSilence").value      = cfg.silence      || "8";
   document.getElementById("cfgInterruptions").checked = Boolean(cfg.interruptions);
-  document.getElementById("cfgPrompt").value       = cfg.prompt       || "";
+  const promptVal = cfg.prompt || "";
+  document.getElementById("cfgPrompt").value = promptVal;
+  const countEl = document.getElementById("cfgPromptCount");
+  if (countEl) countEl.textContent = promptVal.length;
   document.getElementById("vitesseVal").textContent = (cfg.vitesse || "1.0") + "×";
   document.getElementById("silenceVal").textContent = (cfg.silence || "8") + "s";
-  const tonEl = document.getElementById("ton-" + cfg.tonalite);
+  /* Select Tonalité Airtable */
+  const tonSelect = document.getElementById("cfgTonaliteSelect");
+  if (tonSelect && cfg.tonalite) tonSelect.value = cfg.tonalite;
+  /* Radio cards tonalité (UI visuel, mapping approximatif) */
+  const tonMap = { Professionnel:"neutre", Amical:"chaleureux", Formel:"formel", Dynamique:"chaleureux", Empathique:"chaleureux" };
+  const tonEl = document.getElementById("ton-" + (tonMap[cfg.tonalite] || cfg.tonalite));
   if (tonEl) tonEl.checked = true;
   const persEl = document.getElementById("pers-" + cfg.personnalite);
   if (persEl) persEl.checked = true;
@@ -4913,64 +4942,50 @@ function _applyVoixConfig(cfg) {
 }
 
 async function saveVoixConfig() {
-  const cfg = getVoixFormValues();
+  const cfg      = getVoixFormValues();
+  const clientId = clients[0]?.id || null;
   localStorage.setItem("voixConfig", JSON.stringify(cfg));
-  showToast("Configuration sauvegardée ✓", "success");
 
-  /* Persist dans Airtable si connecté */
-  if (window._airtableConnected) {
-    try {
-      const payload = {
-        nomAssistant:  cfg.nom,
-        voix:          cfg.voiceId || cfg.voix,
-        voiceName:     cfg.voiceName,
-        tonalite:      cfg.tonalite,
-        personnalite:  cfg.personnalite,
-        langue:        cfg.langPrimaire,
-        langueSecours: cfg.langSecours,
-        vitesseParole: parseFloat(cfg.vitesse),
-        silenceMax:    parseInt(cfg.silence),
-        interruptions: cfg.interruptions,
-        promptSysteme: cfg.prompt,
-      };
-      const stored = localStorage.getItem("voixConfig");
-      const prev   = stored ? JSON.parse(stored) : {};
-      if (prev._id) payload._id = prev._id;
+  if (!clientId) {
+    showToast("Configuration sauvegardée localement (client non identifié)", "warning");
+    return;
+  }
 
-      const data = await apiFetchPost("/.netlify/functions/save-config", payload);
-      if (data.ok && data.id) {
-        cfg._id = data.id;
-        localStorage.setItem("voixConfig", JSON.stringify(cfg));
+  try {
+    const data = await apiFetchPost("/.netlify/functions/update-voice-config", {
+      id:            clientId,
+      nomAssistant:  cfg.nom,
+      langue:        cfg.langPrimaire,
+      tonalite:      cfg.tonalite,
+      promptSysteme: cfg.prompt,
+      vitesseParole: parseFloat(cfg.vitesse),
+      voiceId:       cfg.voiceId || cfg.voix || "",
+    });
+    console.log("[saveVoixConfig] Airtable réponse :", data);
+    if (data.ok) {
+      showToast("Configuration sauvegardée. Votre assistant sera mis à jour sous 24h.", "success");
+      /* Mettre à jour le cache local du client */
+      if (clients[0]) {
+        clients[0].nomAssistant  = cfg.nom;
+        clients[0].langue        = cfg.langPrimaire;
+        clients[0].tonalite      = cfg.tonalite;
+        clients[0].promptSysteme = cfg.prompt;
+        clients[0].vitesseParole = parseFloat(cfg.vitesse);
+        clients[0].voiceId       = cfg.voiceId || cfg.voix || "";
       }
-
-      /* Voix & IA : synchronisation Vapi gérée par le bouton dédié */
-
-    } catch (e) {
-      console.warn("[AkilAI] save-config POST:", e.message);
+    } else {
+      showToast("Erreur lors de la sauvegarde Airtable", "warning");
     }
+  } catch (e) {
+    console.error("[saveVoixConfig] Exception :", e.message);
+    showToast("Erreur réseau — configuration sauvegardée localement", "warning");
   }
 }
 
 function resetVoixConfig() {
   localStorage.removeItem("voixConfig");
-  /* Recharge les valeurs par défaut */
-  const cfg = VOIX_CONFIG_DEFAULT;
-  document.getElementById("cfgNom").value          = cfg.nom;
-  document.getElementById("cfgVoix").value         = cfg.voix;
-  document.getElementById("cfgLangPrimaire").value = cfg.langPrimaire;
-  document.getElementById("cfgLangSecours").value  = cfg.langSecours;
-  document.getElementById("cfgVitesse").value      = cfg.vitesse;
-  document.getElementById("cfgSilence").value      = cfg.silence;
-  document.getElementById("cfgInterruptions").checked = cfg.interruptions;
-  document.getElementById("cfgPrompt").value       = cfg.prompt;
-  document.getElementById("vitesseVal").textContent= cfg.vitesse + "×";
-  document.getElementById("silenceVal").textContent= cfg.silence + "s";
-  const tonEl = document.getElementById("ton-" + cfg.tonalite);
-  if (tonEl) tonEl.checked = true;
-  const persEl = document.getElementById("pers-" + cfg.personnalite);
-  if (persEl) persEl.checked = true;
-  _highlightVoiceCard("");
-  updatePreview();
+  /* Recharger depuis clients[0] si disponible */
+  loadVoixConfig();
   showToast("Configuration réinitialisée", "info");
 }
 
