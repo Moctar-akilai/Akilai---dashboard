@@ -7,15 +7,19 @@ exports.handler = async (event) => {
 
   try {
     const qs = event.queryStringParameters || {};
-    const limit = Math.min(parseInt(qs.limit || "200", 10), 200);
+    const limit = Math.min(parseInt(qs.limit || "500", 10), 500);
 
     const params = new URLSearchParams({
       maxRecords: String(limit),
-      "sort[0][field]": "createdTime",
+      "sort[0][field]": "Date de creation",
       "sort[0][direction]": "desc",
     });
 
-    const res = await fetch(`${BASE_URL}/Historique?${params.toString()}`, { headers });
+    const res = await fetch(`${BASE_URL}/tblxXBGjv6iZU41XY?${params.toString()}`, { headers });
+    if (!res.ok) {
+      const text = await res.text();
+      return err(`Airtable ${res.status}: ${text}`, 502);
+    }
     const data = await res.json();
 
     if (data.error) return err(data.error.message || "Airtable error");
@@ -33,6 +37,9 @@ exports.handler = async (event) => {
         userId: f["User ID"] || "",
         resume: f["Résumé"] || f.Détails || "",
         duree: f["Durée"] || 0,
+        messageEntrant: f["Message entrant"] || "",
+        transcription: f.Transcription || "",
+        intention: f.Intention || "",
       };
     });
 

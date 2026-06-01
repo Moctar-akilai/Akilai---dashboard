@@ -1,24 +1,30 @@
 const { BASE_URL, headers, ok, err, preflight, corsHeaders } = require("./config");
 const { verifyAdminToken, unauthorized } = require("./admin-utils");
 
+const TABLE_ID = "tblgoPGS5jbhWwXQl";
+
 exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") return preflight();
   if (!verifyAdminToken(event)) return unauthorized();
 
   try {
+    const { userId } = event.queryStringParameters || {};
     let allRecords = [];
     let offset = null;
 
     do {
-      const params = new URLSearchParams({ maxRecords: "100" });
+      const params = new URLSearchParams({
+        maxRecords: "200",
+        "sort[0][field]": "Date du paiement",
+        "sort[0][direction]": "desc",
+      });
+      if (userId) params.set("filterByFormula", `{User ID}="${userId}"`);
       if (offset) params.set("offset", offset);
 
-      const res = await fetch(`${BASE_URL}/Paiements?${params.toString()}`, { headers });
+      const res = await fetch(`${BASE_URL}/${TABLE_ID}?${params.toString()}`, { headers });
       const data = await res.json();
-
-      if (data.records) {
-        allRecords = allRecords.concat(data.records);
-      }
+      if (data.error) return err(data.error.message || "Airtable error");
+      if (data.records) allRecords = allRecords.concat(data.records);
       offset = data.offset || null;
     } while (offset);
 
@@ -26,13 +32,20 @@ exports.handler = async (event) => {
       const f = r.fields || {};
       return {
         id: r.id,
-        client: f.Client || f["User ID"] || "",
+        name: f.Name || "",
+        clientRecordId: (f.Clients || [])[0] || null,
+        clientNom: (f["Nom (from Clients)"] || [])[0] || "",
         montant: f.Montant || 0,
-        plan: f.Plan || "",
+        date: f["Date du paiement"] || "",
         statut: f.Statut || "En attente",
-        date: f.Date || r.createdTime,
-        methode: f.Methode || f.Méthode || "",
+        plan: f.Plan || "",
+        periode: f.Période || "",
+        reference: f["Stripe payment ID"] || "",
         userId: f["User ID"] || "",
+        email: (f.Email || [])[0] || "",
+        numFacture: f["N° Facture"] || "",
+        typePaiement: f["Type paiement"] || "",
+        createdAt: r.createdTime,
       };
     });
 
