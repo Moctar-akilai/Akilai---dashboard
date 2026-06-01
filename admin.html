@@ -206,7 +206,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .cp-topbar{display:flex;align-items:center;gap:12px;padding:14px 28px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
 .cp-back{display:flex;align-items:center;gap:6px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:6px 10px;border-radius:8px;transition:color .15s}
 .cp-back:hover{color:var(--text)}
-.cp-body{padding:28px 32px;display:flex;flex-direction:column;gap:24px;max-width:1200px;width:100%}
+.cp-body{padding:28px 32px;display:flex;flex-direction:column;gap:24px;width:100%}
 .cp-header{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap}
 .cp-avatar{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#4ade80);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:#08131c;flex-shrink:0}
 .cp-info{flex:1;min-width:220px}
@@ -216,9 +216,9 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .cp-dates{display:flex;gap:20px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
 .cp-dates span strong{color:var(--text);margin-left:4px}
 .cp-actions{display:flex;flex-wrap:wrap;gap:8px;margin-left:auto;align-self:center}
-.cp-kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
-@media(max-width:1100px){.cp-kpis{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:700px){.cp-kpis{grid-template-columns:repeat(2,1fr)}}
+.cp-kpis{display:grid;grid-template-columns:repeat(8,1fr);gap:12px}
+@media(max-width:1400px){.cp-kpis{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:800px){.cp-kpis{grid-template-columns:repeat(2,1fr)}}
 .cp-kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:6px}
 .cp-kpi .ck-icon{font-size:20px;width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center}
 .cp-kpi .ck-icon.g{background:rgba(74,222,128,.12);color:#4ade80}
@@ -226,6 +226,8 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .cp-kpi .ck-icon.o{background:rgba(251,191,36,.12);color:#fbbf24}
 .cp-kpi .ck-icon.r{background:rgba(248,113,113,.12);color:#f87171}
 .cp-kpi .ck-icon.y{background:rgba(250,204,21,.12);color:#facc15}
+.cp-kpi .ck-icon.p{background:rgba(167,139,250,.12);color:#a78bfa}
+.cp-kpi .ck-icon.dg{background:rgba(16,185,129,.12);color:#10b981}
 .cp-kpi .ck-val{font-size:22px;font-weight:700;line-height:1}
 .cp-kpi .ck-lbl{font-size:11px;color:var(--muted)}
 .cp-section{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 24px}
@@ -242,6 +244,12 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .hrow-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:2px}
 .hrow-msg{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:400px}
 .hrow-detail{display:none;margin-top:8px;background:rgba(0,0,0,.2);border-radius:8px;padding:10px;font-size:12px;color:var(--muted);white-space:pre-wrap;max-height:200px;overflow-y:auto}
+.wa-conv-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;cursor:pointer;transition:border-color .15s}
+.wa-conv-card:hover{border-color:var(--accent)}
+.wa-conv-top{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.wa-conv-num{font-weight:600;font-size:13px}
+.wa-conv-meta{font-size:11px;color:var(--muted)}
+.wa-conv-preview{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .notes-area{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text);font-size:13px;resize:vertical;min-height:120px;font-family:inherit}
 .notes-area:focus{outline:none;border-color:var(--accent)}
 
@@ -587,6 +595,39 @@ input,select,textarea{font-family:inherit;font-size:14px}
   </form>
 </div>
 
+<!-- ===== MODAL: EDIT CLIENT (from panel) ===== -->
+<div class="modal-overlay" id="modalEditClient">
+  <div class="modal-content wide" style="max-width:680px">
+    <button type="button" class="modal-close" data-close>&times;</button>
+    <h3>Modifier le client</h3>
+    <div class="form-grid">
+      <div class="field"><label>Entreprise</label><input id="ecEntreprise"></div>
+      <div class="field"><label>Nom contact</label><input id="ecNom"></div>
+      <div class="field"><label>Téléphone</label><input id="ecTelephone"></div>
+      <div class="field"><label>Secteur</label><input id="ecSecteur"></div>
+      <div class="field"><label>Plan</label><select id="ecPlan"></select></div>
+      <div class="field"><label>Statut</label><select id="ecStatut"><option>Actif</option><option>Suspendu</option><option>Essai</option></select></div>
+      <div class="field"><label>Pays</label><input id="ecPays"></div>
+      <div class="field"><label>Onboarding</label><select id="ecOnboarding"><option value="">—</option><option>En attente</option><option>En cours</option><option>Terminé</option></select></div>
+      <div class="field"><label>Numéro Vapi</label><input id="ecVapi"></div>
+      <div class="field"><label>Date prochain paiement</label><input type="date" id="ecProchainPaiement"></div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn ghost" data-close>Annuler</button>
+      <button type="button" class="btn" id="ecSaveBtn">Sauvegarder</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: WA CONVERSATION (from panel) ===== -->
+<div class="modal-overlay" id="modalWaConv">
+  <div class="modal-content wide" style="max-width:600px;display:flex;flex-direction:column;gap:0">
+    <button type="button" class="modal-close" data-close>&times;</button>
+    <h3 id="waConvTitle">Conversation WhatsApp</h3>
+    <div id="waConvThread" class="chat-thread" style="min-height:200px;max-height:420px;overflow-y:auto;margin-top:10px"></div>
+  </div>
+</div>
+
 <!-- ===== CLIENT PANEL ===== -->
 <div id="clientPanel">
   <div class="cp-topbar">
@@ -616,6 +657,8 @@ input,select,textarea{font-family:inherit;font-size:14px}
     <!-- KPI cards -->
     <div class="cp-kpis">
       <div class="cp-kpi"><div class="ck-icon g">€</div><div class="ck-val" id="cpKpiMRR">—</div><div class="ck-lbl">MRR client</div></div>
+      <div class="cp-kpi"><div class="ck-icon p">📈</div><div class="ck-val" id="cpKpiARR">—</div><div class="ck-lbl">ARR</div></div>
+      <div class="cp-kpi"><div class="ck-icon dg">💰</div><div class="ck-val" id="cpKpiEncaisse">—</div><div class="ck-lbl">Total encaissé</div></div>
       <div class="cp-kpi"><div class="ck-icon b">📞</div><div class="ck-val" id="cpKpiAppels">—</div><div class="ck-lbl">Total appels</div></div>
       <div class="cp-kpi"><div class="ck-icon b">⏱</div><div class="ck-val" id="cpKpiMinutes">—</div><div class="ck-lbl">Minutes consommées</div></div>
       <div class="cp-kpi"><div class="ck-icon g">💬</div><div class="ck-val" id="cpKpiMessages">—</div><div class="ck-lbl">Messages WhatsApp</div></div>
@@ -830,6 +873,7 @@ function initStaticUI() {
   document.getElementById('clientFilterPays').addEventListener('change', renderClients);
   document.getElementById('newClientForm').addEventListener('submit', submitNewClient);
   document.getElementById('cdSaveBtn').onclick = saveClientDetail;
+  document.getElementById('ecSaveBtn').onclick = saveEditClient;
 
   // client panel hist tabs
   document.querySelectorAll('.cp-htab').forEach(btn=>{
@@ -1134,7 +1178,7 @@ async function openClientPanel(id){
   document.getElementById('cpEmailBtn').onclick=()=>{ window.location.href='mailto:'+c.email; };
   document.getElementById('cpToggleBtn').textContent=c.statut==='Actif'?'Suspendre':'Activer';
   document.getElementById('cpToggleBtn').onclick=()=>toggleClientStatut(c);
-  document.getElementById('cpEditBtn').onclick=()=>openClientDetail(id);
+  document.getElementById('cpEditBtn').onclick=()=>openEditClientModal(id);
 
   // Notes
   document.getElementById('cpNotes').value=c.notes||'';
@@ -1163,12 +1207,19 @@ function renderClientPanelKPIs(c){
   const limits=PLAN_LIMITS[plan]||{msg:0,min:0};
   const isVocal=plan.includes('Vocal')||plan.includes('Combo');
   const isWA=plan.includes('WhatsApp')||plan.includes('Combo');
+  const mrr=PLAN_PRICES[plan]||0;
 
-  // MRR
-  document.getElementById('cpKpiMRR').textContent=(PLAN_PRICES[plan]||0)+' €/mois';
+  document.getElementById('cpKpiMRR').textContent=mrr+' €/mois';
+  document.getElementById('cpKpiARR').textContent=(mrr*12).toLocaleString('fr-FR')+' €/an';
 
-  // Appels & minutes — filter by userId or email
+  // Total encaissé depuis paiements
   const uid=c.userId||c.email||c.id;
+  const totalEnc=adminPaiements
+    .filter(p=>(p.userId===uid||p.userId===c.email)&&p.statut==='Payé')
+    .reduce((s,p)=>s+Number(p.montant||0),0);
+  document.getElementById('cpKpiEncaisse').textContent=totalEnc.toLocaleString('fr-FR')+' €';
+
+  // Appels & minutes
   const histo=adminHistorique.filter(h=>h.userId===uid||h.userId===c.email);
   const appels=histo.filter(h=>{const can=(h.canal||h.type||'').toLowerCase();return can.includes('vocal')||can.includes('appel');});
   const wa=histo.filter(h=>(h.canal||h.type||'').toLowerCase().includes('whats'));
@@ -1211,37 +1262,107 @@ function renderCpTickets(c){
   const rows=adminTickets.filter(t=>t.userId===uid||t.userId===c.email).slice(0,10);
   const tb=document.getElementById('cpTicketsBody');
   if(!rows.length){ tb.innerHTML='<tr class="empty-row"><td colspan="5">Aucun ticket</td></tr>'; return; }
-  tb.innerHTML=rows.map(t=>`<tr class="clickable" onclick="openTicket('${t.id}')">
+  tb.innerHTML=rows.map(t=>`<tr class="clickable" onclick="openTicketFromPanel('${t.id}')">
     <td>#${esc(t.numero)}</td><td>${esc(t.sujet)}</td>
     <td>${prioriteBadge(t.priorite)}</td><td>${statutBadge(t.statut)}</td><td>${fmtDate(t.dateCreation)}</td>
   </tr>`).join('');
 }
 
+function openTicketFromPanel(id){
+  // Open the support modal on top of the panel
+  openTicket(id);
+}
+
 function renderCpHistorique(c, filter){
   const uid=c.userId||c.email||c.id;
-  let rows=adminHistorique.filter(h=>h.userId===uid||h.userId===c.email);
-  if(filter==='appel') rows=rows.filter(h=>(h.canal||h.type||'').toLowerCase().match(/vocal|appel/));
-  else if(filter==='whatsapp') rows=rows.filter(h=>(h.canal||h.type||'').toLowerCase().includes('whats'));
-  rows=rows.slice(0,20);
   const list=document.getElementById('cpHistList');
-  if(!rows.length){ list.innerHTML='<div class="muted" style="padding:12px">Aucun historique.</div>'; return; }
-  list.innerHTML=rows.map(h=>{
-    const isWA=(h.canal||h.type||'').toLowerCase().includes('whats');
-    const preview=isWA?(h.messageEntrant||h.resume||''):h.resume||'';
-    const dureeStr=(!isWA&&h.duree)?` · ${Math.round(h.duree/60)}min`:'';
-    return `<div class="hrow">
-      <div class="hrow-icon ${isWA?'wa':'call'}">${isWA?'💬':'📞'}</div>
-      <div class="hrow-body">
-        <div class="hrow-top">
-          <span style="font-size:13px;font-weight:500">${esc(h.nom||'—')}</span>
-          <span style="font-size:11px;color:var(--muted)">${fmtDate(h.date)}${dureeStr}</span>
-          ${statutBadge(h.statut)}
-        </div>
-        ${preview?`<div class="hrow-msg">${esc(preview)}</div>`:''}
-        ${(h.transcription||h.resume)?`<button class="btn sm ghost" style="font-size:11px;padding:2px 8px;margin-top:6px" onclick="toggleHDetail(this)">Voir détail</button><div class="hrow-detail">${esc(h.transcription||h.resume||'')}</div>`:''}
+  const allHisto=adminHistorique.filter(h=>h.userId===uid||h.userId===c.email);
+
+  if(filter==='whatsapp' || filter===''){
+    // WhatsApp: group by numero, render as conversation cards
+    const waRows=allHisto.filter(h=>(h.canal||h.type||'').toLowerCase().includes('whats'));
+    if(filter==='whatsapp'){
+      list.innerHTML=renderWaGroups(waRows, c);
+      if(!waRows.length) list.innerHTML='<div class="muted" style="padding:12px">Aucune conversation WhatsApp.</div>';
+      return;
+    }
+    // "Tous": show calls as rows, then WA groups
+    const callRows=allHisto.filter(h=>(h.canal||h.type||'').toLowerCase().match(/vocal|appel/)).slice(0,10);
+    const callsHtml=callRows.map(h=>renderCallRow(h)).join('');
+    const waHtml=renderWaGroups(waRows, c);
+    const waSection=waRows.length?`<div style="margin-top:16px"><div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em">WhatsApp</div>${waHtml}</div>`:'';
+    const callSection=callRows.length?`<div><div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em">Appels</div>${callsHtml}</div>`:'';
+    if(!callRows.length&&!waRows.length){ list.innerHTML='<div class="muted" style="padding:12px">Aucun historique.</div>'; return; }
+    list.innerHTML=callSection+waSection;
+    return;
+  }
+
+  // Appels only
+  let rows=allHisto.filter(h=>(h.canal||h.type||'').toLowerCase().match(/vocal|appel/)).slice(0,20);
+  if(!rows.length){ list.innerHTML='<div class="muted" style="padding:12px">Aucun appel.</div>'; return; }
+  list.innerHTML=rows.map(h=>renderCallRow(h)).join('');
+}
+
+function renderCallRow(h){
+  const dureeStr=h.duree?` · ${Math.round(h.duree/60)}min`:'';
+  return `<div class="hrow">
+    <div class="hrow-icon call">📞</div>
+    <div class="hrow-body">
+      <div class="hrow-top">
+        <span style="font-size:13px;font-weight:500">${esc(h.nom||h.numero||'—')}</span>
+        <span style="font-size:11px;color:var(--muted)">${fmtDate(h.date)}${dureeStr}</span>
+        ${statutBadge(h.statut)}
       </div>
+      ${h.resume?`<div class="hrow-msg">${esc(h.resume)}</div>`:''}
+      ${h.transcription?`<button class="btn sm ghost" style="font-size:11px;padding:2px 8px;margin-top:6px" onclick="toggleHDetail(this)">Voir transcription</button><div class="hrow-detail">${esc(h.transcription)}</div>`:''}
+    </div>
+  </div>`;
+}
+
+function renderWaGroups(waRows, c){
+  if(!waRows.length) return '';
+  // Group by numero
+  const groups={};
+  waRows.forEach(h=>{
+    const num=h.numero||'Inconnu';
+    if(!groups[num]) groups[num]=[];
+    groups[num].push(h);
+  });
+  // Sort each group by date desc (most recent first for preview)
+  Object.values(groups).forEach(g=>g.sort((a,b)=>new Date(b.date)-new Date(a.date)));
+  // Sort groups by last message date desc
+  const sorted=Object.entries(groups).sort(([,a],[,b])=>new Date(b[0].date)-new Date(a[0].date));
+  const assistantName=c.nomAssistant||'Assistant';
+  return sorted.map(([num, msgs])=>{
+    const last=msgs[0];
+    const preview=(last.messageEntrant||last.resume||'').slice(0,60);
+    return `<div class="wa-conv-card" onclick="openWaConversation(${JSON.stringify(JSON.stringify(msgs))}, ${JSON.stringify(num)}, ${JSON.stringify(assistantName)})">
+      <div class="wa-conv-top">
+        <span style="font-size:16px">💬</span>
+        <span class="wa-conv-num">${esc(num)}</span>
+        <span class="wa-conv-meta">${msgs.length} message${msgs.length>1?'s':''} · ${fmtDate(last.date)}</span>
+      </div>
+      <div class="wa-conv-preview">${esc(preview)||'—'}</div>
     </div>`;
   }).join('');
+}
+
+function openWaConversation(msgsJson, numero, assistantName){
+  const msgs=JSON.parse(msgsJson);
+  // Sort chronologically (oldest first for display)
+  msgs.sort((a,b)=>new Date(a.date)-new Date(b.date));
+  document.getElementById('waConvTitle').textContent='Conversation — '+numero;
+  const thread=document.getElementById('waConvThread');
+  thread.innerHTML=msgs.map(h=>{
+    const entrant=h.messageEntrant||'';
+    const reponse=h.resume||h.nom||'';
+    let html='';
+    if(entrant) html+=`<div class="bubble client">${esc(entrant)}<div class="meta">${fmtDate(h.date)}</div></div>`;
+    if(reponse) html+=`<div class="bubble admin">${esc(reponse)}<div class="meta">${esc(assistantName)}</div></div>`;
+    return html;
+  }).join('');
+  thread.scrollTop=thread.scrollHeight;
+  document.getElementById('modalWaConv').classList.add('show');
 }
 
 function toggleHDetail(btn){
@@ -1275,6 +1396,64 @@ async function saveClientNotes(id){
   if(res.ok!==false){
     const c=adminClients.find(x=>x.id===id); if(c) c.notes=notes;
     toast('Notes sauvegardées','success');
+  } else toast(res.error||'Erreur','error');
+}
+
+function openEditClientModal(id){
+  const c=adminClients.find(x=>x.id===id); if(!c) return;
+  currentClientId=id;
+  // Populate plan select
+  const ecPlan=document.getElementById('ecPlan');
+  ecPlan.innerHTML=PLAN_LIST.map(p=>`<option${c.plan===p?' selected':''}>${p}</option>`).join('');
+  document.getElementById('ecEntreprise').value=c.entreprise||'';
+  document.getElementById('ecNom').value=c.nom||'';
+  document.getElementById('ecTelephone').value=c.telephone||'';
+  document.getElementById('ecSecteur').value=c.secteur||'';
+  document.getElementById('ecStatut').value=c.statut||'Actif';
+  document.getElementById('ecPays').value=c.pays||'';
+  document.getElementById('ecOnboarding').value=c.onboarding||'';
+  document.getElementById('ecVapi').value=c.numeroVapi||'';
+  // Format date for input[type=date]
+  let paiDate='';
+  if(c.prochainPaiement){ try{ paiDate=new Date(c.prochainPaiement).toISOString().slice(0,10); }catch(e){} }
+  document.getElementById('ecProchainPaiement').value=paiDate;
+  document.getElementById('modalEditClient').classList.add('show');
+}
+
+async function saveEditClient(){
+  if(!currentClientId) return;
+  const fields={
+    "Entreprise": document.getElementById('ecEntreprise').value,
+    "Nom": document.getElementById('ecNom').value,
+    "Numéro de téléphone": document.getElementById('ecTelephone').value,
+    "Secteur": document.getElementById('ecSecteur').value,
+    "Plan": document.getElementById('ecPlan').value,
+    "Statut": document.getElementById('ecStatut').value,
+    "Pays": document.getElementById('ecPays').value,
+    "Onboarding": document.getElementById('ecOnboarding').value||undefined,
+    "Numéro Vapi": document.getElementById('ecVapi').value,
+  };
+  const paiDate=document.getElementById('ecProchainPaiement').value;
+  if(paiDate) fields["Date prochain paiement"]=paiDate;
+  // Remove undefined fields
+  Object.keys(fields).forEach(k=>{ if(fields[k]===undefined) delete fields[k]; });
+  const btn=document.getElementById('ecSaveBtn'); btn.disabled=true;
+  const res=await adminFetch('/.netlify/functions/admin-update-client',{method:'PATCH',body:JSON.stringify({id:currentClientId,fields})});
+  btn.disabled=false;
+  if(res.ok!==false){
+    // Update local data
+    const c=adminClients.find(x=>x.id===currentClientId);
+    if(c){
+      c.entreprise=fields.Entreprise; c.nom=fields.Nom; c.telephone=fields["Numéro de téléphone"];
+      c.secteur=fields.Secteur; c.plan=fields.Plan; c.statut=fields.Statut;
+      c.pays=fields.Pays; c.onboarding=fields.Onboarding||c.onboarding; c.numeroVapi=fields["Numéro Vapi"];
+      if(paiDate) c.prochainPaiement=paiDate;
+    }
+    toast('Client mis à jour','success');
+    document.getElementById('modalEditClient').classList.remove('show');
+    // Refresh panel header & KPIs in place
+    if(_cpClientId===currentClientId && c) openClientPanel(currentClientId);
+    renderClients(); updateOverview();
   } else toast(res.error||'Erreur','error');
 }
 
