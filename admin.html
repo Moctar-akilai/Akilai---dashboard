@@ -2121,7 +2121,7 @@ async function openBillingDetail(clientId){
     let hist=[]; try{ hist=JSON.parse(c.historiqueRelances||'[]'); }catch(e){}
     if(!hist.length){ rhEl.innerHTML='<span>Aucune relance envoyée</span>'; }
     else {
-      const typeLabel={J-7:'J-7','J-3':'J-3','J+1-suspension':'Suspension','Réactivation':'Réactivation'};
+      const typeLabel={'J-7':'J-7','J-3':'J-3','J+1-suspension':'Suspension','Réactivation':'Réactivation'};
       const typeColor={'J-7':'#fb923c','J-3':'#f87171','J+1-suspension':'#dc2626','Réactivation':'#4ade80'};
       rhEl.innerHTML=hist.map(h=>{
         const col=typeColor[h.type]||'#94a3b8';
