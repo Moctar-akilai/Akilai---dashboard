@@ -79,7 +79,11 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .page.active{display:block}
 
 /* ---------- GRID / CARDS ---------- */
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px}
+.kpi-grid{display:grid;gap:14px;margin-bottom:16px}
+.kpi-grid-main{grid-template-columns:repeat(3,1fr)}
+.kpi-grid-ops{grid-template-columns:repeat(4,1fr)}
+.kpi-grid-geo{grid-template-columns:repeat(3,1fr);margin-bottom:24px}
+@media(max-width:900px){.kpi-grid-main,.kpi-grid-ops,.kpi-grid-geo{grid-template-columns:repeat(2,1fr)}}
 .kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;transition:transform .15s,box-shadow .15s;display:flex;flex-direction:column;gap:6px}
 .kpi-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.3)}
 .kpi-card .k-label{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em}
@@ -209,8 +213,9 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .alert-list{display:flex;flex-direction:column;gap:8px}
 .alert-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:var(--surface2);font-size:13px}
 .alert-item .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.alerts-collapsible{overflow:hidden;max-height:600px;transition:max-height .3s ease}
-.alerts-collapsible.collapsed{max-height:0}
+.alerts-collapsible{display:grid;grid-template-rows:1fr;transition:grid-template-rows .3s ease}
+.alerts-collapsible.collapsed{grid-template-rows:0fr}
+.alerts-collapsible>div{overflow:hidden}
 .alerts-header{display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
 .alerts-chevron{transition:transform .3s;font-size:14px;color:var(--text-muted)}
 .alerts-chevron.collapsed{transform:rotate(-90deg)}
@@ -335,16 +340,23 @@ input,select,textarea{font-family:inherit;font-size:14px}
 
     <!-- ===== OVERVIEW ===== -->
     <section class="page active" id="page-overview">
-      <div class="kpi-grid">
+      <!-- Ligne 1 : métriques financières principales -->
+      <div class="kpi-grid kpi-grid-main">
         <div class="kpi-card accent"><div class="k-icon" style="background:rgba(112,178,222,.15)">👥</div><div class="k-label">Clients actifs</div><div class="k-value"><span id="kpiClientsActifs">0</span></div><div class="k-sub">sur <span id="kpiClientsTotal">0</span> au total</div></div>
         <div class="kpi-card accent"><div class="k-icon" style="background:rgba(112,178,222,.15)">💰</div><div class="k-label">MRR calculé</div><div class="k-value" id="kpiMRR">0 €</div><div class="k-sub">revenu mensuel récurrent</div></div>
+        <div class="kpi-card accent" style="border-left-color:#4ade80"><div class="k-icon" style="background:rgba(74,222,128,.12)">📈</div><div class="k-label">Marge brute</div><div class="k-value" id="kpiMarge" style="color:#4ade80">0 €</div><div class="k-sub">MRR − coûts</div></div>
+      </div>
+      <!-- Ligne 2 : opérations & santé -->
+      <div class="kpi-grid kpi-grid-ops">
         <div class="kpi-card"><div class="k-icon" style="background:rgba(239,68,68,.12)">📉</div><div class="k-label">Churn du mois</div><div class="k-value" id="kpiChurn">0</div><div class="k-sub">clients suspendus</div></div>
         <div class="kpi-card"><div class="k-icon" style="background:rgba(245,158,11,.12)">🎫</div><div class="k-label">Tickets ouverts</div><div class="k-value" id="kpiTicketsOuverts">0</div><div class="k-sub">à traiter</div></div>
         <div class="kpi-card"><div class="k-icon" style="background:rgba(148,163,184,.1)">🏗️</div><div class="k-label">Coûts infra / mois</div><div class="k-value" id="kpiCouts">0 €</div><div class="k-sub">infrastructure</div></div>
-        <div class="kpi-card accent"><div class="k-icon" style="background:rgba(34,197,94,.12)">📈</div><div class="k-label">Marge brute</div><div class="k-value" id="kpiMarge">0 €</div><div class="k-sub">MRR - coûts</div></div>
-        <div class="kpi-card kpi-violet"><div class="k-icon" style="background:rgba(167,139,250,.12)">🎙️</div><div class="k-label">Minutes consommées</div><div class="k-value" id="kpiMinutes">0</div><div class="k-sub">appels vocaux (total)</div></div>
+        <div class="kpi-card kpi-violet"><div class="k-icon" style="background:rgba(167,139,250,.12)">🎙️</div><div class="k-label">Minutes consommées</div><div class="k-value" id="kpiMinutes">0</div><div class="k-sub">appels vocaux</div></div>
+      </div>
+      <!-- Ligne 3 : canaux & géographie -->
+      <div class="kpi-grid kpi-grid-geo">
         <div class="kpi-card kpi-cyan"><div class="k-icon" style="background:rgba(34,211,238,.12)">💬</div><div class="k-label">Messages WhatsApp</div><div class="k-value" id="kpiWhatsApp">0</div><div class="k-sub">échanges WA (total)</div></div>
-        <div class="kpi-card kpi-blue"><div class="k-icon" style="background:rgba(96,165,250,.12)">🇫🇷</div><div class="k-label">CA France</div><div class="k-value" id="kpiCAFrance">0 €</div><div class="k-sub">FR · BE · CH · CA</div></div>
+        <div class="kpi-card kpi-blue"><div class="k-icon" style="background:rgba(96,165,250,.12)">🇫🇷</div><div class="k-label">CA France / Europe</div><div class="k-value" id="kpiCAFrance">0 €</div><div class="k-sub">FR · BE · CH · CA</div></div>
         <div class="kpi-card kpi-green"><div class="k-icon" style="background:rgba(74,222,128,.12)">🌍</div><div class="k-label">CA Afrique</div><div class="k-value" id="kpiCAAfrique">0 €</div><div class="k-sub">SN · CI · MA</div></div>
       </div>
       <div class="charts-grid">
