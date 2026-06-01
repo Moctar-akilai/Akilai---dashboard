@@ -658,7 +658,16 @@ input,select,textarea{font-family:inherit;font-size:14px}
 
     <!-- ===== NOTIFICATIONS ===== -->
     <section class="page" id="page-notifications">
-      <div class="toolbar"><div class="spacer"></div><button class="btn ghost sm" id="markAllReadBtn">Tout marquer comme lu</button></div>
+      <div class="toolbar" style="flex-wrap:wrap;gap:8px">
+        <div style="display:flex;gap:6px">
+          <button class="btn sm ghost notif-filter-btn active" data-filter="all">Toutes <span id="nfBadgeAll" class="badge" style="background:rgba(148,163,184,.2);color:var(--text-muted);margin-left:4px">0</span></button>
+          <button class="btn sm ghost notif-filter-btn" data-filter="unread">Non lues <span id="nfBadgeUnread" class="badge" style="background:rgba(239,68,68,.2);color:#f87171;margin-left:4px">0</span></button>
+          <button class="btn sm ghost notif-filter-btn" data-filter="high">Haute priorité <span id="nfBadgeHigh" class="badge" style="background:rgba(239,68,68,.2);color:#f87171;margin-left:4px">0</span></button>
+        </div>
+        <div class="spacer"></div>
+        <button class="btn ghost sm" id="markAllReadBtn">Tout marquer comme lu</button>
+        <button class="btn ghost sm danger" id="clearAllNotifsBtn">Effacer tout</button>
+      </div>
       <div class="notif-list" id="notifList"></div>
     </section>
 
@@ -1098,7 +1107,9 @@ function buildNav() {
     div.className = 'nav-item' + (id==='overview'?' active':'');
     div.dataset.section = id;
     div.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor">${icon}</svg><span class="label">${label}</span>` +
-      (id==='support' ? `<span class="nav-badge" id="supportBadge">0</span>`:'');
+      (id==='support' ? `<span class="nav-badge" id="supportBadge">0</span>`:'') +
+      (id==='notifications' ? `<span class="nav-badge" id="notifBadge">0</span>`:'') +
+      (id==='billing' ? `<span class="nav-badge" id="billingBadge">0</span>`:'');
     div.addEventListener('click', ()=>navigate(id));
     nav.appendChild(div);
   });
@@ -1109,7 +1120,7 @@ function navigate(id) {
   document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active', p.id==='page-'+id));
   document.getElementById('pageTitle').textContent = TITLES[id] || '';
   localStorage.setItem('adminActiveSection', id);
-  if (id==='notifications') renderNotifications();
+  if (id==='notifications'){ renderNotifications(); updateSidebarBadges(); }
   if (id==='automations') ensureRealAutomations().then(()=>{ populateAutoClientFilter(); renderAutomations(); });
 }
 
@@ -1176,6 +1187,15 @@ function initStaticUI() {
 
   // notifications
   document.getElementById('markAllReadBtn').onclick = markAllNotifsRead;
+  document.getElementById('clearAllNotifsBtn').onclick = ()=>{ if(confirm('Effacer toutes les notifications ?')){ saveNotifications([]); renderNotifications(); } };
+  document.querySelectorAll('.notif-filter-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.notif-filter-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      _notifFilter=btn.dataset.filter;
+      renderNotifications();
+    });
+  });
 
   // relance form
   document.getElementById('relanceForm').addEventListener('submit', submitRelance);
@@ -1204,7 +1224,14 @@ async function loadAllAdminData() {
   renderClients(); renderTickets(); renderBilling(); renderAutomations(); renderFinances();
   updateOverview();
   // Load real automations in background (used by client panel)
-  adminFetch('/.netlify/functions/admin-get-automations').then(d=>{ adminRealAutomations=d.automations||[]; });
+  adminFetch('/.netlify/functions/admin-get-automations').then(d=>{
+    adminRealAutomations=d.automations||[];
+    checkAndGenerateNotifications(); // run after automations loaded so erreur auto is included
+  });
+  // Also check Vapi wallet in background
+  adminFetch('/.netlify/functions/check-vapi-wallet').then(d=>{
+    if(d.balance!=null) checkVapiWallet(d.balance);
+  }).catch(()=>{});
 }
 
 async function loadClients(){ const d = await adminFetch('/.netlify/functions/admin-get-clients'); adminClients = d.clients || []; }
@@ -2746,46 +2773,243 @@ function savePlanPrices(){
 }
 
 /* =========================================================
-   NOTIFICATIONS
+   NOTIFICATIONS — système complet
    ========================================================= */
-function notifTypeStyle(type){
+const NOTIF_KEY = 'akilai_notifications';
+const LAST_VISIT_KEY = 'akilai_last_visit';
+const VAPI_THRESHOLD = 5; // $5 minimum
+let _notifFilter = 'all';
+
+function getNotifications(){ try{ return JSON.parse(localStorage.getItem(NOTIF_KEY)||'[]'); }catch(e){ return []; } }
+function saveNotifications(arr){ localStorage.setItem(NOTIF_KEY, JSON.stringify(arr.slice(0,100))); }
+
+function addNotification(n){
+  const all=getNotifications();
+  if(all.find(x=>x.id===n.id)) return; // deduplicate
+  all.unshift({ lu:false, priorite:'normale', ...n, date: n.date||new Date().toISOString() });
+  saveNotifications(all);
+}
+
+function notifStyle(type){
   return ({
-    'new client':['#22c55e','rgba(34,197,94,.15)','👤'],
-    'new ticket':['#f59e0b','rgba(245,158,11,.15)','🎫'],
-    'payment':['#70B2DE','rgba(112,178,222,.15)','💳'],
-    'error':['#ef4444','rgba(239,68,68,.15)','⚠'],
-    'suspended':['#eab308','rgba(234,179,8,.15)','⏸']
-  })[type]||['#94a3b8','rgba(148,163,184,.15)','•'];
+    nouveau_client:  ['#22c55e','rgba(34,197,94,.12)','🎉'],
+    ticket:          ['#f59e0b','rgba(245,158,11,.12)','🎫'],
+    paiement_j7:     ['#f59e0b','rgba(245,158,11,.12)','⚠️'],
+    paiement_j3:     ['#ef4444','rgba(239,68,68,.12)','🔴'],
+    paiement_j1:     ['#dc2626','rgba(220,38,38,.12)','🚨'],
+    erreur_auto:     ['#ef4444','rgba(239,68,68,.12)','⚡'],
+    suspension:      ['#dc2626','rgba(220,38,38,.12)','🔴'],
+    inactif:         ['#94a3b8','rgba(148,163,184,.12)','📊'],
+    vapi_wallet:     ['#f59e0b','rgba(245,158,11,.12)','💳'],
+    ticket_sans_rep: ['#fb923c','rgba(251,146,60,.12)','⏰'],
+  })[type]||['#94a3b8','rgba(148,163,184,.12)','•'];
 }
-function buildNotifications(){
-  const notifs=[];
-  adminClients.forEach(c=>{ if(c.dateInscription) notifs.push({id:'cl-'+c.id,type:'new client',msg:`Nouveau client : ${c.entreprise||c.nom}`,date:c.dateInscription}); });
-  adminTickets.forEach(t=>{ if(t.statut==='Ouvert') notifs.push({id:'tk-'+t.id,type:'new ticket',msg:`Ticket ouvert #${t.numero} : ${t.sujet}`,date:t.dateCreation}); });
-  adminPaiements.forEach(p=>{ if(p.statut==='Payé') notifs.push({id:'pa-'+p.id,type:'payment',msg:`Paiement reçu : ${fmtEur(p.montant)} (${clientNameById(p.userId)||p.client})`,date:p.date});
-    if(p.statut==='Échoué') notifs.push({id:'pf-'+p.id,type:'error',msg:`Paiement échoué : ${clientNameById(p.userId)||p.client}`,date:p.date}); });
-  adminClients.forEach(c=>{ if(c.statut==='Suspendu') notifs.push({id:'su-'+c.id,type:'suspended',msg:`Client suspendu : ${c.entreprise||c.nom}`,date:c.dateInscription}); });
-  adminAutomations.filter(a=>a.statut==='Erreur').forEach(a=>notifs.push({id:'er-'+a.id,type:'error',msg:`Automatisation en erreur : ${a.nom}`,date:new Date().toISOString()}));
-  notifs.sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
-  return notifs;
+
+function relativeDate(iso){
+  if(!iso) return '—';
+  const diff=Date.now()-new Date(iso).getTime();
+  const m=Math.floor(diff/60000);
+  if(m<1) return 'à l\'instant';
+  if(m<60) return `il y a ${m}min`;
+  const h=Math.floor(m/60);
+  if(h<24) return `il y a ${h}h`;
+  const d=Math.floor(h/24);
+  if(d===1) return 'hier';
+  if(d<7) return `il y a ${d} jours`;
+  return fmtDate(iso);
 }
-function getReadIds(){ try{ return JSON.parse(localStorage.getItem('akilai_notif_read')||'[]'); }catch(e){ return []; } }
-function setReadIds(ids){ localStorage.setItem('akilai_notif_read',JSON.stringify(ids)); }
+
+function checkAndGenerateNotifications(){
+  const lastVisit=+(localStorage.getItem(LAST_VISIT_KEY)||0);
+  const now=new Date(); now.setHours(0,0,0,0);
+  const nowMs=Date.now();
+
+  // Nouveaux clients (inscription > lastVisit)
+  adminClients.forEach(c=>{
+    if(!c.dateInscription) return;
+    const d=new Date(c.dateInscription).getTime();
+    if(d>lastVisit){
+      addNotification({ id:`new_client_${c.id}`, type:'nouveau_client', priorite:'haute',
+        titre:'Nouveau client 🎉',
+        message:`${c.entreprise||c.nom} — ${c.plan||'—'} vient de s\'inscrire`,
+        lien:'clients', date:c.dateInscription });
+    }
+  });
+
+  // Nouveaux tickets (creation > lastVisit)
+  adminTickets.forEach(t=>{
+    if(!t.dateCreation) return;
+    const d=new Date(t.dateCreation).getTime();
+    if(d>lastVisit){
+      const prio=t.priorite==='Urgente'?'haute':'normale';
+      addNotification({ id:`new_ticket_${t.id}`, type:'ticket', priorite:prio,
+        titre:`Nouveau ticket #${t.numero}`,
+        message:`${clientNameById(t.userId)||t.userId||'—'} — ${t.sujet} (Priorité: ${t.priorite||'Normale'})`,
+        lien:'support', date:t.dateCreation });
+    }
+  });
+
+  // Paiements J-7 / J-3 / J+1 (clé mensuelle pour ne pas répéter chaque visite)
+  const monthKey=new Date().toISOString().slice(0,7);
+  adminClients.forEach(c=>{
+    if(!c.prochainPaiement||(c.statut!=='Actif'&&c.statut!=='Essai'&&c.statut!=='Suspendu')) return;
+    const d=new Date(c.prochainPaiement); d.setHours(0,0,0,0);
+    const days=Math.round((d-now)/86400000);
+    const name=c.entreprise||c.nom||c.email;
+    if(days===7)
+      addNotification({ id:`pay_j7_${c.id}_${monthKey}`, type:'paiement_j7', priorite:'normale',
+        titre:'Paiement J-7 ⚠️', message:`${name} — échéance le ${fmtDate(c.prochainPaiement)}`,
+        lien:'billing', date:new Date().toISOString() });
+    else if(days===3)
+      addNotification({ id:`pay_j3_${c.id}_${monthKey}`, type:'paiement_j3', priorite:'haute',
+        titre:'Paiement J-3 🔴', message:`${name} — échéance dans 3 jours`, lien:'billing', date:new Date().toISOString() });
+    else if(days<0&&c.statut!=='Suspendu')
+      addNotification({ id:`pay_j1_${c.id}_${monthKey}`, type:'paiement_j1', priorite:'haute',
+        titre:'Paiement en retard 🚨', message:`${name} — compte à suspendre`, lien:'billing', date:new Date().toISOString() });
+  });
+
+  // Automatisations en erreur
+  adminRealAutomations.filter(a=>a.statut==='Erreur').forEach(a=>{
+    const cName=clientNameById(a.userId)||a.userId||'—';
+    addNotification({ id:`err_auto_${a.id||a.nom}_${monthKey}`, type:'erreur_auto', priorite:'haute',
+      titre:'Automatisation en erreur ⚡',
+      message:`${a.nom||'—'} — client : ${cName}`, lien:'automations', date:new Date().toISOString() });
+  });
+
+  // Tickets sans réponse depuis +24h
+  adminTickets.filter(t=>t.statut==='Ouvert').forEach(t=>{
+    if(!t.dateCreation) return;
+    const age=(nowMs-new Date(t.dateCreation).getTime())/3600000;
+    if(age>=24){
+      const cName=clientNameById(t.userId)||t.userId||'—';
+      addNotification({ id:`no_reply_${t.id}`, type:'ticket_sans_rep', priorite:'haute',
+        titre:'Ticket sans réponse ⏰',
+        message:`#${t.numero} — ${cName} attend depuis +${Math.floor(age)}h`, lien:'support', date:new Date().toISOString() });
+    }
+  });
+
+  // Clients inactifs (inscrits > 30j, actifs, peu d'historique)
+  const d30=nowMs-30*86400000;
+  adminClients.filter(c=>c.statut==='Actif'&&c.dateInscription&&new Date(c.dateInscription).getTime()<d30).forEach(c=>{
+    const recentHist=adminHistorique.filter(h=>(h.userId===c.id||h.userId===c.email)&&new Date(h.date||0).getTime()>d30);
+    if(!recentHist.length){
+      addNotification({ id:`inactif_${c.id}_${monthKey}`, type:'inactif', priorite:'normale',
+        titre:'Client inactif 📊',
+        message:`${c.entreprise||c.nom} — aucune activité depuis 30 jours`, lien:'clients', date:new Date().toISOString() });
+    }
+  });
+
+  // Mettre à jour lastVisit maintenant (APRÈS génération)
+  localStorage.setItem(LAST_VISIT_KEY, String(Date.now()));
+
+  updateSidebarBadges();
+  // Si on est déjà sur la page notifications, re-render
+  if(document.getElementById('page-notifications')?.classList.contains('active')) renderNotifications();
+}
+
+function checkVapiWallet(balance){
+  if(balance==null||balance>=VAPI_THRESHOLD) return;
+  const monthKey=new Date().toISOString().slice(0,7);
+  addNotification({ id:`vapi_low_${monthKey}`, type:'vapi_wallet', priorite:'haute',
+    titre:'Wallet Vapi bas 💳',
+    message:`Solde : $${Number(balance).toFixed(2)} — rechargez pour éviter les interruptions`,
+    lien:'settings', date:new Date().toISOString() });
+  updateSidebarBadges();
+}
+
+function updateSidebarBadges(){
+  const all=getNotifications();
+  const unread=all.filter(n=>!n.lu).length;
+
+  // Sidebar badge notifications
+  const nb=document.getElementById('notifBadge');
+  if(nb){ nb.textContent=unread; nb.classList.toggle('show',unread>0); }
+
+  // Sidebar badge billing (paiements en retard)
+  const now2=new Date(); now2.setHours(0,0,0,0);
+  const late=adminClients.filter(c=>{
+    if(!c.prochainPaiement) return false;
+    const d=new Date(c.prochainPaiement); d.setHours(0,0,0,0);
+    return Math.round((d-now2)/86400000)<0&&(c.statut==='Actif'||c.statut==='Essai');
+  }).length;
+  const bb=document.getElementById('billingBadge');
+  if(bb){ bb.textContent=late; bb.classList.toggle('show',late>0); }
+
+  // Sidebar badge support (tickets ouverts)
+  const openTk=adminTickets.filter(t=>t.statut==='Ouvert').length;
+  const sb=document.getElementById('supportBadge');
+  if(sb){ sb.textContent=openTk; sb.classList.toggle('show',openTk>0); }
+
+  // Filter badges
+  const hi=all.filter(n=>n.priorite==='haute').length;
+  const unr=all.filter(n=>!n.lu).length;
+  const nb2=document.getElementById('nfBadgeAll'); if(nb2) nb2.textContent=all.length;
+  const nb3=document.getElementById('nfBadgeUnread'); if(nb3) nb3.textContent=unr;
+  const nb4=document.getElementById('nfBadgeHigh'); if(nb4) nb4.textContent=hi;
+}
+
 function renderNotifications(){
-  const notifs=buildNotifications(); const read=getReadIds();
-  const list=document.getElementById('notifList');
-  if(!notifs.length){ list.innerHTML='<div class="muted">Aucune notification.</div>'; return; }
-  list.innerHTML=notifs.map(n=>{
-    const [color,bg,icon]=notifTypeStyle(n.type);
-    const isRead=read.includes(n.id);
-    return `<div class="notif-card ${isRead?'read':''}" style="border-left-color:${color}">
-      <div class="n-icon" style="background:${bg};color:${color}">${icon}</div>
-      <div class="n-body"><div class="n-msg">${esc(n.msg)}</div><div class="n-date">${fmtDate(n.date)}</div></div>
-      ${isRead?'':`<button class="btn ghost sm" onclick="markNotifRead('${n.id}')">Marquer comme lu</button>`}
+  let all=getNotifications();
+  if(_notifFilter==='unread') all=all.filter(n=>!n.lu);
+  else if(_notifFilter==='high') all=all.filter(n=>n.priorite==='haute');
+
+  updateSidebarBadges();
+  const list=document.getElementById('notifList'); if(!list) return;
+
+  if(!all.length){
+    list.innerHTML=`<div style="text-align:center;padding:60px 20px;color:var(--text-muted)">
+      <div style="font-size:40px;margin-bottom:12px">✓</div>
+      <div style="font-size:15px;font-weight:600;color:var(--text)">Tout est en ordre</div>
+      <div style="font-size:13px;margin-top:4px">${_notifFilter==='all'?'Aucune notification pour l\'instant':'Aucune notification dans ce filtre'}</div>
+    </div>`;
+    return;
+  }
+
+  list.innerHTML=all.map(n=>{
+    const [color,bg,icon]=notifStyle(n.type);
+    const unreadDot=!n.lu?`<span style="width:8px;height:8px;border-radius:50%;background:#ef4444;flex-shrink:0;margin-top:5px"></span>`:'';
+    const prioBadge=n.priorite==='haute'?`<span class="badge badge-danger" style="font-size:10px;padding:2px 6px">Haute</span>`:`<span class="badge badge-muted" style="font-size:10px;padding:2px 6px">Normale</span>`;
+    return `<div class="notif-card ${n.lu?'read':''}" style="border-left-color:${color};cursor:pointer" onclick="clickNotif('${n.id}','${n.lien||''}')">
+      <div class="n-icon" style="background:${bg};color:${color};font-size:18px">${icon}</div>
+      <div class="n-body" style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          ${unreadDot}
+          <strong style="font-size:13px">${esc(n.titre||'')}</strong>
+          ${prioBadge}
+        </div>
+        <div class="n-msg" style="color:var(--text-muted);margin-top:3px">${esc(n.message||'')}</div>
+        <div class="n-date">${relativeDate(n.date)}</div>
+      </div>
+      <button class="btn ghost sm" style="flex-shrink:0;font-size:18px;padding:4px 8px;color:var(--text-muted)" title="Supprimer" onclick="event.stopPropagation();deleteNotif('${n.id}')">×</button>
     </div>`;
   }).join('');
 }
-function markNotifRead(id){ const r=getReadIds(); if(!r.includes(id)){ r.push(id); setReadIds(r);} renderNotifications(); }
-function markAllNotifsRead(){ const ids=buildNotifications().map(n=>n.id); setReadIds(ids); renderNotifications(); toast('Toutes les notifications marquées comme lues'); }
+
+function clickNotif(id, lien){
+  const all=getNotifications();
+  const n=all.find(x=>x.id===id); if(n) n.lu=true;
+  saveNotifications(all);
+  if(lien) navigate(lien);
+  else renderNotifications();
+}
+
+function deleteNotif(id){
+  saveNotifications(getNotifications().filter(n=>n.id!==id));
+  renderNotifications();
+}
+
+function markNotifRead(id){
+  const all=getNotifications();
+  const n=all.find(x=>x.id===id); if(n) n.lu=true;
+  saveNotifications(all); renderNotifications();
+}
+
+function markAllNotifsRead(){
+  const all=getNotifications();
+  all.forEach(n=>n.lu=true);
+  saveNotifications(all); renderNotifications();
+  toast('Toutes les notifications marquées comme lues');
+}
 
 /* =========================================================
    BOOT
