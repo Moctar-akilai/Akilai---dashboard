@@ -5340,23 +5340,16 @@ function populateScheduleSelect() {
   });
 }
 
-function openScheduleModal(autoId) {
-  scheduleTargetId = autoId;
-  const modal = document.getElementById("scheduleModal");
-
-  /* Pré-remplir si automation connue */
-  if (autoId) {
-    const a = automations.find(x => x.id === autoId);
-    if (a) {
-      document.getElementById("scheduleModalTitle").textContent = `Programmer : ${a.nom}`;
-      document.getElementById("scheduleAutoSelect").value = autoId;
-      document.getElementById("scheduleTime").value = a.schedule.heure;
-      document.getElementById("scheduleRecurrence").value = a.schedule.recurrence;
-      /* Cocher les jours */
-      document.querySelectorAll("#scheduleDaysGrid input").forEach(cb => {
-        cb.checked = a.schedule.jours.includes(parseInt(cb.value));
-      });
-    }
+function _fillScheduleForm(autoId) {
+  const a = autoId ? automations.find(x => x.id === autoId) : null;
+  if (a) {
+    document.getElementById("scheduleModalTitle").textContent = `Programmer : ${a.nom}`;
+    document.getElementById("scheduleAutoSelect").value = autoId;
+    document.getElementById("scheduleTime").value = a.schedule.heure || "08:00";
+    document.getElementById("scheduleRecurrence").value = a.schedule.recurrence || "quotidien";
+    document.querySelectorAll("#scheduleDaysGrid input").forEach(cb => {
+      cb.checked = a.schedule.jours.includes(parseInt(cb.value));
+    });
   } else {
     document.getElementById("scheduleModalTitle").textContent = "Programmer une automation";
     document.getElementById("scheduleAutoSelect").value = "";
@@ -5364,8 +5357,23 @@ function openScheduleModal(autoId) {
     document.getElementById("scheduleRecurrence").value = "quotidien";
     document.querySelectorAll("#scheduleDaysGrid input").forEach(cb => { cb.checked = false; });
   }
+}
 
-  modal.classList.add("open");
+function openScheduleModal(autoId) {
+  scheduleTargetId = autoId || null;
+  _fillScheduleForm(autoId);
+
+  const sel = document.getElementById("scheduleAutoSelect");
+  /* Attacher le listener change une seule fois */
+  if (!sel._scheduleChangeAttached) {
+    sel.addEventListener("change", function() {
+      console.log("[scheduleAutoSelect] change →", this.value);
+      _fillScheduleForm(this.value || null);
+    });
+    sel._scheduleChangeAttached = true;
+  }
+
+  document.getElementById("scheduleModal").classList.add("open");
   document.addEventListener("keydown", escCloseModal);
 }
 
@@ -5380,16 +5388,18 @@ function escCloseModal(e) {
 }
 
 function saveSchedule() {
-  const autoId     = parseInt(document.getElementById("scheduleAutoSelect").value);
+  const autoId     = document.getElementById("scheduleAutoSelect").value;
   const heure      = document.getElementById("scheduleTime").value;
   const recurrence = document.getElementById("scheduleRecurrence").value;
   const jours      = Array.from(document.querySelectorAll("#scheduleDaysGrid input:checked")).map(cb => parseInt(cb.value));
+
+  console.log("[saveSchedule] autoId:", autoId, "jours:", jours, "heure:", heure);
 
   if (!autoId)            { showToast("Choisissez une automation", "warning"); return; }
   if (jours.length === 0) { showToast("Sélectionnez au moins un jour", "warning"); return; }
 
   /* Mise à jour locale */
-  const a = automations.find(x => x.id === autoId || x._seq === autoId);
+  const a = automations.find(x => x.id === autoId);
   if (a) { a.schedule.jours = jours; a.schedule.heure = heure; a.schedule.recurrence = recurrence; }
 
   document.getElementById("scheduleModal").classList.remove("open");
@@ -5467,7 +5477,7 @@ function buildCalendar() {
 
       let cellContent = matches.map(a => {
         const isErr = autoState[a.id] === "Erreur";
-        return `<div class="cal-block${isErr ? " err" : ""}" title="${a.nom} — ${a.schedule.heure} (${a.schedule.recurrence})" onclick="openScheduleModal(${a.id})">${a.nom.split("–")[0].trim()}</div>`;
+        return `<div class="cal-block${isErr ? " err" : ""}" title="${a.nom} — ${a.schedule.heure} (${a.schedule.recurrence})" onclick="openScheduleModal('${a.id}')">${a.nom.split("–")[0].trim()}</div>`;
       }).join("");
 
       html += `<div class="cal-cell">${cellContent}</div>`;
