@@ -53,6 +53,7 @@ exports.handler = async function(event, context) {
         pays:             f.Pays                       || "",
         onboarding:       f.Onboarding                 || null,
         vapiAssistantId:  f.VapiAssistantId            || null,
+        numeroVapi:       f["Numéro Vapi"]             || null,
         nomAssistant:     f.NomAssistant               || null,
         voiceId:          f.VoiceId                    || null,
         langue:           f.Langue                     || "fr",

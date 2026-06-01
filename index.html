@@ -2975,6 +2975,16 @@
 
             <hr style="margin:16px 0" />
 
+            <!-- Numéro de téléphone -->
+            <div style="margin-bottom:16px">
+              <div style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px">Numéro de téléphone</div>
+              <div id="vapiPhoneBlock">
+                <div style="font-size:12px;color:var(--text-muted);font-style:italic">Chargement…</div>
+              </div>
+            </div>
+
+            <hr style="margin:16px 0" />
+
             <div style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px">Simulation</div>
             <div style="background:rgba(112,178,222,0.07);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text-muted);line-height:1.6;font-style:italic" id="previewSimulation">
               "Cabinet Dr. Moreau, bonjour ! Sophie à votre service, comment puis-je vous aider ?"
@@ -4904,6 +4914,7 @@ async function loadVoixConfig() {
 
   _applyVoixConfig(cfg);
   _updateVapiButton();
+  loadVapiPhoneNumber();
 }
 
 function _checkVoixIaPlan() {
@@ -5147,6 +5158,50 @@ function previewVoice(url, btn) {
    SÉQ 8 — VAPI : créer ou mettre à jour l'assistant par client
 ============================================================ */
 
+function _formatPhoneNumber(raw) {
+  if (!raw) return raw;
+  /* +33612345678 → +33 6 12 34 56 78 */
+  const digits = raw.replace(/\s/g, "");
+  if (digits.startsWith("+33") && digits.length === 12) {
+    const local = digits.slice(3);
+    return "+33 " + local.replace(/(\d)(\d{2})(\d{2})(\d{2})(\d{2})/, "$1 $2 $3 $4 $5");
+  }
+  return raw;
+}
+
+async function loadVapiPhoneNumber() {
+  const block = document.getElementById("vapiPhoneBlock");
+  if (!block) return;
+
+  const client       = clients[0] || null;
+  const phoneId      = client?.numeroVapi || null;
+
+  if (!phoneId) {
+    block.innerHTML = '<div style="font-size:12px;color:var(--text-muted)">Aucun numéro assigné. Contactez AkilAI.</div>';
+    return;
+  }
+
+  try {
+    const data = await apiFetch(`/.netlify/functions/get-vapi-number?phoneNumberId=${encodeURIComponent(phoneId)}`);
+    const number      = data.number      || null;
+    const assignedId  = data.assistantId || null;
+    const isActive    = !!assignedId;
+
+    block.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <span style="font-size:15px;font-weight:700;color:var(--text);letter-spacing:0.04em">${_formatPhoneNumber(number) || phoneId}</span>
+        <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;${isActive
+          ? "background:rgba(34,197,94,0.15);color:#22c55e;border:1px solid rgba(34,197,94,0.3)"
+          : "background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3)"
+        }">${isActive ? "Actif" : "Non configuré"}</span>
+      </div>
+    `;
+  } catch (e) {
+    console.warn("[loadVapiPhoneNumber]", e.message);
+    block.innerHTML = '<div style="font-size:12px;color:var(--text-muted)">Impossible de charger le numéro.</div>';
+  }
+}
+
 function _updateVapiButton() {
   const label = document.getElementById("btnVapiLabel");
   if (!label) return;
@@ -5190,6 +5245,7 @@ async function createOrUpdateVapiAssistant() {
       /* Mettre à jour le cache local */
       if (client) client.vapiAssistantId = data.assistantId;
       _updateVapiButton();
+      loadVapiPhoneNumber();
       let msg;
       if (data.created && data.phoneAssigned) {
         msg = "Assistant créé et numéro de téléphone assigné avec succès !";
