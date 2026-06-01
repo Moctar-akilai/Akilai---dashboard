@@ -64,8 +64,9 @@ exports.handler = async function(event, context) {
           client_id:     f["User ID"]         || null,
           resume:        f["Résumé"]          || f.Détails || "",
           transcription,
-          escalade:      !!f.Escalade,
-          enregistrement: f["Enregistrement audio"] || null,
+          escalade:           !!f.Escalade,
+          enregistrement:     f["Enregistrement audio"] || null,
+          automatisationIds:  Array.isArray(f["Automatisation"]) ? f["Automatisation"] : [],
         });
       } else if (type === "whatsapp" || canal === "whatsapp") {
         const messages = transcription.map(function(m) {
@@ -84,9 +85,10 @@ exports.handler = async function(event, context) {
           date,
           nb_messages: messages.length,
           client_id:   f["User ID"]        || null,
-          statut:      f.Statut            || "Traité",
-          intention:   f.Intention         || null,
+          statut:            f.Statut            || "Traité",
+          intention:         f.Intention         || null,
           messages,
+          automatisationIds: Array.isArray(f["Automatisation"]) ? f["Automatisation"] : [],
         });
       }
     });

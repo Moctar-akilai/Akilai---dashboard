@@ -2616,9 +2616,9 @@
       <div class="page" id="page-automations">
         <div class="page-header">
           <div>
-            <div class="breadcrumb">Général <span>/ Automations</span></div>
-            <h1 class="page-title">Automations</h1>
-            <p class="page-subtitle">Gérez et planifiez vos <span id="autoActiveCount">7</span> automations actives.</p>
+            <div class="breadcrumb">Général <span>/ Automatisations</span></div>
+            <h1 class="page-title">Automatisations</h1>
+            <p class="page-subtitle">Gérez et planifiez vos <span id="autoActiveCount">7</span> automatisations actives.</p>
           </div>
           <button class="btn btn-secondary btn-sm" onclick="navigate('programmation')">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -2634,8 +2634,6 @@
                   <th colspan="2">Nom</th>
                   <th>Type</th>
                   <th>Statut</th>
-                  <th>Dernière exéc.</th>
-                  <th>Prochaine exéc.</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -3185,14 +3183,14 @@
 <div class="modal-overlay" id="scheduleModal" onclick="closeScheduleModal(event)">
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-header">
-      <div class="modal-title" id="scheduleModalTitle">Programmer une automation</div>
+      <div class="modal-title" id="scheduleModalTitle">Programmer une automatisation</div>
       <button class="modal-close" onclick="closeScheduleModal()">&times;</button>
     </div>
 
     <div class="form-group">
-      <label class="form-label">Automation</label>
+      <label class="form-label">Automatisation</label>
       <select class="form-select" id="scheduleAutoSelect">
-        <option value="">— Choisir une automation —</option>
+        <option value="">— Choisir une automatisation —</option>
       </select>
     </div>
 
@@ -3272,7 +3270,7 @@
           </select>
         </div>
         <div class="form-group full">
-          <label>Automation concernée <span style="color:var(--text-faint);font-weight:400">(optionnel)</span></label>
+          <label>Automatisation concernée <span style="color:var(--text-faint);font-weight:400">(optionnel)</span></label>
           <select id="nt-automation">
             <option value="">— Aucune —</option>
           </select>
@@ -5347,29 +5345,60 @@ function typeChipHtml(type) {
   return `<span class="type-chip" style="border-color:${color}22;color:${color}">${label}</span>`;
 }
 
-const MOCK_LOGS = [
-  { time:"Aujourd'hui 14:22", status:"ok",  msg:"Exécution réussie — 1 tâche traitée" },
-  { time:"Hier 08:00",        status:"ok",  msg:"Exécution réussie — 3 tâches traitées" },
-  { time:"Avant-hier 08:00",  status:"err", msg:"Timeout API — relance échouée" },
-  { time:"Il y a 3 jours",    status:"ok",  msg:"Exécution réussie — 2 tâches traitées" },
-  { time:"Il y a 4 jours",    status:"ok",  msg:"Exécution réussie — 1 tâche traitée" }
-];
+function _buildLogsHtml(autoId) {
+  const all    = [...appels, ...conversations_wa];
+  const linked = all.filter(function(h) {
+    return Array.isArray(h.automatisationIds) && h.automatisationIds.includes(autoId);
+  });
+
+  if (!linked.length) {
+    return '<div style="padding:16px 20px;color:var(--text-muted);font-size:13px;font-style:italic">Aucun log disponible pour cette automatisation.</div>';
+  }
+
+  return linked.map(function(h) {
+    const statut = h.statut || "—";
+    const isOk   = /succ|traité/i.test(statut);
+    const badgeStyle = isOk
+      ? "background:rgba(34,197,94,0.15);color:#22c55e;border:1px solid rgba(34,197,94,0.25)"
+      : "background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.25)";
+
+    const isVoice   = !!(h.duree || h.duree_sec);
+    const canalIcon = isVoice
+      ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4a2 2 0 0 1 1.99-2.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.08 6.08l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>'
+      : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
+
+    const dureeStr = h.duree || (h.duree_sec ? Math.floor(h.duree_sec / 60) + "m " + String(h.duree_sec % 60).padStart(2, "0") + "s" : "");
+    const resume   = h.resume || "";
+
+    return `<div style="display:flex;align-items:flex-start;gap:12px;padding:10px 20px;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:6px;min-width:155px;color:var(--text-faint);font-size:11px;flex-shrink:0">
+        ${canalIcon}
+        <span>${h.date || ""} ${h.heure || ""}</span>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;flex-wrap:wrap">
+          <span style="font-size:12px;font-weight:600;color:var(--text)">${h.nom || "Événement"}</span>
+          ${h.numero ? `<span style="font-size:11px;color:var(--text-muted)">${h.numero}</span>` : ""}
+          ${dureeStr ? `<span style="font-size:11px;color:var(--text-faint)">${dureeStr}</span>` : ""}
+        </div>
+        ${resume ? `<div style="font-size:11px;color:var(--text-muted);line-height:1.5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:500px">${resume}</div>` : ""}
+      </div>
+      <span style="flex-shrink:0;font-size:10px;font-weight:700;padding:3px 7px;border-radius:20px;${badgeStyle}">${statut}</span>
+    </div>`;
+  }).join("");
+}
 
 function buildAutoTable() {
   const tbody = document.getElementById("autoTableBody");
   if (!tbody) return;
   tbody.innerHTML = "";
 
-  const cid = _getActiveClientId();
-  console.log('[AkilAI] buildAutoTable — nb automations total:', automations.length, '— email actif:', _getActiveEmail());
+  console.log('[AkilAI] buildAutoTable — nb automatisations total:', automations.length, '— email actif:', _getActiveEmail());
   automations.filter(a => _matchesCurrentClient(a.client_id)).forEach(a => {
-    const isActive  = autoState[a.id] === "Actif";
-    const isErr     = autoState[a.id] === "Erreur";
-    const checked   = isActive ? "checked" : "";
-
-    /* Ligne principale */
-    const tr = document.createElement("tr");
     const statut = autoState[a.id] || a.statut || "Actif";
+
+    /* Ligne principale — 5 colonnes (sans Dernière / Prochaine exéc.) */
+    const tr = document.createElement("tr");
     tr.innerHTML = `
       <td colspan="2">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
@@ -5382,8 +5411,6 @@ function buildAutoTable() {
       </td>
       <td>${typeChipHtml(a.type)}</td>
       <td id="badge-${a.id}">${statusBadgeHtml(statut)}</td>
-      <td class="cell-time">${a.derniere_exec || "—"}</td>
-      <td class="cell-time">${a.prochaine_exec || '<span style="color:var(--danger)">Non planifiée</span>'}</td>
       <td>
         <div style="display:flex;gap:6px">
           <button class="btn btn-ghost btn-sm" onclick="openScheduleModal('${a.id}')" title="Programmer">
@@ -5399,18 +5426,10 @@ function buildAutoTable() {
     `;
     tbody.appendChild(tr);
 
-    /* Ligne accordion logs */
-    const logsHtml = MOCK_LOGS.map(l => `
-      <div class="log-entry">
-        <span class="log-dot ${l.status}"></span>
-        <span style="color:var(--text-faint);min-width:130px">${l.time}</span>
-        <span>${l.msg}</span>
-      </div>
-    `).join("");
-
+    /* Ligne accordion logs — données réelles depuis historique */
     const trLogs = document.createElement("tr");
     trLogs.className = "logs-row";
-    trLogs.innerHTML = `<td colspan="7"><div class="logs-content" id="logs-${a.id}"><div class="logs-inner">${logsHtml}</div></div></td>`;
+    trLogs.innerHTML = `<td colspan="5"><div class="logs-content" id="logs-${a.id}"><div class="logs-inner">${_buildLogsHtml(a.id)}</div></div></td>`;
     tbody.appendChild(trLogs);
   });
 
@@ -5424,7 +5443,7 @@ function toggleAuto(id, checkbox) {
   /* Mise à jour optimiste */
   autoState[id] = newStatut;
   document.getElementById("badge-" + id).innerHTML = statusBadgeHtml(newStatut);
-  showToast(`Automation ${newStatut === "Actif" ? "activée ✓" : "désactivée"}`, newStatut === "Actif" ? "success" : "info");
+  showToast(`Automatisation ${newStatut === "Actif" ? "activée ✓" : "désactivée"}`, newStatut === "Actif" ? "success" : "info");
   updateAutoCount();
 
   /* Persist dans Airtable si connecté */
@@ -5493,7 +5512,7 @@ function _fillScheduleForm(autoId) {
       cb.checked = a.schedule.jours.includes(parseInt(cb.value));
     });
   } else {
-    document.getElementById("scheduleModalTitle").textContent = "Programmer une automation";
+    document.getElementById("scheduleModalTitle").textContent = "Programmer une automatisation";
     document.getElementById("scheduleAutoSelect").value = "";
     document.getElementById("scheduleTime").value = "08:00";
     document.getElementById("scheduleRecurrence").value = "quotidien";
@@ -5537,7 +5556,7 @@ function saveSchedule() {
 
   console.log("[saveSchedule] autoId:", autoId, "jours:", jours, "heure:", heure);
 
-  if (!autoId)            { showToast("Choisissez une automation", "warning"); return; }
+  if (!autoId)            { showToast("Choisissez une automatisation", "warning"); return; }
   if (jours.length === 0) { showToast("Sélectionnez au moins un jour", "warning"); return; }
 
   /* Mise à jour locale */
@@ -5783,7 +5802,7 @@ function renderClientTabs(c) {
   if (c.statut === "Inactif") alertes.push({ type:"danger",  text:"Client inactif — aucune facturation en cours." });
   if (c.revenus_mensuels === 0 && c.statut !== "Essai") alertes.push({ type:"danger", text:"Revenus nuls — vérifier la configuration du plan." });
   const autoErrors = automations.filter(a => a.client_id === c.id && autoState[a.id] === "Erreur");
-  autoErrors.forEach(a => alertes.push({ type:"danger", text:`Automation en erreur : ${a.nom}` }));
+  autoErrors.forEach(a => alertes.push({ type:"danger", text:`Automatisation en erreur : ${a.nom}` }));
   if (alertes.length === 0) alertes.push({ type:"info", text:"Aucune alerte active pour ce client." });
   document.getElementById("clientAlertesList").innerHTML = alertes.map(al =>
     `<div class="alert-item ${al.type}">
@@ -6306,7 +6325,7 @@ function buildAutoPerfList() {
     <table style="width:100%;border-collapse:collapse;font-size:12px">
       <thead>
         <tr style="color:var(--text-faint);text-transform:uppercase;font-size:10px;letter-spacing:0.05em">
-          <th style="text-align:left;padding:0 0 8px;font-weight:600">Automation</th>
+          <th style="text-align:left;padding:0 0 8px;font-weight:600">Automatisation</th>
           <th style="text-align:right;padding:0 8px 8px;font-weight:600;white-space:nowrap">Exéc. ce mois</th>
           <th style="text-align:right;padding:0 0 8px;font-weight:600">Succès</th>
         </tr>
@@ -6446,7 +6465,7 @@ function checkAlerts(data) {
   const _kpis        = data.kpis        || kpis;
   const _autoState   = data.autoState   || autoState;
 
-  /* R1 — Automation en erreur depuis > 1 jour */
+  /* R1 — Automatisation en erreur depuis > 1 jour */
   _autos.forEach(a => {
     if (_autoState[a.id] === "Erreur" || a.statut === "Erreur") {
       const lastExec = a.derniere_exec ? new Date(a.derniere_exec) : null;
@@ -6456,7 +6475,7 @@ function checkAlerts(data) {
           id:       `R1-${a.id}`,
           priority: "high",
           icon:     "⚠️",
-          title:    `Automation en erreur : ${a.nom}`,
+          title:    `Automatisation en erreur : ${a.nom}`,
           message:  `En erreur depuis ${Math.floor(heures/24)} jour(s). Dernière exécution : ${a.derniere_exec || "inconnue"}.`,
           cta:      { label:"Voir automations", section:"automations" },
           time:     "Maintenant",
@@ -6518,7 +6537,7 @@ function checkAlerts(data) {
     }
   }
 
-  /* R5 — Automation non exécutée à l'heure prévue (écart > 30min) */
+  /* R5 — Automatisation non exécutée à l'heure prévue (écart > 30min) */
   _autos.forEach(a => {
     if (!a.prochaine_exec) return;
     const prevue = new Date(a.prochaine_exec);
