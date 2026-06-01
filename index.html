@@ -5403,7 +5403,7 @@ function saveSchedule() {
   if (a) { a.schedule.jours = jours; a.schedule.heure = heure; a.schedule.recurrence = recurrence; }
 
   document.getElementById("scheduleModal").classList.remove("open");
-  showToast("Programmation sauvegardée ✓", "success");
+  showToast("Programmation sauvegardée avec succès. Les changements prendront effet sous 24h maximum.", "success");
   buildCalendar();
 
   /* Persist dans Airtable si connecté */
