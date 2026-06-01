@@ -40,6 +40,7 @@ exports.handler = async (event) => {
         vapiAssistantId: f.VapiAssistantId || "",
         numeroVapi: f["Numéro Vapi"] || "",
         numeroTwilio: f["Numéro Twilio"] || "",
+        notes: f.Notes || "",
       };
     });
 
