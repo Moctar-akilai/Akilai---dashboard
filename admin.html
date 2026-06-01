@@ -1380,7 +1380,9 @@ function toggleHDetail(btn){
 
 async function toggleClientStatut(c){
   const newStatut=c.statut==='Actif'?'Suspendu':'Actif';
+  console.log('[toggleClientStatut] id:', c.id, '→', newStatut);
   const res=await adminFetch('/.netlify/functions/admin-update-client',{method:'PATCH',body:JSON.stringify({id:c.id,fields:{Statut:newStatut}})});
+  console.log('[toggleClientStatut] réponse:', res);
   if(res.ok!==false){
     c.statut=newStatut;
     toast('Statut mis à jour : '+newStatut,'success');
@@ -1396,9 +1398,11 @@ async function toggleClientStatut(c){
 
 async function saveClientNotes(id){
   const notes=document.getElementById('cpNotes').value;
+  console.log('[saveClientNotes] id:', id, '| longueur notes:', notes.length);
   const btn=document.getElementById('cpSaveNotesBtn'); btn.disabled=true;
   const res=await adminFetch('/.netlify/functions/admin-update-client',{method:'PATCH',body:JSON.stringify({id,fields:{Notes:notes}})});
   btn.disabled=false;
+  console.log('[saveClientNotes] réponse:', res);
   if(res.ok!==false){
     const c=adminClients.find(x=>x.id===id); if(c) c.notes=notes;
     toast('Notes sauvegardées','success');
@@ -1428,7 +1432,8 @@ function openEditClientModal(id){
 
 async function saveEditClient(){
   if(!currentClientId) return;
-  const fields={
+  console.log('[saveEditClient] id:', currentClientId);
+  const raw={
     "Entreprise": document.getElementById('ecEntreprise').value,
     "Nom": document.getElementById('ecNom').value,
     "Numéro de téléphone": document.getElementById('ecTelephone').value,
@@ -1436,31 +1441,34 @@ async function saveEditClient(){
     "Plan": document.getElementById('ecPlan').value,
     "Statut": document.getElementById('ecStatut').value,
     "Pays": document.getElementById('ecPays').value,
-    "Onboarding": document.getElementById('ecOnboarding').value||undefined,
+    "Onboarding": document.getElementById('ecOnboarding').value,
     "Numéro Vapi": document.getElementById('ecVapi').value,
   };
   const paiDate=document.getElementById('ecProchainPaiement').value;
-  if(paiDate) fields["Date prochain paiement"]=paiDate;
-  // Remove undefined fields
-  Object.keys(fields).forEach(k=>{ if(fields[k]===undefined) delete fields[k]; });
+  if(paiDate) raw["Date prochain paiement"]=paiDate;
+  // Remove empty strings (Airtable rejects empty singleSelect)
+  const fields={};
+  Object.entries(raw).forEach(([k,v])=>{ if(v!==''&&v!==undefined&&v!==null) fields[k]=v; });
+  console.log('[saveEditClient] fields:', fields);
   const btn=document.getElementById('ecSaveBtn'); btn.disabled=true;
   const res=await adminFetch('/.netlify/functions/admin-update-client',{method:'PATCH',body:JSON.stringify({id:currentClientId,fields})});
   btn.disabled=false;
+  console.log('[saveEditClient] réponse:', res);
   if(res.ok!==false){
-    // Update local data
     const c=adminClients.find(x=>x.id===currentClientId);
     if(c){
-      c.entreprise=fields.Entreprise; c.nom=fields.Nom; c.telephone=fields["Numéro de téléphone"];
-      c.secteur=fields.Secteur; c.plan=fields.Plan; c.statut=fields.Statut;
-      c.pays=fields.Pays; c.onboarding=fields.Onboarding||c.onboarding; c.numeroVapi=fields["Numéro Vapi"];
+      c.entreprise=fields.Entreprise??c.entreprise; c.nom=fields.Nom??c.nom;
+      c.telephone=fields["Numéro de téléphone"]??c.telephone;
+      c.secteur=fields.Secteur??c.secteur; c.plan=fields.Plan??c.plan;
+      c.statut=fields.Statut??c.statut; c.pays=fields.Pays??c.pays;
+      c.onboarding=fields.Onboarding??c.onboarding; c.numeroVapi=fields["Numéro Vapi"]??c.numeroVapi;
       if(paiDate) c.prochainPaiement=paiDate;
     }
     toast('Client mis à jour','success');
     document.getElementById('modalEditClient').classList.remove('show');
-    // Refresh panel header & KPIs in place
     if(_cpClientId===currentClientId && c) openClientPanel(currentClientId);
     renderClients(); updateOverview();
-  } else toast(res.error||'Erreur','error');
+  } else toast(res.error||'Erreur mise à jour','error');
 }
 
 function closeClientPanel(){
