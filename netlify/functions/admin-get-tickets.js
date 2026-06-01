@@ -39,9 +39,11 @@ exports.handler = async (event) => {
         numero: f["N° Ticket"] || f.ID || i + 1,
         client: f.Client || f["User ID"] || "",
         sujet: f.Sujet || f.Titre || "",
+        message: f.Message || f["Message initial"] || "",
         priorite: f.Priorité || "Normal",
         statut: f.Statut || "Ouvert",
         dateCreation: f["Date de creation"] || r.createdTime,
+        dateResolution: f["Date résolution"] || null,
         conversation,
         userId: f["User ID"] || "",
       };

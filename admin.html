@@ -148,11 +148,17 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .detail-row .dl{color:var(--text-muted)}
 
 /* ---------- CHAT ---------- */
-.chat-thread{max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:6px;margin-bottom:14px}
-.bubble{max-width:80%;padding:9px 13px;border-radius:12px;font-size:13px;line-height:1.45}
+.chat-thread{display:flex;flex-direction:column;gap:10px;padding:10px;background:rgba(0,0,0,.2);border-radius:10px;border:1px solid var(--border)}
+.bubble{max-width:80%;padding:9px 13px;border-radius:12px;font-size:13px;line-height:1.45;word-break:break-word}
 .bubble .meta{font-size:10px;opacity:.6;margin-top:4px}
 .bubble.admin{align-self:flex-end;background:var(--accent);color:#08131c;border-bottom-right-radius:3px}
 .bubble.client{align-self:flex-start;background:var(--surface2);border-bottom-left-radius:3px}
+/* support tabs */
+.support-filters{margin-bottom:0}
+.ticket-tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tab-btn{background:transparent;border:1px solid var(--border);border-radius:20px;padding:5px 16px;color:var(--muted);cursor:pointer;font-size:13px;transition:all .15s}
+.tab-btn:hover{border-color:var(--accent);color:var(--accent)}
+.tab-btn.active{background:var(--accent);border-color:var(--accent);color:#08131c;font-weight:600}
 
 /* ---------- RELANCES ---------- */
 .relance-cols{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
@@ -298,10 +304,20 @@ input,select,textarea{font-family:inherit;font-size:14px}
 
     <!-- ===== SUPPORT ===== -->
     <section class="page" id="page-support">
-      <div class="toolbar">
-        <select id="ticketFilterStatut"><option value="">Tous statuts</option><option>Ouvert</option><option>En cours</option><option>Résolu</option></select>
-        <select id="ticketFilterPriorite"><option value="">Toutes priorités</option><option>Haute</option><option>Normal</option><option>Basse</option></select>
-        <select id="ticketFilterClient"><option value="">Tous clients</option></select>
+      <div class="support-filters">
+        <div class="ticket-tabs" id="ticketTabs">
+          <button class="tab-btn active" data-statut="">Tous</button>
+          <button class="tab-btn" data-statut="Ouvert">Ouvert</button>
+          <button class="tab-btn" data-statut="En cours">En cours</button>
+          <button class="tab-btn" data-statut="Résolu">Résolu</button>
+          <button class="tab-btn" data-statut="Fermé">Fermé</button>
+        </div>
+        <div class="toolbar" style="margin-top:10px">
+          <select id="ticketFilterStatut" style="display:none"></select>
+          <select id="ticketFilterPriorite"><option value="">Toutes priorités</option><option>Urgente</option><option>Haute</option><option>Normale</option><option>Faible</option></select>
+          <select id="ticketFilterClient"><option value="">Tous clients</option></select>
+          <input id="ticketSearch" placeholder="Rechercher…" style="margin-left:auto;width:200px">
+        </div>
       </div>
       <div class="table-wrap">
         <table class="hist-table">
@@ -443,17 +459,31 @@ input,select,textarea{font-family:inherit;font-size:14px}
 
 <!-- ===== MODAL: TICKET ===== -->
 <div class="modal-overlay" id="modalTicket">
-  <div class="modal-content wide">
+  <div class="modal-content wide" style="max-width:700px;display:flex;flex-direction:column;gap:0">
     <button type="button" class="modal-close" data-close>&times;</button>
     <h3 id="tkTitle">Ticket</h3>
-    <div class="form-grid">
-      <div class="field"><label>Statut</label><select id="tkStatut"><option>Ouvert</option><option>En cours</option><option>Résolu</option></select></div>
-      <div class="field"><label>Priorité</label><select id="tkPriorite"><option>Haute</option><option>Normal</option><option>Basse</option></select></div>
+    <div id="tkMeta" style="margin-bottom:4px;font-size:12px;color:#64748b"></div>
+    <div class="form-grid" style="margin-bottom:12px">
+      <div class="field">
+        <label>Statut</label>
+        <select id="tkStatut">
+          <option>Ouvert</option><option>En cours</option><option>Résolu</option><option>Fermé</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Priorité</label>
+        <select id="tkPriorite">
+          <option>Urgente</option><option>Haute</option><option>Normale</option><option>Faible</option>
+        </select>
+      </div>
+      <div class="field" style="align-self:flex-end">
+        <button type="button" class="btn ghost" id="tkSaveStatusBtn" style="width:100%">Mettre à jour</button>
+      </div>
     </div>
-    <div class="chat-thread mt16" id="tkThread"></div>
-    <div class="field"><textarea id="tkReply" rows="3" placeholder="Votre réponse…"></textarea></div>
+    <div class="chat-thread" id="tkThread" style="min-height:160px;max-height:360px;overflow-y:auto"></div>
+    <div class="field" style="margin-top:12px"><textarea id="tkReply" rows="3" placeholder="Votre réponse…"></textarea></div>
     <div class="modal-actions">
-      <button type="button" class="btn ghost" id="tkSaveStatusBtn">Mettre à jour statut/priorité</button>
+      <button type="button" class="btn ghost" data-close>Fermer</button>
       <button type="button" class="btn" id="tkReplyBtn">Répondre</button>
     </div>
   </div>
@@ -647,9 +677,7 @@ function initStaticUI() {
   document.getElementById('autoFilterStatut').addEventListener('change', renderAutomations);
 
   // support
-  document.getElementById('ticketFilterStatut').addEventListener('change', renderTickets);
-  document.getElementById('ticketFilterPriorite').addEventListener('change', renderTickets);
-  document.getElementById('ticketFilterClient').addEventListener('change', renderTickets);
+  initTicketTabs();
   document.getElementById('tkReplyBtn').onclick = submitTicketReply;
   document.getElementById('tkSaveStatusBtn').onclick = saveTicketStatus;
 
@@ -942,19 +970,42 @@ async function toggleAutomation(id){
 /* =========================================================
    SUPPORT
    ========================================================= */
+let _ticketTabStatut = '';
+
+function initTicketTabs(){
+  document.getElementById('ticketTabs').addEventListener('click', e=>{
+    const btn=e.target.closest('.tab-btn'); if(!btn) return;
+    document.querySelectorAll('#ticketTabs .tab-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    _ticketTabStatut = btn.dataset.statut||'';
+    renderTickets();
+  });
+  document.getElementById('ticketFilterPriorite').addEventListener('change',renderTickets);
+  document.getElementById('ticketFilterClient').addEventListener('change',renderTickets);
+  document.getElementById('ticketSearch').addEventListener('input',renderTickets);
+}
+
 function renderTickets(){
-  const fs=document.getElementById('ticketFilterStatut').value, fp=document.getElementById('ticketFilterPriorite').value, fc=document.getElementById('ticketFilterClient').value;
+  const fp=document.getElementById('ticketFilterPriorite').value;
+  const fc=document.getElementById('ticketFilterClient').value;
+  const q=(document.getElementById('ticketSearch').value||'').toLowerCase();
   let rows=adminTickets.filter(t=>{
-    if(fs&&t.statut!==fs) return false;
-    if(fp&&t.priorite!==fp) return false;
-    if(fc && clientNameById(t.userId)!==fc && t.client!==fc) return false;
+    if(_ticketTabStatut && t.statut!==_ticketTabStatut) return false;
+    if(fp && t.priorite!==fp) return false;
+    const clientName=clientNameById(t.userId)||t.client||'';
+    if(fc && clientName!==fc) return false;
+    if(q && !(t.sujet+' '+clientName+' #'+t.numero).toLowerCase().includes(q)) return false;
     return true;
   });
   const tb=document.getElementById('ticketsBody');
   if(!rows.length){ tb.innerHTML='<tr class="empty-row"><td colspan="7">Aucun ticket</td></tr>'; return; }
   tb.innerHTML=rows.map(t=>`<tr class="clickable" onclick="openTicket('${t.id}')">
-    <td>#${esc(t.numero)}</td><td>${esc(clientNameById(t.userId)||t.client||'—')}</td><td>${esc(t.sujet)}</td>
-    <td>${prioriteBadge(t.priorite)}</td><td>${statutBadge(t.statut)}</td><td>${fmtDate(t.dateCreation)}</td>
+    <td>#${esc(t.numero)}</td>
+    <td>${esc(clientNameById(t.userId)||t.client||'—')}</td>
+    <td>${esc(t.sujet)}</td>
+    <td>${prioriteBadge(t.priorite)}</td>
+    <td>${statutBadge(t.statut)}</td>
+    <td>${fmtDate(t.dateCreation)}</td>
     <td><button class="btn sm ghost" onclick="event.stopPropagation();openTicket('${t.id}')">Ouvrir</button></td>
   </tr>`).join('');
 }
@@ -963,24 +1014,34 @@ let currentTicketId=null;
 function openTicket(id){
   const t=adminTickets.find(x=>x.id===id); if(!t) return;
   currentTicketId=id;
-  document.getElementById('tkTitle').textContent=`Ticket #${t.numero} — ${t.sujet}`;
+  document.getElementById('tkTitle').textContent=`Ticket #${t.numero} — ${esc(t.sujet)}`;
+  const clientName=clientNameById(t.userId)||t.client||t.userId||'';
+  document.getElementById('tkMeta').innerHTML=
+    `<strong>${esc(clientName)}</strong> · ${fmtDate(t.dateCreation)}${t.dateResolution?' · Résolu le '+fmtDate(t.dateResolution):''}`;
   document.getElementById('tkStatut').value=t.statut||'Ouvert';
-  document.getElementById('tkPriorite').value=t.priorite||'Normal';
+  document.getElementById('tkPriorite').value=t.priorite||'Normale';
   renderThread(t);
   document.getElementById('tkReply').value='';
   document.getElementById('modalTicket').classList.add('show');
 }
+
 function renderThread(t){
   const thread=document.getElementById('tkThread');
-  const conv=t.conversation||[];
-  if(!conv.length){ thread.innerHTML='<div class="muted">Aucun message dans ce ticket.</div>'; return; }
-  thread.innerHTML=conv.map(m=>{
-    const isAdmin=(m.author||m.role||m.from||'')+''.toLowerCase()==='admin' || (m.author||m.role||m.from||'').toString().toLowerCase().includes('admin') || m.sender==='admin';
-    const side=isAdmin?'admin':'client';
+  const conv=Array.isArray(t.conversation)?t.conversation:[];
+  const msgs=[];
+  // Show initial client message first if present
+  if(t.message){
+    msgs.push(`<div class="bubble client">${esc(t.message)}<div class="meta">${fmtDate(t.dateCreation)} · Message initial</div></div>`);
+  }
+  conv.forEach(m=>{
+    const role=(m.role||m.author||m.from||'').toLowerCase();
+    const isSupport=role==='support'||role==='admin'||role==='akilai';
     const txt=m.text||m.message||m.content||'';
     const when=m.date||m.timestamp||m.createdAt||'';
-    return `<div class="bubble ${side}">${esc(txt)}<div class="meta">${when?fmtDate(when):''}</div></div>`;
-  }).join('');
+    msgs.push(`<div class="bubble ${isSupport?'admin':'client'}">${esc(txt)}<div class="meta">${when?fmtDate(when):''}</div></div>`);
+  });
+  if(!msgs.length){ thread.innerHTML='<div class="muted" style="padding:16px">Aucun message.</div>'; return; }
+  thread.innerHTML=msgs.join('');
   thread.scrollTop=thread.scrollHeight;
 }
 
@@ -991,16 +1052,31 @@ async function submitTicketReply(){
   const btn=document.getElementById('tkReplyBtn'); btn.disabled=true;
   const res=await adminFetch('/.netlify/functions/admin-reply-ticket',{method:'POST',body:JSON.stringify({ticketId:currentTicketId,message:msg})});
   btn.disabled=false;
-  if(res.ok){ toast('Réponse envoyée','success'); document.getElementById('tkReply').value=''; await loadTickets(); const t=adminTickets.find(x=>x.id===currentTicketId); if(t) renderThread(t); renderTickets(); }
-  else toast(res.error||'Erreur envoi','error');
+  if(res.ok){
+    toast('Réponse envoyée','success');
+    document.getElementById('tkReply').value='';
+    await loadTickets();
+    const t=adminTickets.find(x=>x.id===currentTicketId);
+    if(t) renderThread(t);
+    renderTickets();
+    updateOverview();
+  } else toast(res.error||'Erreur envoi','error');
 }
+
 async function saveTicketStatus(){
   if(!currentTicketId) return;
   const statut=document.getElementById('tkStatut').value;
   const priorite=document.getElementById('tkPriorite').value;
-  const res=await adminFetch('/.netlify/functions/update-ticket',{method:'PATCH',body:JSON.stringify({id:currentTicketId,statut,priorite})});
-  if(res.ok!==false){ toast('Ticket mis à jour','success'); await loadTickets(); renderTickets(); updateOverview(); document.getElementById('modalTicket').classList.remove('show'); }
-  else toast(res.error||'Erreur','error');
+  const btn=document.getElementById('tkSaveStatusBtn'); btn.disabled=true;
+  const res=await adminFetch('/.netlify/functions/admin-update-ticket',{method:'PATCH',body:JSON.stringify({id:currentTicketId,statut,priorite})});
+  btn.disabled=false;
+  if(res.ok!==false){
+    toast('Ticket mis à jour','success');
+    const t=adminTickets.find(x=>x.id===currentTicketId);
+    if(t){ t.statut=statut; t.priorite=priorite; }
+    renderTickets();
+    updateOverview();
+  } else toast(res.error||'Erreur','error');
 }
 
 /* =========================================================
