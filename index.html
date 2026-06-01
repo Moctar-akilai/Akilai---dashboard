@@ -93,6 +93,9 @@
     }
     .logo-text span { color: var(--accent); }
     #sidebar.collapsed .logo-text { display: none; }
+    #sidebar.collapsed #sidebarLogoSvg { width: 32px; }
+    #sidebar.collapsed #sidebarLogoSvg text { display: none; }
+    #sidebar.collapsed #sidebarLogoSvg circle { cx: 16; cy: 16; r: 5; }
 
     /* Nav scroll area */
     .sidebar-nav {
@@ -2213,7 +2216,13 @@
 ============================================================ -->
 <div id="loginPage" class="hidden">
   <div class="login-card">
-    <div class="login-logo">Akil<span>AI</span></div>
+    <div class="login-logo">
+      <svg width="130" height="38" viewBox="0 0 130 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <text x="0" y="28" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="26" font-weight="700" letter-spacing="-0.5" fill="#e5e5e5">Akil</text>
+        <text x="63" y="28" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="26" font-weight="700" letter-spacing="-0.5" fill="#e5e5e5">AI</text>
+        <circle cx="122" cy="8" r="5" fill="#70B2DE"/>
+      </svg>
+    </div>
     <div class="login-subtitle">Votre portail d'automatisation IA</div>
 
     <div class="login-field">
@@ -2247,8 +2256,11 @@
   <aside id="sidebar">
 
     <div class="sidebar-logo">
-      <div class="logo-icon">AI</div>
-      <div class="logo-text">Akil<span>AI</span></div>
+      <svg width="110" height="32" viewBox="0 0 110 32" fill="none" xmlns="http://www.w3.org/2000/svg" id="sidebarLogoSvg">
+        <text x="0" y="23" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="22" font-weight="700" letter-spacing="-0.5" fill="white">Akil</text>
+        <text x="52" y="23" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="22" font-weight="700" letter-spacing="-0.5" fill="white">AI</text>
+        <circle cx="103" cy="7" r="4" fill="#70B2DE"/>
+      </svg>
     </div>
 
     <nav class="sidebar-nav">
