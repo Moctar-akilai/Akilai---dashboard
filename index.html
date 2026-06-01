@@ -2493,9 +2493,9 @@
           </div>
         </div>
 
-        <!-- Ligne 2 — 3 KPIs avancés (usage conditionnel en 3e position) -->
+        <!-- Ligne 2 — KPIs avancés (usage conditionnel en 3e position) -->
         <div class="kpi-grid" id="kpiGrid2">
-          <div class="kpi-card">
+          <div class="kpi-card" id="kpiCardDuree">
             <div class="kpi-card-top">
               <div class="kpi-icon accent">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#70B2DE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -2538,23 +2538,11 @@
             <div class="kpi-value" id="kpiUsageWaVal">0 / — msgs</div>
             <div class="kpi-label">Messages envoyés</div>
           </div>
-
-          <!-- Card Messages WhatsApp (visible seulement plans WA/Combo) -->
-          <div class="kpi-card" id="kpiCardWa" style="display:none">
-            <div class="kpi-card-top">
-              <div class="kpi-icon" style="background:rgba(37,211,102,0.12)">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#25D366" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-              </div>
-              <span class="kpi-delta neu" id="kpiWaDelta">—</span>
-            </div>
-            <div class="kpi-value" id="kpiWaVal">—</div>
-            <div class="kpi-label">Messages WhatsApp</div>
-          </div>
         </div>
 
         <!-- Ligne 3 — Graphique appels (65%) + Résumé période (35%) -->
-        <div class="overview-row-3">
-          <div class="chart-card">
+        <div class="overview-row-3" id="overviewRow3">
+          <div class="chart-card" id="chartCardCalls">
             <div class="chart-header">
               <div>
                 <div class="chart-title">Volume d'appels</div>
@@ -3560,24 +3548,26 @@ function updateRealKPIs() {
   /* ── Messages WhatsApp (somme messages_traites des automations WA) ── */
   const waAutos  = myAutos.filter(function(a) { return (a.type || "").toLowerCase().includes("whatsapp"); });
   const totalWa  = waAutos.reduce(function(acc, a) { return acc + (a.messages_traites || 0); }, 0);
-  setText("kpiWaVal",   automations.length > 0 ? totalWa.toLocaleString("fr-FR") : "—");
-  setText("kpiWaDelta", "total");
-  setClass("kpiWaDelta", "kpi-delta neu");
   const _planLow = ((_getSession() && _getSession().plan) || (clients[0] && clients[0].plan) || "").toLowerCase();
   const _isWaPlan = _planLow.includes("whatsapp") || _planLow.includes("combo");
-  /* KPI card Messages WhatsApp (ligne 2) */
-  const _cardWa = document.getElementById("kpiCardWa");
-  if (_cardWa) _cardWa.style.display = _isWaPlan ? "" : "none";
   /* Ligne 1 — swap Appels ↔ Messages WA pour plans WhatsApp-only */
   const _isWaOnly = _planLow.includes("whatsapp") && !_planLow.includes("combo");
   const _cardAppels   = document.getElementById("kpiCardAppels");
   const _cardWaGrid1  = document.getElementById("kpiCardWaGrid1");
   if (_cardAppels)  _cardAppels.style.display  = _isWaOnly ? "none" : "";
   if (_cardWaGrid1) _cardWaGrid1.style.display = _isWaOnly ? "" : "none";
-  /* Sync valeurs WA grid1 avec kpiWaVal */
+  /* Sync valeurs WA grid1 */
   setText("kpiWaGrid1Val",   automations.length > 0 ? totalWa.toLocaleString("fr-FR") : "—");
   setText("kpiWaGrid1Delta", "total");
   setClass("kpiWaGrid1Delta", "kpi-delta neu");
+  /* Ligne 2 — masquer Durée moy pour plans WA (non pertinent) */
+  const _cardDuree = document.getElementById("kpiCardDuree");
+  if (_cardDuree) _cardDuree.style.display = _isWaOnly ? "none" : "";
+  /* Ligne 3 — masquer graphique Appels pour plans WA, afficher résumé en pleine largeur */
+  const _chartCardCalls = document.getElementById("chartCardCalls");
+  const _overviewRow3   = document.getElementById("overviewRow3");
+  if (_chartCardCalls) _chartCardCalls.style.display = _isWaOnly ? "none" : "";
+  if (_overviewRow3)   _overviewRow3.style.gridTemplateColumns = _isWaOnly ? "1fr" : "";
   /* Graphique WA (ligne 4 col droite) vs widget Derniers appels */
   const _chartCardWa     = document.getElementById("chartCardWa");
   const _chartCardRecents = document.getElementById("chartCardRecents");
@@ -3651,14 +3641,14 @@ function updateRealKPIs() {
   /* ── Usage plan (minutes / messages) ── */
   updateUsageKPIs();
 
-  /* Ajuster kpiGrid2 : si aucune card usage visible, passer à 2 colonnes */
+  /* Ajuster kpiGrid2 selon plan : 2 cols si Durée masquée (WA-only), 3 cols sinon */
   const _grid2 = document.getElementById("kpiGrid2");
   if (_grid2) {
-    const _voixVisible = document.getElementById("kpiUsageVoix") && document.getElementById("kpiUsageVoix").style.display !== "none";
-    const _waVisible   = document.getElementById("kpiUsageWa")   && document.getElementById("kpiUsageWa").style.display   !== "none";
-    const _kpiWaVisible= document.getElementById("kpiCardWa")    && document.getElementById("kpiCardWa").style.display    !== "none";
-    const _hasThird = _voixVisible || _waVisible || _kpiWaVisible;
-    _grid2.style.gridTemplateColumns = _hasThird ? "repeat(3,1fr)" : "repeat(2,1fr)";
+    const _voixVisible = document.getElementById("kpiUsageVoix")?.style.display !== "none";
+    const _waVisible   = document.getElementById("kpiUsageWa")?.style.display   !== "none";
+    const _hasThird    = _voixVisible || _waVisible;
+    const _cols = _isWaOnly ? (_hasThird ? "repeat(2,1fr)" : "1fr") : (_hasThird ? "repeat(3,1fr)" : "repeat(2,1fr)");
+    _grid2.style.gridTemplateColumns = _cols;
   }
 }
 
