@@ -346,7 +346,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
       </div>
       <div class="table-wrap">
         <table class="hist-table">
-          <thead><tr><th>Entreprise</th><th>Nom</th><th>Email</th><th>Plan</th><th>Statut</th><th>Inscription</th><th>Prochain paiement</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Entreprise</th><th>Nom</th><th>Email</th><th>Plan</th><th>Statut</th><th>Inscription</th><th>Prochain paiement</th></tr></thead>
           <tbody id="clientsBody"></tbody>
         </table>
       </div>
@@ -1095,14 +1095,13 @@ function renderClients(){
     return true;
   });
   const tb=document.getElementById('clientsBody');
-  if(!rows.length){ tb.innerHTML='<tr class="empty-row"><td colspan="8">Aucun client</td></tr>'; return; }
+  if(!rows.length){ tb.innerHTML='<tr class="empty-row"><td colspan="7">Aucun client</td></tr>'; return; }
   tb.innerHTML=rows.map(c=>`<tr>
     <td><button class="link-btn" onclick="openClientPanel('${c.id}')">${esc(c.entreprise||'—')}</button></td>
     <td>${esc(c.nom)}</td><td>${esc(c.email)}</td>
     <td><span class="badge badge-accent">${esc(c.plan||'—')}</span></td>
     <td>${statutBadge(c.statut)}</td>
     <td>${fmtDate(c.dateInscription)}</td><td>${fmtDate(c.prochainPaiement)}</td>
-    <td>${clientActionsDD(c.id)}</td>
   </tr>`).join('');
 }
 
