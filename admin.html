@@ -134,7 +134,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .dd-menu button:hover{background:var(--surface2)}
 
 /* ---------- MODAL ---------- */
-.modal-overlay{position:fixed;inset:0;background:rgba(5,8,14,.7);backdrop-filter:blur(2px);display:none;align-items:flex-start;justify-content:center;z-index:80;padding:40px 16px;overflow-y:auto}
+.modal-overlay{position:fixed;inset:0;background:rgba(5,8,14,.7);backdrop-filter:blur(2px);display:none;align-items:flex-start;justify-content:center;z-index:150;padding:40px 16px;overflow-y:auto}
 .modal-overlay.show{display:flex}
 .modal-content{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);width:560px;max-width:100%;padding:24px;position:relative;animation:pop .15s ease}
 .modal-content.wide{width:680px}
@@ -1144,6 +1144,7 @@ const PLAN_LIMITS = {
 };
 
 let adminRealAutomations = [];
+const _waGroups = {}; // keyed by "num|clientId" for safe onclick lookup
 let _cpClientId = null;
 let _cpHistFilter = '';
 
@@ -1321,22 +1322,25 @@ function renderCallRow(h){
 
 function renderWaGroups(waRows, c){
   if(!waRows.length) return '';
-  // Group by numero
   const groups={};
   waRows.forEach(h=>{
     const num=h.numero||'Inconnu';
     if(!groups[num]) groups[num]=[];
     groups[num].push(h);
   });
-  // Sort each group by date desc (most recent first for preview)
   Object.values(groups).forEach(g=>g.sort((a,b)=>new Date(b.date)-new Date(a.date)));
-  // Sort groups by last message date desc
   const sorted=Object.entries(groups).sort(([,a],[,b])=>new Date(b[0].date)-new Date(a[0].date));
   const assistantName=c.nomAssistant||'Assistant';
+  // Store in global map to avoid inline JSON in onclick
+  sorted.forEach(([num, msgs])=>{
+    const key=_cpClientId+'|'+num;
+    _waGroups[key]={msgs, assistantName};
+  });
   return sorted.map(([num, msgs])=>{
     const last=msgs[0];
     const preview=(last.messageEntrant||last.resume||'').slice(0,60);
-    return `<div class="wa-conv-card" onclick="openWaConversation(${JSON.stringify(JSON.stringify(msgs))}, ${JSON.stringify(num)}, ${JSON.stringify(assistantName)})">
+    const key=_cpClientId+'|'+num;
+    return `<div class="wa-conv-card" onclick="openWaConversation('${key.replace(/'/g,"\\'")}')">
       <div class="wa-conv-top">
         <span style="font-size:16px">💬</span>
         <span class="wa-conv-num">${esc(num)}</span>
@@ -1347,15 +1351,17 @@ function renderWaGroups(waRows, c){
   }).join('');
 }
 
-function openWaConversation(msgsJson, numero, assistantName){
-  const msgs=JSON.parse(msgsJson);
-  // Sort chronologically (oldest first for display)
-  msgs.sort((a,b)=>new Date(a.date)-new Date(b.date));
+function openWaConversation(key){
+  const entry=_waGroups[key]; if(!entry) return;
+  const {msgs, assistantName}=entry;
+  const numero=key.split('|').slice(1).join('|');
+  // Sort chronologically oldest → newest
+  const sorted=[...msgs].sort((a,b)=>new Date(a.date)-new Date(b.date));
   document.getElementById('waConvTitle').textContent='Conversation — '+numero;
   const thread=document.getElementById('waConvThread');
-  thread.innerHTML=msgs.map(h=>{
+  thread.innerHTML=sorted.map(h=>{
     const entrant=h.messageEntrant||'';
-    const reponse=h.resume||h.nom||'';
+    const reponse=h.resume||'';
     let html='';
     if(entrant) html+=`<div class="bubble client">${esc(entrant)}<div class="meta">${fmtDate(h.date)}</div></div>`;
     if(reponse) html+=`<div class="bubble admin">${esc(reponse)}<div class="meta">${esc(assistantName)}</div></div>`;
