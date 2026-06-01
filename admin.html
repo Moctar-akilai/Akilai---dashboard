@@ -15,7 +15,7 @@
   --text:#e2e8f0; --text-muted:#94a3b8; --text-faint:#475569;
   --accent:#70B2DE; --accent-dim:rgba(112,178,222,0.1); --accent-border:rgba(112,178,222,0.2);
   --success:#22c55e; --warning:#f59e0b; --danger:#ef4444;
-  --radius:12px; --sidebar-w:240px;
+  --radius:12px; --sidebar-w:220px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
@@ -57,9 +57,9 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .collapse-btn{margin-left:auto;background:transparent;border:none;color:var(--text-muted);font-size:18px;padding:4px}
 .sidebar.collapsed .sidebar-top img{display:none}
 .nav{flex:1;padding:12px 8px;overflow-y:auto}
-.nav-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;color:var(--text-muted);font-weight:500;cursor:pointer;position:relative;margin-bottom:2px}
-.nav-item:hover{background:var(--surface2);color:var(--text)}
-.nav-item.active{background:var(--accent-dim);color:var(--accent)}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;color:var(--text-muted);font-weight:500;cursor:pointer;position:relative;margin-bottom:2px;border-left:3px solid transparent;transition:background .15s,color .15s,border-color .15s}
+.nav-item:hover{background:rgba(112,178,222,0.08);color:var(--text)}
+.nav-item.active{background:var(--accent-dim);color:var(--accent);border-left-color:var(--accent)}
 .nav-item svg{width:18px;height:18px;flex-shrink:0}
 .sidebar.collapsed .nav-item span.label{display:none}
 .nav-badge{margin-left:auto;background:var(--danger);color:#fff;font-size:11px;font-weight:600;border-radius:10px;padding:1px 7px;display:none}
@@ -79,20 +79,30 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .page.active{display:block}
 
 /* ---------- GRID / CARDS ---------- */
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-bottom:24px}
-.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px}
-.kpi-card .k-label{font-size:12px;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em}
-.kpi-card .k-value{font-size:26px;font-weight:600}
-.kpi-card .k-sub{font-size:12px;color:var(--text-faint);margin-top:4px}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;transition:transform .15s,box-shadow .15s;display:flex;flex-direction:column;gap:6px}
+.kpi-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.3)}
+.kpi-card .k-label{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em}
+.kpi-card .k-value{font-size:28px;font-weight:700;line-height:1}
+.kpi-card .k-sub{font-size:11px;color:var(--text-faint)}
+.kpi-card .k-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:4px}
 .kpi-card.big .k-value{font-size:30px}
-.kpi-card.accent{border-color:var(--accent-border)}
+.kpi-card.accent{border-color:var(--accent-border);border-left:3px solid var(--accent)}
 .kpi-card.accent .k-value{color:var(--accent)}
+.kpi-card.kpi-violet{border-left:3px solid #a78bfa}
+.kpi-card.kpi-violet .k-value{color:#a78bfa}
+.kpi-card.kpi-cyan{border-left:3px solid #22d3ee}
+.kpi-card.kpi-cyan .k-value{color:#22d3ee}
+.kpi-card.kpi-blue{border-left:3px solid #60a5fa}
+.kpi-card.kpi-blue .k-value{color:#60a5fa}
+.kpi-card.kpi-green{border-left:3px solid #4ade80}
+.kpi-card.kpi-green .k-value{color:#4ade80}
 
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px}
 .card h3{font-size:15px;font-weight:600;margin-bottom:14px}
 .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
-.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px}
-.chart-card h3{font-size:14px;font-weight:600;margin-bottom:12px}
+.chart-card{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius);padding:18px}
+.chart-card h3{font-size:11px;font-weight:700;margin-bottom:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted)}
 .chart-wrap{position:relative;height:240px}
 @media(max-width:900px){.charts-grid{grid-template-columns:1fr}}
 
@@ -199,6 +209,13 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .alert-list{display:flex;flex-direction:column;gap:8px}
 .alert-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:var(--surface2);font-size:13px}
 .alert-item .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.alerts-collapsible{overflow:hidden;max-height:600px;transition:max-height .3s ease}
+.alerts-collapsible.collapsed{max-height:0}
+.alerts-header{display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
+.alerts-chevron{transition:transform .3s;font-size:14px;color:var(--text-muted)}
+.alerts-chevron.collapsed{transform:rotate(-90deg)}
+.alerts-badge-count{background:var(--danger);color:#fff;font-size:10px;font-weight:700;border-radius:10px;padding:1px 6px;display:none}
+.alerts-badge-count.show{display:inline}
 
 /* ---------- SKELETON ---------- */
 .skel{background:linear-gradient(90deg,var(--surface2) 25%,#262d40 50%,var(--surface2) 75%);background-size:200% 100%;animation:shimmer 1.2s infinite;border-radius:4px;height:12px;width:100%}
@@ -319,12 +336,16 @@ input,select,textarea{font-family:inherit;font-size:14px}
     <!-- ===== OVERVIEW ===== -->
     <section class="page active" id="page-overview">
       <div class="kpi-grid">
-        <div class="kpi-card accent"><div class="k-label">Clients actifs</div><div class="k-value"><span id="kpiClientsActifs">0</span></div><div class="k-sub">sur <span id="kpiClientsTotal">0</span> au total</div></div>
-        <div class="kpi-card accent"><div class="k-label">MRR calculé</div><div class="k-value" id="kpiMRR">0 €</div><div class="k-sub">revenu mensuel récurrent</div></div>
-        <div class="kpi-card"><div class="k-label">Churn du mois</div><div class="k-value" id="kpiChurn">0</div><div class="k-sub">clients suspendus</div></div>
-        <div class="kpi-card"><div class="k-label">Tickets ouverts</div><div class="k-value" id="kpiTicketsOuverts">0</div><div class="k-sub">à traiter</div></div>
-        <div class="kpi-card"><div class="k-label">Coûts infra / mois</div><div class="k-value" id="kpiCouts">0 €</div><div class="k-sub">infrastructure</div></div>
-        <div class="kpi-card accent"><div class="k-label">Marge brute</div><div class="k-value" id="kpiMarge">0 €</div><div class="k-sub">MRR - coûts</div></div>
+        <div class="kpi-card accent"><div class="k-icon" style="background:rgba(112,178,222,.15)">👥</div><div class="k-label">Clients actifs</div><div class="k-value"><span id="kpiClientsActifs">0</span></div><div class="k-sub">sur <span id="kpiClientsTotal">0</span> au total</div></div>
+        <div class="kpi-card accent"><div class="k-icon" style="background:rgba(112,178,222,.15)">💰</div><div class="k-label">MRR calculé</div><div class="k-value" id="kpiMRR">0 €</div><div class="k-sub">revenu mensuel récurrent</div></div>
+        <div class="kpi-card"><div class="k-icon" style="background:rgba(239,68,68,.12)">📉</div><div class="k-label">Churn du mois</div><div class="k-value" id="kpiChurn">0</div><div class="k-sub">clients suspendus</div></div>
+        <div class="kpi-card"><div class="k-icon" style="background:rgba(245,158,11,.12)">🎫</div><div class="k-label">Tickets ouverts</div><div class="k-value" id="kpiTicketsOuverts">0</div><div class="k-sub">à traiter</div></div>
+        <div class="kpi-card"><div class="k-icon" style="background:rgba(148,163,184,.1)">🏗️</div><div class="k-label">Coûts infra / mois</div><div class="k-value" id="kpiCouts">0 €</div><div class="k-sub">infrastructure</div></div>
+        <div class="kpi-card accent"><div class="k-icon" style="background:rgba(34,197,94,.12)">📈</div><div class="k-label">Marge brute</div><div class="k-value" id="kpiMarge">0 €</div><div class="k-sub">MRR - coûts</div></div>
+        <div class="kpi-card kpi-violet"><div class="k-icon" style="background:rgba(167,139,250,.12)">🎙️</div><div class="k-label">Minutes consommées</div><div class="k-value" id="kpiMinutes">0</div><div class="k-sub">appels vocaux (total)</div></div>
+        <div class="kpi-card kpi-cyan"><div class="k-icon" style="background:rgba(34,211,238,.12)">💬</div><div class="k-label">Messages WhatsApp</div><div class="k-value" id="kpiWhatsApp">0</div><div class="k-sub">échanges WA (total)</div></div>
+        <div class="kpi-card kpi-blue"><div class="k-icon" style="background:rgba(96,165,250,.12)">🇫🇷</div><div class="k-label">CA France</div><div class="k-value" id="kpiCAFrance">0 €</div><div class="k-sub">FR · BE · CH · CA</div></div>
+        <div class="kpi-card kpi-green"><div class="k-icon" style="background:rgba(74,222,128,.12)">🌍</div><div class="k-label">CA Afrique</div><div class="k-value" id="kpiCAAfrique">0 €</div><div class="k-sub">SN · CI · MA</div></div>
       </div>
       <div class="charts-grid">
         <div class="chart-card"><h3>MRR — 6 derniers mois</h3><div class="chart-wrap"><canvas id="chartMRR"></canvas></div></div>
@@ -333,8 +354,16 @@ input,select,textarea{font-family:inherit;font-size:14px}
         <div class="chart-card"><h3>Résolution des tickets</h3><div class="chart-wrap"><canvas id="chartTickets"></canvas></div></div>
       </div>
       <div class="card">
-        <h3>Alertes</h3>
-        <div class="alert-list" id="alertList"><div class="muted">Aucune alerte.</div></div>
+        <div class="alerts-header" id="alertsHeader">
+          <div style="display:flex;align-items:center;gap:10px">
+            <h3 style="margin:0">Alertes</h3>
+            <span class="alerts-badge-count" id="alertsBadgeCount">0</span>
+          </div>
+          <span class="alerts-chevron" id="alertsChevron">▾</span>
+        </div>
+        <div class="alerts-collapsible" id="alertsCollapsible">
+          <div style="margin-top:12px"><div class="alert-list" id="alertList"><div class="muted">Aucune alerte.</div></div></div>
+        </div>
       </div>
     </section>
 
@@ -1283,6 +1312,7 @@ function initStaticUI() {
   document.getElementById('logoutBtn').onclick = logout;
   document.getElementById('refreshBtn').onclick = ()=>{ loadAllAdminData(); toast('Données rafraîchies'); };
   initBillingTabs();
+  initAlertsCollapsible();
 
   // populate plan selects
   const planOpts = PLAN_LIST.map(p=>`<option>${p}</option>`).join('');
@@ -1481,12 +1511,42 @@ function updateOverview(){
   document.getElementById('kpiCouts').textContent=fmtEur(costs);
   document.getElementById('kpiMarge').textContent=fmtEur(mrr-costs);
 
+  // minutes consommées (Vocal/Appel)
+  const totalSec=adminHistorique.reduce((s,h)=>{ const c=(h.canal||'').toLowerCase(); const t=(h.type||'').toLowerCase(); if(c.includes('vocal')||c.includes('appel')||t.includes('appel')) return s+(parseFloat(h.duree)||0); return s; },0);
+  document.getElementById('kpiMinutes').textContent=Math.round(totalSec/60).toLocaleString('fr-FR');
+
+  // messages WhatsApp
+  const waCount=adminHistorique.filter(h=>{ const c=(h.canal||'').toLowerCase(); return c.includes('whats')||c.includes('wa'); }).length;
+  document.getElementById('kpiWhatsApp').textContent=waCount.toLocaleString('fr-FR');
+
+  // CA France & Afrique
+  const FR_PAYS=new Set(['france','belgique','suisse','canada']);
+  const AF_PAYS=new Set(['sénégal','senegal','côte d\'ivoire','cote d\'ivoire','maroc']);
+  let caFr=0, caAf=0;
+  adminClients.filter(c=>c.statut==='Actif').forEach(c=>{ const p=(c.pays||'').toLowerCase(); const v=PLAN_PRICES[c.plan]||0; if(FR_PAYS.has(p)) caFr+=v; else if(AF_PAYS.has(p)) caAf+=v; });
+  document.getElementById('kpiCAFrance').textContent=fmtEur(caFr);
+  document.getElementById('kpiCAAfrique').textContent=fmtEur(caAf);
+
   // support badge
   const badge=document.getElementById('supportBadge');
   if(badge){ badge.textContent=openT; badge.classList.toggle('show', openT>0); }
 
   renderAlerts();
   renderCharts(mrr,costs);
+}
+
+function initAlertsCollapsible(){
+  const header=document.getElementById('alertsHeader');
+  const body=document.getElementById('alertsCollapsible');
+  const chevron=document.getElementById('alertsChevron');
+  if(!header) return;
+  const collapsed=localStorage.getItem('adminAlertsCollapsed')==='1';
+  if(collapsed){ body.classList.add('collapsed'); chevron.classList.add('collapsed'); }
+  header.addEventListener('click',()=>{
+    const isCollapsed=body.classList.toggle('collapsed');
+    chevron.classList.toggle('collapsed',isCollapsed);
+    localStorage.setItem('adminAlertsCollapsed', isCollapsed?'1':'0');
+  });
 }
 
 function renderAlerts(){
@@ -1500,6 +1560,8 @@ function renderAlerts(){
     if(h>48) alerts.push(['var(--danger)',`Ticket #${t.numero} (${t.sujet}) ouvert depuis >48h`]); } });
   adminAutomations.filter(a=>a.statut==='Erreur').forEach(a=>alerts.push(['var(--danger)',`Automatisation en erreur : ${a.nom}`]));
   list.innerHTML = alerts.length ? alerts.map(([c,m])=>`<div class="alert-item"><span class="dot" style="background:${c}"></span>${esc(m)}</div>`).join('') : '<div class="muted">Aucune alerte.</div>';
+  const badge=document.getElementById('alertsBadgeCount');
+  if(badge){ badge.textContent=alerts.length; badge.classList.toggle('show', alerts.length>0); }
 }
 
 function renderCharts(mrr,costs){
