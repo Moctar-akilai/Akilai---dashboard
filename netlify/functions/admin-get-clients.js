@@ -42,6 +42,7 @@ exports.handler = async (event) => {
         numeroTwilio: f["Numéro Twilio"] || "",
         notes: f.Notes || "",
         montantMensuel: f["Montant mensuel"] || null,
+        historiqueRelances: f["Historique relances"] || "",
       };
     });
 

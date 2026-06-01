@@ -452,18 +452,54 @@ input,select,textarea{font-family:inherit;font-size:14px}
         <div class="stat-pill"><div class="s-label">En attente</div><div class="s-value" id="billPending">0 €</div></div>
         <div class="stat-pill"><div class="s-label">Échoué</div><div class="s-value" id="billFailed">0 €</div></div>
       </div>
-      <div class="table-wrap">
-        <table class="hist-table">
-          <thead><tr><th>Entreprise</th><th>Nom contact</th><th>Plan</th><th>Montant / mois</th><th>Date signature</th><th>Prochain paiement</th><th>Statut paiement</th><th>Actions</th></tr></thead>
-          <tbody id="billingBody"></tbody>
-        </table>
+
+      <!-- Billing tabs -->
+      <div class="ticket-tabs" id="billingTabs" style="margin-bottom:16px">
+        <button class="tab-btn active" data-btab="ajour">À jour</button>
+        <button class="tab-btn" data-btab="relances">Relances <span class="badge" id="badgeRelances" style="background:rgba(251,146,60,.2);color:#fb923c;margin-left:4px">0</span></button>
+        <button class="tab-btn" data-btab="retard">En retard / Réactivation <span class="badge" id="badgeRetard" style="background:rgba(248,113,113,.2);color:#f87171;margin-left:4px">0</span></button>
       </div>
-      <div class="card mt16">
-        <h3>Relances</h3>
-        <div class="relance-cols">
-          <div><strong>J-7</strong><div class="relance-list" id="relanceJ7"></div></div>
-          <div><strong>J-3</strong><div class="relance-list" id="relanceJ3"></div></div>
-          <div><strong>En retard</strong><div class="relance-list" id="relanceLate"></div></div>
+
+      <!-- Tab: À jour -->
+      <div id="btabAjour">
+        <div class="table-wrap">
+          <table class="hist-table">
+            <thead><tr><th>Entreprise</th><th>Nom contact</th><th>Plan</th><th>Montant / mois</th><th>Date signature</th><th>Prochain paiement</th><th>Statut paiement</th><th>Actions</th></tr></thead>
+            <tbody id="billingBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tab: Relances (J-7 / J-3) -->
+      <div id="btabRelances" style="display:none">
+        <div class="relance-cols" style="margin-bottom:20px">
+          <div>
+            <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);margin-bottom:10px">J-7 — Dans 7 jours</div>
+            <div id="relanceJ7"></div>
+          </div>
+          <div>
+            <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);margin-bottom:10px">J-3 — Dans 3 jours</div>
+            <div id="relanceJ3"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: En retard / Réactivation -->
+      <div id="btabRetard" style="display:none">
+        <!-- J+1 — En retard -->
+        <div style="margin-bottom:24px">
+          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#f87171;margin-bottom:10px">Paiement en retard (Actif)</div>
+          <div id="relanceLate"></div>
+        </div>
+        <!-- Clients suspendus -->
+        <div>
+          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);margin-bottom:10px">Clients suspendus — Réactivation</div>
+          <div class="table-wrap">
+            <table class="hist-table">
+              <thead><tr><th>Entreprise</th><th>Nom</th><th>Plan</th><th>Montant</th><th>Statut</th><th>Prochain paiement</th><th>Actions</th></tr></thead>
+              <tbody id="suspendedBody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </section>
@@ -648,14 +684,19 @@ input,select,textarea{font-family:inherit;font-size:14px}
       <div style="font-size:13px;font-weight:600">Historique des paiements</div>
       <button class="btn sm" id="bdAddBtn">+ Ajouter paiement</button>
     </div>
-    <div style="overflow-y:auto;max-height:320px">
+    <div style="overflow-y:auto;max-height:260px">
       <table class="hist-table" style="margin:0">
         <thead><tr><th>Date</th><th>Montant</th><th>Statut</th><th>Référence</th><th>Période</th><th>Actions</th></tr></thead>
         <tbody id="bdHistBody"></tbody>
       </table>
     </div>
+    <!-- Historique relances -->
+    <div style="padding:12px 24px 6px;border-top:1px solid var(--border)">
+      <div style="font-size:12px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Historique relances</div>
+      <div id="bdRelancesHist" style="font-size:12px;color:var(--text-muted)">—</div>
+    </div>
     <div style="padding:12px 24px;border-top:1px solid var(--border);display:flex;gap:8px">
-      <button class="btn sm" id="bdRelanceBtn">Envoyer relance</button>
+      <button class="btn sm" id="bdRelanceBtn">✉ Envoyer relance</button>
     </div>
   </div>
 </div>
@@ -959,6 +1000,7 @@ function initStaticUI() {
   document.getElementById('collapseBtn').onclick = ()=>document.getElementById('sidebar').classList.toggle('collapsed');
   document.getElementById('logoutBtn').onclick = logout;
   document.getElementById('refreshBtn').onclick = ()=>{ loadAllAdminData(); toast('Données rafraîchies'); };
+  initBillingTabs();
 
   // populate plan selects
   const planOpts = PLAN_LIST.map(p=>`<option>${p}</option>`).join('');
@@ -2063,8 +2105,8 @@ async function openBillingDetail(clientId){
   document.getElementById('bdLast').textContent=last?`${fmtDate(last.date)} · ${fmtEur(last.montant)}`:'—';
 
   const tb=document.getElementById('bdHistBody');
-  if(!pays.length){ tb.innerHTML='<tr class="empty-row"><td colspan="6">Aucun paiement enregistré</td></tr>'; return; }
-  tb.innerHTML=pays.map(p=>`<tr>
+  if(!pays.length){ tb.innerHTML='<tr class="empty-row"><td colspan="6">Aucun paiement enregistré</td></tr>'; }
+  else tb.innerHTML=pays.map(p=>`<tr>
     <td>${fmtDate(p.date)||'—'}</td>
     <td>${fmtEur(p.montant)}</td>
     <td>${paiementStatutBadge(p.statut)}</td>
@@ -2072,6 +2114,27 @@ async function openBillingDetail(clientId){
     <td style="font-size:11px;color:var(--muted)">${esc(p.periode||'—')}</td>
     <td><button class="btn sm ghost" onclick="markPaidById('${p.id}',this)">✓ Payé</button></td>
   </tr>`).join('');
+
+  // Render relances history
+  const rhEl=document.getElementById('bdRelancesHist');
+  if(rhEl){
+    let hist=[]; try{ hist=JSON.parse(c.historiqueRelances||'[]'); }catch(e){}
+    if(!hist.length){ rhEl.innerHTML='<span>Aucune relance envoyée</span>'; }
+    else {
+      const typeLabel={J-7:'J-7','J-3':'J-3','J+1-suspension':'Suspension','Réactivation':'Réactivation'};
+      const typeColor={'J-7':'#fb923c','J-3':'#f87171','J+1-suspension':'#dc2626','Réactivation':'#4ade80'};
+      rhEl.innerHTML=hist.map(h=>{
+        const col=typeColor[h.type]||'#94a3b8';
+        const lbl=typeLabel[h.type]||h.type;
+        return `<span style="display:inline-flex;align-items:center;gap:6px;margin:0 8px 4px 0;background:rgba(255,255,255,.05);border-radius:6px;padding:3px 8px">
+          <span style="width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0"></span>
+          <strong style="color:${col}">${lbl}</strong>
+          <span style="color:var(--text-muted)">${h.date||''}</span>
+          <span style="color:#4ade80;font-size:10px">${h.statut||''}</span>
+        </span>`;
+      }).join('');
+    }
+  }
 }
 
 async function markPaidById(id, btn){
@@ -2136,20 +2199,115 @@ async function submitRelance(e){
   else toast(res.error||'Erreur relance','error');
 }
 
-function renderRelances(){
-  const now=new Date();
-  const j7=[],j3=[],late=[];
-  adminClients.forEach(c=>{
-    if(!c.prochainPaiement) return;
-    const d=new Date(c.prochainPaiement); if(isNaN(d)) return;
-    const days=Math.ceil((d-now)/86400000);
-    if(days<0) late.push(c); else if(days<=3) j3.push(c); else if(days<=7) j7.push(c);
+/* ── Billing tabs ── */
+let _billingTab = 'ajour';
+
+function initBillingTabs(){
+  document.querySelectorAll('#billingTabs .tab-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      _billingTab=btn.dataset.btab;
+      document.querySelectorAll('#billingTabs .tab-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('btabAjour').style.display  = _billingTab==='ajour'?'':'none';
+      document.getElementById('btabRelances').style.display= _billingTab==='relances'?'':'none';
+      document.getElementById('btabRetard').style.display  = _billingTab==='retard'?'':'none';
+    });
   });
-  const card=c=>`<div class="relance-card"><div class="rc-name">${esc(c.entreprise||c.nom)}</div>
-    <div class="rc-sub">${esc(c.email)} · ${fmtDate(c.prochainPaiement)}</div>
-    <button class="btn sm" onclick="relanceClient('${c.id}')">Lancer relance</button></div>`;
-  const fill=(elId,arr)=>{ const el=document.getElementById(elId); el.innerHTML=arr.length?arr.map(card).join(''):'<div class="muted">Aucun</div>'; };
-  fill('relanceJ7',j7); fill('relanceJ3',j3); fill('relanceLate',late);
+}
+
+function renderRelances(){
+  const now=new Date(); now.setHours(0,0,0,0);
+  const j7=[],j3=[],late=[],suspended=[];
+
+  adminClients.forEach(c=>{
+    if(c.statut==='Suspendu'){ suspended.push(c); return; }
+    if(c.statut!=='Actif'&&c.statut!=='Essai') return;
+    if(!c.prochainPaiement) return;
+    const d=new Date(c.prochainPaiement); d.setHours(0,0,0,0); if(isNaN(d)) return;
+    const days=Math.round((d-now)/86400000);
+    if(days<0) late.push(c);
+    else if(days<=3) j3.push(c);
+    else if(days<=7) j7.push(c);
+  });
+
+  // Update tab badges
+  document.getElementById('badgeRelances').textContent=j7.length+j3.length;
+  document.getElementById('badgeRetard').textContent=late.length+suspended.length;
+
+  // Relance card (J-7 / J-3)
+  const relCard=(c,type)=>`<div class="relance-card">
+    <div class="rc-name">${esc(c.entreprise||c.nom)}</div>
+    <div class="rc-sub">${esc(c.email)} · Échéance : ${fmtDate(c.prochainPaiement)}</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn sm ghost" onclick="relanceClient('${c.id}')">✉ Relance</button>
+    </div></div>`;
+  const fill=(elId,arr,fn)=>{ const el=document.getElementById(elId); if(el) el.innerHTML=arr.length?arr.map(fn).join(''):'<div style="color:var(--text-muted);font-size:13px;padding:8px">Aucun</div>'; };
+  fill('relanceJ7',j7,c=>relCard(c,'J-7'));
+  fill('relanceJ3',j3,c=>relCard(c,'J-3'));
+
+  // Late (J+1) cards
+  const lateCard=c=>`<div class="relance-card" style="border-color:rgba(248,113,113,.3)">
+    <div class="rc-name">${esc(c.entreprise||c.nom)}</div>
+    <div class="rc-sub">${esc(c.email)} · Échéance dépassée : ${fmtDate(c.prochainPaiement)}</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn sm ghost" onclick="relanceClient('${c.id}')">✉ Relance</button>
+      <button class="btn sm" style="background:#dc2626" onclick="suspendAndNotify('${c.id}')">🔴 Suspendre et notifier</button>
+    </div></div>`;
+  fill('relanceLate',late,lateCard);
+
+  // Suspended table
+  const tb=document.getElementById('suspendedBody');
+  if(tb){
+    if(!suspended.length){ tb.innerHTML='<tr class="empty-row"><td colspan="7">Aucun client suspendu</td></tr>'; }
+    else tb.innerHTML=suspended.map(c=>`<tr>
+      <td><strong>${esc(c.entreprise||'—')}</strong></td>
+      <td>${esc(c.nom||'—')}</td>
+      <td><span class="badge badge-accent">${esc(c.plan||'—')}</span></td>
+      <td>${fmtEur(clientMontant(c))}</td>
+      <td>${statutBadge(c.statut)}</td>
+      <td>${fmtDate(c.prochainPaiement)||'—'}</td>
+      <td><button class="btn sm" style="background:#16a34a" onclick="reactivateClient('${c.id}')">✅ Réactiver</button></td>
+    </tr>`).join('');
+  }
+}
+
+async function suspendAndNotify(clientId){
+  const c=adminClients.find(x=>x.id===clientId); if(!c) return;
+  if(!confirm(`Suspendre ${c.entreprise||c.nom} et désactiver ses automatisations ?`)) return;
+  const btn=event?.target; if(btn){btn.disabled=true;btn.textContent='…';}
+  const res=await adminFetch('/.netlify/functions/send-suspension',{
+    method:'POST',
+    body:JSON.stringify({ clientId:c.id, email:c.email, nom:c.nom||c.entreprise, plan:c.plan, historiqueRelances:c.historiqueRelances||'[]' })
+  });
+  if(res.ok!==false){
+    c.statut='Suspendu';
+    // Update adminRealAutomations in memory
+    adminRealAutomations.filter(a=>a.userId===c.email).forEach(a=>a.statut='Inactif');
+    renderBilling(); renderClients(); updateOverview();
+    toast(`${c.entreprise||c.nom} suspendu — email envoyé`,'success');
+  } else {
+    if(btn){btn.disabled=false;btn.textContent='🔴 Suspendre et notifier';}
+    toast(res.error||'Erreur suspension','error');
+  }
+}
+
+async function reactivateClient(clientId){
+  const c=adminClients.find(x=>x.id===clientId); if(!c) return;
+  if(!confirm(`Réactiver ${c.entreprise||c.nom} et ses automatisations ?`)) return;
+  const btn=event?.target; if(btn){btn.disabled=true;btn.textContent='…';}
+  const res=await adminFetch('/.netlify/functions/send-reactivation',{
+    method:'POST',
+    body:JSON.stringify({ clientId:c.id, email:c.email, nom:c.nom||c.entreprise, prochainPaiement:fmtDate(c.prochainPaiement), historiqueRelances:c.historiqueRelances||'[]' })
+  });
+  if(res.ok!==false){
+    c.statut='Actif';
+    adminRealAutomations.filter(a=>a.userId===c.email).forEach(a=>a.statut='Actif');
+    renderBilling(); renderClients(); updateOverview();
+    toast(`${c.entreprise||c.nom} réactivé — email envoyé`,'success');
+  } else {
+    if(btn){btn.disabled=false;btn.textContent='✅ Réactiver';}
+    toast(res.error||'Erreur réactivation','error');
+  }
 }
 
 /* =========================================================
