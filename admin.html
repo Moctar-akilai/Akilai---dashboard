@@ -1191,12 +1191,13 @@ function initStaticUI() {
    ========================================================= */
 function skeletonRows(tbodyId, cols, n=5){
   const tb = document.getElementById(tbodyId);
+  if(!tb) return;
   tb.innerHTML = Array.from({length:n}).map(()=>`<tr>${Array.from({length:cols}).map(()=>'<td><div class="skel"></div></td>').join('')}</tr>`).join('');
 }
 
 async function loadAllAdminData() {
   skeletonRows('clientsBody',8); skeletonRows('ticketsBody',7);
-  skeletonRows('billingBody',7); skeletonRows('autoBody',5); skeletonRows('mrrByPlanBody',4,3);
+  skeletonRows('billingBody',7); skeletonRows('autoBody',5);
   await Promise.all([ loadClients(), loadTickets(), loadPaiements(), loadHistorique(), loadFinances() ]);
   buildAutomationsFromHistorique();
   populateFilters();
@@ -1343,19 +1344,21 @@ function renderCharts(mrr,costs){
   const mrrSeries=[Math.round(mrr*0.7),Math.round(mrr*0.78),Math.round(mrr*0.85),Math.round(mrr*0.9),Math.round(mrr*0.96),mrr];
 
   drawChart('chartMRR','line',{labels:months,datasets:[{label:'MRR (€)',data:mrrSeries,borderColor:'#70B2DE',backgroundColor:'rgba(112,178,222,.15)',fill:true,tension:.35}]});
-  drawChart('chartPlansDist','doughnut',{labels,datasets:[{data,backgroundColor:['#70B2DE','#4ade80','#fbbf24','#f87171','#a78bfa','#34d399','#fb923c','#60a5fa','#f472b6']}]},true);
+  drawChart('chartPlansDist','doughnut',{labels,datasets:[{data,backgroundColor:['#70B2DE','#4ade80','#fbbf24','#f87171','#a78bfa','#34d399','#fb923c','#60a5fa','#f472b6']}]});
   drawChart('chartVolume','bar',{labels:days,datasets:[{label:'Appels',data:callVals,backgroundColor:'#70B2DE'},{label:'WhatsApp',data:waVals,backgroundColor:'#4ade80'}]});
-  drawChart('chartTickets','doughnut',{labels:['Ouvert','En cours','Résolu'],datasets:[{data:[tOpen,tProg,tRes],backgroundColor:['#f87171','#fbbf24','#4ade80']}]},true);
+  drawChart('chartTickets','doughnut',{labels:['Ouvert','En cours','Résolu'],datasets:[{data:[tOpen,tProg,tRes],backgroundColor:['#f87171','#fbbf24','#4ade80']}]});
 }
 
-function drawChart(id,type,data,isDonut){
+function drawChart(id,type,data,extraOptions={}){
   const el=document.getElementById(id); if(!el) return;
   if(charts[id]) charts[id].destroy();
   Chart.defaults.color='#94a3b8'; Chart.defaults.font.family="'Space Grotesk',sans-serif";
+  const isDonut=(type==='doughnut'||type==='pie');
   charts[id]=new Chart(el,{type,data,options:{
     responsive:true,maintainAspectRatio:false,
-    plugins:{legend:{display:isDonut?true:(type!=='line'||data.datasets.length>1),position:isDonut?'bottom':'top',labels:{boxWidth:12,padding:10}}},
-    scales:isDonut?{}:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{maxTicksLimit:12}},y:{grid:{color:'rgba(255,255,255,.04)'},beginAtZero:true}}
+    plugins:{legend:{display:isDonut?true:(type!=='line'||data.datasets.length>1),position:isDonut?'bottom':'top',labels:{boxWidth:12,padding:10,color:'#94a3b8'}}},
+    scales:isDonut?{}:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{maxTicksLimit:12,color:'#94a3b8'}},y:{grid:{color:'rgba(255,255,255,.04)'},beginAtZero:true,ticks:{color:'#94a3b8'}}},
+    ...extraOptions
   }});
 }
 
@@ -2550,35 +2553,181 @@ async function reactivateClient(clientId){
 /* =========================================================
    FINANCES
    ========================================================= */
+function last6Months(){
+  const months=[];
+  const n=new Date();
+  for(let i=5;i>=0;i--){
+    const d=new Date(n.getFullYear(),n.getMonth()-i,1);
+    months.push(d.getFullYear()+'-'+(d.getMonth()+1));
+  }
+  return months;
+}
+function monthLabel(m){
+  const [y,mo]=m.split('-');
+  return new Date(+y,+mo-1,1).toLocaleDateString('fr-FR',{month:'short'});
+}
+
+function mrrByMonthSeries(months){
+  return months.map(m=>
+    adminPaiements.filter(p=>p.statut==='Payé'&&monthOf(p.date)===m&&(!p.typePaiement||p.typePaiement==='Abonnement'))
+      .reduce((s,p)=>s+Number(p.montant||0),0)
+  );
+}
+
+function updateCostTotal(){
+  const ids=['costVapi','costElevenlabs','costMake','costTwilio','costNetlify','costOpenai','costAutres'];
+  const total=ids.reduce((s,id)=>s+(+document.getElementById(id)?.value||0),0);
+  const el=document.getElementById('costTotal');
+  if(el) el.textContent=fmtEur(total);
+}
+
 function renderFinances(){
-  const mrr=computeMRR(); const costs=totalCosts();
+  const mrr=computeMRR();
+  const costs=totalCosts();
+  const marge=mrr-costs;
+  const tauxMarge=mrr>0?Math.round(marge/mrr*100):0;
+  const totalClients=adminClients.filter(c=>c.statut==='Actif'||c.statut==='Suspendu'||c.statut==='Essai').length;
+  const suspended=adminClients.filter(c=>c.statut==='Suspendu').length;
+  const churnRate=totalClients>0?Math.round(suspended/totalClients*100):0;
+  const cac=adminFinances.cac||0;
+  const actifs=adminClients.filter(c=>c.statut==='Actif');
+  const mrrPerClient=mrr>0&&actifs.length>0?mrr/actifs.length:0;
+  const ltv=churnRate>0?Math.round(mrrPerClient/(churnRate/100)):0;
+
+  // KPI row 1
   document.getElementById('finMRR').textContent=fmtEur(mrr);
   document.getElementById('finARR').textContent=fmtEur(mrr*12);
   document.getElementById('finCouts').textContent=fmtEur(costs);
-  document.getElementById('finMarge').textContent=fmtEur(mrr-costs);
 
-  const tb=document.getElementById('mrrByPlanBody');
-  tb.innerHTML=PLAN_LIST.map(p=>{
-    const n=adminClients.filter(c=>c.statut==='Actif'&&c.plan===p).length;
-    const partial=n*PLAN_PRICES[p];
-    return `<tr><td>${p}</td><td>${n}</td><td>${fmtEur(PLAN_PRICES[p])}</td><td>${fmtEur(partial)}</td></tr>`;
-  }).join('');
+  // MRR badge vs last month (from paiements)
+  const months6=last6Months();
+  const mrrSeries=mrrByMonthSeries(months6);
+  const mrrBadgeEl=document.getElementById('finMRRBadge');
+  if(mrrBadgeEl&&mrrSeries.length>=2){
+    const prev=mrrSeries[mrrSeries.length-2];
+    const curr=mrrSeries[mrrSeries.length-1]||mrr;
+    if(prev>0){
+      const delta=Math.round((curr-prev)/prev*100);
+      const sign=delta>=0?'+':'';
+      mrrBadgeEl.innerHTML=`<span style="color:${delta>=0?'#22c55e':'#ef4444'}">${sign}${delta}% vs mois précédent</span>`;
+    }
+  }
 
-  const months=['Jan','Fév','Mar','Avr','Mai','Juin'];
-  const mrrS=[Math.round(mrr*0.7),Math.round(mrr*0.78),Math.round(mrr*0.85),Math.round(mrr*0.9),Math.round(mrr*0.96),mrr];
-  const cS=[Math.round(costs*0.8),Math.round(costs*0.85),Math.round(costs*0.88),Math.round(costs*0.92),Math.round(costs*0.96),costs];
-  drawChart('chartFinances','line',{labels:months,datasets:[
-    {label:'MRR (€)',data:mrrS,borderColor:'#70B2DE',backgroundColor:'rgba(112,178,222,.15)',fill:true,tension:.35},
-    {label:'Coûts (€)',data:cS,borderColor:'#f87171',backgroundColor:'rgba(248,113,113,.12)',fill:true,tension:.35}
+  // KPI row 2
+  document.getElementById('finMarge').textContent=fmtEur(marge);
+  document.getElementById('finMarge').style.color=marge>=0?'#22c55e':'#ef4444';
+  document.getElementById('finTauxMarge').textContent=mrr>0?tauxMarge+'%':'—';
+  document.getElementById('finTauxMarge').style.color=tauxMarge>60?'#22c55e':tauxMarge>=40?'#f59e0b':'#ef4444';
+  document.getElementById('finChurn').textContent=churnRate+'%';
+  document.getElementById('finChurn').style.color=churnRate<5?'#22c55e':churnRate<10?'#f59e0b':'#ef4444';
+  document.getElementById('finChurnSub').textContent=`${suspended} suspendu(s) / ${totalClients} clients`;
+
+  // LTV / CAC
+  document.getElementById('finLTV').textContent=ltv>0?fmtEur(ltv):'— €';
+  document.getElementById('finCAC').textContent=cac>0?fmtEur(cac):'— €';
+  const ratio=cac>0&&ltv>0?(ltv/cac).toFixed(1):'—';
+  const ratioEl=document.getElementById('finLTVCAC');
+  ratioEl.textContent=ratio;
+  if(ratio!=='—') ratioEl.style.color=+ratio>=3?'#22c55e':'#ef4444';
+
+  // Projections
+  document.getElementById('projBase').textContent=fmtEur(mrr*12);
+  document.getElementById('projBest').textContent=fmtEur(mrr*1.2*12);
+  document.getElementById('projWorst').textContent=fmtEur(mrr*0.8*12);
+
+  // Charts
+  const labels=months6.map(monthLabel);
+  const cS=months6.map(()=>costs);
+
+  // Chart 1: MRR evolution
+  drawChart('chartMRR','line',{labels,datasets:[{
+    label:'MRR (€)',data:mrrSeries,borderColor:'#70B2DE',backgroundColor:'rgba(112,178,222,.15)',fill:true,tension:.35,
+    pointBackgroundColor:'#70B2DE',pointRadius:4
+  }]});
+
+  // Chart 2: MRR vs Coûts
+  drawChart('chartFinances','line',{labels,datasets:[
+    {label:'MRR (€)',data:mrrSeries,borderColor:'#70B2DE',backgroundColor:'rgba(112,178,222,.1)',fill:true,tension:.35},
+    {label:'Coûts (€)',data:cS,borderColor:'#f87171',backgroundColor:'rgba(248,113,113,.1)',fill:true,tension:.35}
   ]});
+
+  // Chart 3: Donut CA par plan
+  const planData={};
+  actifs.forEach(c=>{
+    const k=c.plan||'Inconnu';
+    planData[k]=(planData[k]||0)+clientMontant(c);
+  });
+  const planKeys=Object.keys(planData);
+  const planColors=['#70B2DE','#22c55e','#f59e0b','#f87171','#a78bfa','#34d399','#fb923c','#60a5fa','#e879f9'];
+  if(planKeys.length){
+    drawChart('chartDonut','doughnut',{
+      labels:planKeys,
+      datasets:[{data:planKeys.map(k=>planData[k]),backgroundColor:planColors.slice(0,planKeys.length),borderWidth:2,borderColor:'#181c27'}]
+    },{plugins:{legend:{position:'right',labels:{color:'#94a3b8',font:{size:11}}}}});
+  }
+
+  // France vs Afrique
+  const FR_PAYS=['France','Belgique','Suisse','Canada'];
+  const AF_PAYS=['Sénégal',"Côte d'Ivoire",'Maroc'];
+  const frClients=actifs.filter(c=>FR_PAYS.includes(c.pays));
+  const afClients=actifs.filter(c=>AF_PAYS.includes(c.pays));
+  const frMRR=frClients.reduce((s,c)=>s+clientMontant(c),0);
+  const afMRR=afClients.reduce((s,c)=>s+clientMontant(c),0);
+  const totalMRR=mrr||1;
+  document.getElementById('geoFrClients').textContent=frClients.length;
+  document.getElementById('geoFrMRR').textContent=fmtEur(frMRR);
+  document.getElementById('geoFrPct').textContent=Math.round(frMRR/totalMRR*100)+'%';
+  document.getElementById('geoAfClients').textContent=afClients.length;
+  document.getElementById('geoAfMRR').textContent=fmtEur(afMRR);
+  document.getElementById('geoAfPct').textContent=Math.round(afMRR/totalMRR*100)+'%';
+  document.getElementById('geoAfFCFA').textContent=afMRR>0?`≈ ${Math.round(afMRR*655.957).toLocaleString('fr-FR')} FCFA`:'';
+
+  if(frMRR+afMRR>0){
+    drawChart('chartGeo','bar',{
+      labels:['France/Europe','Sénégal/Afrique'],
+      datasets:[{data:[frMRR,afMRR],backgroundColor:['#70B2DE','#f59e0b'],borderRadius:6,barThickness:32}]
+    },{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#94a3b8'},grid:{color:'rgba(255,255,255,.05)'}},y:{ticks:{color:'#94a3b8'}}}});
+  }
+
+  // Marge par client
+  const nbActifs=actifs.length||1;
+  const coutParClient=costs/nbActifs;
+  const tb=document.getElementById('margeByClientBody');
+  if(tb){
+    if(!actifs.length){ tb.innerHTML='<tr class="empty-row"><td colspan="7">Aucun client actif</td></tr>'; }
+    else tb.innerHTML=actifs.map(c=>{
+      const mrrc=clientMontant(c);
+      const margeC=mrrc-coutParClient;
+      const tauxC=mrrc>0?Math.round(margeC/mrrc*100):0;
+      const col=tauxC>60?'#22c55e':tauxC>=40?'#f59e0b':'#ef4444';
+      const health=paymentHealthScore(c.email)||'—';
+      return `<tr>
+        <td><strong>${esc(c.entreprise||c.nom||'—')}</strong></td>
+        <td><span class="badge badge-accent">${esc(c.plan||'—')}</span></td>
+        <td>${fmtEur(mrrc)}</td>
+        <td style="color:var(--text-muted)">${fmtEur(coutParClient)}</td>
+        <td style="color:${margeC>=0?'#22c55e':'#ef4444'}">${fmtEur(margeC)}</td>
+        <td><span style="font-weight:700;color:${col}">${tauxC}%</span></td>
+        <td>${health}</td>
+      </tr>`;
+    }).join('');
+  }
 }
+
 async function saveCosts(){
-  const couts={ vapi:+document.getElementById('costVapi').value||0, elevenlabs:+document.getElementById('costElevenlabs').value||0,
-    make:+document.getElementById('costMake').value||0, twilio:+document.getElementById('costTwilio').value||0,
-    netlify:+document.getElementById('costNetlify').value||0, openai:+document.getElementById('costOpenai').value||0,
-    autres:+document.getElementById('costAutres').value||0 };
+  const couts={
+    vapi:+document.getElementById('costVapi').value||0,
+    elevenlabs:+document.getElementById('costElevenlabs').value||0,
+    make:+document.getElementById('costMake').value||0,
+    twilio:+document.getElementById('costTwilio').value||0,
+    netlify:+document.getElementById('costNetlify').value||0,
+    openai:+document.getElementById('costOpenai').value||0,
+    autres:+document.getElementById('costAutres').value||0
+  };
+  const cac=+document.getElementById('costCAC').value||0;
   adminFinances.couts=couts;
-  const res=await adminFetch('/.netlify/functions/admin-get-finances',{method:'POST',body:JSON.stringify({couts})});
+  adminFinances.cac=cac;
+  const res=await adminFetch('/.netlify/functions/admin-get-finances',{method:'POST',body:JSON.stringify({couts,cac})});
   if(res.ok){ toast('Coûts sauvegardés','success'); renderFinances(); updateOverview(); }
   else toast(res.error||'Erreur sauvegarde','error');
 }
