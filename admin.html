@@ -719,7 +719,14 @@ async function loadAllAdminData() {
 }
 
 async function loadClients(){ const d = await adminFetch('/.netlify/functions/admin-get-clients'); adminClients = d.clients || []; }
-async function loadTickets(){ const d = await adminFetch('/.netlify/functions/admin-get-tickets'); adminTickets = d.tickets || []; }
+async function loadTickets(){
+  const token = sessionStorage.getItem('akilai_admin_token');
+  console.log('[loadTickets] token présent:', !!token, '| longueur:', token ? token.length : 0);
+  const d = await adminFetch('/.netlify/functions/admin-get-tickets');
+  console.log('[loadTickets] réponse:', d);
+  adminTickets = d.tickets || [];
+  console.log('[loadTickets] nb tickets chargés:', adminTickets.length);
+}
 async function loadPaiements(){ const d = await adminFetch('/.netlify/functions/admin-get-paiements'); adminPaiements = d.paiements || []; }
 async function loadHistorique(){ const d = await adminFetch('/.netlify/functions/admin-get-historique?limit=200'); adminHistorique = d.historique || []; }
 async function loadFinances(){
