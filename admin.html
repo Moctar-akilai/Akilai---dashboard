@@ -252,6 +252,9 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .wa-conv-preview{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .notes-area{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text);font-size:13px;resize:vertical;min-height:120px;font-family:inherit}
 .notes-area:focus{outline:none;border-color:var(--accent)}
+.suspended-banner{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);border-radius:8px;padding:10px 14px;font-size:13px;color:#f87171;margin-bottom:12px;display:none}
+.suspended-banner.show{display:block}
+.auto-disabled{opacity:.45;pointer-events:none;cursor:not-allowed}
 
 /* ---------- TOAST ---------- */
 #toasts{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:10px;z-index:200}
@@ -669,7 +672,8 @@ input,select,textarea{font-family:inherit;font-size:14px}
     <!-- Automatisations -->
     <div class="cp-section">
       <h3>⚡ Automatisations</h3>
-      <div class="table-wrap" style="border:none">
+      <div class="suspended-banner" id="cpSuspendedBanner">⚠️ Compte suspendu — toutes les automatisations sont désactivées</div>
+      <div class="table-wrap" style="border:none" id="cpAutoTable">
         <table class="hist-table">
           <thead><tr><th>Nom</th><th>Type</th><th>Statut</th><th>Exécutions</th><th>Action</th></tr></thead>
           <tbody id="cpAutoBody"></tbody>
@@ -1239,6 +1243,14 @@ function renderClientPanelKPIs(c){
 }
 
 function renderCpAutomations(c){
+  const isSuspended=c.statut==='Suspendu';
+  // Banner
+  const banner=document.getElementById('cpSuspendedBanner');
+  if(banner) banner.classList.toggle('show', isSuspended);
+  // Disable table interaction when suspended
+  const table=document.getElementById('cpAutoTable');
+  if(table) table.classList.toggle('auto-disabled', isSuspended);
+
   const uid=c.userId||c.email||c.id;
   const rows=adminRealAutomations.filter(a=>a.userId===uid||a.userId===c.email);
   const tb=document.getElementById('cpAutoBody');
@@ -1246,16 +1258,33 @@ function renderCpAutomations(c){
   tb.innerHTML=rows.map(a=>`<tr>
     <td>${esc(a.nom)}</td><td>${esc(a.type||'—')}</td><td>${statutBadge(a.statut)}</td>
     <td>${(a.appelsTraites||0)+(a.messagesTraites||0)}</td>
-    <td><button class="btn sm ghost" onclick="toggleCpAuto('${a.id}')">${a.statut==='Inactif'?'Activer':'Désactiver'}</button></td>
+    <td><button class="btn sm ghost" onclick="toggleCpAuto('${a.id}')" ${isSuspended?'disabled':''}>
+      ${a.statut==='Inactif'?'Activer':'Désactiver'}
+    </button></td>
   </tr>`).join('');
 }
 
 async function toggleCpAuto(id){
   const a=adminRealAutomations.find(x=>x.id===id); if(!a) return;
   const newStatut=a.statut==='Inactif'?'Actif':'Inactif';
-  const res=await adminFetch('/.netlify/functions/admin-update-client',{method:'PATCH',body:JSON.stringify({id:a.id,fields:{Statut:newStatut}})});
-  if(res.ok!==false){ a.statut=newStatut; const c=adminClients.find(x=>x.id===_cpClientId); if(c) renderCpAutomations(c); toast('Automatisation mise à jour','success'); }
-  else toast(res.error||'Erreur','error');
+  const res=await adminFetch('/.netlify/functions/admin-update-automation',{method:'PATCH',body:JSON.stringify({id:a.id,statut:newStatut})});
+  if(res.ok!==false){
+    a.statut=newStatut;
+    const c=adminClients.find(x=>x.id===_cpClientId);
+    if(c) renderCpAutomations(c);
+    toast('Automatisation '+(newStatut==='Actif'?'activée':'désactivée'),'success');
+  } else toast(res.error||'Erreur','error');
+}
+
+async function setClientAutomationsStatut(c, statut){
+  const uid=c.userId||c.email||c.id;
+  const toUpdate=adminRealAutomations.filter(a=>(a.userId===uid||a.userId===c.email)&&a.statut!==statut);
+  if(!toUpdate.length) return;
+  await Promise.all(toUpdate.map(a=>
+    adminFetch('/.netlify/functions/admin-update-automation',{method:'PATCH',body:JSON.stringify({id:a.id,statut})})
+      .then(r=>{ if(r.ok!==false) a.statut=statut; })
+  ));
+  renderCpAutomations(c);
 }
 
 function renderCpTickets(c){
@@ -1392,6 +1421,11 @@ async function toggleClientStatut(c){
       `<span class="badge badge-accent">${esc(c.plan||'—')}</span>`+
       (c.pays?`<span class="badge badge-muted">${esc(c.pays)}</span>`:'')+
       (c.secteur?`<span class="badge badge-muted">${esc(c.secteur)}</span>`:'');
+    // Cascade : activer/désactiver toutes les automatisations
+    const autoStatut=newStatut==='Suspendu'?'Inactif':'Actif';
+    await setClientAutomationsStatut(c, autoStatut);
+    if(newStatut==='Suspendu') toast('Automatisations désactivées','success');
+    else toast('Automatisations réactivées','success');
     await loadClients(); renderClients(); updateOverview();
   } else toast(res.error||'Erreur','error');
 }
@@ -1400,13 +1434,18 @@ async function saveClientNotes(id){
   const notes=document.getElementById('cpNotes').value;
   console.log('[saveClientNotes] id:', id, '| longueur notes:', notes.length);
   const btn=document.getElementById('cpSaveNotesBtn'); btn.disabled=true;
+  btn.textContent='Sauvegarde…';
   const res=await adminFetch('/.netlify/functions/admin-update-client',{method:'PATCH',body:JSON.stringify({id,fields:{Notes:notes}})});
   btn.disabled=false;
+  btn.textContent='Sauvegarder les notes';
   console.log('[saveClientNotes] réponse:', res);
   if(res.ok!==false){
-    const c=adminClients.find(x=>x.id===id); if(c) c.notes=notes;
-    toast('Notes sauvegardées','success');
-  } else toast(res.error||'Erreur','error');
+    const c=adminClients.find(x=>x.id===id);
+    if(c) c.notes=notes;
+    // Refresh textarea to confirm
+    document.getElementById('cpNotes').value=notes;
+    toast('Notes sauvegardées ✓','success');
+  } else toast(res.error||'Erreur sauvegarde notes','error');
 }
 
 function openEditClientModal(id){
