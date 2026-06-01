@@ -2786,6 +2786,10 @@
                   Actualiser
                 </button>
               </div>
+              <!-- Recherche voix -->
+              <input type="text" id="voixSearch" class="form-input" placeholder="Rechercher une voix…"
+                style="margin-bottom:10px;font-size:12px;padding:7px 10px"
+                oninput="_filterVoiceCards(this.value)" />
               <!-- Grille de cartes voix (chargée dynamiquement) -->
               <div id="voixCardsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;min-height:80px">
                 <div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--text-faint);font-size:12px" id="voixCardsLoader">
@@ -4993,10 +4997,43 @@ function resetVoixConfig() {
    SÉQ 7 — ELEVENLABS : chargement dynamique des voix
 ============================================================ */
 
+function _isVoiceFr(v) {
+  const lang = (v.labels?.language || "").toLowerCase();
+  const name = (v.name || "").toLowerCase();
+  const desc = (v.labels?.description || "").toLowerCase();
+  const FR_KEYWORDS = ["fr", "french", "francais", "français", "african", "west african"];
+  return FR_KEYWORDS.some(k => lang.includes(k) || name.includes(k) || desc.includes(k));
+}
+
+function _voiceLangBadge(v) {
+  const lang = (v.labels?.language || "").toLowerCase();
+  if (_isVoiceFr(v))                          return { label:"FR", color:"#3b82f6" };
+  if (lang.includes("en") || lang.includes("english"))  return { label:"EN", color:"#6b7280" };
+  if (lang.includes("es") || lang.includes("spanish"))  return { label:"ES", color:"#f59e0b" };
+  if (lang.includes("pt") || lang.includes("portug"))   return { label:"PT", color:"#10b981" };
+  if (lang.includes("ar") || lang.includes("arabic"))   return { label:"AR", color:"#8b5cf6" };
+  if (lang.includes("de") || lang.includes("german"))   return { label:"DE", color:"#ef4444" };
+  if (lang.includes("it") || lang.includes("italian"))  return { label:"IT", color:"#f97316" };
+  return { label:"EN", color:"#6b7280" };
+}
+
+function _sortVoices(voices) {
+  return [...voices].sort((a, b) => {
+    const aFr = _isVoiceFr(a) ? 0 : 1;
+    const bFr = _isVoiceFr(b) ? 0 : 1;
+    if (aFr !== bFr) return aFr - bFr;
+    return (a.name || "").localeCompare(b.name || "");
+  });
+}
+
 async function loadElevenLabsVoices() {
   const grid   = document.getElementById("voixCardsGrid");
   const loader = document.getElementById("voixCardsLoader");
   if (loader) loader.textContent = "Chargement des voix…";
+
+  /* Réinitialiser la recherche */
+  const searchEl = document.getElementById("voixSearch");
+  if (searchEl) searchEl.value = "";
 
   try {
     const data = await apiFetch("/.netlify/functions/get-voices");
@@ -5006,8 +5043,9 @@ async function loadElevenLabsVoices() {
       return;
     }
 
-    _elevenLabsVoices = data.voices;
-    _renderVoiceCards(grid, data.voices);
+    _elevenLabsVoices = _sortVoices(data.voices);
+    console.log("[loadElevenLabsVoices] Total voix :", _elevenLabsVoices.length, "— FR en premier :", _elevenLabsVoices.filter(_isVoiceFr).length);
+    _renderVoiceCards(grid, _elevenLabsVoices);
 
     const currentId = document.getElementById("cfgVoix").value;
     if (currentId) _highlightVoiceCard(currentId);
@@ -5019,16 +5057,21 @@ async function loadElevenLabsVoices() {
 }
 
 function _renderVoiceCards(grid, voices) {
+  if (!voices.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--text-faint);font-size:12px">Aucune voix trouvée</div>';
+    return;
+  }
   grid.innerHTML = voices.map(v => {
-    const lang   = v.labels?.language || "";
-    const gender = v.labels?.gender   || "";
-    const accent = v.labels?.accent   || "";
-    const meta   = [lang, gender, accent].filter(Boolean).join(" · ");
+    const gender   = v.labels?.gender || "";
     const safeName = v.name.replace(/'/g, "\\'");
+    const badge    = _voiceLangBadge(v);
     return `
       <div class="voice-card" id="vcard-${v.voice_id}" onclick="selectVoice('${v.voice_id}','${safeName}')">
-        <div class="voice-card-name">${v.name}</div>
-        ${meta ? `<div class="voice-card-labels">${meta}</div>` : ""}
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:4px">
+          <div class="voice-card-name" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v.name}</div>
+          <span style="flex-shrink:0;font-size:9px;font-weight:700;padding:2px 5px;border-radius:4px;background:${badge.color}22;color:${badge.color};border:1px solid ${badge.color}44">${badge.label}</span>
+        </div>
+        ${gender ? `<div class="voice-card-labels">${gender}</div>` : ""}
         <div class="voice-card-actions">
           ${v.preview_url
             ? `<button class="btn-listen" onclick="event.stopPropagation();previewVoice('${v.preview_url}',this)">▶ Écouter</button>`
@@ -5037,6 +5080,18 @@ function _renderVoiceCards(grid, voices) {
         </div>
       </div>`;
   }).join("");
+}
+
+function _filterVoiceCards(query) {
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? _elevenLabsVoices.filter(v => (v.name || "").toLowerCase().includes(q))
+    : _elevenLabsVoices;
+  const grid = document.getElementById("voixCardsGrid");
+  _renderVoiceCards(grid, filtered);
+  /* Restaurer la surbrillance de la voix sélectionnée */
+  const currentId = document.getElementById("cfgVoix").value;
+  if (currentId) _highlightVoiceCard(currentId);
 }
 
 function _renderVoiceFallback(grid) {
@@ -5100,11 +5155,13 @@ function _updateVapiButton() {
 
 async function createOrUpdateVapiAssistant() {
   const cfg      = getVoixFormValues();
-  const clientId = window._currentClientId;
+  /* Utiliser clients[0] directement — plus fiable que window._currentClientId */
+  const client   = clients[0] || null;
+  const clientId = client?.id || null;
   const btn      = document.getElementById("btnVapiAssistant");
 
   if (!clientId) {
-    showToast("Aucun client sélectionné", "warning");
+    showToast("Données client non chargées — réessayez dans quelques secondes", "warning");
     return;
   }
   if (!cfg.voiceId) {
@@ -5118,11 +5175,11 @@ async function createOrUpdateVapiAssistant() {
 
   try {
     const data = await apiFetchPost("/.netlify/functions/create-vapi-assistant", {
+      clientId,
       nomAssistant:  cfg.nom,
       voiceId:       cfg.voiceId,
       langue:        cfg.langPrimaire,
       promptSysteme: cfg.prompt,
-      tonalite:      cfg.tonalite,
       vitesseParole: parseFloat(cfg.vitesse),
       silenceMax:    parseInt(cfg.silence),
       interruptions: cfg.interruptions,
@@ -5130,8 +5187,10 @@ async function createOrUpdateVapiAssistant() {
 
     if (data.ok) {
       _vapiAssistantId = data.assistantId;
+      /* Mettre à jour le cache local */
+      if (client) client.vapiAssistantId = data.assistantId;
       _updateVapiButton();
-      showToast(data.created ? "Assistant créé ✓" : "Assistant mis à jour ✓", "success");
+      showToast(data.created ? "Assistant créé avec succès ✓" : "Assistant mis à jour ✓", "success");
     } else {
       showToast("Erreur : " + (data.error || "inconnue"), "error");
     }

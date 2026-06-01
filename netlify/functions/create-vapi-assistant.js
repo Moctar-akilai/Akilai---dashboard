@@ -21,6 +21,9 @@ exports.handler = async function(event, context) {
     interruptions = true,
   } = body;
 
+  console.log("[create-vapi-assistant] clientId:", clientId, "nom:", nomAssistant, "voiceId:", voiceId, "langue:", langue);
+
+  /* Lire le VapiAssistantId existant depuis Airtable */
   let existingAssistantId = null;
   if (clientId) {
     try {
@@ -28,34 +31,33 @@ exports.handler = async function(event, context) {
       if (clientRes.ok) {
         const clientData = await clientRes.json();
         existingAssistantId = clientData.fields?.VapiAssistantId || null;
+        console.log("[create-vapi-assistant] VapiAssistantId existant :", existingAssistantId || "aucun");
       }
     } catch (e) {
       console.warn("[create-vapi-assistant] Airtable fetch:", e.message);
     }
   }
 
-  const LANG_MAP = { "fr":"fr", "fr-FR":"fr", "en":"en", "en-US":"en", "es":"es", "ar":"ar", "pt":"pt" };
-  const transcriberLang = LANG_MAP[langue] || "fr";
-
+  /* Payload Vapi — structure officielle */
   const vapiPayload = {
     name: nomAssistant,
+    model: {
+      provider: "openai",
+      model:    "gpt-4o",
+      messages: [
+        { role: "system", content: promptSysteme || "" },
+      ],
+    },
     voice: {
       provider: "11labs",
       voiceId:  voiceId || "21m00Tcm4TlvDq8ikWAM",
-      speed:    parseFloat(vitesseParole) || 1.0,
     },
-    model: {
-      provider:     "openai",
-      model:        "gpt-4o-mini",
-      systemPrompt: promptSysteme,
-    },
-    transcriber: {
-      provider: "deepgram",
-      language: transcriberLang,
-    },
-    silenceTimeoutSeconds:      parseInt(silenceMax) || 8,
-    backgroundDenoisingEnabled: true,
-    endCallOnSilence:           !interruptions,
+    language: langue,
+  };
+
+  const vapiHeaders = {
+    Authorization:  `Bearer ${vapiKey}`,
+    "Content-Type": "application/json",
   };
 
   try {
@@ -63,45 +65,60 @@ exports.handler = async function(event, context) {
     let created = false;
 
     if (!existingAssistantId) {
+      /* CREATE */
+      console.log("[create-vapi-assistant] POST /assistant");
       const createRes = await fetch("https://api.vapi.ai/assistant", {
         method:  "POST",
-        headers: { Authorization: `Bearer ${vapiKey}`, "Content-Type": "application/json" },
+        headers: vapiHeaders,
         body:    JSON.stringify(vapiPayload),
       });
 
+      console.log("[create-vapi-assistant] Vapi CREATE status:", createRes.status);
+
       if (!createRes.ok) {
         const text = await createRes.text();
+        console.error("[create-vapi-assistant] Vapi CREATE error:", text);
         return err(`Vapi API ${createRes.status}: ${text}`, 502);
       }
 
       const createData = await createRes.json();
       assistantId      = createData.id;
       created          = true;
+      console.log("[create-vapi-assistant] Assistant créé, id:", assistantId);
 
-      if (clientId) {
-        await fetch(`${BASE_URL}/Clients/${clientId}`, {
-          method: "PATCH", headers,
+      /* Sauvegarder l'ID dans Airtable */
+      if (clientId && assistantId) {
+        const patchRes = await fetch(`${BASE_URL}/Clients/${clientId}`, {
+          method: "PATCH",
+          headers,
           body:   JSON.stringify({ fields: { VapiAssistantId: assistantId } }),
-        }).catch(e => console.warn("[create-vapi-assistant] Airtable PATCH:", e.message));
+        });
+        console.log("[create-vapi-assistant] Airtable PATCH VapiAssistantId status:", patchRes.status);
       }
+
     } else {
+      /* UPDATE */
       assistantId = existingAssistantId;
+      console.log("[create-vapi-assistant] PATCH /assistant/" + assistantId);
 
       const updateRes = await fetch(`https://api.vapi.ai/assistant/${assistantId}`, {
         method:  "PATCH",
-        headers: { Authorization: `Bearer ${vapiKey}`, "Content-Type": "application/json" },
+        headers: vapiHeaders,
         body:    JSON.stringify(vapiPayload),
       });
 
+      console.log("[create-vapi-assistant] Vapi UPDATE status:", updateRes.status);
+
       if (!updateRes.ok) {
         const text = await updateRes.text();
+        console.error("[create-vapi-assistant] Vapi UPDATE error:", text);
         return err(`Vapi API ${updateRes.status}: ${text}`, 502);
       }
     }
 
-    return ok({ ok: true, assistantId, created, voiceId: voiceId || null });
+    return ok({ ok: true, assistantId, created });
   } catch (e) {
-    console.error("[create-vapi-assistant]", e.message);
+    console.error("[create-vapi-assistant] Exception:", e.message);
     return err(e.message);
   }
 };
