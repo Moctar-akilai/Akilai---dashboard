@@ -158,6 +158,8 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .support-filters{margin-bottom:0}
 .support-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
 @media(max-width:900px){.support-kpis{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:1200px){#autoKpis{grid-template-columns:repeat(3,1fr)!important}}
+@media(max-width:700px){#autoKpis{grid-template-columns:repeat(2,1fr)!important}}
 .sk-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;cursor:pointer;transition:border-color .15s,transform .1s;display:flex;align-items:center;gap:14px}
 .sk-card:hover{border-color:var(--accent);transform:translateY(-1px)}
 .sk-card.active{border-color:var(--accent);box-shadow:0 0 0 2px rgba(112,178,222,.25)}
@@ -166,6 +168,8 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .sk-icon.red{background:rgba(248,113,113,.15);color:#f87171}
 .sk-icon.green{background:rgba(74,222,128,.15);color:#4ade80}
 .sk-icon.gray{background:rgba(100,116,139,.15);color:#94a3b8}
+.sk-icon.purple{background:rgba(167,139,250,.15);color:#a78bfa}
+.sk-icon.cyan{background:rgba(34,211,238,.15);color:#22d3ee}
 .sk-body{}
 .sk-value{font-size:26px;font-weight:700;line-height:1}
 .sk-label{font-size:12px;color:var(--muted);margin-top:3px}
@@ -354,19 +358,43 @@ input,select,textarea{font-family:inherit;font-size:14px}
 
     <!-- ===== AUTOMATIONS ===== -->
     <section class="page" id="page-automations">
-      <div class="stats-bar">
-        <div class="stat-pill"><div class="s-label">Total appels</div><div class="s-value" id="autoTotalCalls">0</div></div>
-        <div class="stat-pill"><div class="s-label">Total messages WA</div><div class="s-value" id="autoTotalWA">0</div></div>
-        <div class="stat-pill"><div class="s-label">En erreur</div><div class="s-value" id="autoErrors">0</div></div>
+      <!-- KPI Cards -->
+      <div class="support-kpis" style="grid-template-columns:repeat(6,1fr);margin-bottom:16px" id="autoKpis">
+        <div class="sk-card" id="akAll" onclick="filterAutoByKpi('')">
+          <div class="sk-icon blue"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+          <div class="sk-body"><div class="sk-value" id="akValAll">0</div><div class="sk-label">Total</div></div>
+        </div>
+        <div class="sk-card" id="akActif" onclick="filterAutoByKpi('Actif')">
+          <div class="sk-icon green"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg></div>
+          <div class="sk-body"><div class="sk-value" id="akValActif">0</div><div class="sk-label">Actives</div></div>
+        </div>
+        <div class="sk-card" id="akInactif" onclick="filterAutoByKpi('Inactif')">
+          <div class="sk-icon gray"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg></div>
+          <div class="sk-body"><div class="sk-value" id="akValInactif">0</div><div class="sk-label">Inactives</div></div>
+        </div>
+        <div class="sk-card" id="akErreur" onclick="filterAutoByKpi('Erreur')">
+          <div class="sk-icon red"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+          <div class="sk-body"><div class="sk-value" id="akValErreur">0</div><div class="sk-label">En erreur</div></div>
+        </div>
+        <div class="sk-card" id="akWA" onclick="filterAutoByType('WhatsApp')">
+          <div class="sk-icon cyan"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+          <div class="sk-body"><div class="sk-value" id="akValWA">0</div><div class="sk-label">WhatsApp</div></div>
+        </div>
+        <div class="sk-card" id="akVocal" onclick="filterAutoByType('Vocal')">
+          <div class="sk-icon purple"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.62 3.38 2 2 0 0 1 3.6 1.2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.78a16 16 0 0 0 6 6l.9-.9a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 21.5 16a2 2 0 0 1 .5.92z"/></svg></div>
+          <div class="sk-body"><div class="sk-value" id="akValVocal">0</div><div class="sk-label">Vocal / RDV</div></div>
+        </div>
       </div>
+      <!-- Filters -->
       <div class="toolbar">
+        <input id="autoSearch" placeholder="Rechercher nom ou client…" style="min-width:200px">
         <select id="autoFilterClient"><option value="">Tous clients</option></select>
-        <select id="autoFilterType"><option value="">Tous types</option><option>Appel</option><option>WhatsApp</option></select>
+        <select id="autoFilterType"><option value="">Tous types</option><option>WhatsApp</option><option>Vocal</option><option>RDV</option><option>Instagram</option></select>
         <select id="autoFilterStatut"><option value="">Tous statuts</option><option>Actif</option><option>Inactif</option><option>Erreur</option></select>
       </div>
       <div class="table-wrap">
         <table class="hist-table">
-          <thead><tr><th>Nom</th><th>Client</th><th>Type</th><th>Statut</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Nom</th><th>Client</th><th>Type</th><th>Statut</th><th>Exécutions</th><th>Dernière activité</th><th>Actions</th></tr></thead>
           <tbody id="autoBody"></tbody>
         </table>
       </div>
@@ -846,6 +874,7 @@ function navigate(id) {
   document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active', p.id==='page-'+id));
   document.getElementById('pageTitle').textContent = TITLES[id] || '';
   if (id==='notifications') renderNotifications();
+  if (id==='automations') ensureRealAutomations().then(()=>{ populateAutoClientFilter(); renderAutomations(); });
 }
 
 /* =========================================================
@@ -892,8 +921,9 @@ function initStaticUI() {
 
   // automations
   document.getElementById('autoFilterClient').addEventListener('change', renderAutomations);
-  document.getElementById('autoFilterType').addEventListener('change', renderAutomations);
-  document.getElementById('autoFilterStatut').addEventListener('change', renderAutomations);
+  document.getElementById('autoFilterType').addEventListener('change', ()=>{ _autoKpiFilter=''; _autoTypeFilter=''; document.querySelectorAll('#autoKpis .sk-card').forEach(c=>c.classList.remove('active')); renderAutomations(); });
+  document.getElementById('autoFilterStatut').addEventListener('change', ()=>{ _autoKpiFilter=''; _autoTypeFilter=''; document.querySelectorAll('#autoKpis .sk-card').forEach(c=>c.classList.remove('active')); renderAutomations(); });
+  document.getElementById('autoSearch').addEventListener('input', renderAutomations);
 
   // support
   initTicketTabs();
@@ -992,10 +1022,18 @@ function esc(s){ return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;
 function populateFilters(){
   const pays=[...new Set(adminClients.map(c=>c.pays).filter(Boolean))].sort();
   document.getElementById('clientFilterPays').innerHTML='<option value="">Tous pays</option>'+pays.map(p=>`<option>${esc(p)}</option>`).join('');
-  const clients=[...new Set(adminClients.map(c=>c.entreprise||c.nom).filter(Boolean))].sort();
-  const opt='<option value="">Tous clients</option>'+clients.map(c=>`<option>${esc(c)}</option>`).join('');
+  const ticketOpt='<option value="">Tous clients</option>'+adminClients.map(c=>`<option value="${esc(c.entreprise||c.nom)}">${esc(c.entreprise||c.nom)}</option>`).join('');
+  document.getElementById('ticketFilterClient').innerHTML=ticketOpt;
+  populateAutoClientFilter();
+}
+
+function populateAutoClientFilter(){
+  // userId in automations = client email (User ID field in Airtable)
+  const opt='<option value="">Tous clients</option>'+adminClients.map(c=>{
+    const label=esc(c.entreprise||c.nom||c.email);
+    return `<option value="${esc(c.email)}">${label}</option>`;
+  }).join('');
   document.getElementById('autoFilterClient').innerHTML=opt;
-  document.getElementById('ticketFilterClient').innerHTML=opt;
 }
 
 /* =========================================================
@@ -1540,27 +1578,118 @@ function emailClient(id){ const c=adminClients.find(x=>x.id===id); if(c) window.
 /* =========================================================
    AUTOMATIONS
    ========================================================= */
-function renderAutomations(){
-  document.getElementById('autoTotalCalls').textContent=adminAutomations.filter(a=>a.type==='Appel').reduce((s,a)=>s+a.count,0);
-  document.getElementById('autoTotalWA').textContent=adminAutomations.filter(a=>a.type==='WhatsApp').reduce((s,a)=>s+a.count,0);
-  document.getElementById('autoErrors').textContent=adminAutomations.filter(a=>a.statut==='Erreur').length;
-  const fc=document.getElementById('autoFilterClient').value, ft=document.getElementById('autoFilterType').value, fst=document.getElementById('autoFilterStatut').value;
-  let rows=adminAutomations.filter(a=>(!fc||a.client===fc)&&(!ft||a.type===ft)&&(!fst||a.statut===fst));
-  const tb=document.getElementById('autoBody');
-  if(!rows.length){ tb.innerHTML='<tr class="empty-row"><td colspan="5">Aucune automatisation</td></tr>'; return; }
-  tb.innerHTML=rows.map((a,i)=>`<tr>
-    <td>${esc(a.nom)}</td><td>${esc(a.client)}</td><td>${esc(a.type)}</td><td>${statutBadge(a.statut)}</td>
-    <td><button class="btn sm ${a.statut==='Inactif'?'':'ghost'}" onclick="toggleAutomation('${a.id}')">${a.statut==='Inactif'?'Activer':'Désactiver'}</button></td>
-  </tr>`).join('');
+let _autoKpiFilter='', _autoTypeFilter='';
+
+function autoTypeBadge(type){
+  const map={WhatsApp:'cyan',Vocal:'purple',RDV:'blue',Instagram:'purple'};
+  const col=map[type]||'gray';
+  return `<span class="badge" style="background:var(--sk-${col},rgba(112,178,222,.15));color:var(--sk-${col}-c,#70B2DE)">${esc(type||'—')}</span>`;
 }
-async function toggleAutomation(id){
-  const a=adminAutomations.find(x=>x.id===id); if(!a) return;
+const AUTO_TYPE_COLOR={
+  WhatsApp:'background:rgba(34,211,238,.15);color:#22d3ee',
+  Vocal:'background:rgba(167,139,250,.15);color:#a78bfa',
+  RDV:'background:rgba(112,178,222,.15);color:#70B2DE',
+  Instagram:'background:rgba(167,139,250,.15);color:#a78bfa',
+};
+
+function updateAutoKPIs(){
+  const list=adminRealAutomations;
+  document.getElementById('akValAll').textContent=list.length;
+  document.getElementById('akValActif').textContent=list.filter(a=>a.statut==='Actif').length;
+  document.getElementById('akValInactif').textContent=list.filter(a=>a.statut==='Inactif').length;
+  document.getElementById('akValErreur').textContent=list.filter(a=>a.statut==='Erreur').length;
+  document.getElementById('akValWA').textContent=list.filter(a=>a.type==='WhatsApp').length;
+  document.getElementById('akValVocal').textContent=list.filter(a=>a.type==='Vocal'||a.type==='RDV').length;
+}
+
+function filterAutoByKpi(statut){
+  _autoKpiFilter=statut; _autoTypeFilter='';
+  document.getElementById('autoFilterStatut').value=statut;
+  document.getElementById('autoFilterType').value='';
+  document.querySelectorAll('#autoKpis .sk-card').forEach(c=>c.classList.remove('active'));
+  const map={'':'akAll','Actif':'akActif','Inactif':'akInactif','Erreur':'akErreur'};
+  if(map[statut]) document.getElementById(map[statut])?.classList.add('active');
+  renderAutomations();
+}
+
+function filterAutoByType(type){
+  _autoTypeFilter=type; _autoKpiFilter='';
+  document.getElementById('autoFilterType').value=type;
+  document.getElementById('autoFilterStatut').value='';
+  document.querySelectorAll('#autoKpis .sk-card').forEach(c=>c.classList.remove('active'));
+  const map={WhatsApp:'akWA',Vocal:'akVocal',RDV:'akVocal'};
+  if(map[type]) document.getElementById(map[type])?.classList.add('active');
+  renderAutomations();
+}
+
+async function ensureRealAutomations(){
+  if(adminRealAutomations.length) return;
+  const d=await adminFetch('/.netlify/functions/admin-get-automations');
+  adminRealAutomations=d.automations||[];
+}
+
+function renderAutomations(){
+  updateAutoKPIs();
+  const fc=document.getElementById('autoFilterClient').value;
+  const ft=document.getElementById('autoFilterType').value;
+  const fst=document.getElementById('autoFilterStatut').value;
+  const q=(document.getElementById('autoSearch')?.value||'').toLowerCase();
+
+  // Build client lookup: email → client object (needed for search too)
+  const clientByEmail={};
+  adminClients.forEach(c=>{ if(c.email) clientByEmail[c.email.toLowerCase()]=c; });
+
+  let rows=adminRealAutomations.filter(a=>{
+    if(fc && a.userId.toLowerCase()!==fc.toLowerCase()) return false;
+    if(ft && a.type!==ft) return false;
+    if(fst && a.statut!==fst) return false;
+    if(q){
+      const cl=clientByEmail[(a.userId||'').toLowerCase()];
+      const clientName=(cl?.entreprise||cl?.nom||a.userId||'').toLowerCase();
+      if(!(a.nom.toLowerCase().includes(q)||clientName.includes(q))) return false;
+    }
+    return true;
+  });
+  // Sort: Actif first, then Erreur, then Inactif
+  const ORDER={Actif:0,Erreur:1,Inactif:2};
+  rows.sort((a,b)=>(ORDER[a.statut]??3)-(ORDER[b.statut]??3));
+
+  const tb=document.getElementById('autoBody');
+  if(!rows.length){ tb.innerHTML='<tr class="empty-row"><td colspan="7">Aucune automatisation</td></tr>'; return; }
+
+  const fmtExec=n=>n!=null?String(n):'—';
+
+  tb.innerHTML=rows.map(a=>{
+    const matchClient=clientByEmail[(a.userId||'').toLowerCase()];
+    const clientLabel=matchClient?(matchClient.entreprise||matchClient.nom||matchClient.email):esc(a.userId||'—');
+    const clientId=matchClient?.id;
+    const clientCell=clientId
+      ? `<button class="link-btn" onclick="openClientPanel('${clientId}')">${clientLabel}</button>`
+      : `<span>${clientLabel}</span>`;
+    const typeStyle=AUTO_TYPE_COLOR[a.type]||'background:rgba(100,116,139,.15);color:#94a3b8';
+    const execCount=fmtExec((a.appelsTraites||0)+(a.messagesTraites||0));
+    const lastActivity=a.derniere_exec?fmtDate(a.derniere_exec):'—';
+    return `<tr>
+      <td>${esc(a.nom||'—')}</td>
+      <td>${clientCell}</td>
+      <td><span class="badge" style="${typeStyle}">${esc(a.type||'—')}</span></td>
+      <td>${statutBadge(a.statut)}</td>
+      <td style="font-family:monospace;font-size:12px">${execCount}</td>
+      <td style="font-size:12px;color:var(--muted)">${lastActivity}</td>
+      <td><button class="btn sm ${a.statut==='Inactif'?'':'ghost'}" onclick="toggleRealAutomation('${a.id}')">${a.statut==='Inactif'?'Activer':'Désactiver'}</button></td>
+    </tr>`;
+  }).join('');
+}
+
+async function toggleRealAutomation(id){
+  const a=adminRealAutomations.find(x=>x.id===id); if(!a) return;
   const newStatut=a.statut==='Inactif'?'Actif':'Inactif';
-  if(a.recordId){
-    const res=await adminFetch('/.netlify/functions/update-automation',{method:'PATCH',body:JSON.stringify({id:a.recordId,statut:newStatut})});
-    if(!res.ok){ toast(res.error||'Erreur','error'); return; }
-  }
-  a.statut=newStatut; renderAutomations(); toast('Automatisation '+(newStatut==='Actif'?'activée':'désactivée'),'success');
+  const res=await adminFetch('/.netlify/functions/admin-update-automation',{method:'PATCH',body:JSON.stringify({id:a.id,statut:newStatut})});
+  if(!res.ok){ toast(res.error||'Erreur','error'); return; }
+  a.statut=newStatut;
+  updateAutoKPIs();
+  renderAutomations();
+  toast('Automatisation '+(newStatut==='Actif'?'activée':'désactivée'),'success');
 }
 
 /* =========================================================
