@@ -2719,12 +2719,9 @@
             <table class="hist-table">
               <thead>
                 <tr>
-                  <th>Contact</th>
                   <th>Numéro</th>
-                  <th>Canal</th>
-                  <th>Intention</th>
-                  <th>Date</th>
                   <th>Messages</th>
+                  <th>Dernière activité</th>
                   <th></th>
                 </tr>
               </thead>
@@ -4683,7 +4680,7 @@ function buildWaTable(data) {
   tbody.innerHTML = "";
 
   if (data.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state">
+    tbody.innerHTML = `<tr><td colspan="4"><div class="empty-state">
       <div class="empty-state-icon">💬</div>
       <div class="empty-state-title">Aucune conversation</div>
       <div class="empty-state-sub">Les conversations WhatsApp apparaîtront ici une fois reçues.</div>
@@ -4691,80 +4688,93 @@ function buildWaTable(data) {
     return;
   }
 
-  data.forEach(conv => {
-    /* Ligne principale */
+  /* Group records by phone number */
+  const groups = {};
+  data.forEach(rec => {
+    const key = rec.numero || "inconnu";
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(rec);
+  });
+
+  /* Sort each group chronologically (oldest first) */
+  Object.values(groups).forEach(recs => {
+    recs.sort((a, b) => new Date(a.date + "T" + (a.heure || "00:00")) - new Date(b.date + "T" + (b.heure || "00:00")));
+  });
+
+  /* Sort groups by most recent message descending */
+  const sortedGroups = Object.entries(groups).sort((a, b) => {
+    const lastA = a[1][a[1].length - 1];
+    const lastB = b[1][b[1].length - 1];
+    return new Date(lastB.date) - new Date(lastA.date);
+  });
+
+  const nomAssistant = (clients[0] && clients[0].nomAssistant) || "Assistant";
+
+  sortedGroups.forEach(([numero, recs]) => {
+    const groupId   = "wa-grp-" + numero.replace(/[^a-z0-9]/gi, "_");
+    const lastRec   = recs[recs.length - 1];
+    const nbMsgs    = recs.filter(r => r.messageEntrant).length;
+    const lastDate  = lastRec.date;
+
+    /* Header row */
     const tr = document.createElement("tr");
     tr.className = "main-row";
-    tr.onclick = () => toggleWaDetail(conv.id);
+    tr.onclick = () => toggleWaDetail(groupId);
     tr.innerHTML = `
-      <td><div class="cell-name">${conv.nom}</div></td>
-      <td class="cell-mono">${conv.numero}</td>
       <td>
-        <span class="wa-canal">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.999 2.007a9.993 9.993 0 0 0-8.522 15.216L2 22l4.878-1.435A9.994 9.994 0 1 0 12 2.007z"/></svg>
-          WhatsApp
-        </span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="#25D366" style="flex-shrink:0"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.999 2.007a9.993 9.993 0 0 0-8.522 15.216L2 22l4.878-1.435A9.994 9.994 0 1 0 12 2.007z"/></svg>
+          <span class="cell-mono">${numero}</span>
+        </div>
       </td>
-      <td style="font-size:13px;white-space:nowrap">${conv.intention || "—"}</td>
-      <td>${conv.date}</td>
-      <td><span class="badge badge-accent">${conv.nb_messages} msgs</span></td>
+      <td><span class="badge badge-accent">${nbMsgs} msg${nbMsgs > 1 ? "s" : ""}</span></td>
+      <td style="font-size:13px;color:var(--text-muted)">${lastDate}</td>
       <td>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-             style="color:var(--text-faint);transition:transform 0.2s" id="chevron-wa-${conv.id}">
+             style="color:var(--text-faint);transition:transform 0.2s" id="chevron-wa-${groupId}">
           <polyline points="6 9 12 15 18 9"/>
         </svg>
       </td>
     `;
     tbody.appendChild(tr);
 
-    /* Ligne détail accordion */
+    /* Accordion detail */
     const trDetail = document.createElement("tr");
     trDetail.className = "detail-row";
 
-    let chatHtml;
-    if (conv.messages && conv.messages.length > 0) {
-      chatHtml = conv.messages.map((msg, i) => {
-        const isUser = msg.role === "user";
-        const isAudio = msg.type === "audio";
-        let contentHtml;
-        if (isAudio) {
-          contentHtml = `<div class="wa-audio-msg"><span>🎤</span><span>Message vocal — ${msg.duree}</span></div>`;
-        } else {
-          contentHtml = `<div class="bubble-text ${isUser ? 'wa-bubble' : ''}">${msg.text}</div>`;
-        }
-        const readTick = (!isUser && i === conv.messages.length - 1) ? `<span class="msg-read">✓✓</span>` : "";
-        return `
-          <div class="bubble ${isUser ? 'user' : 'assistant'}">
-            <div class="bubble-avatar">${isUser ? (msg.nom ? msg.nom[0] : "U") : "AI"}</div>
+    const bubblesHtml = recs.map(rec => {
+      let html = "";
+      if (rec.messageEntrant) {
+        html += `
+          <div class="bubble user">
+            <div class="bubble-avatar" title="${numero}">${numero.slice(-2)}</div>
             <div>
-              ${contentHtml}
-              <div class="msg-time">${msg.heure} ${readTick}</div>
+              <div class="bubble-text wa-bubble">${rec.messageEntrant}</div>
+              <div class="msg-time">${numero} · ${rec.heure || rec.date}</div>
             </div>
-          </div>
-        `;
-      }).join("");
-    } else if (conv.messageEntrant) {
-      chatHtml = `
-        <div class="bubble user">
-          <div class="bubble-avatar">U</div>
-          <div>
-            <div class="bubble-text wa-bubble">${conv.messageEntrant}</div>
-            <div class="msg-time">${conv.heure || ""}</div>
-          </div>
-        </div>
-      `;
-    } else {
-      chatHtml = `<div style="color:var(--text-faint);font-size:13px;padding:8px 0">Aucun contenu disponible.</div>`;
-    }
+          </div>`;
+      }
+      if (rec.details) {
+        html += `
+          <div class="bubble assistant">
+            <div class="bubble-avatar" title="${nomAssistant}">${nomAssistant[0] || "A"}</div>
+            <div>
+              <div class="bubble-text">${rec.details}</div>
+              <div class="msg-time">${nomAssistant} · ${rec.heure || rec.date}</div>
+            </div>
+          </div>`;
+      }
+      return html;
+    }).join("");
 
     trDetail.innerHTML = `
-      <td colspan="7">
-        <div class="detail-content" id="detail-wa-${conv.id}">
+      <td colspan="4">
+        <div class="detail-content" id="detail-wa-${groupId}">
           <div class="detail-inner">
             <div style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px">
-              Conversation avec ${conv.nom} · ${conv.numero}
+              Conversation · ${numero}
             </div>
-            <div class="transcript-wrap" style="max-height:320px">${chatHtml}</div>
+            <div class="transcript-wrap" style="max-height:400px">${bubblesHtml || '<div style="color:var(--text-faint);font-size:13px">Aucun contenu disponible.</div>'}</div>
           </div>
         </div>
       </td>
@@ -4776,6 +4786,7 @@ function buildWaTable(data) {
 function toggleWaDetail(id) {
   const detail  = document.getElementById("detail-wa-" + id);
   const chevron = document.getElementById("chevron-wa-" + id);
+  if (!detail) return;
   const isOpen  = detail.classList.toggle("open");
   if (chevron) chevron.style.transform = isOpen ? "rotate(180deg)" : "";
 }
@@ -4786,7 +4797,7 @@ function filterWa() {
   const now    = new Date();
   const filtered = conversations_wa.filter(c => {
     if (!_matchesCurrentClient(c.client_id)) return false;
-    if (q && !c.nom.toLowerCase().includes(q) && !c.numero.includes(q)) return false;
+    if (q && !c.numero.includes(q) && !c.nom.toLowerCase().includes(q)) return false;
     if (period === "today") {
       const d = new Date(c.date);
       if (d.toDateString() !== now.toDateString()) return false;

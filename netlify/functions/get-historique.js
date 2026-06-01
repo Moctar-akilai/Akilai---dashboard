@@ -89,6 +89,7 @@ exports.handler = async function(event, context) {
           statut:        f.Statut            || "Traité",
           intention:     f.Intention         || null,
           messageEntrant: f["Message entrant"] || "",
+          details:        f["Détails"] || f["Résumé"] || "",
           messages,
           automatisationIds: Array.isArray(f["Automatisation"]) ? f["Automatisation"] : [],
         });
