@@ -102,7 +102,7 @@ exports.handler = async (event) => {
         await fetch(`${BASE_URL}/${LEADS_TABLE}/${existing.id}`, {
           method: "PATCH",
           headers,
-          body: JSON.stringify({ fields: patchFields }),
+          body: JSON.stringify({ fields: patchFields, typecast: true }),
         });
         leadId = existing.id;
         action = "updated";
@@ -125,7 +125,7 @@ exports.handler = async (event) => {
         const createRes  = await fetch(`${BASE_URL}/${LEADS_TABLE}`, {
           method: "POST",
           headers,
-          body: JSON.stringify({ fields: createFields }),
+          body: JSON.stringify({ fields: createFields, typecast: true }),
         });
         const createData = await createRes.json();
         if (createData.error) {
@@ -165,7 +165,7 @@ exports.handler = async (event) => {
       await fetch(`${BASE_URL}/${LEADS_TABLE}/${existing.id}`, {
         method: "PATCH",
         headers,
-        body: JSON.stringify({ fields: patchFields }),
+        body: JSON.stringify({ fields: patchFields, typecast: true }),
       });
       console.log("[calendly-webhook] Lead marqué annulé:", existing.id, "| statut revert:", revertable);
       return { statusCode: 200, headers: corsHeaders, body: JSON.stringify({ ok: true, canceled: true, leadId: existing.id }) };

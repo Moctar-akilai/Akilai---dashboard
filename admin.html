@@ -4498,12 +4498,11 @@ function renderCRM() {
     const color    = CRM_STATUT_COLORS[col] || '#94a3b8';
     const total    = colLeads.reduce((s,l)=>s+(l.montantEstime||0),0);
     return `
-      <div class="kanban-col" data-col-statut="${col}"
-           style="min-width:236px;flex:0 0 236px;background:#141414;border-radius:12px;padding:16px;min-height:400px;display:flex;flex-direction:column;transition:background .15s,border .15s;border:2px solid transparent;box-sizing:border-box"
-           ondragover="onColDragOver(event)"
-           ondragenter="onColDragEnter(event)"
-           ondragleave="onColDragLeave(event)"
-           ondrop="onLeadDrop(event)">
+      <div class="kanban-col" data-statut="${col}"
+           style="min-width:236px;flex:0 0 236px;background:#141414;border-radius:12px;padding:16px;min-height:400px;display:flex;flex-direction:column;transition:background .15s;box-sizing:border-box"
+           ondragover="dragOver(event)"
+           ondragleave="dragLeave(event)"
+           ondrop="drop(event)">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
           <span style="font-size:13px;font-weight:600">${col}</span>
           <span class="col-badge" style="font-size:11px;font-weight:600;background:${color}22;color:${color};border-radius:10px;padding:2px 9px">${colLeads.length}</span>
@@ -4526,12 +4525,12 @@ function renderLeadCard(l) {
          draggable="true"
          data-lead-id="${l.id}"
          data-statut="${esc(l.statut)}"
-         ondragstart="onLeadDragStart(event)"
-         ondragend="onLeadDragEnd(event)"
+         ondragstart="dragStart(event)"
+         ondragend="dragEnd(event)"
          onclick="onLeadCardClick(event,'${l.id}')"
          style="cursor:grab;background:#1e1e1e;border-radius:8px;padding:12px;border-left:3px solid ${color};border-top:1px solid #2a2a2a;border-right:1px solid #2a2a2a;border-bottom:1px solid #2a2a2a;transition:transform .15s,box-shadow .15s,opacity .15s"
-         onmouseover="if(!_isDragging)this.style.transform='translateY(-1px)',this.style.boxShadow='0 4px 14px rgba(0,0,0,.4)'"
-         onmouseout="this.style.transform='',this.style.boxShadow=''">
+         onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 14px rgba(0,0,0,.4)'"
+         onmouseout="this.style.transform='';this.style.boxShadow=''">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
         <div style="width:30px;height:30px;border-radius:50%;background:${color}22;color:${color};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${initials}</div>
         <div style="min-width:0">
@@ -4669,125 +4668,110 @@ document.addEventListener('DOMContentLoaded', () => {
 /* =========================================================
    KANBAN DRAG & DROP
    ========================================================= */
-let _isDragging    = false;
-let _dragLeadId    = null;
-let _dragOldStatut = null;
+let draggedLeadId    = null;
+let draggedOldStatut = null;
+let _didDrag         = false;
 
-function onLeadDragStart(event) {
-  _isDragging    = true;
-  _dragLeadId    = event.currentTarget.dataset.leadId;
-  _dragOldStatut = event.currentTarget.dataset.statut;
-  event.dataTransfer.setData('leadId',   _dragLeadId);
-  event.dataTransfer.setData('oldStatut', _dragOldStatut);
+function dragStart(event) {
+  draggedLeadId    = event.currentTarget.dataset.leadId;
+  draggedOldStatut = event.currentTarget.dataset.statut;
+  _didDrag         = false;
   event.dataTransfer.effectAllowed = 'move';
-  event.currentTarget.style.opacity  = '0.45';
-  event.currentTarget.style.cursor   = 'grabbing';
+  event.currentTarget.style.opacity = '0.4';
 }
 
-function onLeadDragEnd(event) {
-  _isDragging = false;
+function dragEnd(event) {
   event.currentTarget.style.opacity = '1';
-  event.currentTarget.style.cursor  = 'grab';
-  // Retirer tous les highlights restants
-  document.querySelectorAll('.kanban-col').forEach(col => _colReset(col));
-}
-
-function onColDragOver(event) {
-  event.preventDefault();
-  event.dataTransfer.dropEffect = 'move';
-}
-
-function onColDragEnter(event) {
-  event.preventDefault();
-  const col = event.currentTarget;
-  col.style.background = 'rgba(112,178,222,0.08)';
-  col.style.border      = '2px dashed #70B2DE';
-}
-
-function onColDragLeave(event) {
-  // Ne retirer le highlight que si on quitte vraiment la colonne
-  // (pas quand on survole un enfant)
-  if (!event.currentTarget.contains(event.relatedTarget)) {
-    _colReset(event.currentTarget);
-  }
-}
-
-function _colReset(col) {
-  col.style.background = '#141414';
-  col.style.border     = '2px solid transparent';
-}
-
-async function onLeadDrop(event) {
-  event.preventDefault();
-  const col       = event.currentTarget;
-  _colReset(col);
-
-  const leadId    = event.dataTransfer.getData('leadId')    || _dragLeadId;
-  const oldStatut = event.dataTransfer.getData('oldStatut') || _dragOldStatut;
-  const newStatut = col.dataset.colStatut;
-
-  if (!leadId || !newStatut || oldStatut === newStatut) return;
-
-  // ── Déplacement visuel immédiat ──
-  const card = document.querySelector(`.lead-card[data-lead-id="${leadId}"]`);
-  if (card) {
-    card.dataset.statut = newStatut;
-    const target = col.querySelector('.kanban-cards');
-    if (target) {
-      // Retirer le message "Aucun lead" si présent
-      const empty = target.querySelector('.kanban-empty');
-      if (empty) empty.remove();
-      target.appendChild(card);
-    }
-  }
-
-  // ── Mettre à jour les badges count ──
-  updateKanbanBadges();
-
-  // ── Mettre à jour en mémoire ──
-  const lead = allLeads.find(l => l.id === leadId);
-  if (lead) lead.statut = newStatut;
-
-  // ── PATCH Airtable (fire & forget avec feedback) ──
-  try {
-    const res = await adminFetch('/.netlify/functions/admin-update-lead', {
-      method: 'POST',
-      body: JSON.stringify({
-        id:                 leadId,
-        statut:             newStatut,
-        dateDerniereAction: new Date().toISOString().split('T')[0],
-      }),
-    });
-    if (res.error) {
-      toast('Erreur déplacement : ' + res.error, true);
-      // Rollback visuel
-      if (lead) lead.statut = oldStatut;
-      renderCRM();
-    } else {
-      toast(`Déplacé → ${newStatut}`);
-    }
-  } catch (e) {
-    toast('Erreur réseau', true);
-    if (lead) lead.statut = oldStatut;
-    renderCRM();
-  }
-}
-
-function updateKanbanBadges() {
-  CRM_KANBAN_COLS.forEach(statut => {
-    const cards = document.querySelectorAll(`.lead-card[data-statut="${statut}"]`).length;
-    const badge = document.querySelector(`.kanban-col[data-col-statut="${statut}"] .col-badge`);
-    if (badge) badge.textContent = cards;
+  // Retirer tout highlight résiduel
+  document.querySelectorAll('.kanban-col').forEach(c => {
+    c.style.background = '#141414';
+    c.style.outline    = 'none';
   });
 }
 
-// Distinguer clic (ouvrir modal) du drag
-let _dragMoved = false;
-document.addEventListener('mousedown', () => { _dragMoved = false; });
-document.addEventListener('mousemove', () => { if (_isDragging) _dragMoved = true; });
+function dragOver(event) {
+  event.preventDefault();
+  event.dataTransfer.dropEffect = 'move';
+  event.currentTarget.style.background = 'rgba(112,178,222,0.1)';
+  event.currentTarget.style.outline    = '2px dashed #70B2DE';
+}
+
+function dragLeave(event) {
+  if (!event.currentTarget.contains(event.relatedTarget)) {
+    event.currentTarget.style.background = '#141414';
+    event.currentTarget.style.outline    = 'none';
+  }
+}
+
+function drop(event) {
+  event.preventDefault();
+  const col       = event.currentTarget;
+  col.style.background = '#141414';
+  col.style.outline    = 'none';
+
+  const newStatut = col.dataset.statut;
+  if (!draggedLeadId || !newStatut || draggedOldStatut === newStatut) {
+    draggedLeadId = draggedOldStatut = null;
+    return;
+  }
+
+  _didDrag = true;
+
+  // Déplacer visuellement
+  const card = document.querySelector(`.lead-card[data-lead-id="${draggedLeadId}"]`);
+  const colBody = col.querySelector('.kanban-cards');
+  if (card && colBody) {
+    card.dataset.statut = newStatut;
+    card.style.opacity  = '1';
+    const empty = colBody.querySelector('.kanban-empty');
+    if (empty) empty.remove();
+    colBody.appendChild(card);
+  }
+
+  // Mettre à jour badges
+  updateKanbanCounts();
+
+  // Mettre à jour en mémoire
+  const lead = allLeads.find(l => l.id === draggedLeadId);
+  if (lead) lead.statut = newStatut;
+
+  const leadIdSnap    = draggedLeadId;
+  const oldStatutSnap = draggedOldStatut;
+  draggedLeadId = draggedOldStatut = null;
+
+  // PATCH Airtable
+  adminFetch('/.netlify/functions/admin-update-lead', {
+    method: 'POST',
+    body: JSON.stringify({
+      id:                 leadIdSnap,
+      statut:             newStatut,
+      dateDerniereAction: new Date().toISOString().split('T')[0],
+    }),
+  }).then(res => {
+    if (res.error) {
+      toast('Erreur déplacement : ' + res.error, true);
+      if (lead) lead.statut = oldStatutSnap;
+      renderCRM();
+    } else {
+      toast('Déplacé → ' + newStatut);
+    }
+  }).catch(() => {
+    toast('Erreur réseau', true);
+    if (lead) lead.statut = oldStatutSnap;
+    renderCRM();
+  });
+}
+
+function updateKanbanCounts() {
+  document.querySelectorAll('.kanban-col').forEach(col => {
+    const count = col.querySelectorAll('.lead-card').length;
+    const badge = col.querySelector('.col-badge');
+    if (badge) badge.textContent = count;
+  });
+}
 
 function onLeadCardClick(event, id) {
-  if (_dragMoved) return; // drag → pas d'ouverture modal
+  if (_didDrag) { _didDrag = false; return; }
   openLeadModal(id);
 }
 

@@ -36,7 +36,7 @@ exports.handler = async (event) => {
     const res  = await fetch(`${BASE_URL}/${LEADS_TABLE}/${id}`, {
       method: "PATCH",
       headers,
-      body: JSON.stringify({ fields }),
+      body: JSON.stringify({ fields, typecast: true }),
     });
     const data = await res.json();
     if (data.error) return err(data.error.message, 400);
