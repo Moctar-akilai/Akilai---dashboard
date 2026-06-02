@@ -13,19 +13,15 @@ exports.handler = async (event) => {
   const headers = { 'Authorization': `Token ${MAKE_API_KEY}`, 'Content-Type': 'application/json' }
 
   try {
-    // 1. Organisation ID
+    // 1. Organisation
     const orgsRes = await fetch(`${BASE}/organizations?pg[limit]=5`, { headers })
-    if (!orgsRes.ok) {
-      const t = await orgsRes.text()
-      console.error('[make] /organizations error:', orgsRes.status, t)
-      return err(`Make API error ${orgsRes.status}`)
-    }
+    if (!orgsRes.ok) return err(`Make API error ${orgsRes.status}`)
     const orgsData = await orgsRes.json()
     const org = orgsData?.organizations?.[0]
     const organizationId = org?.id
     if (!organizationId) return err('Aucune organisation Make trouvée')
 
-    // 2. Team ID
+    // 2. Team
     const teamsRes = await fetch(`${BASE}/teams?organizationId=${organizationId}&pg[limit]=10`, { headers })
     const teamsData = await teamsRes.json()
     const teamId = teamsData?.teams?.[0]?.id
@@ -34,14 +30,25 @@ exports.handler = async (event) => {
     // 3. Scénarios
     const scenRes = await fetch(`${BASE}/scenarios?teamId=${teamId}&pg[limit]=100`, { headers })
     const scenData = await scenRes.json()
-    const scenarios = scenData?.scenarios || []
+    const rawScenarios = scenData?.scenarios || []
+
+    const scenarios = rawScenarios.map(s => ({
+      id: s.id,
+      name: s.name,
+      isActive: s.isActive,
+      isPaused: s.isPaused,
+      teamId: s.teamId,
+      lastEdit: s.updatedAt || null,
+      executionsCount: s.executionsCount || 0,
+    }))
 
     const actifs   = scenarios.filter(s => s.isActive && !s.isPaused).length
-    const erreur   = scenarios.filter(s => s.isPaused).length
-    const inactifs = scenarios.length - actifs - erreur
+    const enPause  = scenarios.filter(s => s.isPaused).length
+    const inactifs = scenarios.length - actifs - enPause
 
     return ok({
-      scenarios: { total: scenarios.length, actifs, inactifs, erreur },
+      stats: { total: scenarios.length, actifs, inactifs, enPause },
+      scenarios,
       organisation: { nom: org?.name || 'AkilAI', plan: org?.plan || 'Core' },
     })
   } catch (e) {

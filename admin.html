@@ -833,11 +833,18 @@ canvas{max-width:100%!important}
             <div class="kpi-card"><div class="k-label">Total scénarios</div><div class="k-value" id="makeTotal">—</div></div>
             <div class="kpi-card kpi-green"><div class="k-label">Actifs</div><div class="k-value" id="makeActifs" style="color:#22c55e">—</div></div>
             <div class="kpi-card"><div class="k-label">Inactifs</div><div class="k-value" id="makeInactifs" style="color:var(--text-muted)">—</div></div>
-            <div class="kpi-card kpi-red"><div class="k-label">En erreur</div><div class="k-value" id="makeErreur" style="color:#ef4444">—</div></div>
+            <div class="kpi-card kpi-red"><div class="k-label">En pause</div><div class="k-value" id="makeErreur" style="color:#f59e0b">—</div></div>
           </div>
           <div id="makeOrgInfo" style="font-size:13px;color:var(--text-muted);margin-bottom:16px"></div>
           <div id="makeError" style="display:none;color:var(--text-muted);font-size:13px;margin-bottom:16px;padding:12px;background:var(--surface2);border-radius:8px;border-left:3px solid #ef4444">
             Impossible de récupérer les données Make. Vérifiez votre clé API Make (<code>MAKE_API_KEY</code>).
+          </div>
+          <!-- Scenarios table -->
+          <div class="table-wrap" id="makeScenariosWrap" style="display:none;border:none;margin-bottom:16px">
+            <table class="hist-table">
+              <thead><tr><th>Nom</th><th>Statut</th><th>Exécutions</th><th>Dernière modif</th><th>Action</th></tr></thead>
+              <tbody id="makeScenariosBody"></tbody>
+            </table>
           </div>
           <div class="modal-actions">
             <a href="https://make.com" target="_blank" class="btn ghost">Ouvrir Make ↗</a>
@@ -3436,21 +3443,67 @@ async function loadMakeSettings(){
   });
   document.getElementById('makeError').style.display='none';
   document.getElementById('makeOrgInfo').textContent='';
+  document.getElementById('makeScenariosWrap').style.display='none';
   const d=await adminFetch('/.netlify/functions/admin-get-make-stats').catch(()=>null);
-  if(d&&d.scenarios){
-    document.getElementById('makeTotal').textContent=d.scenarios.total??'—';
-    document.getElementById('makeActifs').textContent=d.scenarios.actifs??'—';
-    document.getElementById('makeInactifs').textContent=d.scenarios.inactifs??'—';
-    document.getElementById('makeErreur').textContent=d.scenarios.erreur??'—';
+  if(d&&d.stats){
+    document.getElementById('makeTotal').textContent=d.stats.total??'—';
+    document.getElementById('makeActifs').textContent=d.stats.actifs??'—';
+    document.getElementById('makeInactifs').textContent=d.stats.inactifs??'—';
+    document.getElementById('makeErreur').textContent=d.stats.enPause??'—';
     if(d.organisation?.nom){
       document.getElementById('makeOrgInfo').textContent=
         `Organisation : ${d.organisation.nom}${d.organisation.plan?' · Plan : '+d.organisation.plan:''}`;
+    }
+    if(d.scenarios?.length){
+      renderMakeScenarios(d.scenarios);
+      document.getElementById('makeScenariosWrap').style.display='';
     }
   } else {
     ['makeTotal','makeActifs','makeInactifs','makeErreur'].forEach(id=>{
       const el=document.getElementById(id); if(el) el.textContent='—';
     });
     document.getElementById('makeError').style.display='';
+  }
+}
+
+function renderMakeScenarios(scenarios){
+  const tb=document.getElementById('makeScenariosBody'); if(!tb) return;
+  tb.innerHTML=scenarios.map(s=>{
+    let badge, btnLabel, btnClass;
+    if(s.isActive && !s.isPaused){
+      badge=`<span class="badge" style="background:rgba(34,197,94,.15);color:#22c55e">Actif</span>`;
+      btnLabel='Désactiver'; btnClass='btn sm ghost';
+    } else if(s.isPaused){
+      badge=`<span class="badge" style="background:rgba(245,158,11,.15);color:#f59e0b">En pause</span>`;
+      btnLabel='Activer'; btnClass='btn sm';
+    } else {
+      badge=`<span class="badge" style="background:rgba(148,163,184,.1);color:var(--text-muted)">Inactif</span>`;
+      btnLabel='Activer'; btnClass='btn sm';
+    }
+    const lastEdit=s.lastEdit?new Date(s.lastEdit).toLocaleDateString('fr-FR'):'—';
+    return `<tr>
+      <td style="font-size:13px"><strong>${esc(s.name)}</strong></td>
+      <td>${badge}</td>
+      <td style="font-size:12px;color:var(--text-muted)">${(s.executionsCount||0).toLocaleString('fr-FR')}</td>
+      <td style="font-size:12px;color:var(--text-muted)">${lastEdit}</td>
+      <td><button class="${btnClass}" onclick="toggleMakeScenario(${s.id},${s.isActive&&!s.isPaused?'true':'false'},this)">${btnLabel}</button></td>
+    </tr>`;
+  }).join('');
+}
+
+async function toggleMakeScenario(scenarioId, isCurrentlyActive, btn){
+  const action=isCurrentlyActive?'deactivate':'activate';
+  btn.disabled=true; btn.textContent='…';
+  const d=await adminFetch('/.netlify/functions/admin-toggle-make-scenario',{
+    method:'POST',
+    body:JSON.stringify({ scenarioId, action })
+  });
+  if(d&&d.success){
+    toast(`Scénario ${action==='activate'?'activé':'désactivé'}`,'success');
+    loadMakeSettings();
+  } else {
+    toast(d?.error||'Erreur toggle scénario','error');
+    btn.disabled=false; btn.textContent=isCurrentlyActive?'Désactiver':'Activer';
   }
 }
 
