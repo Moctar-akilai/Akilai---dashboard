@@ -6,7 +6,7 @@ const ALLOWED = new Set([
   "Tarifs Plans", "Infos Agence", "Templates Emails",
   "Seuil Vapi", "Admins Secondaires",
   "Delai Ticket Alerte", "Bandeau Suspension", "Horaire Support",
-  "Finances",
+  "Finance",
 ]);
 
 exports.handler = async (event) => {
