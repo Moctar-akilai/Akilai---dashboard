@@ -3331,7 +3331,7 @@ async function previewEmailTemplate(){
       const label=EMAIL_TEMPLATES[_tmplKey]?.label||_tmplKey;
       document.getElementById('emailPreviewTitle').textContent=`Aperçu — ${label}`;
       const modal=document.getElementById('modalEmailPreview');
-      modal.classList.add('open');
+      modal.classList.add('show');
       const frame=document.getElementById('emailPreviewFrame');
       frame.srcdoc='';
       setTimeout(()=>{ frame.contentDocument.open(); frame.contentDocument.write(res.html); frame.contentDocument.close(); },50);
