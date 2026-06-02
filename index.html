@@ -6870,7 +6870,23 @@ function updateClientNotifBadge() {
 }
 
 function checkClientNotifications() {
-  const lastVisit = +(localStorage.getItem(CLIENT_LAST_VISIT_KEY) || 0);
+  // Purger les notifs mal formées (sans titre/id) issues d'éventuelles sessions précédentes
+  const _stored = getClientNotifs();
+  const _valid = _stored.filter(n => n.id && (n.titre || n.title));
+  if (_valid.length !== _stored.length) {
+    console.log('[notif] purge de', _stored.length - _valid.length, 'notif(s) mal formée(s)');
+    saveClientNotifs(_valid);
+  }
+
+  // Diagnostic
+  console.log('[notif] total stockées:', _valid.length);
+  console.log('[notif] non lues:', _valid.filter(n => !n.lu).length);
+  if (_valid[0]) console.log('[notif] première notif:', JSON.stringify(_valid[0]));
+
+  // Si pas de lastVisit → remonter 7 jours pour afficher les récentes
+  const _lv = localStorage.getItem(CLIENT_LAST_VISIT_KEY);
+  const lastVisit = _lv ? +_lv : Date.now() - 7 * 86400000;
+  console.log('[notif] lastVisit:', _lv ? new Date(lastVisit).toISOString() : '(défaut -7j)');
   const now = new Date();
 
   // Réponse support sur ticket (dernier message role = "support" depuis lastVisit)
@@ -6958,7 +6974,9 @@ function updateNotifications() {
   const readIds  = getReadAlerts();
 
   // Fusionner alertes temps-réel + notifications persistantes
-  const persisted = getClientNotifs();
+  // Filtrer les notifs mal formées (sans id ou sans titre)
+  const persisted = getClientNotifs().filter(n => n.id && (n.titre || n.title));
+  console.log('[notif] updateNotifications — persistées valides:', persisted.length, '| alertes temps-réel:', _currentAlerts.length);
   const persistedUnread = persisted.filter(n => !n.lu);
 
   // Badge : total non-lu (alertes temps-réel non lues + persistantes non lues)
@@ -6991,7 +7009,7 @@ function updateNotifications() {
       return `<div class="notif-item ${n.lu ? '' : 'unread'}" style="cursor:pointer" onclick="clickClientNotif('${n.id}','${n.lien||''}')">
         <div class="notif-item-icon">${icon}</div>
         <div class="notif-item-body">
-          <div class="notif-item-msg"><strong>${n.titre||''}</strong><br>${n.message||''}</div>
+          <div class="notif-item-msg"><strong>${n.titre||n.title||''}</strong><br>${n.message||''}</div>
           <div class="notif-item-time">${timeStr}</div>
         </div>
         <button class="notif-item-del" title="Supprimer" onclick="event.stopPropagation();deleteClientNotif('${n.id}')" style="background:none;border:none;color:var(--text-muted);font-size:16px;cursor:pointer;padding:2px 6px;line-height:1">×</button>
