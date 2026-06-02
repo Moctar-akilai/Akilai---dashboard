@@ -829,14 +829,18 @@ canvas{max-width:100%!important}
       <div id="stab-make" style="display:none">
         <div class="card">
           <h3>Make (Integromat)</h3>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px">
-            <div class="kpi-card"><div class="k-label">Scénarios actifs</div><div class="k-value" id="makeActiveScenarios">—</div></div>
-            <div class="kpi-card"><div class="k-label">Opérations ce mois</div><div class="k-value" id="makeOpsUsed">—</div></div>
-            <div class="kpi-card"><div class="k-label">Quota restant</div><div class="k-value" id="makeOpsLeft">—</div></div>
+          <div id="makeStatsGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px">
+            <div class="kpi-card"><div class="k-label">Total scénarios</div><div class="k-value" id="makeTotal">—</div></div>
+            <div class="kpi-card kpi-green"><div class="k-label">Actifs</div><div class="k-value" id="makeActifs" style="color:#22c55e">—</div></div>
+            <div class="kpi-card"><div class="k-label">Inactifs</div><div class="k-value" id="makeInactifs" style="color:var(--text-muted)">—</div></div>
+            <div class="kpi-card kpi-red"><div class="k-label">En erreur</div><div class="k-value" id="makeErreur" style="color:#ef4444">—</div></div>
           </div>
-          <p style="color:var(--text-muted);font-size:13px">Les données Make sont récupérées via l'API Make. La clé <code>MAKE_API_KEY</code> doit être configurée dans les variables Netlify.</p>
+          <div id="makeOrgInfo" style="font-size:13px;color:var(--text-muted);margin-bottom:16px"></div>
+          <div id="makeError" style="display:none;color:var(--text-muted);font-size:13px;margin-bottom:16px;padding:12px;background:var(--surface2);border-radius:8px;border-left:3px solid #ef4444">
+            Impossible de récupérer les données Make. Vérifiez votre clé API Make (<code>MAKE_API_KEY</code>).
+          </div>
           <div class="modal-actions">
-            <a href="https://www.make.com/en/dashboard" target="_blank" class="btn ghost">Ouvrir Make Dashboard ↗</a>
+            <a href="https://make.com" target="_blank" class="btn ghost">Ouvrir Make ↗</a>
             <button class="btn" id="refreshMakeBtn">Actualiser</button>
           </div>
         </div>
@@ -3427,18 +3431,26 @@ async function saveVapiSeuil(){
 
 /* ── Make ── */
 async function loadMakeSettings(){
-  document.getElementById('makeActiveScenarios').textContent='…';
-  document.getElementById('makeOpsUsed').textContent='…';
-  document.getElementById('makeOpsLeft').textContent='…';
-  const d=await adminFetch('/.netlify/functions/make-get-stats').catch(()=>null);
-  if(d&&d.scenarios!=null){
-    document.getElementById('makeActiveScenarios').textContent=d.scenarios;
-    document.getElementById('makeOpsUsed').textContent=d.opsUsed!=null?d.opsUsed.toLocaleString('fr-FR'):'—';
-    document.getElementById('makeOpsLeft').textContent=d.opsLeft!=null?d.opsLeft.toLocaleString('fr-FR'):'—';
+  ['makeTotal','makeActifs','makeInactifs','makeErreur'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.textContent='…';
+  });
+  document.getElementById('makeError').style.display='none';
+  document.getElementById('makeOrgInfo').textContent='';
+  const d=await adminFetch('/.netlify/functions/admin-get-make-stats').catch(()=>null);
+  if(d&&d.scenarios){
+    document.getElementById('makeTotal').textContent=d.scenarios.total??'—';
+    document.getElementById('makeActifs').textContent=d.scenarios.actifs??'—';
+    document.getElementById('makeInactifs').textContent=d.scenarios.inactifs??'—';
+    document.getElementById('makeErreur').textContent=d.scenarios.erreur??'—';
+    if(d.organisation?.nom){
+      document.getElementById('makeOrgInfo').textContent=
+        `Organisation : ${d.organisation.nom}${d.organisation.plan?' · Plan : '+d.organisation.plan:''}`;
+    }
   } else {
-    document.getElementById('makeActiveScenarios').textContent='—';
-    document.getElementById('makeOpsUsed').textContent='—';
-    document.getElementById('makeOpsLeft').textContent='—';
+    ['makeTotal','makeActifs','makeInactifs','makeErreur'].forEach(id=>{
+      const el=document.getElementById(id); if(el) el.textContent='—';
+    });
+    document.getElementById('makeError').style.display='';
   }
 }
 
