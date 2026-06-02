@@ -376,7 +376,7 @@ canvas{max-width:100%!important}
     <section class="page" id="page-clients">
       <div class="toolbar">
         <input class="search" id="clientSearch" placeholder="Rechercher (entreprise, nom, email)…">
-        <select id="clientFilterStatut"><option value="">Tous statuts</option><option>Actif</option><option>Suspendu</option><option>Essai</option></select>
+        <select id="clientFilterStatut"><option value="">Tous statuts</option><option>Actif</option><option>Suspendu</option><option>Essai</option><option>Résilié</option></select>
         <select id="clientFilterPlan"><option value="">Tous plans</option></select>
         <select id="clientFilterPays"><option value="">Tous pays</option></select>
         <div class="spacer"></div>
@@ -925,7 +925,7 @@ canvas{max-width:100%!important}
     <div id="cdDetails"></div>
     <div class="form-grid mt16">
       <div class="field"><label>Plan</label><select id="cdPlan"></select></div>
-      <div class="field"><label>Statut</label><select id="cdStatut"><option>Actif</option><option>Suspendu</option><option>Essai</option></select></div>
+      <div class="field"><label>Statut</label><select id="cdStatut"><option>Actif</option><option>Suspendu</option><option>Essai</option><option>Résilié</option></select></div>
       <div class="field"><label>Numéro Vapi</label><input id="cdVapi"></div>
       <div class="field"><label>Numéro Twilio</label><input id="cdTwilio"></div>
     </div>
@@ -1075,7 +1075,7 @@ canvas{max-width:100%!important}
       <div class="field"><label>Téléphone</label><input id="ecTelephone"></div>
       <div class="field"><label>Secteur</label><select id="ecSecteur"><option value="">— Secteur —</option><option>Médical</option><option>Immobilier</option><option>Restaurant</option><option>Formation</option><option>Hôtellerie / Conciergerie</option><option>E-commerce</option><option>Juridique</option><option>Autre</option></select></div>
       <div class="field"><label>Plan</label><select id="ecPlan"><option value="">— Plan —</option><option>Starter WhatsApp</option><option>Business WhatsApp</option><option>Premium WhatsApp</option><option>Starter Vocal</option><option>Business Vocal</option><option>Premium Vocal</option><option>Starter Combo</option><option>Business Combo</option><option>Premium Combo</option></select></div>
-      <div class="field"><label>Statut</label><select id="ecStatut"><option>Actif</option><option>Suspendu</option><option>Essai</option></select></div>
+      <div class="field"><label>Statut</label><select id="ecStatut"><option>Actif</option><option>Suspendu</option><option>Essai</option><option>Résilié</option></select></div>
       <div class="field"><label>Pays</label><select id="ecPays"><option value="">— Pays —</option><option>France</option><option>Sénégal</option><option>Côte d'Ivoire</option><option>Maroc</option><option>Belgique</option><option>Suisse</option><option>Canada</option><option>Autre</option></select></div>
       <div class="field"><label>Onboarding</label><select id="ecOnboarding"><option value="">—</option><option>À configurer</option><option>En cours</option><option>Terminé</option></select></div>
       <div class="field"><label>Numéro Vapi</label><input id="ecVapi"></div>
@@ -1084,6 +1084,31 @@ canvas{max-width:100%!important}
     <div class="modal-actions">
       <button type="button" class="btn ghost" data-close>Annuler</button>
       <button type="button" class="btn" id="ecSaveBtn">Sauvegarder</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: RÉSILIATION CLIENT ===== -->
+<div class="modal-overlay" id="modalResilier">
+  <div class="modal-content" style="max-width:460px">
+    <button type="button" class="modal-close" data-close>&times;</button>
+    <h3 style="margin:0 0 8px;color:#f87171">⚠️ Résiliation du compte</h3>
+    <p id="resilMsg" style="color:var(--muted);font-size:14px;margin:0 0 20px;line-height:1.5"></p>
+    <div class="field" style="margin-bottom:20px">
+      <label style="font-size:13px;font-weight:600;margin-bottom:6px;display:block">Raison de résiliation <span style="color:#f87171">*</span></label>
+      <select id="resilRaison" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface-2,#1a1a2e);color:var(--text);font-size:14px">
+        <option value="">— Sélectionner une raison —</option>
+        <option value="Fin de contrat">Fin de contrat</option>
+        <option value="Non-paiement">Non-paiement</option>
+        <option value="Demande client">Demande client</option>
+        <option value="Insatisfaction">Insatisfaction</option>
+        <option value="Doublon / fusion">Doublon / fusion</option>
+        <option value="Autre">Autre</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost sm" data-close>Annuler</button>
+      <button class="btn sm" id="resilConfirmBtn" style="background:#dc2626;color:#fff;border-color:#dc2626">Résilier définitivement</button>
     </div>
   </div>
 </div>
@@ -1133,6 +1158,8 @@ canvas{max-width:100%!important}
         <button class="btn ghost sm" id="cpEmailBtn">✉ Email</button>
         <button class="btn ghost sm" id="cpToggleBtn">Suspendre</button>
         <button class="btn sm" id="cpEditBtn">Modifier</button>
+        <span id="cpResiliBadge" style="display:none;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;background:rgba(248,113,113,.15);color:#f87171;border:1px solid rgba(248,113,113,.3)">🔴 Résilié</span>
+        <button class="btn sm" id="cpResiliBtn" style="display:none;background:#dc2626;color:#fff;border-color:#dc2626">Résilier</button>
       </div>
     </div>
 
@@ -1542,7 +1569,7 @@ function clientNameById(id){ const c = adminClients.find(c=>c.id===id || c.email
 function fmtEur(n){ return (Math.round((n||0)*100)/100).toLocaleString('fr-FR')+' €'; }
 function fmtDate(d){ if(!d) return '—'; const dt=new Date(d); return isNaN(dt)?d:dt.toLocaleDateString('fr-FR'); }
 function statutBadge(s){
-  const map={'Actif':'success','Suspendu':'danger','Essai':'warning','Ouvert':'danger','En cours':'warning','Résolu':'success','Payé':'success','En attente':'warning','Échoué':'danger','Erreur':'danger','Inactif':'muted'};
+  const map={'Actif':'success','Suspendu':'danger','Essai':'warning','Résilié':'danger','Ouvert':'danger','En cours':'warning','Résolu':'success','Payé':'success','En attente':'warning','Échoué':'danger','Erreur':'danger','Inactif':'muted'};
   return `<span class="badge badge-${map[s]||'muted'}">${s||'—'}</span>`;
 }
 function prioriteBadge(p){ const m={'Haute':'danger','Normal':'accent','Basse':'muted'}; return `<span class="badge badge-${m[p]||'muted'}">${p||'Normal'}</span>`; }
@@ -1781,9 +1808,16 @@ async function openClientPanel(id){
 
   // Action buttons
   document.getElementById('cpEmailBtn').onclick=()=>{ window.location.href='mailto:'+c.email; };
-  document.getElementById('cpToggleBtn').textContent=c.statut==='Actif'?'Suspendre':'Activer';
+  document.getElementById('cpToggleBtn').textContent=c.statut==='Actif'?'Suspendre':(c.statut==='Résilié'?'Résilié':'Activer');
+  document.getElementById('cpToggleBtn').disabled=c.statut==='Résilié';
   document.getElementById('cpToggleBtn').onclick=()=>toggleClientStatut(c);
   document.getElementById('cpEditBtn').onclick=()=>openEditClientModal(id);
+
+  // Bouton Résilier
+  const isResilied = c.statut === 'Résilié';
+  document.getElementById('cpResiliBtn').style.display = isResilied ? 'none' : '';
+  document.getElementById('cpResiliBadge').style.display = isResilied ? '' : 'none';
+  document.getElementById('cpResiliBtn').onclick = () => openResilierModal(c);
 
   // Notes
   document.getElementById('cpNotes').value=c.notes||'';
@@ -2094,6 +2128,7 @@ function toggleHDetail(btn){
 }
 
 async function toggleClientStatut(c){
+  if(c.statut==='Résilié'){ toast('Compte résilié — utilisez "Modifier" pour changer le statut manuellement','error'); return; }
   const newStatut=c.statut==='Actif'?'Suspendu':'Actif';
   console.log('[toggleClientStatut] id:', c.id, '→', newStatut);
   const res=await adminFetch('/.netlify/functions/admin-update-client',{method:'PATCH',body:JSON.stringify({id:c.id,fields:{Statut:newStatut}})});
@@ -2114,6 +2149,47 @@ async function toggleClientStatut(c){
     else toast('Automatisations réactivées','success');
     await loadClients(); renderClients(); updateOverview();
   } else toast(res.error||'Erreur','error');
+}
+
+function openResilierModal(c){
+  document.getElementById('resilMsg').textContent=
+    `Vous êtes sur le point de résilier définitivement le compte de ${c.entreprise||c.nom||'ce client'}. Cette action bloquera l'accès au dashboard client.`;
+  document.getElementById('resilRaison').value='';
+  const overlay=document.getElementById('modalResilier');
+  overlay.classList.add('show');
+  document.getElementById('resilConfirmBtn').onclick=()=>resilierClient(c);
+}
+
+async function resilierClient(c){
+  const raison=document.getElementById('resilRaison').value;
+  if(!raison){ document.getElementById('resilRaison').style.outline='2px solid #f87171'; return; }
+  document.getElementById('resilRaison').style.outline='';
+  const btn=document.getElementById('resilConfirmBtn');
+  btn.disabled=true; btn.textContent='Résiliation…';
+
+  const notes=(c.notes||'')+(c.notes?'\n':'')+`[${new Date().toLocaleDateString('fr-FR')}] Résilié — ${raison}`;
+  const res=await adminFetch('/.netlify/functions/admin-update-client',{
+    method:'PATCH',
+    body:JSON.stringify({id:c.id,fields:{Statut:'Résilié',Notes:notes}})
+  });
+  btn.disabled=false; btn.textContent='Résilier définitivement';
+
+  if(res.ok!==false){
+    c.statut='Résilié'; c.notes=notes;
+    document.getElementById('modalResilier').classList.remove('show');
+    document.getElementById('cpResiliBtn').style.display='none';
+    document.getElementById('cpResiliBadge').style.display='';
+    document.getElementById('cpToggleBtn').textContent='Activer';
+    document.getElementById('cpBadges').innerHTML=
+      statutBadge(c.statut)+
+      `<span class="badge badge-accent">${esc(c.plan||'—')}</span>`+
+      (c.pays?`<span class="badge badge-muted">${esc(c.pays)}</span>`:'')+
+      (c.secteur?`<span class="badge badge-muted">${esc(c.secteur)}</span>`:'');
+    document.getElementById('cpNotes').value=notes;
+    await setClientAutomationsStatut(c,'Inactif');
+    toast('Compte résilié — automatisations désactivées','success');
+    await loadClients(); renderClients(); updateOverview();
+  } else toast(res.error||'Erreur lors de la résiliation','error');
 }
 
 async function saveClientNotes(id){
