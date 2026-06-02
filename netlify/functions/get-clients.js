@@ -31,6 +31,18 @@ exports.handler = async function(event, context) {
 
     if (records.length > 0) {
       console.log("[get-clients] Champs bruts :", JSON.stringify(records[0].fields));
+      const statut = records[0].fields["Statut"];
+      if (statut === "Résilié") {
+        console.log("[get-clients] Compte résilié — accès bloqué pour :", email);
+        return {
+          statusCode: 403,
+          headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+          body: JSON.stringify({
+            error: "COMPTE_RESILIE",
+            message: "Votre compte a été résilié. Pour toute question, contactez-nous : bonjour@akilai.fr"
+          })
+        };
+      }
     }
 
     const clients = records.map(function(r, i) {

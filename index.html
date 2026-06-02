@@ -4167,6 +4167,12 @@ async function loginSubmit() {
     });
     const data = await res.json();
 
+    if (res.status === 403 || data.error === 'COMPTE_RESILIE') {
+      errEl.textContent = '🔒 ' + (data.message || 'Compte résilié. Contactez AkilAI : bonjour@akilai.fr');
+      emailEl.focus();
+      return;
+    }
+
     if (data.ok) {
       const session = { clientId: data.clientId, email: data.email, contact: data.contact, entreprise: data.entreprise, plan: data.plan };
       _setSession(session);
@@ -4195,6 +4201,28 @@ function logout() {
   document.getElementById('loginPage').classList.remove('hidden');
   /* Remettre le focus sur le champ email */
   setTimeout(() => document.getElementById('loginEmail').focus(), 50);
+}
+
+function _showCompteResilié(msg) {
+  try { sessionStorage.clear(); } catch(e) {}
+  try { localStorage.clear(); } catch(e) {}
+  document.body.innerHTML = `
+    <div style="
+      min-height:100vh;background:#0f0f0f;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      font-family:'Space Grotesk',sans-serif;color:#ffffff;text-align:center;padding:40px
+    ">
+      <div style="font-size:28px;font-weight:700;color:#70B2DE;margin-bottom:32px">Akilai.</div>
+      <div style="font-size:48px;margin-bottom:16px">🔒</div>
+      <h1 style="font-size:24px;margin:0 0 12px">Compte résilié</h1>
+      <p style="color:#a0a0a0;max-width:400px;line-height:1.6;margin:0 0 32px">
+        ${msg || 'Votre compte AkilAI a été résilié. Vos données sont conservées pendant 12 mois.'}
+      </p>
+      <a href="mailto:bonjour@akilai.fr" style="
+        background:#70B2DE;color:#ffffff;padding:12px 24px;
+        border-radius:8px;text-decoration:none;font-weight:600
+      ">Contacter AkilAI</a>
+    </div>`;
 }
 
 /* ============================================================
@@ -4266,7 +4294,13 @@ async function loadClientsFromAirtable() {
   const em = _getActiveEmail();
   if (!em) { console.warn("[AkilAI] loadClients ignoré — email non disponible"); return; }
   try {
-    const data = await apiFetch(`/.netlify/functions/get-clients?email=${encodeURIComponent(em)}`);
+    const res = await fetch(`/.netlify/functions/get-clients?email=${encodeURIComponent(em)}`);
+    if (res.status === 403) {
+      const body = await res.json().catch(() => ({}));
+      if (body.error === 'COMPTE_RESILIE') { _showCompteResilié(body.message); return; }
+    }
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
     if (data.clients && data.clients.length) {
       clients.splice(0, clients.length, ...data.clients);
     }
