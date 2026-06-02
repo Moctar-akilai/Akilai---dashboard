@@ -50,7 +50,7 @@ exports.handler = async (event) => {
       existing.cac = cac ?? existing.cac;
       existing.updatedAt = new Date().toISOString();
 
-      const fields = { Finance: JSON.stringify(existing) };
+      const fields = { Finances: JSON.stringify(existing) };
 
       let res;
       if (record) {

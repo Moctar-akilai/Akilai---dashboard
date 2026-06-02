@@ -29,7 +29,7 @@ exports.handler = async (event) => {
         delaiTicketAlerte:Number(f["Delai Ticket Alerte"] || 24),
         bandeauSuspension:f["Bandeau Suspension"] || "",
         horaireSupport:   f["Horaire Support"] || "Lundi–Vendredi, 9h–18h",
-        finances:         parse("Finance", null),
+        finances:         parse("Finances", null),
       },
     });
   } catch (e) {
