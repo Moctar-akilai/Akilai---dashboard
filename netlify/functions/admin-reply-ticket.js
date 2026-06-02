@@ -1,6 +1,6 @@
 const { BASE_URL, headers, ok, err, preflight, corsHeaders } = require("./config");
 const { verifyAdminToken, unauthorized } = require("./admin-utils");
-const { ticketResolu: ticketResoluTpl } = require("./email-templates");
+const { ticketResolu: ticketResoluTpl, nouvelleReponseTicket } = require("./email-templates");
 const { getEmailCorps } = require("./email-config");
 
 async function sendTicketResolvedEmail(email, nom, numTicket, sujet, reponseAkilai) {
@@ -64,13 +64,25 @@ exports.handler = async (event) => {
 
     if (patchData.error) return err(patchData.error.message || "Airtable error");
 
-    // 4. Send email if ticket resolved
+    // 4. Send email to client on every support reply
+    const clientEmail = (f["E-mail"] || [])[0] || f["User ID"] || "";
+    const clientNom   = (f["Nom (from Client)"] || [])[0] || "";
+    const numTicket   = f["N° Ticket"] || ticketId;
+    const sujet       = f["Sujet"] || "";
+
     if (resoudre) {
-      const clientEmail = (f["E-mail"] || [])[0] || "";
-      const clientNom = (f["Nom (from Client)"] || [])[0] || "";
-      const numTicket = f["N° Ticket"] || ticketId;
-      const sujet = f["Sujet"] || "";
       sendTicketResolvedEmail(clientEmail, clientNom, numTicket, sujet, message).catch(() => {});
+    } else if (clientEmail) {
+      // Réponse simple (pas de résolution) → email "nouvelle réponse"
+      const RESEND_API_KEY = process.env.RESEND_API_KEY || "";
+      if (RESEND_API_KEY) {
+        const tpl = nouvelleReponseTicket({ nom: clientNom || clientEmail, numTicket, sujet, reponse: message });
+        fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
+          body: JSON.stringify({ from: "AkilAI <noreply@akilai.fr>", to: clientEmail, subject: tpl.subject, html: tpl.html }),
+        }).then(r => r.json()).then(d => console.log('[email] reply ticket:', d.id || d.error)).catch(() => {});
+      }
     }
 
     return ok({ ok: true, statut: newStatut });

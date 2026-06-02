@@ -288,4 +288,27 @@ function resiliationAdmin({ entreprise, nom, email, plan, montant, raison, comme
   };
 }
 
-module.exports = { bienvenue, relanceJ7, relanceJ3, suspension, reactivation, facture, ticketResolu, resiliationClient, resiliationAdmin };
+// ─── 10. Nouvelle réponse ticket ─────────────────────────────────────────────
+function nouvelleReponseTicket({ nom, numTicket, sujet, reponse, dashboardUrl = 'https://portal-akilai.netlify.app' }) {
+  const body = `
+    ${GREETING(nom)}
+    ${TEXT('L\'équipe AkilAI a répondu à votre ticket :')}
+    ${INFO_BLOCK([
+      ['Ticket', `#${numTicket}`],
+      ['Sujet', sujet || '—'],
+    ])}
+    ${TEXT('Réponse :')}
+    <div style="background:#252525;border-radius:8px;padding:20px;margin:0 0 20px;color:#e0e0e0;font-size:14px;line-height:1.7;border-left:4px solid #70B2DE;">
+      ${(reponse||'').replace(/\n/g,'<br>')}
+    </div>
+    ${TEXT('Pour répondre ou voir la conversation complète, accédez à votre dashboard.', true)}
+    ${CTA('Voir mon ticket', dashboardUrl)}
+    ${DIVIDER}
+    ${SIGNATURE}`;
+  return {
+    subject: `💬 Nouvelle réponse sur votre ticket #${numTicket}`,
+    html: BASE('#70B2DE', 'Nouvelle réponse', `Nouvelle réponse sur votre ticket #${numTicket}`, body),
+  };
+}
+
+module.exports = { bienvenue, relanceJ7, relanceJ3, suspension, reactivation, facture, ticketResolu, resiliationClient, resiliationAdmin, nouvelleReponseTicket };

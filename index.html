@@ -4287,6 +4287,7 @@ async function loadAllFromAirtable() {
   ]);
   /* Recalculer les cards KPI avec toutes les sources chargées */
   updateRealKPIs();
+  checkClientNotifications();
   updateNotifications();
 }
 
@@ -6832,6 +6833,122 @@ function checkAlerts(data) {
   return alerts;
 }
 
+/* ---- 4A+ — Notifications persistantes client ---- */
+const CLIENT_NOTIF_KEY      = 'akilai_client_notifications';
+const CLIENT_LAST_VISIT_KEY = 'akilai_client_last_visit';
+
+function getClientNotifs() {
+  try { return JSON.parse(localStorage.getItem(CLIENT_NOTIF_KEY) || '[]'); } catch { return []; }
+}
+function saveClientNotifs(arr) {
+  localStorage.setItem(CLIENT_NOTIF_KEY, JSON.stringify(arr.slice(0, 50)));
+}
+
+function addClientNotif(n) {
+  const all = getClientNotifs();
+  // Anti-doublon : même type + même message dans les 24h
+  const exists = all.find(x =>
+    x.type === n.type && x.message === n.message &&
+    Date.now() - new Date(x.date).getTime() < 86400000
+  );
+  if (exists) return;
+  all.unshift({ id: `${n.type}_${Date.now()}_${Math.random().toString(36).slice(2,6)}`, lu: false, date: new Date().toISOString(), ...n });
+  saveClientNotifs(all);
+  updateClientNotifBadge();
+}
+
+function updateClientNotifBadge() {
+  const nonLues = getClientNotifs().filter(n => !n.lu).length;
+  const badge = document.getElementById('notifBadge');
+  if (!badge) return;
+  if (nonLues > 0) {
+    badge.textContent = nonLues > 9 ? '9+' : nonLues;
+    badge.classList.remove('hidden');
+  } else {
+    badge.classList.add('hidden');
+  }
+}
+
+function checkClientNotifications() {
+  const lastVisit = +(localStorage.getItem(CLIENT_LAST_VISIT_KEY) || 0);
+  const now = new Date();
+
+  // Réponse support sur ticket (dernier message role = "support" depuis lastVisit)
+  tickets.forEach(t => {
+    const conv = t.conversation || [];
+    const last = conv[conv.length - 1];
+    if (last && last.role === 'support' && last.date && new Date(last.date).getTime() > lastVisit) {
+      addClientNotif({
+        type: 'reponse_ticket', priorite: 'haute',
+        titre: 'Nouvelle réponse sur votre ticket 💬',
+        message: `${t._seq || t.id} — ${t.sujet}`,
+        lien: 'tickets',
+      });
+    }
+  });
+
+  // Ticket résolu depuis lastVisit (approx : statut Résolu et date ticket récente)
+  tickets.filter(t => t.statut === 'Résolu').forEach(t => {
+    const refDate = new Date(t.date).getTime();
+    if (refDate > lastVisit) {
+      addClientNotif({
+        type: 'ticket_resolu', priorite: 'normale',
+        titre: 'Ticket résolu ✅',
+        message: `${t._seq || t.id} — ${t.sujet} a été résolu`,
+        lien: 'tickets',
+      });
+    }
+  });
+
+  // Paiement J-7 / J-3
+  const clientObj = clients[0];
+  if (clientObj?.prochain_paiement) {
+    const jours = Math.ceil((new Date(clientObj.prochain_paiement) - now) / 86400000);
+    const monthKey = now.toISOString().slice(0, 7);
+    if (jours === 7) addClientNotif({
+      type: `paiement_j7_${monthKey}`, priorite: 'normale',
+      titre: 'Rappel paiement ⚠️',
+      message: 'Votre abonnement expire dans 7 jours',
+      lien: 'abonnement',
+    });
+    if (jours === 3) addClientNotif({
+      type: `paiement_j3_${monthKey}`, priorite: 'haute',
+      titre: 'Rappel paiement urgent 🔴',
+      message: 'Votre abonnement expire dans 3 jours',
+      lien: 'abonnement',
+    });
+  }
+
+  // Automatisation activée depuis lastVisit
+  automations.forEach(a => {
+    if (a.statut !== 'Actif') return;
+    const d = a.date_activation ? new Date(a.date_activation).getTime() : 0;
+    if (d > lastVisit) {
+      addClientNotif({
+        type: `auto_active_${a.id}`, priorite: 'normale',
+        titre: 'Automatisation activée 🚀',
+        message: `${a.nom} est maintenant active`,
+        lien: 'automations',
+      });
+    }
+  });
+
+  // Assistant vocal configuré (une seule fois)
+  if (clientObj?.vapiAssistantId && !localStorage.getItem('akilai_vapi_notif_sent')) {
+    addClientNotif({
+      type: 'assistant_configure', priorite: 'normale',
+      titre: 'Assistant vocal configuré ✅',
+      message: `${clientObj.nomAssistant || 'Votre assistant'} est prêt`,
+      lien: 'voix-ia',
+    });
+    localStorage.setItem('akilai_vapi_notif_sent', 'true');
+  }
+
+  // Mettre à jour lastVisit APRÈS génération
+  localStorage.setItem(CLIENT_LAST_VISIT_KEY, String(Date.now()));
+  updateClientNotifBadge();
+}
+
 /* ---- 4B — Centre de notifications ---- */
 let _currentAlerts = [];
 let _bannerCtaSection = null;
@@ -6839,13 +6956,18 @@ let _bannerCtaSection = null;
 function updateNotifications() {
   _currentAlerts = checkAlerts({});
   const readIds  = getReadAlerts();
-  const unread   = _currentAlerts.filter(a => !readIds.includes(a.id));
 
-  /* Badge */
+  // Fusionner alertes temps-réel + notifications persistantes
+  const persisted = getClientNotifs();
+  const persistedUnread = persisted.filter(n => !n.lu);
+
+  // Badge : total non-lu (alertes temps-réel non lues + persistantes non lues)
+  const alertUnread = _currentAlerts.filter(a => !readIds.includes(a.id));
+  const totalUnread = alertUnread.length + persistedUnread.length;
   const badge = document.getElementById("notifBadge");
   if (badge) {
-    if (unread.length > 0) {
-      badge.textContent = unread.length > 9 ? "9+" : unread.length;
+    if (totalUnread > 0) {
+      badge.textContent = totalUnread > 9 ? "9+" : totalUnread;
       badge.classList.remove("hidden");
     } else {
       badge.classList.add("hidden");
@@ -6855,22 +6977,41 @@ function updateNotifications() {
   /* Liste dropdown */
   const list = document.getElementById("notifList");
   if (list) {
-    if (_currentAlerts.length === 0) {
-      list.innerHTML = `<div class="notif-empty"><div class="notif-empty-icon">✅</div>Aucune alerte active</div>`;
-    } else {
-      list.innerHTML = _currentAlerts.map(a => {
-        const isUnread = !readIds.includes(a.id);
-        return `
-        <div class="notif-item ${isUnread ? "unread" : ""}" id="notif-${a.id}">
-          <div class="notif-item-icon">${a.icon}</div>
-          <div class="notif-item-body">
-            <div class="notif-item-msg"><strong>${a.title}</strong><br>${a.message}</div>
-            <div class="notif-item-time">${a.time}</div>
-            ${a.cta ? `<button class="notif-item-cta" onclick="notifGoto('${a.id}','${a.cta.section}')">${a.cta.label} →</button>` : ""}
-          </div>
-        </div>`;
-      }).join("");
-    }
+    const NOTIF_ICONS = {
+      reponse_ticket: '💬', ticket_resolu: '✅', paiement_j7: '⚠️',
+      paiement_j3: '🔴', auto_activee: '🚀', assistant_configure: '✅',
+    };
+    const persistedHtml = persisted.map(n => {
+      const icon = NOTIF_ICONS[n.type] || (n.type.startsWith('paiement') ? '💳' : (n.type.startsWith('auto') ? '🚀' : '🔔'));
+      const diff = Date.now() - new Date(n.date).getTime();
+      const timeStr = diff < 3600000 ? `il y a ${Math.floor(diff/60000)||1}min`
+        : diff < 86400000 ? `il y a ${Math.floor(diff/3600000)}h`
+        : diff < 604800000 ? `il y a ${Math.floor(diff/86400000)} jour(s)`
+        : new Date(n.date).toLocaleDateString('fr-FR');
+      return `<div class="notif-item ${n.lu ? '' : 'unread'}" style="cursor:pointer" onclick="clickClientNotif('${n.id}','${n.lien||''}')">
+        <div class="notif-item-icon">${icon}</div>
+        <div class="notif-item-body">
+          <div class="notif-item-msg"><strong>${n.titre||''}</strong><br>${n.message||''}</div>
+          <div class="notif-item-time">${timeStr}</div>
+        </div>
+        <button class="notif-item-del" title="Supprimer" onclick="event.stopPropagation();deleteClientNotif('${n.id}')" style="background:none;border:none;color:var(--text-muted);font-size:16px;cursor:pointer;padding:2px 6px;line-height:1">×</button>
+      </div>`;
+    }).join('');
+
+    const alertsHtml = _currentAlerts.map(a => {
+      const isUnread = !readIds.includes(a.id);
+      return `<div class="notif-item ${isUnread ? "unread" : ""}" id="notif-${a.id}">
+        <div class="notif-item-icon">${a.icon}</div>
+        <div class="notif-item-body">
+          <div class="notif-item-msg"><strong>${a.title}</strong><br>${a.message}</div>
+          <div class="notif-item-time">${a.time}</div>
+          ${a.cta ? `<button class="notif-item-cta" onclick="notifGoto('${a.id}','${a.cta.section}')">${a.cta.label} →</button>` : ""}
+        </div>
+      </div>`;
+    }).join('');
+
+    const combined = persistedHtml + alertsHtml;
+    list.innerHTML = combined || `<div class="notif-empty"><div class="notif-empty-icon">✅</div>Aucune notification — tout est à jour</div>`;
   }
 
   /* 4C — Bandeau critique (R1 ou R4) */
@@ -6928,8 +7069,23 @@ function notifGoto(alertId, section) {
   updateNotifications();
 }
 
+function clickClientNotif(id, lien) {
+  const all = getClientNotifs();
+  const n = all.find(x => x.id === id);
+  if (n) { n.lu = true; saveClientNotifs(all); }
+  document.getElementById('notifDropdown')?.classList.remove('open');
+  if (lien) navigate(lien);
+  updateNotifications();
+}
+
+function deleteClientNotif(id) {
+  saveClientNotifs(getClientNotifs().filter(n => n.id !== id));
+  updateNotifications();
+}
+
 function markAllRead() {
   _currentAlerts.forEach(a => markAlertRead(a.id));
+  const all = getClientNotifs(); all.forEach(n => n.lu = true); saveClientNotifs(all);
   document.getElementById("notifDropdown")?.classList.remove("open");
   updateNotifications();
   showToast("Toutes les alertes marquées comme lues", "info");
