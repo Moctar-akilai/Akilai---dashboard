@@ -5,8 +5,10 @@ exports.handler = async (event) => {
 
   const CALENDLY_API_KEY = process.env.CALENDLY_API_KEY || "";
   if (!CALENDLY_API_KEY) {
-    return { statusCode: 500, headers: corsHeaders, body: JSON.stringify({ error: "CALENDLY_API_KEY non configuré" }) };
+    console.warn("[admin-get-calendly] CALENDLY_API_KEY non configuré dans les variables Netlify");
+    return { statusCode: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "CALENDLY_API_KEY non configuré", missingKey: true }) };
   }
+  console.log("[admin-get-calendly] Clé Calendly présente, appel API…");
 
   const calHeaders = {
     Authorization: `Bearer ${CALENDLY_API_KEY}`,
