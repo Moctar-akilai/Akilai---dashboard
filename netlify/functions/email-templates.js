@@ -11,10 +11,13 @@ const BASE = (headerBg, headerTitle, headerSub, body) => `<!DOCTYPE html>
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#0f0f0f;padding:40px 16px;">
   <tr><td align="center">
     <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#1a1a1a;border-radius:12px;overflow:hidden;border:1px solid #2a2a2a;">
-      <!-- Header -->
-      <tr><td style="background:${headerBg};padding:32px 40px;text-align:center;">
-        <img src="https://portal-akilai.netlify.app/logo.png" alt="AkilAI" width="120" style="display:block;margin:0 auto 8px auto;"/>
-        <div style="color:rgba(255,255,255,0.8);font-size:14px;margin-top:6px;">${headerSub}</div>
+      <!-- Logo header -->
+      <tr><td style="background-color:#0f0f0f;text-align:center;padding:32px 40px 24px 40px;">
+        <img src="https://portal-akilai.netlify.app/logo.png" alt="AkilAI" width="180" style="display:inline-block;max-width:180px;height:auto;"/>
+      </td></tr>
+      <!-- Colour band -->
+      <tr><td style="background-color:${headerBg};text-align:center;padding:16px 40px;font-size:16px;font-weight:600;color:#ffffff;letter-spacing:0.5px;">
+        ${headerSub}
       </td></tr>
       <!-- Body -->
       <tr><td style="padding:40px;">
