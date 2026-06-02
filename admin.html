@@ -425,6 +425,7 @@ canvas{max-width:100%!important}
         <select id="autoFilterClient"><option value="">Tous clients</option></select>
         <select id="autoFilterType"><option value="">Tous types</option><option>WhatsApp</option><option>Vocal</option><option>RDV</option><option>Instagram</option></select>
         <select id="autoFilterStatut"><option value="">Tous statuts</option><option>Actif</option><option>Inactif</option><option>Erreur</option></select>
+        <button class="btn ghost sm" id="syncMakeAutoBtn">🔄 Sync Make</button>
       </div>
       <div class="table-wrap">
         <table class="hist-table">
@@ -848,6 +849,7 @@ canvas{max-width:100%!important}
           </div>
           <div class="modal-actions">
             <a href="https://make.com" target="_blank" class="btn ghost">Ouvrir Make ↗</a>
+            <button class="btn ghost" id="syncMakeBtn">🔄 Synchroniser les statuts</button>
             <button class="btn" id="refreshMakeBtn">Actualiser</button>
           </div>
         </div>
@@ -1387,6 +1389,7 @@ function initStaticUI() {
   document.getElementById('autoFilterType').addEventListener('change', ()=>{ _autoKpiFilter=''; _autoTypeFilter=''; document.querySelectorAll('#autoKpis .sk-card').forEach(c=>c.classList.remove('active')); renderAutomations(); });
   document.getElementById('autoFilterStatut').addEventListener('change', ()=>{ _autoKpiFilter=''; _autoTypeFilter=''; document.querySelectorAll('#autoKpis .sk-card').forEach(c=>c.classList.remove('active')); renderAutomations(); });
   document.getElementById('autoSearch').addEventListener('input', renderAutomations);
+  document.getElementById('syncMakeAutoBtn').onclick = syncMakeStatus;
 
   // support
   initTicketTabs();
@@ -3210,6 +3213,7 @@ function initSettingsTabs(){
   document.getElementById('saveVapiSeuilBtn').onclick = saveVapiSeuil;
   // Make
   document.getElementById('refreshMakeBtn').onclick = loadMakeSettings;
+  document.getElementById('syncMakeBtn').onclick = syncMakeStatus;
   // Admins
   document.getElementById('addAdminBtn').onclick = addSecondaryAdmin;
   // Support
@@ -3480,15 +3484,35 @@ function renderMakeScenarios(scenarios){
       badge=`<span class="badge" style="background:rgba(148,163,184,.1);color:var(--text-muted)">Inactif</span>`;
       btnLabel='Activer'; btnClass='btn sm';
     }
+    const desyncBadge=s.desynced
+      ?`<span class="badge" style="background:rgba(245,158,11,.15);color:#f59e0b;margin-left:6px" title="Statut Make (${s.makeStatut}) ≠ Airtable (${s.airtableStatut})">⚠ Désync</span>`
+      :'';
     const lastEdit=s.lastEdit?new Date(s.lastEdit).toLocaleDateString('fr-FR'):'—';
     return `<tr>
-      <td style="font-size:13px"><strong>${esc(s.name)}</strong></td>
+      <td style="font-size:13px"><strong>${esc(s.name)}</strong>${desyncBadge}</td>
       <td>${badge}</td>
       <td style="font-size:12px;color:var(--text-muted)">${(s.executionsCount||0).toLocaleString('fr-FR')}</td>
       <td style="font-size:12px;color:var(--text-muted)">${lastEdit}</td>
       <td><button class="${btnClass}" onclick="toggleMakeScenario(${s.id},${s.isActive&&!s.isPaused?'true':'false'},this)">${btnLabel}</button></td>
     </tr>`;
   }).join('');
+}
+
+async function syncMakeStatus(){
+  const btn=document.getElementById('syncMakeBtn');
+  const autoBtn=document.getElementById('syncMakeAutoBtn');
+  if(btn){ btn.disabled=true; btn.textContent='⏳ Synchronisation…'; }
+  if(autoBtn){ autoBtn.disabled=true; autoBtn.textContent='⏳…'; }
+  const d=await adminFetch('/.netlify/functions/sync-make-status',{method:'POST',body:'{}'});
+  if(btn){ btn.disabled=false; btn.textContent='🔄 Synchroniser les statuts'; }
+  if(autoBtn){ autoBtn.disabled=false; autoBtn.textContent='🔄 Sync Make'; }
+  if(d&&(d.synced!=null)){
+    toast(`${d.synced} automatisation(s) mise(s) à jour, ${d.alreadyOk} déjà à jour`,'success');
+    loadMakeSettings();
+    ensureRealAutomations().then(()=>renderAutomations());
+  } else {
+    toast(d?.error||'Erreur synchronisation Make','error');
+  }
 }
 
 async function toggleMakeScenario(scenarioId, isCurrentlyActive, btn){
