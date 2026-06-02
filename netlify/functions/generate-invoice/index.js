@@ -1,5 +1,5 @@
-const { BASE_URL, headers, ok, err, preflight, corsHeaders } = require("./config");
-const { verifyAdminToken, unauthorized } = require("./admin-utils");
+const { BASE_URL, headers, ok, err, preflight, corsHeaders } = require("../config");
+const { verifyAdminToken, unauthorized } = require("../admin-utils");
 const { PDFDocument, rgb, StandardFonts } = require("pdf-lib");
 const { v2: cloudinary } = require("cloudinary");
 
@@ -209,8 +209,8 @@ async function uploadToCloudinary(pdfBuffer, numFacture) {
 
 // --- Email sender ---
 
-const { facture: factureTpl } = require("./email-templates");
-const { getEmailCorps } = require("./email-config");
+const { facture: factureTpl } = require("../email-templates");
+const { getEmailCorps } = require("../email-config");
 
 async function sendInvoiceEmail(email, nom, numFacture, pdfBuffer, periode, montant, plan, pdfUrl) {
   if (!RESEND_API_KEY || !email) return;

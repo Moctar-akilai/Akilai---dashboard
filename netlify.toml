@@ -12,6 +12,9 @@
 [functions."cron-relances"]
   schedule = "0 9 * * *"
 
+[functions."generate-invoice"]
+  node_bundler = "esbuild"
+
 # Variables d'environnement à configurer dans Netlify → Site settings → Env vars :
 #   AIRTABLE_API_KEY   — clé API Airtable
 #   AIRTABLE_BASE_ID   — ID de la base Airtable (commence par "app...")
