@@ -29,14 +29,14 @@ exports.handler = async (event) => {
       const couts = data.months?.[monthKey] || DEFAULT_COUTS;
       const cac = data.cac || 0;
 
-      return ok({ couts, cac, updatedAt: data.updatedAt || null });
+      return ok({ couts, cac, updatedAt: data.updatedAt || null, allMonths: data.months || {} });
     }
 
     if (event.httpMethod === "POST") {
-      const { couts, cac } = JSON.parse(event.body || "{}");
+      const bodyData = JSON.parse(event.body || "{}");
+      const { couts, cac } = bodyData;
       if (!couts) return err("couts requis", 400);
-
-      const monthKey = currentMonthKey();
+      const monthKey = bodyData.monthKey || currentMonthKey();
 
       // Merge with existing months
       let existing = { months: {}, cac: 0 };

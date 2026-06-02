@@ -594,7 +594,15 @@ canvas{max-width:100%!important}
 
       <!-- Costs form -->
       <div class="card" style="margin-bottom:20px">
-        <h3>Coûts infrastructure — <span id="costMonthLabel"></span></h3>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+          <h3 style="margin:0">Coûts infrastructure</h3>
+          <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
+            <button class="btn ghost sm" id="coutsPrevBtn" onclick="navigateCoutsMois(-1)">◀</button>
+            <select id="coutsMoisSelect" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-size:13px" onchange="loadCostMonth(this.value)"></select>
+            <button class="btn ghost sm" id="coutsNextBtn" onclick="navigateCoutsMois(1)">▶</button>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">Mois sélectionné : <strong id="costMonthLabel"></strong></div>
         <div class="form-grid">
           <div class="field"><label>Vapi (€)</label><input type="number" id="costVapi" min="0" step="0.01" oninput="updateCostTotal()"></div>
           <div class="field"><label>ElevenLabs (€)</label><input type="number" id="costElevenlabs" min="0" step="0.01" oninput="updateCostTotal()"></div>
@@ -658,23 +666,25 @@ canvas{max-width:100%!important}
       <!-- Projections fin d'année -->
       <div class="card" style="margin-bottom:20px">
         <h3>Projections fin d'année</h3>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">
-          <div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:16px;text-align:center">
-            <div class="k-label">Meilleur cas (+20%)</div>
-            <div style="font-size:22px;font-weight:700;color:#22c55e;margin:8px 0" id="projBest">—</div>
-            <div style="font-size:11px;color:var(--text-muted)">ARR</div>
-          </div>
-          <div style="background:rgba(112,178,222,.08);border:1px solid rgba(112,178,222,.2);border-radius:10px;padding:16px;text-align:center">
-            <div class="k-label">Scénario actuel</div>
-            <div style="font-size:22px;font-weight:700;color:#70B2DE;margin:8px 0" id="projBase">—</div>
-            <div style="font-size:11px;color:var(--text-muted)">ARR</div>
-          </div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px" id="projNote"></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:18px">
           <div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:16px;text-align:center">
-            <div class="k-label">Pire cas (-20%)</div>
+            <div class="k-label">Pessimiste (−20%)</div>
             <div style="font-size:22px;font-weight:700;color:#ef4444;margin:8px 0" id="projWorst">—</div>
             <div style="font-size:11px;color:var(--text-muted)">ARR</div>
           </div>
+          <div style="background:rgba(112,178,222,.08);border:1px solid rgba(112,178,222,.3);border-radius:10px;padding:16px;text-align:center;box-shadow:0 0 0 2px rgba(112,178,222,.2)">
+            <div class="k-label" style="color:var(--accent)">★ Scénario réaliste</div>
+            <div style="font-size:26px;font-weight:700;color:#70B2DE;margin:8px 0" id="projBase">—</div>
+            <div style="font-size:11px;color:var(--text-muted)">ARR</div>
+          </div>
+          <div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:16px;text-align:center">
+            <div class="k-label">Optimiste (+20%)</div>
+            <div style="font-size:22px;font-weight:700;color:#22c55e;margin:8px 0" id="projBest">—</div>
+            <div style="font-size:11px;color:var(--text-muted)">ARR</div>
+          </div>
         </div>
+        <div class="chart-wrap"><canvas id="chartProjection"></canvas></div>
       </div>
 
       <!-- Marge par client -->
@@ -1183,6 +1193,7 @@ let adminPaiements = [];
 let adminHistorique = [];
 let adminAutomations = [];
 let adminFinances = { couts: { vapi:0, elevenlabs:0, make:0, twilio:0, netlify:0, openai:0, autres:0 }, cac:0 };
+let _coutsMoisKey = (()=>{ const n=new Date(); return n.getFullYear()+'-'+(n.getMonth()+1); })();
 let adminConfig = { recordId:null, tarifsPlans:null, infosAgence:{}, templatesEmails:{}, seuilVapi:5, adminsSecondaires:[], delaiTicketAlerte:24, bandeauSuspension:'', horaireSupport:'Lundi–Vendredi, 9h–18h' };
 let _settingsTab = 'plans';
 let _tmplKey = 'bienvenue';
@@ -1318,6 +1329,7 @@ function initStaticUI() {
   document.getElementById('refreshBtn').onclick = ()=>{ loadAllAdminData(); toast('Données rafraîchies'); };
   initBillingTabs();
   initAlertsCollapsible();
+  initCoutsMoisSelect();
 
   // populate plan selects
   const planOpts = PLAN_LIST.map(p=>`<option>${p}</option>`).join('');
@@ -1433,16 +1445,31 @@ async function loadPaiements(){ const d = await adminFetch('/.netlify/functions/
 async function loadHistorique(){ const d = await adminFetch('/.netlify/functions/admin-get-historique?limit=200'); adminHistorique = d.historique || []; }
 async function loadFinances(){
   const d = await adminFetch('/.netlify/functions/admin-get-finances');
-  if (d.couts) adminFinances.couts = { vapi:0,elevenlabs:0,make:0,twilio:0,netlify:0,openai:0,autres:0, ...d.couts };
+  adminFinances.allMonths = d.allMonths || {};
   if (d.cac != null) adminFinances.cac = d.cac;
-  const c = adminFinances.couts;
-  document.getElementById('costVapi').value=c.vapi||''; document.getElementById('costElevenlabs').value=c.elevenlabs||'';
-  document.getElementById('costMake').value=c.make||''; document.getElementById('costTwilio').value=c.twilio||'';
-  document.getElementById('costNetlify').value=c.netlify||''; document.getElementById('costOpenai').value=c.openai||'';
-  document.getElementById('costAutres').value=c.autres||'';
+  _coutsMoisKey = (()=>{ const n=new Date(); return n.getFullYear()+'-'+(n.getMonth()+1); })();
+  loadCostMonth(_coutsMoisKey);
   document.getElementById('costCAC').value=adminFinances.cac||'';
-  const now=new Date();
-  document.getElementById('costMonthLabel').textContent=now.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+  updateCostTotal();
+}
+
+function loadCostMonth(key){
+  _coutsMoisKey = key;
+  const c = adminFinances.allMonths[key] || { vapi:0,elevenlabs:0,make:0,twilio:0,netlify:0,openai:0,autres:0 };
+  adminFinances.couts = { vapi:0,elevenlabs:0,make:0,twilio:0,netlify:0,openai:0,autres:0, ...c };
+  ['vapi','elevenlabs','make','twilio','netlify','openai','autres'].forEach(k=>{
+    const el=document.getElementById('cost'+k.charAt(0).toUpperCase()+k.slice(1));
+    if(el) el.value=adminFinances.couts[k]||'';
+  });
+  // Update month label and nav
+  const [y,m]=key.split('-');
+  const label=new Date(+y,+m-1,1).toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+  const el=document.getElementById('costMonthLabel');
+  if(el) el.textContent=label.charAt(0).toUpperCase()+label.slice(1);
+  const now=new Date(); const nowKey=now.getFullYear()+'-'+(now.getMonth()+1);
+  const isPast=key<nowKey;
+  const sb=document.getElementById('saveCostsBtn');
+  if(sb) sb.textContent=isPast?'⚠ Modifier mois passé':'Sauvegarder';
   updateCostTotal();
 }
 
@@ -2968,12 +2995,91 @@ async function saveCosts(){
     openai:+document.getElementById('costOpenai').value||0,
     autres:+document.getElementById('costAutres').value||0
   };
+  const total=Object.values(couts).reduce((s,v)=>s+v,0);
   const cac=+document.getElementById('costCAC').value||0;
+  const now=new Date(); const nowKey=now.getFullYear()+'-'+(now.getMonth()+1);
+  const isPast=_coutsMoisKey<nowKey;
+
+  if(isPast){
+    // Require confirmation
+    const ok=await confirmPastCostEdit(_coutsMoisKey, total);
+    if(!ok) return;
+  }
+
+  adminFinances.allMonths[_coutsMoisKey]=couts;
   adminFinances.couts=couts;
   adminFinances.cac=cac;
-  const res=await adminFetch('/.netlify/functions/admin-get-finances',{method:'POST',body:JSON.stringify({couts,cac})});
+  const res=await adminFetch('/.netlify/functions/admin-get-finances',{method:'POST',body:JSON.stringify({couts,cac,monthKey:_coutsMoisKey})});
   if(res.ok){ toast('Coûts sauvegardés','success'); renderFinances(); updateOverview(); }
   else toast(res.error||'Erreur sauvegarde','error');
+}
+
+function confirmPastCostEdit(monthKey, expectedTotal){
+  return new Promise(resolve=>{
+    const [y,m]=monthKey.split('-');
+    const label=new Date(+y,+m-1,1).toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+    const id='modalPastCost';
+    let mo=document.getElementById(id);
+    if(!mo){
+      mo=document.createElement('div');
+      mo.id=id;
+      mo.className='modal-overlay';
+      mo.innerHTML=`<div class="modal-content" style="max-width:420px">
+        <h3 style="margin-bottom:12px">⚠ Modifier les données passées</h3>
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Vous allez modifier les coûts de <strong id="pastCostMonthName"></strong>. Cette action va recalculer les marges historiques.</p>
+        <div class="field" style="margin-bottom:16px">
+          <label>Confirmez le montant total (€)</label>
+          <input type="number" id="pastCostConfirmInput" min="0" step="0.01" placeholder="0.00" style="width:100%">
+          <div id="pastCostErr" style="color:#ef4444;font-size:12px;margin-top:4px;display:none">Montant incorrect. Veuillez saisir le montant exact affiché.</div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn ghost" id="pastCostCancel">Annuler</button>
+          <button class="btn danger" id="pastCostConfirm">Confirmer la modification</button>
+        </div>
+      </div>`;
+      document.body.appendChild(mo);
+    }
+    document.getElementById('pastCostMonthName').textContent=label.charAt(0).toUpperCase()+label.slice(1);
+    document.getElementById('pastCostConfirmInput').value='';
+    document.getElementById('pastCostErr').style.display='none';
+    mo.style.display='flex';
+    document.getElementById('pastCostCancel').onclick=()=>{ mo.style.display='none'; resolve(false); };
+    document.getElementById('pastCostConfirm').onclick=()=>{
+      const v=+document.getElementById('pastCostConfirmInput').value;
+      if(Math.abs(v-expectedTotal)>0.01){
+        document.getElementById('pastCostErr').style.display='block';
+        return;
+      }
+      mo.style.display='none'; resolve(true);
+    };
+  });
+}
+
+function navigateCoutsMois(delta){
+  const [y,m]=_coutsMoisKey.split('-').map(Number);
+  const d=new Date(y,m-1+delta,1);
+  const newKey=d.getFullYear()+'-'+(d.getMonth()+1);
+  const now=new Date(); const maxKey=now.getFullYear()+'-'+(now.getMonth()+1);
+  if(newKey>maxKey) return;
+  const sel=document.getElementById('coutsMoisSelect');
+  if(sel) sel.value=newKey;
+  loadCostMonth(newKey);
+}
+
+function initCoutsMoisSelect(){
+  const sel=document.getElementById('coutsMoisSelect');
+  if(!sel) return;
+  const now=new Date();
+  const opts=[];
+  // Show 12 months back + current
+  for(let i=11;i>=0;i--){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    const key=d.getFullYear()+'-'+(d.getMonth()+1);
+    const label=d.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+    opts.push(`<option value="${key}">${label.charAt(0).toUpperCase()+label.slice(1)}</option>`);
+  }
+  sel.innerHTML=opts.join('');
+  sel.value=_coutsMoisKey;
 }
 
 /* =========================================================
