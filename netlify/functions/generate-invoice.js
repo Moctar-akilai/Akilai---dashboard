@@ -90,11 +90,13 @@ function buildPDF({ numFacture, clientNom, clientEmail, montant, devise, plan, d
 }
 
 const { facture: factureTpl } = require("./email-templates");
+const { getEmailCorps } = require("./email-config");
 
 async function sendInvoiceEmail(email, nom, numFacture, pdfBuffer, periode, montantTTC, plan) {
   if (!RESEND_API_KEY) return;
   const b64 = pdfBuffer.toString("base64");
-  const tpl = factureTpl({ nom: nom || email, numFacture, periode, montantTTC, plan });
+  const _corps = await getEmailCorps('facture').catch(() => null);
+  const tpl = factureTpl({ nom: nom || email, numFacture, periode, montantTTC, plan, corps: _corps });
   const _rInv = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },

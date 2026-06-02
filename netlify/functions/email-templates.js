@@ -1,5 +1,9 @@
 const YEAR = new Date().getFullYear();
 
+function renderCorps(text) {
+  return text.split('\n').filter(l => l.trim()).map(l => TEXT(l)).join('');
+}
+
 const BASE = (headerBg, headerTitle, headerSub, body) => `<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -61,19 +65,21 @@ const DIVIDER = `<hr style="border:none;border-top:1px solid #2a2a2a;margin:24px
 const SIGNATURE = `<p style="color:#a0a0a0;font-size:14px;line-height:1.6;margin:20px 0 0;">Cordialement,<br/><strong style="color:#70B2DE;">L'équipe AkilAI</strong></p>`;
 
 // ─── 1. Bienvenue ────────────────────────────────────────────────────────────
-function bienvenue({ nom, plan, dateInscription, email, dashboardUrl = 'https://portal-akilai.netlify.app' }) {
+function bienvenue({ nom, plan, dateInscription, email, corps, dashboardUrl = 'https://portal-akilai.netlify.app' }) {
+  const mainText = corps ? renderCorps(corps)
+    : TEXT('Votre compte AkilAI est activé et prêt à l\'emploi. Nous sommes ravis de vous accueillir !')
+    + TEXT('Accédez à votre dashboard pour configurer vos automatisations et paramétrer votre assistant vocal.')
+    + TEXT('Une question ? Notre équipe est disponible via le support de votre dashboard.', true);
   const body = `
     ${GREETING(nom)}
-    ${TEXT('Votre compte AkilAI est activé et prêt à l\'emploi. Nous sommes ravis de vous accueillir !')}
+    ${mainText}
     ${INFO_BLOCK([
       ['Plan souscrit', plan || '—'],
       ["Date d'activation", dateInscription || new Date().toLocaleDateString('fr-FR')],
-      ['Email de connexion', email],
+      ['Email de connexion', email || '—'],
     ])}
-    ${TEXT('Accédez à votre dashboard pour configurer vos automatisations et paramétrer votre assistant vocal.')}
     ${CTA('Accéder à mon dashboard', dashboardUrl)}
     ${DIVIDER}
-    ${TEXT('Une question ? Notre équipe est disponible via le support de votre dashboard.', true)}
     ${SIGNATURE}`;
   return {
     subject: `Bienvenue chez AkilAI, ${nom} 🎉`,
@@ -82,7 +88,9 @@ function bienvenue({ nom, plan, dateInscription, email, dashboardUrl = 'https://
 }
 
 // ─── 2. Relance J-7 ──────────────────────────────────────────────────────────
-function relanceJ7({ nom, plan, montant, dateEcheance, lienPaiement }) {
+function relanceJ7({ nom, plan, montant, dateEcheance, lienPaiement, corps }) {
+  const mainText = corps ? renderCorps(corps)
+    : TEXT('Pour continuer à bénéficier de vos automatisations sans interruption, renouvelez votre abonnement avant la date d\'échéance.');
   const body = `
     ${GREETING(nom)}
     <div style="text-align:center;margin:16px 0 24px;">
@@ -91,7 +99,7 @@ function relanceJ7({ nom, plan, montant, dateEcheance, lienPaiement }) {
         <span style="color:#f59e0b;font-size:16px;font-weight:600;margin-left:6px;">jours restants</span>
       </div>
     </div>
-    ${TEXT('Pour continuer à bénéficier de vos automatisations sans interruption, renouvelez votre abonnement avant la date d\'échéance.')}
+    ${mainText}
     ${INFO_BLOCK([
       ['Plan', plan || '—'],
       ['Montant', `${montant || '—'} €/mois`],
@@ -108,7 +116,9 @@ function relanceJ7({ nom, plan, montant, dateEcheance, lienPaiement }) {
 }
 
 // ─── 3. Relance J-3 ──────────────────────────────────────────────────────────
-function relanceJ3({ nom, plan, montant, dateEcheance, lienPaiement }) {
+function relanceJ3({ nom, plan, montant, dateEcheance, lienPaiement, corps }) {
+  const mainText = corps ? renderCorps(corps)
+    : TEXT('Sans renouvellement d\'ici le <strong style="color:#ef4444;">' + (dateEcheance || '—') + '</strong>, vos automatisations seront automatiquement suspendues.');
   const body = `
     ${GREETING(nom)}
     <div style="text-align:center;margin:16px 0 24px;">
@@ -117,7 +127,7 @@ function relanceJ3({ nom, plan, montant, dateEcheance, lienPaiement }) {
         <span style="color:#ef4444;font-size:16px;font-weight:600;margin-left:6px;">jours restants</span>
       </div>
     </div>
-    ${TEXT('Sans renouvellement d\'ici le <strong style="color:#ef4444;">' + (dateEcheance || '—') + '</strong>, vos automatisations seront automatiquement suspendues.')}
+    ${mainText}
     ${INFO_BLOCK([
       ['Plan', plan || '—'],
       ['Montant', `${montant || '—'} €/mois`],
@@ -134,8 +144,11 @@ function relanceJ3({ nom, plan, montant, dateEcheance, lienPaiement }) {
 }
 
 // ─── 4. Suspension ────────────────────────────────────────────────────────────
-function suspension({ nom, plan, dateSuspension, lienPaiement }) {
+function suspension({ nom, plan, dateSuspension, lienPaiement, corps }) {
   const ds = dateSuspension || new Date().toLocaleDateString('fr-FR');
+  const mainText = corps ? renderCorps(corps)
+    : TEXT('Votre abonnement <strong>' + (plan || '—') + '</strong> n\'a pas été renouvelé. Pour réactiver votre compte et relancer vos automatisations, réglez votre situation dès maintenant.')
+    + TEXT('Une fois le paiement effectué, votre compte sera réactivé automatiquement sous 24h.', true);
   const body = `
     ${GREETING(nom)}
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#2a1515;border-left:4px solid #ef4444;border-radius:0 8px 8px 0;padding:16px 20px;margin:0 0 20px;">
@@ -143,9 +156,8 @@ function suspension({ nom, plan, dateSuspension, lienPaiement }) {
         Vos automatisations ont été <strong>désactivées le ${ds}</strong>.
       </td></tr>
     </table>
-    ${TEXT('Votre abonnement <strong>' + (plan || '—') + '</strong> n\'a pas été renouvelé. Pour réactiver votre compte et relancer vos automatisations, réglez votre situation dès maintenant.')}
+    ${mainText}
     ${lienPaiement ? CTA('Régulariser ma situation', lienPaiement, '#ef4444') : ''}
-    ${TEXT('Une fois le paiement effectué, votre compte sera réactivé automatiquement sous 24h.', true)}
     ${DIVIDER}
     ${SIGNATURE}`;
   return {
@@ -155,7 +167,10 @@ function suspension({ nom, plan, dateSuspension, lienPaiement }) {
 }
 
 // ─── 5. Réactivation ─────────────────────────────────────────────────────────
-function reactivation({ nom, plan, dateProchainPaiement }) {
+function reactivation({ nom, plan, dateProchainPaiement, corps }) {
+  const mainText = corps ? renderCorps(corps)
+    : TEXT('Tout est de nouveau opérationnel. Retrouvez vos automatisations dans votre dashboard.')
+    + TEXT('Merci de votre confiance.', true);
   const body = `
     ${GREETING(nom)}
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#152a1e;border-left:4px solid #22c55e;border-radius:0 8px 8px 0;padding:16px 20px;margin:0 0 20px;">
@@ -167,10 +182,9 @@ function reactivation({ nom, plan, dateProchainPaiement }) {
       ['Plan', plan || '—'],
       ['Prochain paiement', dateProchainPaiement || '—'],
     ], '#22c55e', '#152a1e')}
-    ${TEXT('Tout est de nouveau opérationnel. Retrouvez vos automatisations dans votre dashboard.')}
+    ${mainText}
     ${CTA('Accéder à mon dashboard', 'https://portal-akilai.netlify.app', '#22c55e')}
     ${DIVIDER}
-    ${TEXT('Merci de votre confiance.', true)}
     ${SIGNATURE}`;
   return {
     subject: `✅ Votre compte AkilAI est réactivé`,
@@ -179,17 +193,19 @@ function reactivation({ nom, plan, dateProchainPaiement }) {
 }
 
 // ─── 6. Facture ───────────────────────────────────────────────────────────────
-function facture({ nom, numFacture, periode, montantTTC, plan }) {
+function facture({ nom, numFacture, periode, montantTTC, plan, corps }) {
+  const mainText = corps ? renderCorps(corps)
+    : TEXT('Veuillez trouver votre facture en pièce jointe à cet email.')
+    + TEXT('Conservez ce document pour votre comptabilité.', true);
   const body = `
     ${GREETING(nom)}
-    ${TEXT('Veuillez trouver votre facture en pièce jointe à cet email.')}
+    ${mainText}
     ${INFO_BLOCK([
       ['N° Facture', numFacture || '—'],
       ['Période', periode || '—'],
       ['Montant TTC', `${montantTTC || '—'} €`],
       ['Plan', plan || '—'],
     ])}
-    ${TEXT('Conservez ce document pour votre comptabilité.', true)}
     ${DIVIDER}
     ${SIGNATURE}`;
   return {
@@ -199,7 +215,9 @@ function facture({ nom, numFacture, periode, montantTTC, plan }) {
 }
 
 // ─── 7. Ticket résolu ─────────────────────────────────────────────────────────
-function ticketResolu({ nom, numTicket, sujet, dateResolution, reponseAkilai }) {
+function ticketResolu({ nom, numTicket, sujet, dateResolution, reponseAkilai, corps }) {
+  const closingText = corps ? renderCorps(corps)
+    : TEXT('Si ce problème persiste ou si vous avez d\'autres questions, ouvrez un nouveau ticket depuis votre dashboard.', true);
   const body = `
     ${GREETING(nom)}
     ${TEXT('Votre demande a été traitée par notre équipe.')}
@@ -213,7 +231,7 @@ function ticketResolu({ nom, numTicket, sujet, dateResolution, reponseAkilai }) 
       ${reponseAkilai || '—'}
     </div>
     ${CTA('Accéder au support', 'https://portal-akilai.netlify.app')}
-    ${TEXT('Si ce problème persiste ou si vous avez d\'autres questions, ouvrez un nouveau ticket depuis votre dashboard.', true)}
+    ${closingText}
     ${DIVIDER}
     ${SIGNATURE}`;
   return {

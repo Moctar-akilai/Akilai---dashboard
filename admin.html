@@ -777,7 +777,7 @@ canvas{max-width:100%!important}
           </div>
           <div class="form-grid">
             <div class="field full"><label>Objet</label><input id="tmplSubject"></div>
-            <div class="field full"><label>Corps HTML</label><textarea id="tmplBody" style="height:220px;resize:vertical;font-family:monospace;font-size:12px"></textarea></div>
+            <div class="field full"><label>Corps du message</label><textarea id="tmplBody" style="height:220px;resize:vertical;font-size:13px;line-height:1.6" placeholder="Texte du message…"></textarea></div>
           </div>
           <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
             <button class="btn ghost sm" id="tmplPreviewBtn">👁 Aperçu</button>
@@ -3143,16 +3143,31 @@ const DEFAULT_PLAN_LIMITS = {
 let PLAN_LIMIT_LABELS = { ...DEFAULT_PLAN_LIMITS };
 
 const EMAIL_TEMPLATES_DEFAULT = {
-  bienvenue: { label:"Bienvenue nouveau client", subject:"Bienvenue chez AkilAI 🎉", body:`<p>Bonjour <strong>{Nom}</strong>,</p><p>Bienvenue chez <strong>AkilAI</strong> ! Votre compte <strong>{Plan}</strong> est maintenant actif.</p><p>L'équipe AkilAI</p>` },
-  j7:        { label:"Rappel paiement J-7",      subject:"Votre abonnement AkilAI expire dans 7 jours", body:`<p>Bonjour <strong>{Nom}</strong>,</p><p>Votre abonnement <strong>{Plan}</strong> expire le <strong>{DateEcheance}</strong>.</p><p><a href="{LienPaiement}">Renouveler mon abonnement</a></p>` },
-  j3:        { label:"Rappel paiement J-3",      subject:"⚠️ Votre abonnement expire dans 3 jours", body:`<p>Bonjour <strong>{Nom}</strong>,</p><p>Rappel urgent — échéance le <strong>{DateEcheance}</strong>. Montant : <strong>{Montant} €</strong>.</p><p><a href="{LienPaiement}">Renouveler maintenant</a></p>` },
-  suspension:{ label:"Suspension compte J+1",    subject:"🔴 Votre compte AkilAI a été suspendu", body:`<p>Bonjour <strong>{Nom}</strong>,</p><p>Votre abonnement <strong>{Plan}</strong> n'a pas été renouvelé. Vos automatisations ont été désactivées.</p><p><a href="{LienPaiement}">Régulariser mon abonnement</a></p>` },
-  reactivation:{label:"Réactivation compte",     subject:"✅ Votre compte AkilAI est réactivé", body:`<p>Bonjour <strong>{Nom}</strong>,</p><p>Votre compte et vos automatisations ont été <strong>réactivés avec succès</strong>.</p><p>L'équipe AkilAI</p>` },
-  facture:   { label:"Facture PDF",              subject:"Votre facture AkilAI — {NFacture}", body:`<p>Bonjour <strong>{Nom}</strong>,</p><p>Veuillez trouver ci-joint votre facture.</p><p>Merci de votre confiance,<br/>L'équipe AkilAI</p>` },
-  ticket_resolu:{ label:"Ticket résolu",         subject:"✅ Votre ticket #{NTicket} est résolu", body:`<p>Bonjour <strong>{Nom}</strong>,</p><p>Votre demande a été traitée. N'hésitez pas à nous contacter si besoin.</p><p>L'équipe AkilAI</p>` },
+  bienvenue:    { label:"Bienvenue",    subject:"Bienvenue chez AkilAI, {Nom} 🎉",
+    corps:"Votre compte est activé et prêt à l'emploi.\nAccédez à votre dashboard pour configurer vos automatisations et paramétrer votre assistant.\nUne question ? Notre équipe est disponible via le support de votre dashboard." },
+  relanceJ7:    { label:"J-7",          subject:"Votre abonnement AkilAI expire dans 7 jours",
+    corps:"Pour continuer à bénéficier de vos automatisations sans interruption, renouvelez votre abonnement avant le {DateEcheance}." },
+  relanceJ3:    { label:"J-3",          subject:"⚠️ Plus que 3 jours pour renouveler votre abonnement AkilAI",
+    corps:"Sans renouvellement d'ici le {DateEcheance}, vos automatisations seront automatiquement suspendues." },
+  suspension:   { label:"Suspension",   subject:"🔴 Votre compte AkilAI a été suspendu",
+    corps:"Votre abonnement {Plan} n'a pas été renouvelé. Pour réactiver votre compte et relancer vos automatisations, réglez votre situation dès maintenant.\nUne fois le paiement effectué, votre compte sera réactivé automatiquement." },
+  reactivation: { label:"Réactivation", subject:"✅ Votre compte AkilAI est réactivé",
+    corps:"Votre compte et vos automatisations ont été réactivés avec succès. Tout est de nouveau opérationnel.\nMerci de votre confiance." },
+  facture:      { label:"Facture",      subject:"🧾 Votre facture AkilAI — {Periode}",
+    corps:"Veuillez trouver votre facture en pièce jointe à cet email. Conservez ce document pour votre comptabilité." },
+  ticketResolu: { label:"Ticket résolu",subject:"✅ Votre ticket #{NumTicket} a été résolu",
+    corps:"Votre demande a été traitée par notre équipe. Si ce problème persiste ou si vous avez d'autres questions, ouvrez un nouveau ticket depuis votre dashboard." },
 };
 let EMAIL_TEMPLATES = JSON.parse(JSON.stringify(EMAIL_TEMPLATES_DEFAULT));
-const TMPL_VARS = ['{Nom}','{Entreprise}','{Plan}','{Montant}','{DateEcheance}','{LienPaiement}','{NomAssistant}','{NFacture}','{NTicket}'];
+const TMPL_VARS_MAP = {
+  bienvenue:    ['{Nom}','{Plan}','{DateInscription}','{Email}'],
+  relanceJ7:    ['{Nom}','{Plan}','{Montant}','{DateEcheance}','{LienPaiement}'],
+  relanceJ3:    ['{Nom}','{Plan}','{Montant}','{DateEcheance}','{LienPaiement}'],
+  suspension:   ['{Nom}','{Plan}','{DateSuspension}','{LienPaiement}'],
+  reactivation: ['{Nom}','{Plan}','{DateProchainPaiement}'],
+  facture:      ['{Nom}','{NumFacture}','{Periode}','{MontantTTC}','{Plan}'],
+  ticketResolu: ['{Nom}','{NumTicket}','{Sujet}','{DateResolution}','{ReponseAkilai}'],
+};
 
 function initSettingsTabs(){
   document.querySelectorAll('#settingsTabs .tab-btn').forEach(btn=>{
@@ -3204,7 +3219,9 @@ async function loadAdminConfig(){
     });
   }
   if(adminConfig.templatesEmails){
-    Object.entries(adminConfig.templatesEmails).forEach(([k,v])=>{ if(EMAIL_TEMPLATES[k]) EMAIL_TEMPLATES[k]={...EMAIL_TEMPLATES[k],...v}; });
+    Object.entries(adminConfig.templatesEmails).forEach(([k,v])=>{
+      if(EMAIL_TEMPLATES[k]) EMAIL_TEMPLATES[k]={...EMAIL_TEMPLATES[k],...v};
+    });
   }
 }
 
@@ -3266,6 +3283,14 @@ async function saveAgencyInfo(){
 }
 
 /* ── Email Templates ── */
+function renderTmplVarsBar(){
+  const varsEl=document.getElementById('tmplVarsBar'); if(!varsEl) return;
+  const vars=TMPL_VARS_MAP[_tmplKey]||[];
+  varsEl.innerHTML=vars.map(v=>
+    `<span class="badge badge-accent" style="cursor:pointer" onclick="insertTmplVar('${v}')">${v}</span>`
+  ).join('');
+}
+
 function initTemplateEditor(){
   const tabsEl=document.getElementById('tmplTabs'); if(!tabsEl) return;
   tabsEl.innerHTML=Object.entries(EMAIL_TEMPLATES).map(([k,t])=>
@@ -3280,16 +3305,13 @@ function initTemplateEditor(){
     });
   });
 
-  const varsEl=document.getElementById('tmplVarsBar'); if(!varsEl) return;
-  varsEl.innerHTML=TMPL_VARS.map(v=>
-    `<span class="badge badge-accent" style="cursor:pointer" onclick="insertTmplVar('${v}')">${v}</span>`
-  ).join('');
-
   document.getElementById('tmplPreviewBtn').onclick=()=>{
-    const html=document.getElementById('tmplBody').value;
+    const corps=document.getElementById('tmplBody').value;
     const frame=document.getElementById('tmplPreviewFrame');
     const zone=document.getElementById('tmplPreviewZone');
-    frame.srcdoc=html; zone.style.display='';
+    const preview='<div style="background:#1a1a1a;padding:24px;font-family:Arial,sans-serif;color:#e0e0e0;font-size:14px;line-height:1.7;border-radius:8px;">'
+      +corps.split('\n').filter(l=>l.trim()).map(l=>`<p style="margin:0 0 12px;">${esc(l)}</p>`).join('')+'</div>';
+    frame.srcdoc=preview; zone.style.display='';
   };
   document.getElementById('tmplSaveBtn').onclick=saveEmailTemplate;
   document.getElementById('tmplTestBtn').onclick=sendTestEmail;
@@ -3299,7 +3321,8 @@ function initTemplateEditor(){
 function updateTemplateEditor(){
   const t=EMAIL_TEMPLATES[_tmplKey]; if(!t) return;
   const subj=document.getElementById('tmplSubject'); if(subj) subj.value=t.subject||'';
-  const body=document.getElementById('tmplBody'); if(body) body.value=t.body||'';
+  const body=document.getElementById('tmplBody'); if(body) body.value=t.corps||'';
+  renderTmplVarsBar();
 }
 
 function insertTmplVar(v){
@@ -3312,7 +3335,7 @@ function insertTmplVar(v){
 
 async function saveEmailTemplate(){
   EMAIL_TEMPLATES[_tmplKey].subject=document.getElementById('tmplSubject').value;
-  EMAIL_TEMPLATES[_tmplKey].body=document.getElementById('tmplBody').value;
+  EMAIL_TEMPLATES[_tmplKey].corps=document.getElementById('tmplBody').value;
   adminConfig.templatesEmails=EMAIL_TEMPLATES;
   const res=await saveConfig('Templates Emails', EMAIL_TEMPLATES);
   if(res.ok!==false) toast('Template sauvegardé','success');
@@ -3320,15 +3343,13 @@ async function saveEmailTemplate(){
 }
 
 async function sendTestEmail(){
-  const subject=document.getElementById('tmplSubject').value;
-  const body=document.getElementById('tmplBody').value;
-  const adminEmail=sessionStorage.getItem('akilai_admin_email')||'';
-  if(!adminEmail){ toast('Email admin non disponible','error'); return; }
-  const res=await adminFetch('/.netlify/functions/send-relance',{
+  const sujet=document.getElementById('tmplSubject').value;
+  const corps=document.getElementById('tmplBody').value;
+  const res=await adminFetch('/.netlify/functions/send-test-email',{
     method:'POST',
-    body:JSON.stringify({ email:adminEmail, subject, html:body, isTest:true })
+    body:JSON.stringify({ template:_tmplKey, sujet, corps })
   });
-  if(res.ok!==false) toast(`Email test envoyé à ${adminEmail}`,'success');
+  if(res.ok!==false||res.success) toast('Email test envoyé à l\'adresse admin','success');
   else toast(res.error||'Erreur envoi test','error');
 }
 

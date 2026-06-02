@@ -1,6 +1,7 @@
 const { BASE_URL, headers, ok, err, preflight, corsHeaders } = require("./config");
 const { verifyAdminToken, unauthorized } = require("./admin-utils");
 const { bienvenue: bienvenueTpl } = require("./email-templates");
+const { getEmailCorps } = require("./email-config");
 
 exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") return preflight();
@@ -50,8 +51,9 @@ exports.handler = async (event) => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${RESEND_API_KEY}`,
         },
-        body: JSON.stringify((() => {
-          const tpl = bienvenueTpl({ nom, plan, email, dateInscription: new Date().toLocaleDateString('fr-FR') });
+        body: JSON.stringify(await (async () => {
+          const corps = await getEmailCorps('bienvenue').catch(() => null);
+          const tpl = bienvenueTpl({ nom, plan, email, dateInscription: new Date().toLocaleDateString('fr-FR'), corps });
           return { from: "AkilAI <noreply@akilai.fr>", to: email, subject: tpl.subject, html: tpl.html };
         })()),
       });

@@ -5,11 +5,13 @@ const CLIENTS_TABLE = "tble0g9eMTjAfw6OO";
 const AUTOMATIONS_TABLE = "tble4KroqvA1JodJs";
 
 const { reactivation: reactivationTpl } = require("./email-templates");
+const { getEmailCorps } = require("./email-config");
 
 async function sendReactivationEmail(email, nom, prochainPaiement, plan) {
   const RESEND_API_KEY = process.env.RESEND_API_KEY || "";
   if (!RESEND_API_KEY) return;
-  const tpl = reactivationTpl({ nom, plan, dateProchainPaiement: prochainPaiement });
+  const corps = await getEmailCorps("reactivation").catch(() => null);
+  const tpl = reactivationTpl({ nom, plan, dateProchainPaiement: prochainPaiement, corps });
 
   const _rReact = await fetch("https://api.resend.com/emails", {
     method: "POST",

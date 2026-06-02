@@ -1,11 +1,13 @@
 const { BASE_URL, headers, ok, err, preflight, corsHeaders } = require("./config");
 const { verifyAdminToken, unauthorized } = require("./admin-utils");
 const { ticketResolu: ticketResoluTpl } = require("./email-templates");
+const { getEmailCorps } = require("./email-config");
 
 async function sendTicketResolvedEmail(email, nom, numTicket, sujet, reponseAkilai) {
   const RESEND_API_KEY = process.env.RESEND_API_KEY || "";
   if (!RESEND_API_KEY || !email) return;
-  const tpl = ticketResoluTpl({ nom, numTicket, sujet, reponseAkilai, dateResolution: new Date().toLocaleDateString('fr-FR') });
+  const corps = await getEmailCorps('ticketResolu').catch(() => null);
+  const tpl = ticketResoluTpl({ nom, numTicket, sujet, reponseAkilai, dateResolution: new Date().toLocaleDateString('fr-FR'), corps });
   const _r = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },

@@ -1,6 +1,7 @@
 const { ok, err, preflight, corsHeaders } = require("./config");
 const { verifyAdminToken, unauthorized } = require("./admin-utils");
 const { relanceJ7, relanceJ3 } = require("./email-templates");
+const { getEmailCorps } = require("./email-config");
 
 exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") return preflight();
@@ -16,9 +17,11 @@ exports.handler = async (event) => {
     const RESEND_API_KEY = process.env.RESEND_API_KEY || "";
     if (!RESEND_API_KEY) return err("RESEND_API_KEY not configured");
 
+    const tmplKey = type === "J-3" ? "relanceJ3" : "relanceJ7";
+    const corps = await getEmailCorps(tmplKey);
     const tpl = type === "J-3"
-      ? relanceJ3({ nom, montant, dateEcheance, lienPaiement })
-      : relanceJ7({ nom, montant, dateEcheance, lienPaiement });
+      ? relanceJ3({ nom, montant, dateEcheance, lienPaiement, corps })
+      : relanceJ7({ nom, montant, dateEcheance, lienPaiement, corps });
 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
