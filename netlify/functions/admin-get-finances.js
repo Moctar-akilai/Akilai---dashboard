@@ -3,7 +3,7 @@ const { verifyAdminToken, unauthorized } = require("./admin-utils");
 
 function currentMonthKey() {
   const n = new Date();
-  return `couts_${n.getFullYear()}_${String(n.getMonth() + 1).padStart(2, "0")}`;
+  return `${n.getFullYear()}_${String(n.getMonth() + 1).padStart(2, "0")}`;
 }
 
 exports.handler = async (event) => {
@@ -23,11 +23,21 @@ exports.handler = async (event) => {
       const f = existingRecord.fields || {};
       const monthKey = currentMonthKey();
 
-      // Try monthly key first, fall back to legacy "Couts" field
+      // Couts field stores a map: { "2026_06": {...}, "2026_05": {...} }
+      // or legacy flat object for backwards compat
       let couts = defaultCouts;
       try {
-        const raw = f[monthKey] || f.Couts;
-        if (raw) couts = typeof raw === "string" ? JSON.parse(raw) : raw;
+        const raw = f.Couts;
+        if (raw) {
+          const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+          // If it has a month-keyed structure, extract current month
+          if (parsed[monthKey] && typeof parsed[monthKey] === "object") {
+            couts = parsed[monthKey];
+          } else if (parsed.vapi !== undefined || parsed.make !== undefined) {
+            // legacy flat object
+            couts = parsed;
+          }
+        }
       } catch (e) { /* keep defaults */ }
 
       let cac = 0;
@@ -41,9 +51,24 @@ exports.handler = async (event) => {
       if (!couts) return err("couts is required");
 
       const monthKey = currentMonthKey();
+
+      // Read existing monthly map to merge
+      let monthlyMap = {};
+      try {
+        const raw = existingRecord?.fields?.Couts;
+        if (raw) {
+          const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+          // If it already has month keys, keep them; otherwise start fresh
+          if (parsed && typeof parsed === "object" && !parsed.vapi) {
+            monthlyMap = parsed;
+          }
+        }
+      } catch (e) {}
+
+      monthlyMap[monthKey] = couts;
+
       const fields = {
-        [monthKey]: JSON.stringify(couts),
-        Couts: JSON.stringify(couts), // keep legacy field in sync
+        Couts: JSON.stringify(monthlyMap),
         UpdatedAt: new Date().toISOString(),
       };
       if (cac != null) fields.CAC = Number(cac);
