@@ -13,7 +13,7 @@ const BASE = (headerBg, headerTitle, headerSub, body) => `<!DOCTYPE html>
     <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#1a1a1a;border-radius:12px;overflow:hidden;border:1px solid #2a2a2a;">
       <!-- Logo header -->
       <tr><td style="background-color:#0f0f0f;text-align:center;padding:32px 40px 24px 40px;">
-        <img src="https://portal-akilai.netlify.app/logo.png" alt="AkilAI" width="180" style="display:inline-block;max-width:180px;height:auto;"/>
+        <img src="https://portal-akilai.netlify.app/logo.png" alt="AkilAI" width="260" style="display:inline-block;max-width:260px;height:auto;"/>
       </td></tr>
       <!-- Colour band -->
       <tr><td style="background-color:${headerBg};text-align:center;padding:16px 40px;font-size:16px;font-weight:600;color:#ffffff;letter-spacing:0.5px;">
