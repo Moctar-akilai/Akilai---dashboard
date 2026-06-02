@@ -27,7 +27,7 @@ exports.handler = async (event) => {
     const res = await fetch(url, {
       method: "PATCH",
       headers,
-      body: JSON.stringify({ fields }),
+      body: JSON.stringify({ fields, typecast: true }),
     });
 
     console.log("[admin-update-client] Statut Airtable:", res.status);

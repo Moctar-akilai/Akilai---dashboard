@@ -32,7 +32,7 @@ exports.handler = async function(event, context) {
     const res = await fetch(`${BASE_URL}/Support`, {
       method:  "POST",
       headers,
-      body:    JSON.stringify({ fields }),
+      body:    JSON.stringify({ fields, typecast: true }),
     });
 
     if (!res.ok) {

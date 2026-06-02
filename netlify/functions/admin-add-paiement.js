@@ -33,7 +33,7 @@ exports.handler = async (event) => {
     const res = await fetch(`${BASE_URL}/${TABLE_ID}`, {
       method: "POST",
       headers,
-      body: JSON.stringify({ fields }),
+      body: JSON.stringify({ fields, typecast: true }),
     });
     const data = await res.json();
     if (data.error) return err(data.error.message || "Airtable error");

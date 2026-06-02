@@ -34,7 +34,7 @@ exports.handler = async (event) => {
     const airtableRes = await fetch(`${BASE_URL}/Clients`, {
       method: "POST",
       headers,
-      body: JSON.stringify({ fields }),
+      body: JSON.stringify({ fields, typecast: true }),
     });
     const data = await airtableRes.json();
 
