@@ -2545,7 +2545,11 @@ async function openBillingDetail(clientId){
   if(c.id)    params.set('clientRecordId', c.id);
   console.log('[billing] appel admin-get-paiements:', params.toString());
   const d=await adminFetch(`/.netlify/functions/admin-get-paiements?${params.toString()}`);
+  console.log('[billing-detail] réponse brute:', JSON.stringify(d).substring(0,300));
+  if(d.ok===false){ console.error('[billing-detail] erreur fonction:', d.error); }
   const pays=d.paiements||[];
+  console.log('[billing-detail] paiements reçus:', pays.length);
+  if(pays[0]) console.log('[billing-detail] premier paiement:', JSON.stringify(pays[0]));
 
   const total=pays.filter(p=>p.statut==='Payé').reduce((s,p)=>s+Number(p.montant||0),0);
   const nb=pays.length;
@@ -2555,8 +2559,11 @@ async function openBillingDetail(clientId){
   document.getElementById('bdLast').textContent=last?`${fmtDate(last.date)} · ${fmtEur(last.montant)}`:'—';
 
   const tb=document.getElementById('bdHistBody');
+  console.log('[billing-detail] élément bdHistBody trouvé:', !!tb);
+  if(!tb) return;
   if(!pays.length){ tb.innerHTML='<tr class="empty-row"><td colspan="7">Aucun paiement enregistré</td></tr>'; }
   else tb.innerHTML=pays.map(p=>{
+    console.log('[billing-detail] rendu paiement id:', p.id, 'date:', p.date, 'montant:', p.montant, 'statut:', p.statut);
     const typeLabel=p.typePaiement?`<span class="badge" style="background:rgba(112,178,222,.15);color:#70B2DE;font-size:10px">${esc(p.typePaiement)}</span>`:'—';
     let factureCell='';
     if(p.numFacture){
