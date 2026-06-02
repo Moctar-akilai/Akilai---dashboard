@@ -1831,7 +1831,7 @@ async function renderCpPaiements(c){
   loadEl.style.display='none';
   if(!_cpPaiements.length){
     tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:16px">Aucun paiement enregistré</td></tr>';
-    tableEl.style.display='table';
+    tableEl.style.display='block'; // div doit être block, pas table
     totalEl.textContent='';
     renderCpFactures();
     return;
@@ -1852,7 +1852,7 @@ async function renderCpPaiements(c){
 
   const total=_cpPaiements.filter(p=>p.statut==='Payé').reduce((s,p)=>s+Number(p.montant||0),0);
   totalEl.textContent=`Total encaissé : ${fmtEur(total)}`;
-  tableEl.style.display='table';
+  tableEl.style.display='block'; // div.table-wrap → block, pas table
 
   renderCpFactures();
 }
@@ -1863,22 +1863,33 @@ function renderCpFactures(){
   const tbody   = document.getElementById('cpFacturesBody');
   if(!emptyEl) return;
 
-  const factures=_cpPaiements.filter(p=>p.numFacture && p.factureUrl);
+  console.log('[factures] paiements total:', _cpPaiements.length);
+  console.log('[factures] avec numFacture:', _cpPaiements.filter(p=>p.numFacture).length);
+  console.log('[factures] avec factureUrl:', _cpPaiements.filter(p=>p.factureUrl).length);
+  if(_cpPaiements[0]) console.log('[factures] premier paiement complet:', JSON.stringify(_cpPaiements[0]));
+
+  // Filtre assoupli : numFacture suffit (factureUrl peut être absent si Cloudinary non configuré)
+  const factures=_cpPaiements.filter(p=>p.numFacture);
   if(!factures.length){
     emptyEl.style.display='block';
     tableEl.style.display='none';
     return;
   }
   emptyEl.style.display='none';
-  tbody.innerHTML=factures.map(p=>`<tr>
-    <td style="font-weight:600;color:var(--accent)">${esc(p.numFacture)}</td>
-    <td style="color:var(--muted);font-size:12px">${esc(p.periode||'—')}</td>
-    <td style="font-weight:600">${fmtEur(p.montant)}</td>
-    <td style="color:var(--muted)">${fmtDate(p.date)||'—'}</td>
-    <td><a href="${esc(p.factureUrl)}" target="_blank" rel="noopener"
-        style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:7px;background:rgba(112,178,222,.12);color:#70B2DE;font-size:12px;font-weight:600;text-decoration:none;border:1px solid rgba(112,178,222,.2)">
-        📥 Télécharger</a></td>
-  </tr>`).join('');
+  tbody.innerHTML=factures.map(p=>{
+    const dlBtn=p.factureUrl
+      ?`<a href="${esc(p.factureUrl)}" target="_blank" rel="noopener"
+          style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:7px;background:rgba(112,178,222,.12);color:#70B2DE;font-size:12px;font-weight:600;text-decoration:none;border:1px solid rgba(112,178,222,.2)">
+          📥 Télécharger</a>`
+      :`<span style="color:var(--muted);font-size:12px">PDF non stocké</span>`;
+    return `<tr>
+      <td style="font-weight:600;color:var(--accent)">${esc(p.numFacture)}</td>
+      <td style="color:var(--muted);font-size:12px">${esc(p.periode||'—')}</td>
+      <td style="font-weight:600">${fmtEur(p.montant)}</td>
+      <td style="color:var(--muted)">${fmtDate(p.date)||'—'}</td>
+      <td>${dlBtn}</td>
+    </tr>`;
+  }).join('');
   tableEl.style.display='table';
 }
 
