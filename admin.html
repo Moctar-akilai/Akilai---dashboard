@@ -3872,6 +3872,7 @@ function notifStyle(type){
     vapi_wallet:     ['#f59e0b','rgba(245,158,11,.12)','💳'],
     ticket_sans_rep: ['#fb923c','rgba(251,146,60,.12)','⏰'],
     resiliation:     ['#dc2626','rgba(220,38,38,.12)','🔴'],
+    programmation:   ['#70B2DE','rgba(112,178,222,.12)','📅'],
   })[type]||['#94a3b8','rgba(148,163,184,.12)','•'];
 }
 
@@ -3966,6 +3967,19 @@ function checkAndGenerateNotifications(){
       addNotification({ id:`inactif_${c.id}_${monthKey}`, type:'inactif', priorite:'normale',
         titre:'Client inactif 📊',
         message:`${c.entreprise||c.nom} — aucune activité depuis 30 jours`, lien:'clients', date:new Date().toISOString() });
+    }
+  });
+
+  // Programmations modifiées depuis lastVisit
+  adminRealAutomations.forEach(a=>{
+    if(!a.modifieScheduling) return;
+    if(new Date(a.modifieScheduling).getTime()>lastVisit){
+      const cName=clientNameById(a.userId)||a.userId||'—';
+      addNotification({ id:`sched_${a.id}_${new Date(a.modifieScheduling).toISOString().slice(0,10)}`,
+        type:'programmation', priorite:'normale',
+        titre:'Programmation modifiée 📅',
+        message:`${a.nom||'—'} — ${cName}`, lien:'automations',
+        date:a.modifieScheduling });
     }
   });
 
