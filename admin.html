@@ -15,10 +15,10 @@
   --text:#e2e8f0; --text-muted:#94a3b8; --text-faint:#475569;
   --accent:#70B2DE; --accent-dim:rgba(112,178,222,0.1); --accent-border:rgba(112,178,222,0.2);
   --success:#22c55e; --warning:#f59e0b; --danger:#ef4444;
-  --radius:12px; --sidebar-w:240px;
+  --radius:12px; --sidebar-w:220px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
+html,body{height:100%;max-width:100%;overflow-x:hidden}
 body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
 a{color:inherit;text-decoration:none}
 button{font-family:inherit;cursor:pointer}
@@ -57,9 +57,9 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .collapse-btn{margin-left:auto;background:transparent;border:none;color:var(--text-muted);font-size:18px;padding:4px}
 .sidebar.collapsed .sidebar-top img{display:none}
 .nav{flex:1;padding:12px 8px;overflow-y:auto}
-.nav-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;color:var(--text-muted);font-weight:500;cursor:pointer;position:relative;margin-bottom:2px}
-.nav-item:hover{background:var(--surface2);color:var(--text)}
-.nav-item.active{background:var(--accent-dim);color:var(--accent)}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;color:var(--text-muted);font-weight:500;cursor:pointer;position:relative;margin-bottom:2px;border-left:3px solid transparent;transition:background .15s,color .15s,border-color .15s}
+.nav-item:hover{background:rgba(112,178,222,0.08);color:var(--text)}
+.nav-item.active{background:var(--accent-dim);color:var(--accent);border-left-color:var(--accent)}
 .nav-item svg{width:18px;height:18px;flex-shrink:0}
 .sidebar.collapsed .nav-item span.label{display:none}
 .nav-badge{margin-left:auto;background:var(--danger);color:#fff;font-size:11px;font-weight:600;border-radius:10px;padding:1px 7px;display:none}
@@ -70,31 +70,44 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .sidebar.collapsed .admin-email{display:none}
 .sidebar.collapsed .sidebar-bottom .btn span{display:none}
 
-.main{margin-left:var(--sidebar-w);flex:1;min-height:100vh;transition:margin-left .2s}
-.sidebar.collapsed ~ .main{margin-left:64px}
+.main{margin-left:var(--sidebar-w);flex:1;min-height:100vh;min-width:0;max-width:calc(100vw - var(--sidebar-w));overflow-x:hidden;transition:margin-left .2s}
+.sidebar.collapsed ~ .main{margin-left:64px;max-width:calc(100vw - 64px)}
 .topbar{padding:18px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;background:var(--bg);position:sticky;top:0;z-index:20}
 .topbar h2{font-size:18px;font-weight:600}
 .topbar .spacer{flex:1}
-.page{display:none;padding:28px}
+.page{display:none;padding:28px;width:100%;max-width:100%;overflow-x:hidden}
 .page.active{display:block}
 
 /* ---------- GRID / CARDS ---------- */
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-bottom:24px}
-.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px}
-.kpi-card .k-label{font-size:12px;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em}
-.kpi-card .k-value{font-size:26px;font-weight:600}
-.kpi-card .k-sub{font-size:12px;color:var(--text-faint);margin-top:4px}
+.kpi-grid{display:grid;gap:14px;margin-bottom:16px;width:100%}
+.kpi-grid-main{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.kpi-grid-ops{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.kpi-grid-geo{grid-template-columns:repeat(auto-fit,minmax(170px,1fr));margin-bottom:24px}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;transition:transform .15s,box-shadow .15s;display:flex;flex-direction:column;gap:6px}
+.kpi-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.3)}
+.kpi-card .k-label{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em}
+.kpi-card .k-value{font-size:28px;font-weight:700;line-height:1}
+.kpi-card .k-sub{font-size:11px;color:var(--text-faint)}
+.kpi-card .k-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:4px}
 .kpi-card.big .k-value{font-size:30px}
-.kpi-card.accent{border-color:var(--accent-border)}
+.kpi-card.accent{border-color:var(--accent-border);border-left:3px solid var(--accent)}
 .kpi-card.accent .k-value{color:var(--accent)}
+.kpi-card.kpi-violet{border-left:3px solid #a78bfa}
+.kpi-card.kpi-violet .k-value{color:#a78bfa}
+.kpi-card.kpi-cyan{border-left:3px solid #22d3ee}
+.kpi-card.kpi-cyan .k-value{color:#22d3ee}
+.kpi-card.kpi-blue{border-left:3px solid #60a5fa}
+.kpi-card.kpi-blue .k-value{color:#60a5fa}
+.kpi-card.kpi-green{border-left:3px solid #4ade80}
+.kpi-card.kpi-green .k-value{color:#4ade80}
 
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px;width:100%;overflow-x:hidden}
 .card h3{font-size:15px;font-weight:600;margin-bottom:14px}
-.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
-.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px}
-.chart-card h3{font-size:14px;font-weight:600;margin-bottom:12px}
-.chart-wrap{position:relative;height:240px}
-@media(max-width:900px){.charts-grid{grid-template-columns:1fr}}
+.charts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:20px;width:100%}
+.chart-card{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius);padding:18px}
+.chart-card h3{font-size:11px;font-weight:700;margin-bottom:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted)}
+.chart-wrap{position:relative;height:240px;width:100%}
+canvas{max-width:100%!important}
 
 /* ---------- TABLES ---------- */
 .table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface)}
@@ -142,7 +155,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .modal-content h3{font-size:16px;font-weight:600;margin-bottom:16px;padding-right:30px}
 .modal-close{position:absolute;top:16px;right:16px;background:transparent;border:none;color:var(--text-muted);font-size:22px;line-height:1}
 .modal-close:hover{color:var(--text)}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
 .form-grid .field.full{grid-column:1/-1}
 .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
 .detail-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
@@ -156,10 +169,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .bubble.client{align-self:flex-start;background:var(--surface2);border-bottom-left-radius:3px}
 /* support tabs */
 .support-filters{margin-bottom:0}
-.support-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
-@media(max-width:900px){.support-kpis{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:1200px){#autoKpis{grid-template-columns:repeat(3,1fr)!important}}
-@media(max-width:700px){#autoKpis{grid-template-columns:repeat(2,1fr)!important}}
+.support-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
 .sk-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;cursor:pointer;transition:border-color .15s,transform .1s;display:flex;align-items:center;gap:14px}
 .sk-card:hover{border-color:var(--accent);transform:translateY(-1px)}
 .sk-card.active{border-color:var(--accent);box-shadow:0 0 0 2px rgba(112,178,222,.25)}
@@ -179,8 +189,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .tab-btn.active{background:var(--accent);border-color:var(--accent);color:#08131c;font-weight:600}
 
 /* ---------- RELANCES ---------- */
-.relance-cols{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-@media(max-width:900px){.relance-cols{grid-template-columns:1fr}}
+.relance-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
 .relance-list{display:flex;flex-direction:column;gap:10px;margin-top:10px}
 .relance-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px}
 .relance-card .rc-name{font-weight:600;font-size:13px}
@@ -199,6 +208,14 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .alert-list{display:flex;flex-direction:column;gap:8px}
 .alert-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:var(--surface2);font-size:13px}
 .alert-item .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.alerts-collapsible{display:grid;grid-template-rows:1fr;transition:grid-template-rows .3s ease}
+.alerts-collapsible.collapsed{grid-template-rows:0fr}
+.alerts-collapsible>div{overflow:hidden}
+.alerts-header{display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
+.alerts-chevron{transition:transform .3s;font-size:14px;color:var(--text-muted)}
+.alerts-chevron.collapsed{transform:rotate(-90deg)}
+.alerts-badge-count{background:var(--danger);color:#fff;font-size:10px;font-weight:700;border-radius:10px;padding:1px 6px;display:none}
+.alerts-badge-count.show{display:inline}
 
 /* ---------- SKELETON ---------- */
 .skel{background:linear-gradient(90deg,var(--surface2) 25%,#262d40 50%,var(--surface2) 75%);background-size:200% 100%;animation:shimmer 1.2s infinite;border-radius:4px;height:12px;width:100%}
@@ -220,9 +237,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .cp-dates{display:flex;gap:20px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
 .cp-dates span strong{color:var(--text);margin-left:4px}
 .cp-actions{display:flex;flex-wrap:wrap;gap:8px;margin-left:auto;align-self:center}
-.cp-kpis{display:grid;grid-template-columns:repeat(8,1fr);gap:12px}
-@media(max-width:1400px){.cp-kpis{grid-template-columns:repeat(4,1fr)}}
-@media(max-width:800px){.cp-kpis{grid-template-columns:repeat(2,1fr)}}
+.cp-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:12px}
 .cp-kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:6px}
 .cp-kpi .ck-icon{font-size:20px;width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center}
 .cp-kpi .ck-icon.g{background:rgba(74,222,128,.12);color:#4ade80}
@@ -318,13 +333,24 @@ input,select,textarea{font-family:inherit;font-size:14px}
 
     <!-- ===== OVERVIEW ===== -->
     <section class="page active" id="page-overview">
-      <div class="kpi-grid">
-        <div class="kpi-card accent"><div class="k-label">Clients actifs</div><div class="k-value"><span id="kpiClientsActifs">0</span></div><div class="k-sub">sur <span id="kpiClientsTotal">0</span> au total</div></div>
-        <div class="kpi-card accent"><div class="k-label">MRR calculé</div><div class="k-value" id="kpiMRR">0 €</div><div class="k-sub">revenu mensuel récurrent</div></div>
-        <div class="kpi-card"><div class="k-label">Churn du mois</div><div class="k-value" id="kpiChurn">0</div><div class="k-sub">clients suspendus</div></div>
-        <div class="kpi-card"><div class="k-label">Tickets ouverts</div><div class="k-value" id="kpiTicketsOuverts">0</div><div class="k-sub">à traiter</div></div>
-        <div class="kpi-card"><div class="k-label">Coûts infra / mois</div><div class="k-value" id="kpiCouts">0 €</div><div class="k-sub">infrastructure</div></div>
-        <div class="kpi-card accent"><div class="k-label">Marge brute</div><div class="k-value" id="kpiMarge">0 €</div><div class="k-sub">MRR - coûts</div></div>
+      <!-- Ligne 1 : métriques financières principales -->
+      <div class="kpi-grid kpi-grid-main">
+        <div class="kpi-card accent"><div class="k-icon" style="background:rgba(112,178,222,.15)">👥</div><div class="k-label">Clients actifs</div><div class="k-value"><span id="kpiClientsActifs">0</span></div><div class="k-sub">sur <span id="kpiClientsTotal">0</span> au total</div></div>
+        <div class="kpi-card accent"><div class="k-icon" style="background:rgba(112,178,222,.15)">💰</div><div class="k-label">MRR calculé</div><div class="k-value" id="kpiMRR">0 €</div><div class="k-sub">revenu mensuel récurrent</div></div>
+        <div class="kpi-card accent" style="border-left-color:#4ade80"><div class="k-icon" style="background:rgba(74,222,128,.12)">📈</div><div class="k-label">Marge brute</div><div class="k-value" id="kpiMarge" style="color:#4ade80">0 €</div><div class="k-sub">MRR − coûts</div></div>
+      </div>
+      <!-- Ligne 2 : opérations & santé -->
+      <div class="kpi-grid kpi-grid-ops">
+        <div class="kpi-card"><div class="k-icon" style="background:rgba(239,68,68,.12)">📉</div><div class="k-label">Churn du mois</div><div class="k-value" id="kpiChurn">0</div><div class="k-sub">clients suspendus</div></div>
+        <div class="kpi-card"><div class="k-icon" style="background:rgba(245,158,11,.12)">🎫</div><div class="k-label">Tickets ouverts</div><div class="k-value" id="kpiTicketsOuverts">0</div><div class="k-sub">à traiter</div></div>
+        <div class="kpi-card"><div class="k-icon" style="background:rgba(148,163,184,.1)">🏗️</div><div class="k-label">Coûts infra / mois</div><div class="k-value" id="kpiCouts">0 €</div><div class="k-sub">infrastructure</div></div>
+        <div class="kpi-card kpi-violet"><div class="k-icon" style="background:rgba(167,139,250,.12)">🎙️</div><div class="k-label">Minutes consommées</div><div class="k-value" id="kpiMinutes">0</div><div class="k-sub">appels vocaux</div></div>
+      </div>
+      <!-- Ligne 3 : canaux & géographie -->
+      <div class="kpi-grid kpi-grid-geo">
+        <div class="kpi-card kpi-cyan"><div class="k-icon" style="background:rgba(34,211,238,.12)">💬</div><div class="k-label">Messages WhatsApp</div><div class="k-value" id="kpiWhatsApp">0</div><div class="k-sub">échanges WA (total)</div></div>
+        <div class="kpi-card kpi-blue"><div class="k-icon" style="background:rgba(96,165,250,.12)">🇫🇷</div><div class="k-label">CA France / Europe</div><div class="k-value" id="kpiCAFrance">0 €</div><div class="k-sub">FR · BE · CH · CA</div></div>
+        <div class="kpi-card kpi-green"><div class="k-icon" style="background:rgba(74,222,128,.12)">🌍</div><div class="k-label">CA Afrique</div><div class="k-value" id="kpiCAAfrique">0 €</div><div class="k-sub">SN · CI · MA</div></div>
       </div>
       <div class="charts-grid">
         <div class="chart-card"><h3>MRR — 6 derniers mois</h3><div class="chart-wrap"><canvas id="chartMRR"></canvas></div></div>
@@ -333,8 +359,16 @@ input,select,textarea{font-family:inherit;font-size:14px}
         <div class="chart-card"><h3>Résolution des tickets</h3><div class="chart-wrap"><canvas id="chartTickets"></canvas></div></div>
       </div>
       <div class="card">
-        <h3>Alertes</h3>
-        <div class="alert-list" id="alertList"><div class="muted">Aucune alerte.</div></div>
+        <div class="alerts-header" id="alertsHeader">
+          <div style="display:flex;align-items:center;gap:10px">
+            <h3 style="margin:0">Alertes</h3>
+            <span class="alerts-badge-count" id="alertsBadgeCount">0</span>
+          </div>
+          <span class="alerts-chevron" id="alertsChevron">▾</span>
+        </div>
+        <div class="alerts-collapsible" id="alertsCollapsible">
+          <div style="margin-top:12px"><div class="alert-list" id="alertList"><div class="muted">Aucune alerte.</div></div></div>
+        </div>
       </div>
     </section>
 
@@ -359,7 +393,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
     <!-- ===== AUTOMATIONS ===== -->
     <section class="page" id="page-automations">
       <!-- KPI Cards -->
-      <div class="support-kpis" style="grid-template-columns:repeat(6,1fr);margin-bottom:16px" id="autoKpis">
+      <div class="support-kpis" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr));margin-bottom:16px" id="autoKpis">
         <div class="sk-card" id="akAll" onclick="filterAutoByKpi('')">
           <div class="sk-icon blue"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
           <div class="sk-body"><div class="sk-value" id="akValAll">0</div><div class="sk-label">Total</div></div>
@@ -391,6 +425,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
         <select id="autoFilterClient"><option value="">Tous clients</option></select>
         <select id="autoFilterType"><option value="">Tous types</option><option>WhatsApp</option><option>Vocal</option><option>RDV</option><option>Instagram</option></select>
         <select id="autoFilterStatut"><option value="">Tous statuts</option><option>Actif</option><option>Inactif</option><option>Erreur</option></select>
+        <button class="btn ghost sm" id="syncMakeAutoBtn">🔄 Sync Make</button>
       </div>
       <div class="table-wrap">
         <table class="hist-table">
@@ -514,67 +549,349 @@ input,select,textarea{font-family:inherit;font-size:14px}
 
     <!-- ===== FINANCES ===== -->
     <section class="page" id="page-finances">
-      <div class="kpi-grid">
-        <div class="kpi-card big accent"><div class="k-label">MRR</div><div class="k-value" id="finMRR">0 €</div></div>
-        <div class="kpi-card big accent"><div class="k-label">ARR</div><div class="k-value" id="finARR">0 €</div></div>
-        <div class="kpi-card big"><div class="k-label">Coûts totaux</div><div class="k-value" id="finCouts">0 €</div></div>
-        <div class="kpi-card big accent"><div class="k-label">Marge brute</div><div class="k-value" id="finMarge">0 €</div></div>
+
+      <!-- KPI row 1 -->
+      <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin-bottom:12px">
+        <div class="kpi-card big" style="border-color:rgba(34,197,94,.3)">
+          <div class="k-label">MRR total</div>
+          <div class="k-value" id="finMRR" style="color:#22c55e">0 €</div>
+          <div class="k-sub" id="finMRRBadge" style="font-size:11px;margin-top:4px"></div>
+        </div>
+        <div class="kpi-card big" style="border-color:rgba(112,178,222,.3)">
+          <div class="k-label">ARR projeté</div>
+          <div class="k-value" id="finARR" style="color:#70B2DE">0 €</div>
+          <div class="k-sub">MRR × 12</div>
+        </div>
+        <div class="kpi-card big" style="border-color:rgba(239,68,68,.3)">
+          <div class="k-label">Coûts infrastructure</div>
+          <div class="k-value" id="finCouts" style="color:#ef4444">0 €</div>
+          <div class="k-sub">ce mois</div>
+        </div>
       </div>
+
+      <!-- KPI row 2 -->
+      <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin-bottom:20px">
+        <div class="kpi-card big">
+          <div class="k-label">Marge brute</div>
+          <div class="k-value" id="finMarge">0 €</div>
+        </div>
+        <div class="kpi-card big">
+          <div class="k-label">Taux de marge</div>
+          <div class="k-value" id="finTauxMarge">— %</div>
+        </div>
+        <div class="kpi-card big">
+          <div class="k-label">Churn rate</div>
+          <div class="k-value" id="finChurn">— %</div>
+          <div class="k-sub" id="finChurnSub"></div>
+        </div>
+      </div>
+
+      <!-- Charts row -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-bottom:20px">
+        <div class="chart-card"><h3>Évolution MRR — 6 mois</h3><div class="chart-wrap"><canvas id="chartMRRFin"></canvas></div></div>
+        <div class="chart-card"><h3>CA par plan</h3><div class="chart-wrap" style="max-height:220px"><canvas id="chartDonut"></canvas></div></div>
+      </div>
+      <div class="chart-card" style="margin-bottom:20px"><h3>MRR vs Coûts (6 mois)</h3><div class="chart-wrap"><canvas id="chartFinances"></canvas></div></div>
+
+      <!-- Costs form -->
+      <div class="card" style="margin-bottom:20px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+          <h3 style="margin:0">Coûts infrastructure</h3>
+          <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
+            <button class="btn ghost sm" id="coutsPrevBtn" onclick="navigateCoutsMois(-1)">◀</button>
+            <select id="coutsMoisSelect" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-size:13px" onchange="loadCostMonth(this.value)"></select>
+            <button class="btn ghost sm" id="coutsNextBtn" onclick="navigateCoutsMois(1)">▶</button>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">Mois sélectionné : <strong id="costMonthLabel"></strong></div>
+        <div class="form-grid">
+          <div class="field"><label>Vapi (€)</label><input type="number" id="costVapi" min="0" step="0.01" oninput="updateCostTotal()"></div>
+          <div class="field"><label>ElevenLabs (€)</label><input type="number" id="costElevenlabs" min="0" step="0.01" oninput="updateCostTotal()"></div>
+          <div class="field"><label>Make (€)</label><input type="number" id="costMake" min="0" step="0.01" oninput="updateCostTotal()"></div>
+          <div class="field"><label>Twilio (€)</label><input type="number" id="costTwilio" min="0" step="0.01" oninput="updateCostTotal()"></div>
+          <div class="field"><label>Netlify (€)</label><input type="number" id="costNetlify" min="0" step="0.01" oninput="updateCostTotal()"></div>
+          <div class="field"><label>OpenAI (€)</label><input type="number" id="costOpenai" min="0" step="0.01" oninput="updateCostTotal()"></div>
+          <div class="field"><label>Autres (€)</label><input type="number" id="costAutres" min="0" step="0.01" oninput="updateCostTotal()"></div>
+          <div class="field"><label>CAC — Prospection/Marketing (€)</label><input type="number" id="costCAC" min="0" step="0.01"></div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px">
+          <div style="font-size:14px;color:var(--text-muted)">Total : <strong id="costTotal" style="color:var(--text)">0 €</strong></div>
+          <button class="btn" id="saveCostsBtn">Sauvegarder</button>
+        </div>
+      </div>
+
+      <!-- France vs Afrique -->
+      <div class="card" style="margin-bottom:20px">
+        <h3>Répartition géographique</h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;margin-bottom:16px">
+          <div style="background:var(--surface2);border-radius:10px;padding:18px">
+            <div style="font-size:13px;font-weight:700;color:var(--accent);margin-bottom:10px">🇫🇷 France / Europe</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">
+              <div><div class="k-label">Clients actifs</div><div style="font-size:20px;font-weight:700" id="geoFrClients">—</div></div>
+              <div><div class="k-label">MRR</div><div style="font-size:20px;font-weight:700;color:#22c55e" id="geoFrMRR">—</div></div>
+              <div><div class="k-label">% MRR total</div><div style="font-size:20px;font-weight:700" id="geoFrPct">—</div></div>
+            </div>
+          </div>
+          <div style="background:var(--surface2);border-radius:10px;padding:18px">
+            <div style="font-size:13px;font-weight:700;color:#f59e0b;margin-bottom:10px">🌍 Sénégal / Afrique</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">
+              <div><div class="k-label">Clients actifs</div><div style="font-size:20px;font-weight:700" id="geoAfClients">—</div></div>
+              <div><div class="k-label">MRR</div><div style="font-size:20px;font-weight:700;color:#22c55e" id="geoAfMRR">—</div></div>
+              <div><div class="k-label">% MRR total</div><div style="font-size:20px;font-weight:700" id="geoAfPct">—</div></div>
+            </div>
+            <div style="margin-top:8px;font-size:11px;color:var(--text-muted)" id="geoAfFCFA"></div>
+          </div>
+        </div>
+        <div class="chart-wrap" style="height:80px"><canvas id="chartGeo"></canvas></div>
+      </div>
+
+      <!-- LTV / CAC / Churn -->
+      <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin-bottom:20px">
+        <div class="kpi-card big">
+          <div class="k-label">LTV estimée</div>
+          <div class="k-value" id="finLTV">— €</div>
+          <div class="k-sub">MRR moyen / churn mensuel</div>
+        </div>
+        <div class="kpi-card big">
+          <div class="k-label">CAC ce mois</div>
+          <div class="k-value" id="finCAC">— €</div>
+          <div class="k-sub">Saisi dans les coûts</div>
+        </div>
+        <div class="kpi-card big">
+          <div class="k-label">Ratio LTV / CAC</div>
+          <div class="k-value" id="finLTVCAC">—</div>
+          <div class="k-sub">≥ 3 recommandé</div>
+        </div>
+      </div>
+
+      <!-- Projections fin d'année -->
+      <div class="card" style="margin-bottom:20px">
+        <h3>Projections fin d'année</h3>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px" id="projNote"></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:18px">
+          <div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:16px;text-align:center">
+            <div class="k-label">Pessimiste (−20%)</div>
+            <div style="font-size:22px;font-weight:700;color:#ef4444;margin:8px 0" id="projWorst">—</div>
+            <div style="font-size:11px;color:var(--text-muted)">ARR</div>
+          </div>
+          <div style="background:rgba(112,178,222,.08);border:1px solid rgba(112,178,222,.3);border-radius:10px;padding:16px;text-align:center;box-shadow:0 0 0 2px rgba(112,178,222,.2)">
+            <div class="k-label" style="color:var(--accent)">★ Scénario réaliste</div>
+            <div style="font-size:26px;font-weight:700;color:#70B2DE;margin:8px 0" id="projBase">—</div>
+            <div style="font-size:11px;color:var(--text-muted)">ARR</div>
+          </div>
+          <div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:16px;text-align:center">
+            <div class="k-label">Optimiste (+20%)</div>
+            <div style="font-size:22px;font-weight:700;color:#22c55e;margin:8px 0" id="projBest">—</div>
+            <div style="font-size:11px;color:var(--text-muted)">ARR</div>
+          </div>
+        </div>
+        <div class="chart-wrap"><canvas id="chartProjection"></canvas></div>
+      </div>
+
+      <!-- Marge par client -->
       <div class="card">
-        <h3>MRR par plan</h3>
+        <h3>Marge par client</h3>
         <div class="table-wrap" style="border:none">
           <table class="hist-table">
-            <thead><tr><th>Plan</th><th>Nb clients</th><th>Tarif / mois</th><th>MRR partiel</th></tr></thead>
-            <tbody id="mrrByPlanBody"></tbody>
+            <thead><tr><th>Entreprise</th><th>Plan</th><th>MRR client</th><th>Coût estimé</th><th>Marge</th><th>Taux</th><th>Santé</th></tr></thead>
+            <tbody id="margeByClientBody"></tbody>
           </table>
         </div>
       </div>
-      <div class="card">
-        <h3>Coûts infrastructure</h3>
-        <div class="form-grid">
-          <div class="field"><label>Vapi (€)</label><input type="number" id="costVapi"></div>
-          <div class="field"><label>ElevenLabs (€)</label><input type="number" id="costElevenlabs"></div>
-          <div class="field"><label>Make (€)</label><input type="number" id="costMake"></div>
-          <div class="field"><label>Twilio (€)</label><input type="number" id="costTwilio"></div>
-          <div class="field"><label>Netlify (€)</label><input type="number" id="costNetlify"></div>
-          <div class="field"><label>OpenAI (€)</label><input type="number" id="costOpenai"></div>
-          <div class="field"><label>Autres (€)</label><input type="number" id="costAutres"></div>
-        </div>
-        <div class="modal-actions"><button class="btn" id="saveCostsBtn">Sauvegarder</button></div>
-      </div>
-      <div class="chart-card"><h3>MRR vs Coûts (6 mois)</h3><div class="chart-wrap"><canvas id="chartFinances"></canvas></div></div>
+
     </section>
 
     <!-- ===== NOTIFICATIONS ===== -->
     <section class="page" id="page-notifications">
-      <div class="toolbar"><div class="spacer"></div><button class="btn ghost sm" id="markAllReadBtn">Tout marquer comme lu</button></div>
+      <div class="toolbar" style="flex-wrap:wrap;gap:8px">
+        <div style="display:flex;gap:6px">
+          <button class="btn sm ghost notif-filter-btn active" data-filter="all">Toutes <span id="nfBadgeAll" class="badge" style="background:rgba(148,163,184,.2);color:var(--text-muted);margin-left:4px">0</span></button>
+          <button class="btn sm ghost notif-filter-btn" data-filter="unread">Non lues <span id="nfBadgeUnread" class="badge" style="background:rgba(239,68,68,.2);color:#f87171;margin-left:4px">0</span></button>
+          <button class="btn sm ghost notif-filter-btn" data-filter="high">Haute priorité <span id="nfBadgeHigh" class="badge" style="background:rgba(239,68,68,.2);color:#f87171;margin-left:4px">0</span></button>
+        </div>
+        <div class="spacer"></div>
+        <button class="btn ghost sm" id="markAllReadBtn">Tout marquer comme lu</button>
+        <button class="btn ghost sm danger" id="clearAllNotifsBtn">Effacer tout</button>
+      </div>
       <div class="notif-list" id="notifList"></div>
     </section>
 
     <!-- ===== SETTINGS ===== -->
     <section class="page" id="page-settings">
-      <div class="card">
-        <h3>Plans &amp; tarifs</h3>
-        <div class="table-wrap" style="border:none">
-          <table class="hist-table">
-            <thead><tr><th>Plan</th><th>Prix / mois (€)</th></tr></thead>
-            <tbody id="settingsPlansBody"></tbody>
-          </table>
+      <!-- Settings tabs -->
+      <div class="ticket-tabs" id="settingsTabs" style="margin-bottom:20px">
+        <button class="tab-btn active" data-stab="plans">Tarifs &amp; Plans</button>
+        <button class="tab-btn" data-stab="agence">Infos Agence</button>
+        <button class="tab-btn" data-stab="templates">Templates Emails</button>
+        <button class="tab-btn" data-stab="vapi">Configuration Vapi</button>
+        <button class="tab-btn" data-stab="make">Make</button>
+        <button class="tab-btn" data-stab="admins">Administrateurs</button>
+        <button class="tab-btn" data-stab="support">Support</button>
+      </div>
+
+      <!-- TAB: Tarifs & Plans -->
+      <div id="stab-plans">
+        <div class="card">
+          <h3>Plans &amp; tarifs</h3>
+          <div class="table-wrap" style="border:none">
+            <table class="hist-table">
+              <thead><tr><th>Plan</th><th>Montant mensuel (€)</th><th>Limites</th></tr></thead>
+              <tbody id="settingsPlansBody"></tbody>
+            </table>
+          </div>
+          <div class="modal-actions">
+            <button class="btn ghost" id="resetPlansBtn">Réinitialiser</button>
+            <button class="btn" id="savePlansBtn">Sauvegarder tarifs</button>
+          </div>
         </div>
-        <div class="modal-actions"><button class="btn" id="savePlansBtn">Appliquer les tarifs</button></div>
       </div>
-      <div class="card">
-        <h3>Configuration Vapi</h3>
-        <div class="detail-row"><span class="dl">Solde wallet</span><span class="muted">Consultez la console Vapi</span></div>
-        <p class="muted mt16">La clé API Vapi n'est pas exposée au back-office. Rendez-vous sur <strong>dashboard.vapi.ai</strong> pour le solde et la facturation.</p>
-      </div>
-      <div class="card">
-        <h3>Infos générales</h3>
-        <div class="form-grid">
-          <div class="field"><label>Email admin</label><input id="settingsAdminEmail" readonly></div>
-          <div class="field"><label>Nom de l'agence</label><input id="settingsAgency" value="AkilAI"></div>
+
+      <!-- TAB: Infos Agence -->
+      <div id="stab-agence" style="display:none">
+        <div class="card">
+          <h3>Informations agence</h3>
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px">Ces informations sont utilisées dans la génération des factures PDF.</p>
+          <div class="form-grid">
+            <div class="field"><label>Nom agence</label><input id="agNom" value="AkilAI"></div>
+            <div class="field"><label>Email contact</label><input id="agEmail" value="contact@akilai.fr"></div>
+            <div class="field"><label>Site web</label><input id="agSite" placeholder="akilai.fr"></div>
+            <div class="field"><label>Téléphone</label><input id="agTel" placeholder="+33 1 23 45 67 89"></div>
+            <div class="field"><label>SIRET</label><input id="agSiret" placeholder="000 000 000 00000"></div>
+            <div class="field full"><label>Adresse</label><input id="agAdresse" placeholder="1 rue de la Paix, 75001 Paris"></div>
+            <div class="field full"><label>URL Logo (pour PDF)</label><input id="agLogo" placeholder="https://..."></div>
+            <div class="field"><label>Email admin (lecture seule)</label><input id="settingsAdminEmail" readonly></div>
+          </div>
+          <div class="modal-actions"><button class="btn" id="saveAgenceBtn">Sauvegarder</button></div>
         </div>
       </div>
+
+      <!-- TAB: Templates Emails -->
+      <div id="stab-templates" style="display:none">
+        <div class="card">
+          <h3>Templates emails</h3>
+          <!-- Template selector tabs -->
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px" id="tmplTabs"></div>
+          <!-- Variables -->
+          <div style="margin-bottom:12px">
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Variables disponibles (clic pour insérer)</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px" id="tmplVarsBar"></div>
+          </div>
+          <div class="form-grid">
+            <div class="field full"><label>Objet</label><input id="tmplSubject"></div>
+            <div class="field full"><label>Corps du message</label><textarea id="tmplBody" style="height:220px;resize:vertical;font-size:13px;line-height:1.6" placeholder="Texte du message…"></textarea></div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
+            <button class="btn ghost sm" id="tmplPreviewBtn">👁 Aperçu</button>
+            <button class="btn ghost sm" id="tmplTestBtn">📧 Envoyer test</button>
+            <div class="spacer"></div>
+            <button class="btn" id="tmplSaveBtn">Sauvegarder template</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: Vapi -->
+      <div id="stab-vapi" style="display:none">
+        <div class="card" style="margin-bottom:16px">
+          <h3>Wallet Vapi</h3>
+          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+            <div>
+              <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">Solde actuel</div>
+              <div style="font-size:28px;font-weight:700" id="vapiBalance">—</div>
+            </div>
+            <div style="flex:1;max-width:260px">
+              <div class="field"><label>Seuil alerte solde bas ($)</label>
+                <input type="number" id="vapiSeuil" value="5" min="1" step="1" style="width:120px">
+              </div>
+              <button class="btn sm" id="saveVapiSeuilBtn">Sauvegarder seuil</button>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:16px">
+          <h3>Numéros Vapi</h3>
+          <div class="table-wrap" style="border:none">
+            <table class="hist-table">
+              <thead><tr><th>Numéro</th><th>Label</th><th>Assistant assigné</th><th>Provider</th></tr></thead>
+              <tbody id="vapiNumbersBody"><tr><td colspan="4" style="text-align:center;color:var(--text-muted)">Chargement…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Assistants Vapi</h3>
+          <div class="table-wrap" style="border:none">
+            <table class="hist-table">
+              <thead><tr><th>Nom</th><th>Modèle</th><th>Voix</th><th>Statut</th></tr></thead>
+              <tbody id="vapiAssistantsBody"><tr><td colspan="4" style="text-align:center;color:var(--text-muted)">Chargement…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: Make -->
+      <div id="stab-make" style="display:none">
+        <div class="card">
+          <h3>Make (Integromat)</h3>
+          <div id="makeStatsGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px">
+            <div class="kpi-card"><div class="k-label">Total scénarios</div><div class="k-value" id="makeTotal">—</div></div>
+            <div class="kpi-card kpi-green"><div class="k-label">Actifs</div><div class="k-value" id="makeActifs" style="color:#22c55e">—</div></div>
+            <div class="kpi-card"><div class="k-label">Inactifs</div><div class="k-value" id="makeInactifs" style="color:var(--text-muted)">—</div></div>
+            <div class="kpi-card kpi-red"><div class="k-label">En pause</div><div class="k-value" id="makeErreur" style="color:#f59e0b">—</div></div>
+          </div>
+          <div id="makeOrgInfo" style="font-size:13px;color:var(--text-muted);margin-bottom:16px"></div>
+          <div id="makeError" style="display:none;color:var(--text-muted);font-size:13px;margin-bottom:16px;padding:12px;background:var(--surface2);border-radius:8px;border-left:3px solid #ef4444">
+            Impossible de récupérer les données Make. Vérifiez votre clé API Make (<code>MAKE_API_KEY</code>).
+          </div>
+          <!-- Scenarios table -->
+          <div class="table-wrap" id="makeScenariosWrap" style="display:none;border:none;margin-bottom:16px">
+            <table class="hist-table">
+              <thead><tr><th>Nom</th><th>Statut</th><th>Exécutions</th><th>Dernière modif</th><th>Action</th></tr></thead>
+              <tbody id="makeScenariosBody"></tbody>
+            </table>
+          </div>
+          <div class="modal-actions">
+            <a href="https://make.com" target="_blank" class="btn ghost">Ouvrir Make ↗</a>
+            <button class="btn ghost" id="syncMakeBtn">🔄 Synchroniser les statuts</button>
+            <button class="btn" id="refreshMakeBtn">Actualiser</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: Admins -->
+      <div id="stab-admins" style="display:none">
+        <div class="card">
+          <h3>Gestion des administrateurs</h3>
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Les admins secondaires peuvent se connecter avec le même mot de passe que l'admin principal.</p>
+          <div class="table-wrap" style="border:none;margin-bottom:16px">
+            <table class="hist-table">
+              <thead><tr><th>Email</th><th>Rôle</th><th>Actions</th></tr></thead>
+              <tbody id="adminsBody"></tbody>
+            </table>
+          </div>
+          <div style="display:flex;gap:8px">
+            <input id="newAdminEmail" type="email" placeholder="Nouvel email admin…" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text)">
+            <button class="btn" id="addAdminBtn">Ajouter</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: Support -->
+      <div id="stab-support" style="display:none">
+        <div class="card" style="margin-bottom:16px">
+          <h3>Paramètres support</h3>
+          <div class="form-grid">
+            <div class="field"><label>Délai alerte ticket sans réponse (heures)</label>
+              <input type="number" id="suppDelai" value="24" min="1" max="168">
+            </div>
+            <div class="field"><label>Horaires support (affiché aux clients)</label>
+              <input id="suppHoraires" value="Lundi–Vendredi, 9h–18h">
+            </div>
+            <div class="field full"><label>Message bandeau suspension client</label>
+              <textarea id="suppBandeau" style="height:80px" placeholder="Votre compte est suspendu. Contactez-nous pour régulariser votre situation."></textarea>
+            </div>
+          </div>
+          <div class="modal-actions"><button class="btn" id="saveSupportBtn">Sauvegarder</button></div>
+        </div>
+      </div>
+
     </section>
   </main>
 </div>
@@ -780,6 +1097,19 @@ input,select,textarea{font-family:inherit;font-size:14px}
   </div>
 </div>
 
+<!-- ===== MODAL: EMAIL PREVIEW ===== -->
+<div class="modal-overlay" id="modalEmailPreview">
+  <div class="modal-content wide" style="max-width:700px;padding:0;overflow:hidden;background:#1a1a1a;display:flex;flex-direction:column;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:#111;border-bottom:1px solid #2a2a2a;">
+      <span id="emailPreviewTitle" style="font-weight:600;font-size:15px;color:#e0e0e0">Aperçu email</span>
+      <button type="button" class="modal-close" data-close style="background:none;border:none;color:#a0a0a0;font-size:20px;cursor:pointer;line-height:1">&times;</button>
+    </div>
+    <div style="padding:16px;background:#1a1a1a;">
+      <iframe id="emailPreviewFrame" style="width:100%;height:600px;border:none;border-radius:8px;background:#0f0f0f;display:block;"></iframe>
+    </div>
+  </div>
+</div>
+
 <!-- ===== CLIENT PANEL ===== -->
 <div id="clientPanel">
   <div class="cp-topbar">
@@ -881,7 +1211,11 @@ let adminTickets = [];
 let adminPaiements = [];
 let adminHistorique = [];
 let adminAutomations = [];
-let adminFinances = { couts: { vapi:0, elevenlabs:0, make:0, twilio:0, netlify:0, openai:0, autres:0 } };
+let adminFinances = { couts: { vapi:0, elevenlabs:0, make:0, twilio:0, netlify:0, openai:0, autres:0 }, cac:0 };
+let _coutsMoisKey = (()=>{ const n=new Date(); return n.getFullYear()+'-'+(n.getMonth()+1); })();
+let adminConfig = { recordId:null, tarifsPlans:null, infosAgence:{}, templatesEmails:{}, seuilVapi:5, adminsSecondaires:[], delaiTicketAlerte:24, bandeauSuspension:'', horaireSupport:'Lundi–Vendredi, 9h–18h' };
+let _settingsTab = 'plans';
+let _tmplKey = 'bienvenue';
 
 const charts = {};
 const NAV = [
@@ -987,7 +1321,9 @@ function buildNav() {
     div.className = 'nav-item' + (id==='overview'?' active':'');
     div.dataset.section = id;
     div.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor">${icon}</svg><span class="label">${label}</span>` +
-      (id==='support' ? `<span class="nav-badge" id="supportBadge">0</span>`:'');
+      (id==='support' ? `<span class="nav-badge" id="supportBadge">0</span>`:'') +
+      (id==='notifications' ? `<span class="nav-badge" id="notifBadge">0</span>`:'') +
+      (id==='billing' ? `<span class="nav-badge" id="billingBadge">0</span>`:'');
     div.addEventListener('click', ()=>navigate(id));
     nav.appendChild(div);
   });
@@ -998,7 +1334,8 @@ function navigate(id) {
   document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active', p.id==='page-'+id));
   document.getElementById('pageTitle').textContent = TITLES[id] || '';
   localStorage.setItem('adminActiveSection', id);
-  if (id==='notifications') renderNotifications();
+  if (id==='notifications'){ renderNotifications(); updateSidebarBadges(); }
+  if (id==='settings'){ renderSettings(); }
   if (id==='automations') ensureRealAutomations().then(()=>{ populateAutoClientFilter(); renderAutomations(); });
 }
 
@@ -1010,6 +1347,8 @@ function initStaticUI() {
   document.getElementById('logoutBtn').onclick = logout;
   document.getElementById('refreshBtn').onclick = ()=>{ loadAllAdminData(); toast('Données rafraîchies'); };
   initBillingTabs();
+  initAlertsCollapsible();
+  initCoutsMoisSelect();
 
   // populate plan selects
   const planOpts = PLAN_LIST.map(p=>`<option>${p}</option>`).join('');
@@ -1050,6 +1389,7 @@ function initStaticUI() {
   document.getElementById('autoFilterType').addEventListener('change', ()=>{ _autoKpiFilter=''; _autoTypeFilter=''; document.querySelectorAll('#autoKpis .sk-card').forEach(c=>c.classList.remove('active')); renderAutomations(); });
   document.getElementById('autoFilterStatut').addEventListener('change', ()=>{ _autoKpiFilter=''; _autoTypeFilter=''; document.querySelectorAll('#autoKpis .sk-card').forEach(c=>c.classList.remove('active')); renderAutomations(); });
   document.getElementById('autoSearch').addEventListener('input', renderAutomations);
+  document.getElementById('syncMakeAutoBtn').onclick = syncMakeStatus;
 
   // support
   initTicketTabs();
@@ -1060,11 +1400,19 @@ function initStaticUI() {
   document.getElementById('saveCostsBtn').onclick = saveCosts;
 
   // settings
-  document.getElementById('savePlansBtn').onclick = savePlanPrices;
-  renderSettingsPlans();
+  initSettingsTabs();
 
   // notifications
   document.getElementById('markAllReadBtn').onclick = markAllNotifsRead;
+  document.getElementById('clearAllNotifsBtn').onclick = ()=>{ if(confirm('Effacer toutes les notifications ?')){ saveNotifications([]); renderNotifications(); } };
+  document.querySelectorAll('.notif-filter-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.notif-filter-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      _notifFilter=btn.dataset.filter;
+      renderNotifications();
+    });
+  });
 
   // relance form
   document.getElementById('relanceForm').addEventListener('submit', submitRelance);
@@ -1080,19 +1428,27 @@ function initStaticUI() {
    ========================================================= */
 function skeletonRows(tbodyId, cols, n=5){
   const tb = document.getElementById(tbodyId);
+  if(!tb) return;
   tb.innerHTML = Array.from({length:n}).map(()=>`<tr>${Array.from({length:cols}).map(()=>'<td><div class="skel"></div></td>').join('')}</tr>`).join('');
 }
 
 async function loadAllAdminData() {
   skeletonRows('clientsBody',8); skeletonRows('ticketsBody',7);
-  skeletonRows('billingBody',7); skeletonRows('autoBody',5); skeletonRows('mrrByPlanBody',4,3);
-  await Promise.all([ loadClients(), loadTickets(), loadPaiements(), loadHistorique(), loadFinances() ]);
+  skeletonRows('billingBody',7); skeletonRows('autoBody',5);
+  await Promise.all([ loadClients(), loadTickets(), loadPaiements(), loadHistorique(), loadFinances(), loadAdminConfig() ]);
   buildAutomationsFromHistorique();
   populateFilters();
   renderClients(); renderTickets(); renderBilling(); renderAutomations(); renderFinances();
   updateOverview();
   // Load real automations in background (used by client panel)
-  adminFetch('/.netlify/functions/admin-get-automations').then(d=>{ adminRealAutomations=d.automations||[]; });
+  adminFetch('/.netlify/functions/admin-get-automations').then(d=>{
+    adminRealAutomations=d.automations||[];
+    checkAndGenerateNotifications(); // run after automations loaded so erreur auto is included
+  });
+  // Also check Vapi wallet in background
+  adminFetch('/.netlify/functions/check-vapi-wallet').then(d=>{
+    if(d.balance!=null) checkVapiWallet(d.balance);
+  }).catch(()=>{});
 }
 
 async function loadClients(){ const d = await adminFetch('/.netlify/functions/admin-get-clients'); adminClients = d.clients || []; }
@@ -1109,12 +1465,32 @@ async function loadPaiements(){ const d = await adminFetch('/.netlify/functions/
 async function loadHistorique(){ const d = await adminFetch('/.netlify/functions/admin-get-historique?limit=200'); adminHistorique = d.historique || []; }
 async function loadFinances(){
   const d = await adminFetch('/.netlify/functions/admin-get-finances');
-  if (d.couts) adminFinances.couts = { vapi:0,elevenlabs:0,make:0,twilio:0,netlify:0,openai:0,autres:0, ...d.couts };
-  const c = adminFinances.couts;
-  document.getElementById('costVapi').value=c.vapi; document.getElementById('costElevenlabs').value=c.elevenlabs;
-  document.getElementById('costMake').value=c.make; document.getElementById('costTwilio').value=c.twilio;
-  document.getElementById('costNetlify').value=c.netlify; document.getElementById('costOpenai').value=c.openai;
-  document.getElementById('costAutres').value=c.autres;
+  adminFinances.allMonths = d.allMonths || {};
+  if (d.cac != null) adminFinances.cac = d.cac;
+  _coutsMoisKey = (()=>{ const n=new Date(); return n.getFullYear()+'-'+(n.getMonth()+1); })();
+  loadCostMonth(_coutsMoisKey);
+  document.getElementById('costCAC').value=adminFinances.cac||'';
+  updateCostTotal();
+}
+
+function loadCostMonth(key){
+  _coutsMoisKey = key;
+  const c = adminFinances.allMonths[key] || { vapi:0,elevenlabs:0,make:0,twilio:0,netlify:0,openai:0,autres:0 };
+  adminFinances.couts = { vapi:0,elevenlabs:0,make:0,twilio:0,netlify:0,openai:0,autres:0, ...c };
+  ['vapi','elevenlabs','make','twilio','netlify','openai','autres'].forEach(k=>{
+    const el=document.getElementById('cost'+k.charAt(0).toUpperCase()+k.slice(1));
+    if(el) el.value=adminFinances.couts[k]||'';
+  });
+  // Update month label and nav
+  const [y,m]=key.split('-');
+  const label=new Date(+y,+m-1,1).toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+  const el=document.getElementById('costMonthLabel');
+  if(el) el.textContent=label.charAt(0).toUpperCase()+label.slice(1);
+  const now=new Date(); const nowKey=now.getFullYear()+'-'+(now.getMonth()+1);
+  const isPast=key<nowKey;
+  const sb=document.getElementById('saveCostsBtn');
+  if(sb) sb.textContent=isPast?'⚠ Modifier mois passé':'Sauvegarder';
+  updateCostTotal();
 }
 
 function buildAutomationsFromHistorique(){
@@ -1187,12 +1563,42 @@ function updateOverview(){
   document.getElementById('kpiCouts').textContent=fmtEur(costs);
   document.getElementById('kpiMarge').textContent=fmtEur(mrr-costs);
 
+  // minutes consommées (Vocal/Appel)
+  const totalSec=adminHistorique.reduce((s,h)=>{ const c=(h.canal||'').toLowerCase(); const t=(h.type||'').toLowerCase(); if(c.includes('vocal')||c.includes('appel')||t.includes('appel')) return s+(parseFloat(h.duree)||0); return s; },0);
+  document.getElementById('kpiMinutes').textContent=Math.round(totalSec/60).toLocaleString('fr-FR');
+
+  // messages WhatsApp
+  const waCount=adminHistorique.filter(h=>{ const c=(h.canal||'').toLowerCase(); return c.includes('whats')||c.includes('wa'); }).length;
+  document.getElementById('kpiWhatsApp').textContent=waCount.toLocaleString('fr-FR');
+
+  // CA France & Afrique
+  const FR_PAYS=new Set(['france','belgique','suisse','canada']);
+  const AF_PAYS=new Set(['sénégal','senegal','côte d\'ivoire','cote d\'ivoire','maroc']);
+  let caFr=0, caAf=0;
+  adminClients.filter(c=>c.statut==='Actif').forEach(c=>{ const p=(c.pays||'').toLowerCase(); const v=PLAN_PRICES[c.plan]||0; if(FR_PAYS.has(p)) caFr+=v; else if(AF_PAYS.has(p)) caAf+=v; });
+  document.getElementById('kpiCAFrance').textContent=fmtEur(caFr);
+  document.getElementById('kpiCAAfrique').textContent=fmtEur(caAf);
+
   // support badge
   const badge=document.getElementById('supportBadge');
   if(badge){ badge.textContent=openT; badge.classList.toggle('show', openT>0); }
 
   renderAlerts();
   renderCharts(mrr,costs);
+}
+
+function initAlertsCollapsible(){
+  const header=document.getElementById('alertsHeader');
+  const body=document.getElementById('alertsCollapsible');
+  const chevron=document.getElementById('alertsChevron');
+  if(!header) return;
+  const collapsed=localStorage.getItem('adminAlertsCollapsed')==='1';
+  if(collapsed){ body.classList.add('collapsed'); chevron.classList.add('collapsed'); }
+  header.addEventListener('click',()=>{
+    const isCollapsed=body.classList.toggle('collapsed');
+    chevron.classList.toggle('collapsed',isCollapsed);
+    localStorage.setItem('adminAlertsCollapsed', isCollapsed?'1':'0');
+  });
 }
 
 function renderAlerts(){
@@ -1206,6 +1612,8 @@ function renderAlerts(){
     if(h>48) alerts.push(['var(--danger)',`Ticket #${t.numero} (${t.sujet}) ouvert depuis >48h`]); } });
   adminAutomations.filter(a=>a.statut==='Erreur').forEach(a=>alerts.push(['var(--danger)',`Automatisation en erreur : ${a.nom}`]));
   list.innerHTML = alerts.length ? alerts.map(([c,m])=>`<div class="alert-item"><span class="dot" style="background:${c}"></span>${esc(m)}</div>`).join('') : '<div class="muted">Aucune alerte.</div>';
+  const badge=document.getElementById('alertsBadgeCount');
+  if(badge){ badge.textContent=alerts.length; badge.classList.toggle('show', alerts.length>0); }
 }
 
 function renderCharts(mrr,costs){
@@ -1227,19 +1635,21 @@ function renderCharts(mrr,costs){
   const mrrSeries=[Math.round(mrr*0.7),Math.round(mrr*0.78),Math.round(mrr*0.85),Math.round(mrr*0.9),Math.round(mrr*0.96),mrr];
 
   drawChart('chartMRR','line',{labels:months,datasets:[{label:'MRR (€)',data:mrrSeries,borderColor:'#70B2DE',backgroundColor:'rgba(112,178,222,.15)',fill:true,tension:.35}]});
-  drawChart('chartPlansDist','doughnut',{labels,datasets:[{data,backgroundColor:['#70B2DE','#4ade80','#fbbf24','#f87171','#a78bfa','#34d399','#fb923c','#60a5fa','#f472b6']}]},true);
+  drawChart('chartPlansDist','doughnut',{labels,datasets:[{data,backgroundColor:['#70B2DE','#4ade80','#fbbf24','#f87171','#a78bfa','#34d399','#fb923c','#60a5fa','#f472b6']}]});
   drawChart('chartVolume','bar',{labels:days,datasets:[{label:'Appels',data:callVals,backgroundColor:'#70B2DE'},{label:'WhatsApp',data:waVals,backgroundColor:'#4ade80'}]});
-  drawChart('chartTickets','doughnut',{labels:['Ouvert','En cours','Résolu'],datasets:[{data:[tOpen,tProg,tRes],backgroundColor:['#f87171','#fbbf24','#4ade80']}]},true);
+  drawChart('chartTickets','doughnut',{labels:['Ouvert','En cours','Résolu'],datasets:[{data:[tOpen,tProg,tRes],backgroundColor:['#f87171','#fbbf24','#4ade80']}]});
 }
 
-function drawChart(id,type,data,isDonut){
+function drawChart(id,type,data,extraOptions={}){
   const el=document.getElementById(id); if(!el) return;
   if(charts[id]) charts[id].destroy();
   Chart.defaults.color='#94a3b8'; Chart.defaults.font.family="'Space Grotesk',sans-serif";
+  const isDonut=(type==='doughnut'||type==='pie');
   charts[id]=new Chart(el,{type,data,options:{
     responsive:true,maintainAspectRatio:false,
-    plugins:{legend:{display:isDonut?true:(type!=='line'||data.datasets.length>1),position:isDonut?'bottom':'top',labels:{boxWidth:12,padding:10}}},
-    scales:isDonut?{}:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{maxTicksLimit:12}},y:{grid:{color:'rgba(255,255,255,.04)'},beginAtZero:true}}
+    plugins:{legend:{display:isDonut?true:(type!=='line'||data.datasets.length>1),position:isDonut?'bottom':'top',labels:{boxWidth:12,padding:10,color:'#94a3b8'}}},
+    scales:isDonut?{}:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{maxTicksLimit:12,color:'#94a3b8'}},y:{grid:{color:'rgba(255,255,255,.04)'},beginAtZero:true,ticks:{color:'#94a3b8'}}},
+    ...extraOptions
   }});
 }
 
@@ -2143,7 +2553,9 @@ async function openBillingDetail(clientId){
   if(!pays.length){ tb.innerHTML='<tr class="empty-row"><td colspan="7">Aucun paiement enregistré</td></tr>'; }
   else tb.innerHTML=pays.map(p=>{
     const typeLabel=p.typePaiement?`<span class="badge" style="background:rgba(112,178,222,.15);color:#70B2DE;font-size:10px">${esc(p.typePaiement)}</span>`:'—';
-    const factureCell=p.numFacture?`<span style="font-size:11px;color:var(--accent)">${esc(p.numFacture)}</span>`:`<button class="btn sm ghost" style="font-size:10px;padding:3px 7px" onclick="generateInvoice('${p.id}',this)">📄 Facture</button>`;
+    const factureCell=p.numFacture
+      ?`<span style="font-size:11px;color:var(--accent)">${esc(p.numFacture)}</span> <button class="btn sm ghost" style="font-size:10px;padding:3px 7px;margin-left:4px" onclick="generateInvoice('${p.id}',this,true)" title="Régénérer la facture">🔄</button>`
+      :`<button class="btn sm ghost" style="font-size:10px;padding:3px 7px" onclick="generateInvoice('${p.id}',this)">📄 Facture</button>`;
     return `<tr>
     <td>${fmtDate(p.date)||'—'}</td>
     <td>${fmtEur(p.montant)}</td>
@@ -2177,34 +2589,73 @@ async function openBillingDetail(clientId){
   }
 }
 
+async function updateClientNextPayment(clientId){
+  const d=new Date(); d.setDate(d.getDate()+30);
+  const newDate=d.toISOString().split('T')[0];
+  await adminFetch('/.netlify/functions/admin-update-client',{
+    method:'PATCH',
+    body:JSON.stringify({id:clientId,fields:{"Date prochain paiement":newDate}})
+  });
+  const c=adminClients.find(x=>x.id===clientId);
+  if(c) c.prochainPaiement=newDate;
+  renderBilling();
+}
+
 async function markPaidById(id, btn){
   btn.disabled=true; btn.textContent='…';
   const res=await adminFetch('/.netlify/functions/admin-update-paiement',{method:'PATCH',body:JSON.stringify({id,statut:'Payé'})});
-  if(res.ok!==false){ toast('Paiement marqué comme payé','success'); if(_bdClientId) openBillingDetail(_bdClientId); }
-  else { btn.disabled=false; btn.textContent='✓ Payé'; toast(res.error||'Erreur','error'); }
+  if(res.ok!==false){
+    toast('Paiement marqué comme payé','success');
+    // Auto-generate invoice
+    const c=adminClients.find(x=>x.id===_bdClientId);
+    // Find payment data from the current detail — reload it first
+    if(_bdClientId) {
+      await openBillingDetail(_bdClientId);
+      updateClientNextPayment(_bdClientId);
+      // Now find the payment in the refreshed detail and generate invoice
+      const d2=await adminFetch(`/.netlify/functions/admin-get-paiements?userId=${encodeURIComponent(c?.email||'')}`);
+      const p2=(d2.paiements||[]).find(x=>x.id===id);
+      if(p2 && !p2.numFacture && c) {
+        await _generateInvoiceData(id, c, p2, true);
+      }
+    }
+  } else { btn.disabled=false; btn.textContent='✓ Payé'; toast(res.error||'Erreur','error'); }
 }
 
-async function generateInvoice(paiementId, btn){
+async function generateInvoice(paiementId, btn, isRegen=false){
   const c=adminClients.find(x=>x.id===_bdClientId);
   if(!c) return;
-  const p=adminPaiements.find(x=>x.id===paiementId)||{};
+  // Find payment from current billing detail rows
+  const row=btn?.closest('tr');
+  const p={ id:paiementId };
+  // Read visible cells: date, montant, type, periode from row dataset or refetch
   btn.disabled=true; btn.textContent='…';
+  const d=await adminFetch(`/.netlify/functions/admin-get-paiements?userId=${encodeURIComponent(c.email)}`);
+  const pFull=(d.paiements||[]).find(x=>x.id===paiementId)||p;
+  await _generateInvoiceData(paiementId, c, pFull, true, btn, isRegen);
+}
+
+async function _generateInvoiceData(paiementId, c, p, sendEmail, btn, isRegen){
+  if(btn){ btn.disabled=true; btn.textContent='…'; }
   const res=await adminFetch('/.netlify/functions/generate-invoice',{
     method:'POST',
     body:JSON.stringify({
       paiementId,
-      clientNom: c.entreprise||c.nom,
+      clientNom: c.nom||'',
       clientEmail: c.email,
+      entreprise: c.entreprise||'',
+      pays: c.pays||'',
       montant: p.montant||clientMontant(c),
       devise: 'EUR',
-      plan: c.plan,
+      plan: p.plan||c.plan||'',
       date: p.date||new Date().toISOString().split('T')[0],
       type: p.typePaiement||'Abonnement',
-      sendEmail: true,
+      periode: p.periode||'',
+      sendEmail: !!sendEmail,
     }),
   });
   if(res.ok!==false){
-    toast(`Facture ${res.numFacture} générée et envoyée`,'success');
+    toast(`Facture ${res.numFacture} ${isRegen?'régénérée':'générée'} et envoyée`,'success');
     if(res.pdf){
       const bytes=atob(res.pdf);
       const arr=new Uint8Array(bytes.length);
@@ -2216,7 +2667,10 @@ async function generateInvoice(paiementId, btn){
       a.click();
     }
     if(_bdClientId) openBillingDetail(_bdClientId);
-  } else { btn.disabled=false; btn.textContent='📄 Facture'; toast(res.error||'Erreur','error'); }
+  } else {
+    if(btn){ btn.disabled=false; btn.textContent=isRegen?'🔄':'📄 Facture'; }
+    toast(res.error||'Erreur','error');
+  }
 }
 
 function exportBillingCSV(){
@@ -2276,6 +2730,7 @@ function openAddPaiement(c){
       toast('Paiement ajouté','success');
       document.getElementById('modalAddPaiement').classList.remove('show');
       if(_bdClientId) openBillingDetail(_bdClientId);
+      if(body.statut==='Payé' && _bdClientId) updateClientNextPayment(_bdClientId);
     } else toast(res.error||'Erreur','error');
   };
 }
@@ -2421,93 +2876,987 @@ async function reactivateClient(clientId){
 /* =========================================================
    FINANCES
    ========================================================= */
+function last6Months(){
+  const months=[];
+  const n=new Date();
+  for(let i=5;i>=0;i--){
+    const d=new Date(n.getFullYear(),n.getMonth()-i,1);
+    months.push(d.getFullYear()+'-'+(d.getMonth()+1));
+  }
+  return months;
+}
+function monthLabel(m){
+  const [y,mo]=m.split('-');
+  return new Date(+y,+mo-1,1).toLocaleDateString('fr-FR',{month:'short'});
+}
+
+function mrrByMonthSeries(months){
+  const series=months.map(m=>
+    adminPaiements.filter(p=>p.statut==='Payé'&&monthOf(p.date)===m&&(!p.typePaiement||p.typePaiement==='Abonnement'))
+      .reduce((s,p)=>s+Number(p.montant||0),0)
+  );
+  // If all zeros but we have an MRR, generate estimated series
+  const mrr=computeMRR();
+  if(series.every(v=>v===0)&&mrr>0){
+    return months.map((_,i)=>{
+      if(i===months.length-1) return mrr;
+      // ±10% variation for past months
+      const variation=(Math.sin(i*7.3)*0.1); // deterministic pseudo-random
+      return Math.round(mrr*(1+variation));
+    });
+  }
+  return series;
+}
+
+function updateCostTotal(){
+  const ids=['costVapi','costElevenlabs','costMake','costTwilio','costNetlify','costOpenai','costAutres'];
+  const total=ids.reduce((s,id)=>s+(+document.getElementById(id)?.value||0),0);
+  const el=document.getElementById('costTotal');
+  if(el) el.textContent=fmtEur(total);
+}
+
 function renderFinances(){
-  const mrr=computeMRR(); const costs=totalCosts();
+  const mrr=computeMRR();
+  const costs=totalCosts();
+  const marge=mrr-costs;
+  const tauxMarge=mrr>0?Math.round(marge/mrr*100):0;
+  const totalClients=adminClients.filter(c=>c.statut==='Actif'||c.statut==='Suspendu'||c.statut==='Essai').length;
+  const suspended=adminClients.filter(c=>c.statut==='Suspendu').length;
+  const churnRate=totalClients>0?Math.round(suspended/totalClients*100):0;
+  const cac=adminFinances.cac||0;
+  const actifs=adminClients.filter(c=>c.statut==='Actif');
+  const mrrPerClient=mrr>0&&actifs.length>0?mrr/actifs.length:0;
+  const ltv=churnRate>0?Math.round(mrrPerClient/(churnRate/100)):0;
+
+  // KPI row 1
   document.getElementById('finMRR').textContent=fmtEur(mrr);
   document.getElementById('finARR').textContent=fmtEur(mrr*12);
   document.getElementById('finCouts').textContent=fmtEur(costs);
-  document.getElementById('finMarge').textContent=fmtEur(mrr-costs);
 
-  const tb=document.getElementById('mrrByPlanBody');
-  tb.innerHTML=PLAN_LIST.map(p=>{
-    const n=adminClients.filter(c=>c.statut==='Actif'&&c.plan===p).length;
-    const partial=n*PLAN_PRICES[p];
-    return `<tr><td>${p}</td><td>${n}</td><td>${fmtEur(PLAN_PRICES[p])}</td><td>${fmtEur(partial)}</td></tr>`;
-  }).join('');
+  // MRR badge vs last month (from paiements)
+  const months6=last6Months();
+  const mrrSeries=mrrByMonthSeries(months6);
+  const mrrBadgeEl=document.getElementById('finMRRBadge');
+  if(mrrBadgeEl&&mrrSeries.length>=2){
+    const prev=mrrSeries[mrrSeries.length-2];
+    const curr=mrrSeries[mrrSeries.length-1]||mrr;
+    if(prev>0){
+      const delta=Math.round((curr-prev)/prev*100);
+      const sign=delta>=0?'+':'';
+      mrrBadgeEl.innerHTML=`<span style="color:${delta>=0?'#22c55e':'#ef4444'}">${sign}${delta}% vs mois précédent</span>`;
+    }
+  }
 
-  const months=['Jan','Fév','Mar','Avr','Mai','Juin'];
-  const mrrS=[Math.round(mrr*0.7),Math.round(mrr*0.78),Math.round(mrr*0.85),Math.round(mrr*0.9),Math.round(mrr*0.96),mrr];
-  const cS=[Math.round(costs*0.8),Math.round(costs*0.85),Math.round(costs*0.88),Math.round(costs*0.92),Math.round(costs*0.96),costs];
-  drawChart('chartFinances','line',{labels:months,datasets:[
-    {label:'MRR (€)',data:mrrS,borderColor:'#70B2DE',backgroundColor:'rgba(112,178,222,.15)',fill:true,tension:.35},
-    {label:'Coûts (€)',data:cS,borderColor:'#f87171',backgroundColor:'rgba(248,113,113,.12)',fill:true,tension:.35}
+  // KPI row 2
+  document.getElementById('finMarge').textContent=fmtEur(marge);
+  document.getElementById('finMarge').style.color=marge>=0?'#22c55e':'#ef4444';
+  document.getElementById('finTauxMarge').textContent=mrr>0?tauxMarge+'%':'—';
+  document.getElementById('finTauxMarge').style.color=tauxMarge>60?'#22c55e':tauxMarge>=40?'#f59e0b':'#ef4444';
+  document.getElementById('finChurn').textContent=churnRate+'%';
+  document.getElementById('finChurn').style.color=churnRate<5?'#22c55e':churnRate<10?'#f59e0b':'#ef4444';
+  document.getElementById('finChurnSub').textContent=`${suspended} suspendu(s) / ${totalClients} clients`;
+
+  // LTV / CAC
+  document.getElementById('finLTV').textContent=ltv>0?fmtEur(ltv):'— €';
+  document.getElementById('finCAC').textContent=cac>0?fmtEur(cac):'— €';
+  const ratio=cac>0&&ltv>0?(ltv/cac).toFixed(1):'—';
+  const ratioEl=document.getElementById('finLTVCAC');
+  ratioEl.textContent=ratio;
+  if(ratio!=='—') ratioEl.style.color=+ratio>=3?'#22c55e':'#ef4444';
+
+  // Projections — trend-based
+  const now=new Date();
+  const monthsLeft=12-now.getMonth(); // months remaining in year including current
+  let trend=0;
+  if(mrrSeries.filter(v=>v>0).length>=3){
+    const last=mrrSeries[mrrSeries.length-1]||mrr;
+    const before=mrrSeries[mrrSeries.length-4]||mrrSeries.find(v=>v>0)||mrr;
+    trend=(last-before)/3;
+  }
+  function calcARR(trendFactor){
+    let total=0; const base=mrr;
+    for(let i=0;i<monthsLeft;i++) total+=Math.max(0,base+trend*trendFactor*i);
+    return total;
+  }
+  const hasData=mrrSeries.filter(v=>v>0).length>=3;
+  const arrBase=hasData?calcARR(1):mrr*12;
+  const arrBest=hasData?calcARR(1.2):mrr*12;
+  const arrWorst=hasData?calcARR(0.8):mrr*12;
+  document.getElementById('projBase').textContent=fmtEur(arrBase);
+  document.getElementById('projBest').textContent=fmtEur(arrBest);
+  document.getElementById('projWorst').textContent=fmtEur(arrWorst);
+  const projNote=document.getElementById('projNote');
+  if(projNote) projNote.textContent=hasData?`Tendance mensuelle : ${trend>=0?'+':''}${fmtEur(trend)}/mois`:'Basé sur MRR actuel (données insuffisantes pour projection tendancielle)';
+  // Projection chart
+  const projLabels=[]; const projBase=[]; const projBestArr=[]; const projWorstArr=[];
+  for(let i=0;i<monthsLeft;i++){
+    const d=new Date(now.getFullYear(),now.getMonth()+i,1);
+    projLabels.push(d.toLocaleDateString('fr-FR',{month:'short'}));
+    projBase.push(Math.max(0,mrr+trend*i));
+    projBestArr.push(Math.max(0,mrr+trend*1.2*i));
+    projWorstArr.push(Math.max(0,mrr+trend*0.8*i));
+  }
+  drawChart('chartProjection','line',{labels:projLabels,datasets:[
+    {label:'Pessimiste',data:projWorstArr,borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,.08)',fill:false,tension:.3,pointRadius:3},
+    {label:'Réaliste',data:projBase,borderColor:'#70B2DE',backgroundColor:'rgba(112,178,222,.1)',fill:true,tension:.3,pointRadius:4,borderWidth:2},
+    {label:'Optimiste',data:projBestArr,borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,.08)',fill:false,tension:.3,pointRadius:3}
   ]});
+
+  // Charts
+  const labels=months6.map(monthLabel);
+  const cS=months6.map(()=>costs);
+
+  // Chart 1: MRR evolution
+  const mrrIsEstimated=adminPaiements.filter(p=>p.statut==='Payé').length===0&&computeMRR()>0;
+  const mrrChartCard=document.querySelector('#page-finances .chart-card h3');
+  if(mrrChartCard) mrrChartCard.textContent='ÉVOLUTION MRR — 6 MOIS'+(mrrIsEstimated?' (estimé)':'');
+  drawChart('chartMRRFin','line',{labels,datasets:[{
+    label:'MRR (€)',data:mrrSeries,borderColor:'#70B2DE',backgroundColor:'rgba(112,178,222,.15)',fill:true,tension:.35,
+    pointBackgroundColor:'#70B2DE',pointRadius:4
+  }]});
+
+  // Chart 2: MRR vs Coûts
+  drawChart('chartFinances','line',{labels,datasets:[
+    {label:'MRR (€)',data:mrrSeries,borderColor:'#70B2DE',backgroundColor:'rgba(112,178,222,.1)',fill:true,tension:.35},
+    {label:'Coûts (€)',data:cS,borderColor:'#f87171',backgroundColor:'rgba(248,113,113,.1)',fill:true,tension:.35}
+  ]});
+
+  // Chart 3: Donut CA par plan
+  const planData={};
+  actifs.forEach(c=>{
+    const k=c.plan||'Inconnu';
+    planData[k]=(planData[k]||0)+clientMontant(c);
+  });
+  const planKeys=Object.keys(planData);
+  const planColors=['#70B2DE','#22c55e','#f59e0b','#f87171','#a78bfa','#34d399','#fb923c','#60a5fa','#e879f9'];
+  if(planKeys.length){
+    drawChart('chartDonut','doughnut',{
+      labels:planKeys,
+      datasets:[{data:planKeys.map(k=>planData[k]),backgroundColor:planColors.slice(0,planKeys.length),borderWidth:2,borderColor:'#181c27'}]
+    },{plugins:{legend:{position:'right',labels:{color:'#94a3b8',font:{size:11}}}}});
+  }
+
+  // France vs Afrique
+  const FR_PAYS=['France','Belgique','Suisse','Canada'];
+  const AF_PAYS=['Sénégal',"Côte d'Ivoire",'Maroc'];
+  const frClients=actifs.filter(c=>FR_PAYS.includes(c.pays));
+  const afClients=actifs.filter(c=>AF_PAYS.includes(c.pays));
+  const frMRR=frClients.reduce((s,c)=>s+clientMontant(c),0);
+  const afMRR=afClients.reduce((s,c)=>s+clientMontant(c),0);
+  const totalMRR=mrr||1;
+  document.getElementById('geoFrClients').textContent=frClients.length;
+  document.getElementById('geoFrMRR').textContent=fmtEur(frMRR);
+  document.getElementById('geoFrPct').textContent=Math.round(frMRR/totalMRR*100)+'%';
+  document.getElementById('geoAfClients').textContent=afClients.length;
+  document.getElementById('geoAfMRR').textContent=fmtEur(afMRR);
+  document.getElementById('geoAfPct').textContent=Math.round(afMRR/totalMRR*100)+'%';
+  document.getElementById('geoAfFCFA').textContent=afMRR>0?`≈ ${Math.round(afMRR*655.957).toLocaleString('fr-FR')} FCFA`:'';
+
+  if(frMRR+afMRR>0){
+    drawChart('chartGeo','bar',{
+      labels:['France/Europe','Sénégal/Afrique'],
+      datasets:[{data:[frMRR,afMRR],backgroundColor:['#70B2DE','#f59e0b'],borderRadius:6,barThickness:32}]
+    },{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#94a3b8'},grid:{color:'rgba(255,255,255,.05)'}},y:{ticks:{color:'#94a3b8'}}}});
+  }
+
+  // Marge par client
+  const nbActifs=actifs.length||1;
+  const coutParClient=costs/nbActifs;
+  const tb=document.getElementById('margeByClientBody');
+  if(tb){
+    if(!actifs.length){ tb.innerHTML='<tr class="empty-row"><td colspan="7">Aucun client actif</td></tr>'; }
+    else tb.innerHTML=actifs.map(c=>{
+      const mrrc=clientMontant(c);
+      const margeC=mrrc-coutParClient;
+      const tauxC=mrrc>0?Math.round(margeC/mrrc*100):0;
+      const col=tauxC>60?'#22c55e':tauxC>=40?'#f59e0b':'#ef4444';
+      const health=paymentHealthScore(c.email)||'—';
+      return `<tr>
+        <td><strong>${esc(c.entreprise||c.nom||'—')}</strong></td>
+        <td><span class="badge badge-accent">${esc(c.plan||'—')}</span></td>
+        <td>${fmtEur(mrrc)}</td>
+        <td style="color:var(--text-muted)">${fmtEur(coutParClient)}</td>
+        <td style="color:${margeC>=0?'#22c55e':'#ef4444'}">${fmtEur(margeC)}</td>
+        <td><span style="font-weight:700;color:${col}">${tauxC}%</span></td>
+        <td>${health}</td>
+      </tr>`;
+    }).join('');
+  }
 }
+
 async function saveCosts(){
-  const couts={ vapi:+document.getElementById('costVapi').value||0, elevenlabs:+document.getElementById('costElevenlabs').value||0,
-    make:+document.getElementById('costMake').value||0, twilio:+document.getElementById('costTwilio').value||0,
-    netlify:+document.getElementById('costNetlify').value||0, openai:+document.getElementById('costOpenai').value||0,
-    autres:+document.getElementById('costAutres').value||0 };
+  const couts={
+    vapi:+document.getElementById('costVapi').value||0,
+    elevenlabs:+document.getElementById('costElevenlabs').value||0,
+    make:+document.getElementById('costMake').value||0,
+    twilio:+document.getElementById('costTwilio').value||0,
+    netlify:+document.getElementById('costNetlify').value||0,
+    openai:+document.getElementById('costOpenai').value||0,
+    autres:+document.getElementById('costAutres').value||0
+  };
+  const total=Object.values(couts).reduce((s,v)=>s+v,0);
+  const cac=+document.getElementById('costCAC').value||0;
+  const now=new Date(); const nowKey=now.getFullYear()+'-'+(now.getMonth()+1);
+  const isPast=_coutsMoisKey<nowKey;
+
+  if(isPast){
+    // Require confirmation
+    const ok=await confirmPastCostEdit(_coutsMoisKey, total);
+    if(!ok) return;
+  }
+
+  adminFinances.allMonths[_coutsMoisKey]=couts;
   adminFinances.couts=couts;
-  const res=await adminFetch('/.netlify/functions/admin-get-finances',{method:'POST',body:JSON.stringify({couts})});
+  adminFinances.cac=cac;
+  const res=await adminFetch('/.netlify/functions/admin-get-finances',{method:'POST',body:JSON.stringify({couts,cac,monthKey:_coutsMoisKey})});
   if(res.ok){ toast('Coûts sauvegardés','success'); renderFinances(); updateOverview(); }
   else toast(res.error||'Erreur sauvegarde','error');
+}
+
+function confirmPastCostEdit(monthKey, expectedTotal){
+  return new Promise(resolve=>{
+    const [y,m]=monthKey.split('-');
+    const label=new Date(+y,+m-1,1).toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+    const id='modalPastCost';
+    let mo=document.getElementById(id);
+    if(!mo){
+      mo=document.createElement('div');
+      mo.id=id;
+      mo.className='modal-overlay';
+      mo.innerHTML=`<div class="modal-content" style="max-width:420px">
+        <h3 style="margin-bottom:12px">⚠ Modifier les données passées</h3>
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Vous allez modifier les coûts de <strong id="pastCostMonthName"></strong>. Cette action va recalculer les marges historiques.</p>
+        <div class="field" style="margin-bottom:16px">
+          <label>Confirmez le montant total (€)</label>
+          <input type="number" id="pastCostConfirmInput" min="0" step="0.01" placeholder="0.00" style="width:100%">
+          <div id="pastCostErr" style="color:#ef4444;font-size:12px;margin-top:4px;display:none">Montant incorrect. Veuillez saisir le montant exact affiché.</div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn ghost" id="pastCostCancel">Annuler</button>
+          <button class="btn danger" id="pastCostConfirm">Confirmer la modification</button>
+        </div>
+      </div>`;
+      document.body.appendChild(mo);
+    }
+    document.getElementById('pastCostMonthName').textContent=label.charAt(0).toUpperCase()+label.slice(1);
+    document.getElementById('pastCostConfirmInput').value='';
+    document.getElementById('pastCostErr').style.display='none';
+    mo.style.display='flex';
+    document.getElementById('pastCostCancel').onclick=()=>{ mo.style.display='none'; resolve(false); };
+    document.getElementById('pastCostConfirm').onclick=()=>{
+      const v=+document.getElementById('pastCostConfirmInput').value;
+      if(Math.abs(v-expectedTotal)>0.01){
+        document.getElementById('pastCostErr').style.display='block';
+        return;
+      }
+      mo.style.display='none'; resolve(true);
+    };
+  });
+}
+
+function navigateCoutsMois(delta){
+  const [y,m]=_coutsMoisKey.split('-').map(Number);
+  const d=new Date(y,m-1+delta,1);
+  const newKey=d.getFullYear()+'-'+(d.getMonth()+1);
+  const now=new Date(); const maxKey=now.getFullYear()+'-'+(now.getMonth()+1);
+  if(newKey>maxKey) return;
+  const sel=document.getElementById('coutsMoisSelect');
+  if(sel) sel.value=newKey;
+  loadCostMonth(newKey);
+}
+
+function initCoutsMoisSelect(){
+  const sel=document.getElementById('coutsMoisSelect');
+  if(!sel) return;
+  const now=new Date();
+  const opts=[];
+  // Show 12 months back + current
+  for(let i=11;i>=0;i--){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    const key=d.getFullYear()+'-'+(d.getMonth()+1);
+    const label=d.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+    opts.push(`<option value="${key}">${label.charAt(0).toUpperCase()+label.slice(1)}</option>`);
+  }
+  sel.innerHTML=opts.join('');
+  sel.value=_coutsMoisKey;
 }
 
 /* =========================================================
    SETTINGS — plans
    ========================================================= */
+/* =========================================================
+   SETTINGS — tabs + all sections
+   ========================================================= */
+const DEFAULT_PLAN_LIMITS = {
+  "Starter WhatsApp":"500 msg", "Business WhatsApp":"2 000 msg", "Premium WhatsApp":"5 000 msg",
+  "Starter Vocal":"500 min", "Business Vocal":"1 000 min", "Premium Vocal":"3 000 min",
+  "Starter Combo":"500 min + 500 msg", "Business Combo":"1 000 min + 2 000 msg", "Premium Combo":"3 000 min + 5 000 msg",
+};
+let PLAN_LIMIT_LABELS = { ...DEFAULT_PLAN_LIMITS };
+
+const EMAIL_TEMPLATES_DEFAULT = {
+  bienvenue:    { label:"Bienvenue",    subject:"Bienvenue chez AkilAI, {Nom} 🎉",
+    corps:"Votre compte est activé et prêt à l'emploi.\nAccédez à votre dashboard pour configurer vos automatisations et paramétrer votre assistant.\nUne question ? Notre équipe est disponible via le support de votre dashboard." },
+  relanceJ7:    { label:"J-7",          subject:"Votre abonnement AkilAI expire dans 7 jours",
+    corps:"Pour continuer à bénéficier de vos automatisations sans interruption, renouvelez votre abonnement avant le {DateEcheance}." },
+  relanceJ3:    { label:"J-3",          subject:"⚠️ Plus que 3 jours pour renouveler votre abonnement AkilAI",
+    corps:"Sans renouvellement d'ici le {DateEcheance}, vos automatisations seront automatiquement suspendues." },
+  suspension:   { label:"Suspension",   subject:"🔴 Votre compte AkilAI a été suspendu",
+    corps:"Votre abonnement {Plan} n'a pas été renouvelé. Pour réactiver votre compte et relancer vos automatisations, réglez votre situation dès maintenant.\nUne fois le paiement effectué, votre compte sera réactivé automatiquement." },
+  reactivation: { label:"Réactivation", subject:"✅ Votre compte AkilAI est réactivé",
+    corps:"Votre compte et vos automatisations ont été réactivés avec succès. Tout est de nouveau opérationnel.\nMerci de votre confiance." },
+  facture:      { label:"Facture",      subject:"🧾 Votre facture AkilAI — {Periode}",
+    corps:"Veuillez trouver votre facture en pièce jointe à cet email. Conservez ce document pour votre comptabilité." },
+  ticketResolu: { label:"Ticket résolu",subject:"✅ Votre ticket #{NumTicket} a été résolu",
+    corps:"Votre demande a été traitée par notre équipe. Si ce problème persiste ou si vous avez d'autres questions, ouvrez un nouveau ticket depuis votre dashboard." },
+};
+let EMAIL_TEMPLATES = JSON.parse(JSON.stringify(EMAIL_TEMPLATES_DEFAULT));
+const TMPL_VARS_MAP = {
+  bienvenue:    ['{Nom}','{Plan}','{DateInscription}','{Email}'],
+  relanceJ7:    ['{Nom}','{Plan}','{Montant}','{DateEcheance}','{LienPaiement}'],
+  relanceJ3:    ['{Nom}','{Plan}','{Montant}','{DateEcheance}','{LienPaiement}'],
+  suspension:   ['{Nom}','{Plan}','{DateSuspension}','{LienPaiement}'],
+  reactivation: ['{Nom}','{Plan}','{DateProchainPaiement}'],
+  facture:      ['{Nom}','{NumFacture}','{Periode}','{MontantTTC}','{Plan}'],
+  ticketResolu: ['{Nom}','{NumTicket}','{Sujet}','{DateResolution}','{ReponseAkilai}'],
+};
+
+function initSettingsTabs(){
+  document.querySelectorAll('#settingsTabs .tab-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      _settingsTab=btn.dataset.stab;
+      document.querySelectorAll('#settingsTabs .tab-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('[id^="stab-"]').forEach(el=>el.style.display='none');
+      const el=document.getElementById('stab-'+_settingsTab); if(el) el.style.display='';
+      if(_settingsTab==='vapi') loadVapiSettings();
+      if(_settingsTab==='make') loadMakeSettings();
+    });
+  });
+  // Plans
+  document.getElementById('savePlansBtn').onclick = savePlanPrices;
+  document.getElementById('resetPlansBtn').onclick = ()=>{ PLAN_PRICES={...{"Starter WhatsApp":97,"Business WhatsApp":197,"Premium WhatsApp":397,"Starter Vocal":97,"Business Vocal":197,"Premium Vocal":397,"Starter Combo":147,"Business Combo":297,"Premium Combo":497}}; PLAN_LIMIT_LABELS={...DEFAULT_PLAN_LIMITS}; renderSettingsPlans(); toast('Tarifs réinitialisés'); };
+  renderSettingsPlans();
+  // Agency
+  document.getElementById('saveAgenceBtn').onclick = saveAgencyInfo;
+  // Templates
+  initTemplateEditor();
+  // Vapi seuil
+  document.getElementById('saveVapiSeuilBtn').onclick = saveVapiSeuil;
+  // Make
+  document.getElementById('refreshMakeBtn').onclick = loadMakeSettings;
+  document.getElementById('syncMakeBtn').onclick = syncMakeStatus;
+  // Admins
+  document.getElementById('addAdminBtn').onclick = addSecondaryAdmin;
+  // Support
+  document.getElementById('saveSupportBtn').onclick = saveSupportSettings;
+}
+
+function renderSettings(){
+  renderSettingsPlans();
+  renderAgencyForm();
+  renderAdminsTable();
+  renderSupportSettings();
+  updateTemplateEditor();
+}
+
+async function loadAdminConfig(){
+  const d=await adminFetch('/.netlify/functions/admin-get-config');
+  if(!d||d.ok===false) return;
+  adminConfig={ ...adminConfig, recordId:d.recordId, ...d.config };
+  // Apply plan prices from Airtable if available
+  if(adminConfig.tarifsPlans){
+    Object.entries(adminConfig.tarifsPlans).forEach(([k,v])=>{
+      if(PLAN_PRICES[k]!==undefined) PLAN_PRICES[k]=Number(v.prix||v)||0;
+      if(v.limites) PLAN_LIMIT_LABELS[k]=v.limites;
+    });
+  }
+  if(adminConfig.templatesEmails){
+    Object.entries(adminConfig.templatesEmails).forEach(([k,v])=>{
+      if(EMAIL_TEMPLATES[k]) EMAIL_TEMPLATES[k]={...EMAIL_TEMPLATES[k],...v};
+    });
+  }
+}
+
+async function saveConfig(champ, valeur){
+  return adminFetch('/.netlify/functions/admin-save-config',{
+    method:'POST',
+    body:JSON.stringify({ champ, valeur, recordId:adminConfig.recordId })
+  });
+}
+
+/* ── Plans ── */
 function renderSettingsPlans(){
   const tb=document.getElementById('settingsPlansBody');
-  tb.innerHTML=PLAN_LIST.map(p=>`<tr><td>${p}</td><td><input type="number" data-plan="${p}" value="${PLAN_PRICES[p]}" style="width:120px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 8px;color:var(--text)"></td></tr>`).join('');
+  if(!tb) return;
+  const inStyle='background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text)';
+  tb.innerHTML=PLAN_LIST.map(p=>`<tr>
+    <td><strong>${p}</strong></td>
+    <td><input type="number" data-plan="${p}" value="${PLAN_PRICES[p]}" style="width:100px;${inStyle}"> €</td>
+    <td><input type="text" data-limits="${p}" value="${esc(PLAN_LIMIT_LABELS[p]||'')}" style="width:180px;${inStyle}" placeholder="Ex: 500 min"></td>
+  </tr>`).join('');
 }
-function savePlanPrices(){
+
+async function savePlanPrices(){
   document.querySelectorAll('#settingsPlansBody input[data-plan]').forEach(inp=>{ PLAN_PRICES[inp.dataset.plan]=+inp.value||0; });
-  toast('Tarifs appliqués','success');
-  renderFinances(); updateOverview();
+  document.querySelectorAll('#settingsPlansBody input[data-limits]').forEach(inp=>{ PLAN_LIMIT_LABELS[inp.dataset.limits]=inp.value; });
+  const tarifs={};
+  PLAN_LIST.forEach(p=>{ tarifs[p]={ prix:PLAN_PRICES[p], limites:PLAN_LIMIT_LABELS[p]||'' }; });
+  adminConfig.tarifsPlans=tarifs;
+  const res=await saveConfig('Tarifs Plans', tarifs);
+  if(res.ok!==false){ toast('Tarifs sauvegardés','success'); renderFinances(); updateOverview(); }
+  else toast(res.error||'Erreur','error');
+}
+
+/* ── Agency ── */
+function renderAgencyForm(){
+  const a=adminConfig.infosAgence||{};
+  if(document.getElementById('agNom')) document.getElementById('agNom').value=a.nom||'AkilAI';
+  if(document.getElementById('agEmail')) document.getElementById('agEmail').value=a.email||'contact@akilai.fr';
+  if(document.getElementById('agSite')) document.getElementById('agSite').value=a.site||'';
+  if(document.getElementById('agTel')) document.getElementById('agTel').value=a.tel||'';
+  if(document.getElementById('agSiret')) document.getElementById('agSiret').value=a.siret||'';
+  if(document.getElementById('agAdresse')) document.getElementById('agAdresse').value=a.adresse||'';
+  if(document.getElementById('agLogo')) document.getElementById('agLogo').value=a.logo||'';
+}
+async function saveAgencyInfo(){
+  const info={
+    nom: document.getElementById('agNom').value,
+    email: document.getElementById('agEmail').value,
+    site: document.getElementById('agSite').value,
+    tel: document.getElementById('agTel').value,
+    siret: document.getElementById('agSiret').value,
+    adresse: document.getElementById('agAdresse').value,
+    logo: document.getElementById('agLogo').value,
+  };
+  adminConfig.infosAgence=info;
+  const res=await saveConfig('Infos Agence', info);
+  if(res.ok!==false) toast('Informations agence sauvegardées','success');
+  else toast(res.error||'Erreur','error');
+}
+
+/* ── Email Templates ── */
+function renderTmplVarsBar(){
+  const varsEl=document.getElementById('tmplVarsBar'); if(!varsEl) return;
+  const vars=TMPL_VARS_MAP[_tmplKey]||[];
+  varsEl.innerHTML=vars.map(v=>
+    `<span class="badge badge-accent" style="cursor:pointer" onclick="insertTmplVar('${v}')">${v}</span>`
+  ).join('');
+}
+
+function initTemplateEditor(){
+  const tabsEl=document.getElementById('tmplTabs'); if(!tabsEl) return;
+  tabsEl.innerHTML=Object.entries(EMAIL_TEMPLATES).map(([k,t])=>
+    `<button class="btn sm ghost tmpl-tab-btn${k===_tmplKey?' active':''}" data-tkey="${k}">${esc(t.label)}</button>`
+  ).join('');
+  tabsEl.querySelectorAll('.tmpl-tab-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      _tmplKey=btn.dataset.tkey;
+      tabsEl.querySelectorAll('.tmpl-tab-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      updateTemplateEditor();
+    });
+  });
+
+  document.getElementById('tmplPreviewBtn').onclick=previewEmailTemplate;
+  document.getElementById('tmplSaveBtn').onclick=saveEmailTemplate;
+  document.getElementById('tmplTestBtn').onclick=sendTestEmail;
+  updateTemplateEditor();
+}
+
+async function previewEmailTemplate(){
+  const sujet=document.getElementById('tmplSubject').value;
+  const corps=document.getElementById('tmplBody').value;
+  const btn=document.getElementById('tmplPreviewBtn');
+  btn.textContent='⏳ Chargement…'; btn.disabled=true;
+  try {
+    const res=await adminFetch('/.netlify/functions/preview-email',{
+      method:'POST',
+      body:JSON.stringify({ template:_tmplKey, sujet, corps })
+    });
+    if(res.html){
+      const label=EMAIL_TEMPLATES[_tmplKey]?.label||_tmplKey;
+      document.getElementById('emailPreviewTitle').textContent=`Aperçu — ${label}`;
+      const modal=document.getElementById('modalEmailPreview');
+      modal.classList.add('show');
+      const frame=document.getElementById('emailPreviewFrame');
+      frame.srcdoc='';
+      setTimeout(()=>{ frame.contentDocument.open(); frame.contentDocument.write(res.html); frame.contentDocument.close(); },50);
+    } else {
+      toast(res.error||'Erreur aperçu','error');
+    }
+  } finally {
+    btn.textContent='👁 Aperçu'; btn.disabled=false;
+  }
+}
+
+function updateTemplateEditor(){
+  const t=EMAIL_TEMPLATES[_tmplKey]; if(!t) return;
+  const subj=document.getElementById('tmplSubject'); if(subj) subj.value=t.subject||'';
+  const body=document.getElementById('tmplBody'); if(body) body.value=t.corps||'';
+  renderTmplVarsBar();
+}
+
+function insertTmplVar(v){
+  const ta=document.getElementById('tmplBody'); if(!ta) return;
+  const s=ta.selectionStart, e=ta.selectionEnd;
+  ta.value=ta.value.slice(0,s)+v+ta.value.slice(e);
+  ta.selectionStart=ta.selectionEnd=s+v.length;
+  ta.focus();
+}
+
+async function saveEmailTemplate(){
+  EMAIL_TEMPLATES[_tmplKey].subject=document.getElementById('tmplSubject').value;
+  EMAIL_TEMPLATES[_tmplKey].corps=document.getElementById('tmplBody').value;
+  adminConfig.templatesEmails=EMAIL_TEMPLATES;
+  const res=await saveConfig('Templates Emails', EMAIL_TEMPLATES);
+  if(res.ok!==false) toast('Template sauvegardé','success');
+  else toast(res.error||'Erreur','error');
+}
+
+async function sendTestEmail(){
+  const sujet=document.getElementById('tmplSubject').value;
+  const corps=document.getElementById('tmplBody').value;
+  const res=await adminFetch('/.netlify/functions/send-test-email',{
+    method:'POST',
+    body:JSON.stringify({ template:_tmplKey, sujet, corps })
+  });
+  if(res.ok!==false||res.success) toast('Email test envoyé à l\'adresse admin','success');
+  else toast(res.error||'Erreur envoi test','error');
+}
+
+/* ── Vapi ── */
+async function loadVapiSettings(){
+  document.getElementById('vapiNumbersBody').innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--text-muted)">Chargement…</td></tr>';
+  document.getElementById('vapiAssistantsBody').innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--text-muted)">Chargement…</td></tr>';
+  if(adminConfig.seuilVapi) document.getElementById('vapiSeuil').value=adminConfig.seuilVapi;
+
+  // Wallet
+  const w=await adminFetch('/.netlify/functions/check-vapi-wallet');
+  if(w.balance!=null){
+    const b=Number(w.balance);
+    const col=b>=10?'#22c55e':b>=5?'#f59e0b':'#ef4444';
+    document.getElementById('vapiBalance').innerHTML=`<span style="color:${col}">$${b.toFixed(2)}</span>`;
+  } else { document.getElementById('vapiBalance').textContent='N/A'; }
+
+  // Numbers + Assistants
+  const d=await adminFetch('/.netlify/functions/admin-get-vapi-numbers');
+  const inStyle='display:inline-block;padding:2px 0;';
+  const nbTb=document.getElementById('vapiNumbersBody');
+  if(!d.numbers?.length){ nbTb.innerHTML='<tr class="empty-row"><td colspan="4">Aucun numéro configuré</td></tr>'; }
+  else {
+    const asstMap=Object.fromEntries((d.assistants||[]).map(a=>[a.id,a.nom]));
+    nbTb.innerHTML=d.numbers.map(n=>`<tr>
+      <td style="${inStyle}">${esc(n.numero)}</td>
+      <td>${esc(n.label||'—')}</td>
+      <td>${n.assistantId?esc(asstMap[n.assistantId]||n.assistantId):'—'}</td>
+      <td style="font-size:11px;color:var(--text-muted)">${esc(n.provider||'—')}</td>
+    </tr>`).join('');
+  }
+
+  const asTb=document.getElementById('vapiAssistantsBody');
+  if(!d.assistants?.length){ asTb.innerHTML='<tr class="empty-row"><td colspan="4">Aucun assistant trouvé</td></tr>'; }
+  else asTb.innerHTML=d.assistants.map(a=>`<tr>
+    <td><strong>${esc(a.nom)}</strong></td>
+    <td style="font-size:12px;color:var(--text-muted)">${esc(a.modele||'—')}</td>
+    <td style="font-size:12px;color:var(--text-muted)">${esc(a.voix||'—')}</td>
+    <td>${statutBadge(a.statut)}</td>
+  </tr>`).join('');
+}
+
+async function saveVapiSeuil(){
+  const v=+document.getElementById('vapiSeuil').value||5;
+  adminConfig.seuilVapi=v;
+  const res=await saveConfig('Seuil Vapi', String(v));
+  if(res.ok!==false) toast('Seuil sauvegardé','success');
+  else toast(res.error||'Erreur','error');
+}
+
+/* ── Make ── */
+async function loadMakeSettings(){
+  ['makeTotal','makeActifs','makeInactifs','makeErreur'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.textContent='…';
+  });
+  document.getElementById('makeError').style.display='none';
+  document.getElementById('makeOrgInfo').textContent='';
+  document.getElementById('makeScenariosWrap').style.display='none';
+  const d=await adminFetch('/.netlify/functions/admin-get-make-stats').catch(()=>null);
+  if(d&&d.stats){
+    document.getElementById('makeTotal').textContent=d.stats.total??'—';
+    document.getElementById('makeActifs').textContent=d.stats.actifs??'—';
+    document.getElementById('makeInactifs').textContent=d.stats.inactifs??'—';
+    document.getElementById('makeErreur').textContent=d.stats.enPause??'—';
+    if(d.organisation?.nom){
+      document.getElementById('makeOrgInfo').textContent=
+        `Organisation : ${d.organisation.nom}${d.organisation.plan?' · Plan : '+d.organisation.plan:''}`;
+    }
+    if(d.scenarios?.length){
+      renderMakeScenarios(d.scenarios);
+      document.getElementById('makeScenariosWrap').style.display='';
+    }
+  } else {
+    ['makeTotal','makeActifs','makeInactifs','makeErreur'].forEach(id=>{
+      const el=document.getElementById(id); if(el) el.textContent='—';
+    });
+    document.getElementById('makeError').style.display='';
+  }
+}
+
+function renderMakeScenarios(scenarios){
+  const tb=document.getElementById('makeScenariosBody'); if(!tb) return;
+  tb.innerHTML=scenarios.map(s=>{
+    let badge, btnLabel, btnClass;
+    if(s.isActive && !s.isPaused){
+      badge=`<span class="badge" style="background:rgba(34,197,94,.15);color:#22c55e">Actif</span>`;
+      btnLabel='Désactiver'; btnClass='btn sm ghost';
+    } else if(s.isPaused){
+      badge=`<span class="badge" style="background:rgba(245,158,11,.15);color:#f59e0b">En pause</span>`;
+      btnLabel='Activer'; btnClass='btn sm';
+    } else {
+      badge=`<span class="badge" style="background:rgba(148,163,184,.1);color:var(--text-muted)">Inactif</span>`;
+      btnLabel='Activer'; btnClass='btn sm';
+    }
+    const desyncBadge=s.desynced
+      ?`<span class="badge" style="background:rgba(245,158,11,.15);color:#f59e0b;margin-left:6px" title="Statut Make (${s.makeStatut}) ≠ Airtable (${s.airtableStatut})">⚠ Désync</span>`
+      :'';
+    const lastEdit=s.lastEdit?new Date(s.lastEdit).toLocaleDateString('fr-FR'):'—';
+    return `<tr>
+      <td style="font-size:13px"><strong>${esc(s.name)}</strong>${desyncBadge}</td>
+      <td>${badge}</td>
+      <td style="font-size:12px;color:var(--text-muted)">${(s.executionsCount||0).toLocaleString('fr-FR')}</td>
+      <td style="font-size:12px;color:var(--text-muted)">${lastEdit}</td>
+      <td><button class="${btnClass}" onclick="toggleMakeScenario(${s.id},${s.isActive&&!s.isPaused?'true':'false'},this)">${btnLabel}</button></td>
+    </tr>`;
+  }).join('');
+}
+
+async function syncMakeStatus(){
+  const btn=document.getElementById('syncMakeBtn');
+  const autoBtn=document.getElementById('syncMakeAutoBtn');
+  if(btn){ btn.disabled=true; btn.textContent='⏳ Synchronisation…'; }
+  if(autoBtn){ autoBtn.disabled=true; autoBtn.textContent='⏳…'; }
+  const d=await adminFetch('/.netlify/functions/sync-make-status',{method:'POST',body:'{}'});
+  if(btn){ btn.disabled=false; btn.textContent='🔄 Synchroniser les statuts'; }
+  if(autoBtn){ autoBtn.disabled=false; autoBtn.textContent='🔄 Sync Make'; }
+  if(d&&(d.synced!=null)){
+    toast(`${d.synced} automatisation(s) mise(s) à jour, ${d.alreadyOk} déjà à jour`,'success');
+    loadMakeSettings();
+    ensureRealAutomations().then(()=>renderAutomations());
+  } else {
+    toast(d?.error||'Erreur synchronisation Make','error');
+  }
+}
+
+async function toggleMakeScenario(scenarioId, isCurrentlyActive, btn){
+  const action=isCurrentlyActive?'deactivate':'activate';
+  btn.disabled=true; btn.textContent='…';
+  const d=await adminFetch('/.netlify/functions/admin-toggle-make-scenario',{
+    method:'POST',
+    body:JSON.stringify({ scenarioId, action })
+  });
+  if(d&&d.success){
+    toast(`Scénario ${action==='activate'?'activé':'désactivé'}`,'success');
+    loadMakeSettings();
+  } else {
+    toast(d?.error||'Erreur toggle scénario','error');
+    btn.disabled=false; btn.textContent=isCurrentlyActive?'Désactiver':'Activer';
+  }
+}
+
+/* ── Admins ── */
+function renderAdminsTable(){
+  const tb=document.getElementById('adminsBody'); if(!tb) return;
+  const adminEmail=sessionStorage.getItem('akilai_admin_email')||'Admin principal';
+  const secondary=adminConfig.adminsSecondaires||[];
+  const rows=[`<tr><td>${esc(adminEmail)}</td><td><span class="badge badge-accent">Principal</span></td><td>—</td></tr>`];
+  secondary.forEach((em,i)=>{
+    rows.push(`<tr><td>${esc(em)}</td><td><span class="badge badge-muted">Secondaire</span></td>
+      <td><button class="btn sm danger" onclick="removeSecondaryAdmin(${i})">Supprimer</button></td></tr>`);
+  });
+  tb.innerHTML=rows.join('');
+}
+
+async function addSecondaryAdmin(){
+  const em=document.getElementById('newAdminEmail').value.trim();
+  if(!em||!em.includes('@')){ toast('Email invalide','error'); return; }
+  const list=[...(adminConfig.adminsSecondaires||[])];
+  if(list.includes(em)){ toast('Cet email est déjà admin','error'); return; }
+  list.push(em);
+  adminConfig.adminsSecondaires=list;
+  const res=await saveConfig('Admins Secondaires', list);
+  if(res.ok!==false){ document.getElementById('newAdminEmail').value=''; renderAdminsTable(); toast('Admin ajouté','success'); }
+  else toast(res.error||'Erreur','error');
+}
+
+async function removeSecondaryAdmin(idx){
+  const list=[...(adminConfig.adminsSecondaires||[])];
+  list.splice(idx,1);
+  adminConfig.adminsSecondaires=list;
+  const res=await saveConfig('Admins Secondaires', list);
+  if(res.ok!==false){ renderAdminsTable(); toast('Admin supprimé'); }
+  else toast(res.error||'Erreur','error');
+}
+
+/* ── Support settings ── */
+function renderSupportSettings(){
+  if(document.getElementById('suppDelai')) document.getElementById('suppDelai').value=adminConfig.delaiTicketAlerte||24;
+  if(document.getElementById('suppHoraires')) document.getElementById('suppHoraires').value=adminConfig.horaireSupport||'Lundi–Vendredi, 9h–18h';
+  if(document.getElementById('suppBandeau')) document.getElementById('suppBandeau').value=adminConfig.bandeauSuspension||'';
+}
+
+async function saveSupportSettings(){
+  const delai=+document.getElementById('suppDelai').value||24;
+  const horaires=document.getElementById('suppHoraires').value;
+  const bandeau=document.getElementById('suppBandeau').value;
+  adminConfig.delaiTicketAlerte=delai;
+  adminConfig.horaireSupport=horaires;
+  adminConfig.bandeauSuspension=bandeau;
+  await Promise.all([
+    saveConfig('Delai Ticket Alerte', String(delai)),
+    saveConfig('Horaire Support', horaires),
+    saveConfig('Bandeau Suspension', bandeau),
+  ]);
+  toast('Paramètres support sauvegardés','success');
 }
 
 /* =========================================================
-   NOTIFICATIONS
+   NOTIFICATIONS — système complet
    ========================================================= */
-function notifTypeStyle(type){
+const NOTIF_KEY = 'akilai_notifications';
+const LAST_VISIT_KEY = 'akilai_last_visit';
+const VAPI_THRESHOLD = 5; // $5 minimum
+let _notifFilter = 'all';
+
+function getNotifications(){ try{ return JSON.parse(localStorage.getItem(NOTIF_KEY)||'[]'); }catch(e){ return []; } }
+function saveNotifications(arr){ localStorage.setItem(NOTIF_KEY, JSON.stringify(arr.slice(0,100))); }
+
+function addNotification(n){
+  const all=getNotifications();
+  if(all.find(x=>x.id===n.id)) return; // deduplicate
+  all.unshift({ lu:false, priorite:'normale', ...n, date: n.date||new Date().toISOString() });
+  saveNotifications(all);
+}
+
+function notifStyle(type){
   return ({
-    'new client':['#22c55e','rgba(34,197,94,.15)','👤'],
-    'new ticket':['#f59e0b','rgba(245,158,11,.15)','🎫'],
-    'payment':['#70B2DE','rgba(112,178,222,.15)','💳'],
-    'error':['#ef4444','rgba(239,68,68,.15)','⚠'],
-    'suspended':['#eab308','rgba(234,179,8,.15)','⏸']
-  })[type]||['#94a3b8','rgba(148,163,184,.15)','•'];
+    nouveau_client:  ['#22c55e','rgba(34,197,94,.12)','🎉'],
+    ticket:          ['#f59e0b','rgba(245,158,11,.12)','🎫'],
+    paiement_j7:     ['#f59e0b','rgba(245,158,11,.12)','⚠️'],
+    paiement_j3:     ['#ef4444','rgba(239,68,68,.12)','🔴'],
+    paiement_j1:     ['#dc2626','rgba(220,38,38,.12)','🚨'],
+    erreur_auto:     ['#ef4444','rgba(239,68,68,.12)','⚡'],
+    suspension:      ['#dc2626','rgba(220,38,38,.12)','🔴'],
+    inactif:         ['#94a3b8','rgba(148,163,184,.12)','📊'],
+    vapi_wallet:     ['#f59e0b','rgba(245,158,11,.12)','💳'],
+    ticket_sans_rep: ['#fb923c','rgba(251,146,60,.12)','⏰'],
+  })[type]||['#94a3b8','rgba(148,163,184,.12)','•'];
 }
-function buildNotifications(){
-  const notifs=[];
-  adminClients.forEach(c=>{ if(c.dateInscription) notifs.push({id:'cl-'+c.id,type:'new client',msg:`Nouveau client : ${c.entreprise||c.nom}`,date:c.dateInscription}); });
-  adminTickets.forEach(t=>{ if(t.statut==='Ouvert') notifs.push({id:'tk-'+t.id,type:'new ticket',msg:`Ticket ouvert #${t.numero} : ${t.sujet}`,date:t.dateCreation}); });
-  adminPaiements.forEach(p=>{ if(p.statut==='Payé') notifs.push({id:'pa-'+p.id,type:'payment',msg:`Paiement reçu : ${fmtEur(p.montant)} (${clientNameById(p.userId)||p.client})`,date:p.date});
-    if(p.statut==='Échoué') notifs.push({id:'pf-'+p.id,type:'error',msg:`Paiement échoué : ${clientNameById(p.userId)||p.client}`,date:p.date}); });
-  adminClients.forEach(c=>{ if(c.statut==='Suspendu') notifs.push({id:'su-'+c.id,type:'suspended',msg:`Client suspendu : ${c.entreprise||c.nom}`,date:c.dateInscription}); });
-  adminAutomations.filter(a=>a.statut==='Erreur').forEach(a=>notifs.push({id:'er-'+a.id,type:'error',msg:`Automatisation en erreur : ${a.nom}`,date:new Date().toISOString()}));
-  notifs.sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
-  return notifs;
+
+function relativeDate(iso){
+  if(!iso) return '—';
+  const diff=Date.now()-new Date(iso).getTime();
+  const m=Math.floor(diff/60000);
+  if(m<1) return 'à l\'instant';
+  if(m<60) return `il y a ${m}min`;
+  const h=Math.floor(m/60);
+  if(h<24) return `il y a ${h}h`;
+  const d=Math.floor(h/24);
+  if(d===1) return 'hier';
+  if(d<7) return `il y a ${d} jours`;
+  return fmtDate(iso);
 }
-function getReadIds(){ try{ return JSON.parse(localStorage.getItem('akilai_notif_read')||'[]'); }catch(e){ return []; } }
-function setReadIds(ids){ localStorage.setItem('akilai_notif_read',JSON.stringify(ids)); }
+
+function checkAndGenerateNotifications(){
+  const lastVisit=+(localStorage.getItem(LAST_VISIT_KEY)||0);
+  const now=new Date(); now.setHours(0,0,0,0);
+  const nowMs=Date.now();
+
+  // Nouveaux clients (inscription > lastVisit)
+  adminClients.forEach(c=>{
+    if(!c.dateInscription) return;
+    const d=new Date(c.dateInscription).getTime();
+    if(d>lastVisit){
+      addNotification({ id:`new_client_${c.id}`, type:'nouveau_client', priorite:'haute',
+        titre:'Nouveau client 🎉',
+        message:`${c.entreprise||c.nom} — ${c.plan||'—'} vient de s\'inscrire`,
+        lien:'clients', date:c.dateInscription });
+    }
+  });
+
+  // Nouveaux tickets (creation > lastVisit)
+  adminTickets.forEach(t=>{
+    if(!t.dateCreation) return;
+    const d=new Date(t.dateCreation).getTime();
+    if(d>lastVisit){
+      const prio=t.priorite==='Urgente'?'haute':'normale';
+      addNotification({ id:`new_ticket_${t.id}`, type:'ticket', priorite:prio,
+        titre:`Nouveau ticket #${t.numero}`,
+        message:`${clientNameById(t.userId)||t.userId||'—'} — ${t.sujet} (Priorité: ${t.priorite||'Normale'})`,
+        lien:'support', date:t.dateCreation });
+    }
+  });
+
+  // Paiements J-7 / J-3 / J+1 (clé mensuelle pour ne pas répéter chaque visite)
+  const monthKey=new Date().toISOString().slice(0,7);
+  adminClients.forEach(c=>{
+    if(!c.prochainPaiement||(c.statut!=='Actif'&&c.statut!=='Essai'&&c.statut!=='Suspendu')) return;
+    const d=new Date(c.prochainPaiement); d.setHours(0,0,0,0);
+    const days=Math.round((d-now)/86400000);
+    const name=c.entreprise||c.nom||c.email;
+    if(days===7)
+      addNotification({ id:`pay_j7_${c.id}_${monthKey}`, type:'paiement_j7', priorite:'normale',
+        titre:'Paiement J-7 ⚠️', message:`${name} — échéance le ${fmtDate(c.prochainPaiement)}`,
+        lien:'billing', date:new Date().toISOString() });
+    else if(days===3)
+      addNotification({ id:`pay_j3_${c.id}_${monthKey}`, type:'paiement_j3', priorite:'haute',
+        titre:'Paiement J-3 🔴', message:`${name} — échéance dans 3 jours`, lien:'billing', date:new Date().toISOString() });
+    else if(days<0&&c.statut!=='Suspendu')
+      addNotification({ id:`pay_j1_${c.id}_${monthKey}`, type:'paiement_j1', priorite:'haute',
+        titre:'Paiement en retard 🚨', message:`${name} — compte à suspendre`, lien:'billing', date:new Date().toISOString() });
+  });
+
+  // Automatisations en erreur
+  adminRealAutomations.filter(a=>a.statut==='Erreur').forEach(a=>{
+    const cName=clientNameById(a.userId)||a.userId||'—';
+    addNotification({ id:`err_auto_${a.id||a.nom}_${monthKey}`, type:'erreur_auto', priorite:'haute',
+      titre:'Automatisation en erreur ⚡',
+      message:`${a.nom||'—'} — client : ${cName}`, lien:'automations', date:new Date().toISOString() });
+  });
+
+  // Tickets sans réponse depuis +24h
+  adminTickets.filter(t=>t.statut==='Ouvert').forEach(t=>{
+    if(!t.dateCreation) return;
+    const age=(nowMs-new Date(t.dateCreation).getTime())/3600000;
+    if(age>=24){
+      const cName=clientNameById(t.userId)||t.userId||'—';
+      addNotification({ id:`no_reply_${t.id}`, type:'ticket_sans_rep', priorite:'haute',
+        titre:'Ticket sans réponse ⏰',
+        message:`#${t.numero} — ${cName} attend depuis +${Math.floor(age)}h`, lien:'support', date:new Date().toISOString() });
+    }
+  });
+
+  // Clients inactifs (inscrits > 30j, actifs, peu d'historique)
+  const d30=nowMs-30*86400000;
+  adminClients.filter(c=>c.statut==='Actif'&&c.dateInscription&&new Date(c.dateInscription).getTime()<d30).forEach(c=>{
+    const recentHist=adminHistorique.filter(h=>(h.userId===c.id||h.userId===c.email)&&new Date(h.date||0).getTime()>d30);
+    if(!recentHist.length){
+      addNotification({ id:`inactif_${c.id}_${monthKey}`, type:'inactif', priorite:'normale',
+        titre:'Client inactif 📊',
+        message:`${c.entreprise||c.nom} — aucune activité depuis 30 jours`, lien:'clients', date:new Date().toISOString() });
+    }
+  });
+
+  // Mettre à jour lastVisit maintenant (APRÈS génération)
+  localStorage.setItem(LAST_VISIT_KEY, String(Date.now()));
+
+  updateSidebarBadges();
+  // Si on est déjà sur la page notifications, re-render
+  if(document.getElementById('page-notifications')?.classList.contains('active')) renderNotifications();
+}
+
+function checkVapiWallet(balance){
+  if(balance==null||balance>=VAPI_THRESHOLD) return;
+  const monthKey=new Date().toISOString().slice(0,7);
+  addNotification({ id:`vapi_low_${monthKey}`, type:'vapi_wallet', priorite:'haute',
+    titre:'Wallet Vapi bas 💳',
+    message:`Solde : $${Number(balance).toFixed(2)} — rechargez pour éviter les interruptions`,
+    lien:'settings', date:new Date().toISOString() });
+  updateSidebarBadges();
+}
+
+function updateSidebarBadges(){
+  const all=getNotifications();
+  const unread=all.filter(n=>!n.lu).length;
+
+  // Sidebar badge notifications
+  const nb=document.getElementById('notifBadge');
+  if(nb){ nb.textContent=unread; nb.classList.toggle('show',unread>0); }
+
+  // Sidebar badge billing (paiements en retard)
+  const now2=new Date(); now2.setHours(0,0,0,0);
+  const late=adminClients.filter(c=>{
+    if(!c.prochainPaiement) return false;
+    const d=new Date(c.prochainPaiement); d.setHours(0,0,0,0);
+    return Math.round((d-now2)/86400000)<0&&(c.statut==='Actif'||c.statut==='Essai');
+  }).length;
+  const bb=document.getElementById('billingBadge');
+  if(bb){ bb.textContent=late; bb.classList.toggle('show',late>0); }
+
+  // Sidebar badge support (tickets ouverts)
+  const openTk=adminTickets.filter(t=>t.statut==='Ouvert').length;
+  const sb=document.getElementById('supportBadge');
+  if(sb){ sb.textContent=openTk; sb.classList.toggle('show',openTk>0); }
+
+  // Filter badges
+  const hi=all.filter(n=>n.priorite==='haute').length;
+  const unr=all.filter(n=>!n.lu).length;
+  const nb2=document.getElementById('nfBadgeAll'); if(nb2) nb2.textContent=all.length;
+  const nb3=document.getElementById('nfBadgeUnread'); if(nb3) nb3.textContent=unr;
+  const nb4=document.getElementById('nfBadgeHigh'); if(nb4) nb4.textContent=hi;
+}
+
 function renderNotifications(){
-  const notifs=buildNotifications(); const read=getReadIds();
-  const list=document.getElementById('notifList');
-  if(!notifs.length){ list.innerHTML='<div class="muted">Aucune notification.</div>'; return; }
-  list.innerHTML=notifs.map(n=>{
-    const [color,bg,icon]=notifTypeStyle(n.type);
-    const isRead=read.includes(n.id);
-    return `<div class="notif-card ${isRead?'read':''}" style="border-left-color:${color}">
-      <div class="n-icon" style="background:${bg};color:${color}">${icon}</div>
-      <div class="n-body"><div class="n-msg">${esc(n.msg)}</div><div class="n-date">${fmtDate(n.date)}</div></div>
-      ${isRead?'':`<button class="btn ghost sm" onclick="markNotifRead('${n.id}')">Marquer comme lu</button>`}
+  let all=getNotifications();
+  if(_notifFilter==='unread') all=all.filter(n=>!n.lu);
+  else if(_notifFilter==='high') all=all.filter(n=>n.priorite==='haute');
+
+  updateSidebarBadges();
+  const list=document.getElementById('notifList'); if(!list) return;
+
+  if(!all.length){
+    list.innerHTML=`<div style="text-align:center;padding:60px 20px;color:var(--text-muted)">
+      <div style="font-size:40px;margin-bottom:12px">✓</div>
+      <div style="font-size:15px;font-weight:600;color:var(--text)">Tout est en ordre</div>
+      <div style="font-size:13px;margin-top:4px">${_notifFilter==='all'?'Aucune notification pour l\'instant':'Aucune notification dans ce filtre'}</div>
+    </div>`;
+    return;
+  }
+
+  list.innerHTML=all.map(n=>{
+    const [color,bg,icon]=notifStyle(n.type);
+    const unreadDot=!n.lu?`<span style="width:8px;height:8px;border-radius:50%;background:#ef4444;flex-shrink:0;margin-top:5px"></span>`:'';
+    const prioBadge=n.priorite==='haute'?`<span class="badge badge-danger" style="font-size:10px;padding:2px 6px">Haute</span>`:`<span class="badge badge-muted" style="font-size:10px;padding:2px 6px">Normale</span>`;
+    return `<div class="notif-card ${n.lu?'read':''}" style="border-left-color:${color};cursor:pointer" onclick="clickNotif('${n.id}','${n.lien||''}')">
+      <div class="n-icon" style="background:${bg};color:${color};font-size:18px">${icon}</div>
+      <div class="n-body" style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          ${unreadDot}
+          <strong style="font-size:13px">${esc(n.titre||'')}</strong>
+          ${prioBadge}
+        </div>
+        <div class="n-msg" style="color:var(--text-muted);margin-top:3px">${esc(n.message||'')}</div>
+        <div class="n-date">${relativeDate(n.date)}</div>
+      </div>
+      <button class="btn ghost sm" style="flex-shrink:0;font-size:18px;padding:4px 8px;color:var(--text-muted)" title="Supprimer" onclick="event.stopPropagation();deleteNotif('${n.id}')">×</button>
     </div>`;
   }).join('');
 }
-function markNotifRead(id){ const r=getReadIds(); if(!r.includes(id)){ r.push(id); setReadIds(r);} renderNotifications(); }
-function markAllNotifsRead(){ const ids=buildNotifications().map(n=>n.id); setReadIds(ids); renderNotifications(); toast('Toutes les notifications marquées comme lues'); }
+
+function clickNotif(id, lien){
+  const all=getNotifications();
+  const n=all.find(x=>x.id===id); if(n) n.lu=true;
+  saveNotifications(all);
+  if(lien) navigate(lien);
+  else renderNotifications();
+}
+
+function deleteNotif(id){
+  saveNotifications(getNotifications().filter(n=>n.id!==id));
+  renderNotifications();
+}
+
+function markNotifRead(id){
+  const all=getNotifications();
+  const n=all.find(x=>x.id===id); if(n) n.lu=true;
+  saveNotifications(all); renderNotifications();
+}
+
+function markAllNotifsRead(){
+  const all=getNotifications();
+  all.forEach(n=>n.lu=true);
+  saveNotifications(all); renderNotifications();
+  toast('Toutes les notifications marquées comme lues');
+}
 
 /* =========================================================
    BOOT
