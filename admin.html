@@ -1182,6 +1182,33 @@ canvas{max-width:100%!important}
       <div id="cpHistList"></div>
     </div>
 
+    <!-- Paiements -->
+    <div class="cp-section">
+      <h3>💳 Paiements</h3>
+      <div id="cpPaiementsWrap">
+        <div id="cpPaiementsLoading" style="color:var(--muted);font-size:13px;padding:12px 0">Chargement…</div>
+        <div class="table-wrap" style="border:none;display:none" id="cpPaiementsTable">
+          <table class="hist-table">
+            <thead><tr><th>Date</th><th>Période</th><th>Montant</th><th>Type</th><th>Statut</th></tr></thead>
+            <tbody id="cpPaiementsBody"></tbody>
+          </table>
+          <div id="cpPaiementsTotal" style="margin-top:10px;text-align:right;font-size:13px;font-weight:600;color:var(--accent)"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Factures -->
+    <div class="cp-section">
+      <h3>🧾 Factures</h3>
+      <div class="table-wrap" style="border:none" id="cpFacturesWrap">
+        <div id="cpFacturesEmpty" style="display:none;color:var(--muted);font-size:13px;padding:12px 0">Aucune facture générée pour ce client.</div>
+        <table class="hist-table" id="cpFacturesTable" style="display:none">
+          <thead><tr><th>N° Facture</th><th>Période</th><th>Montant TTC</th><th>Date</th><th>Action</th></tr></thead>
+          <tbody id="cpFacturesBody"></tbody>
+        </table>
+      </div>
+    </div>
+
     <!-- Notes / Brief -->
     <div class="cp-section">
       <h3>📝 Notes & Brief client</h3>
@@ -1778,6 +1805,81 @@ async function openClientPanel(id){
     adminRealAutomations=d.automations||[];
     renderCpAutomations(c);
   }
+
+  // Paiements & Factures
+  renderCpPaiements(c);
+}
+
+let _cpPaiements = [];
+
+async function renderCpPaiements(c){
+  const loadEl  = document.getElementById('cpPaiementsLoading');
+  const tableEl = document.getElementById('cpPaiementsTable');
+  const tbody   = document.getElementById('cpPaiementsBody');
+  const totalEl = document.getElementById('cpPaiementsTotal');
+  if(!loadEl) return;
+
+  loadEl.style.display='block';
+  tableEl.style.display='none';
+
+  const params=new URLSearchParams();
+  if(c.email) params.set('userId', c.email);
+  if(c.id)    params.set('clientRecordId', c.id);
+  const d=await adminFetch(`/.netlify/functions/admin-get-paiements?${params.toString()}`);
+  _cpPaiements = d.paiements||[];
+
+  loadEl.style.display='none';
+  if(!_cpPaiements.length){
+    tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:16px">Aucun paiement enregistré</td></tr>';
+    tableEl.style.display='table';
+    totalEl.textContent='';
+    renderCpFactures();
+    return;
+  }
+
+  tbody.innerHTML=_cpPaiements.map(p=>{
+    const statutColors={'Payé':'#4ade80','En attente':'#fb923c','Échoué':'#f87171','Remboursé':'#a78bfa','Annulé':'#94a3b8'};
+    const col=statutColors[p.statut]||'#94a3b8';
+    const badge=`<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;background:${col}22;color:${col}">${esc(p.statut||'—')}</span>`;
+    return `<tr>
+      <td>${fmtDate(p.date)||'—'}</td>
+      <td style="color:var(--muted);font-size:12px">${esc(p.periode||'—')}</td>
+      <td style="font-weight:600">${fmtEur(p.montant)}</td>
+      <td><span class="badge" style="background:rgba(112,178,222,.12);color:#70B2DE;font-size:10px">${esc(p.typePaiement||'—')}</span></td>
+      <td>${badge}</td>
+    </tr>`;
+  }).join('');
+
+  const total=_cpPaiements.filter(p=>p.statut==='Payé').reduce((s,p)=>s+Number(p.montant||0),0);
+  totalEl.textContent=`Total encaissé : ${fmtEur(total)}`;
+  tableEl.style.display='table';
+
+  renderCpFactures();
+}
+
+function renderCpFactures(){
+  const emptyEl = document.getElementById('cpFacturesEmpty');
+  const tableEl = document.getElementById('cpFacturesTable');
+  const tbody   = document.getElementById('cpFacturesBody');
+  if(!emptyEl) return;
+
+  const factures=_cpPaiements.filter(p=>p.numFacture && p.factureUrl);
+  if(!factures.length){
+    emptyEl.style.display='block';
+    tableEl.style.display='none';
+    return;
+  }
+  emptyEl.style.display='none';
+  tbody.innerHTML=factures.map(p=>`<tr>
+    <td style="font-weight:600;color:var(--accent)">${esc(p.numFacture)}</td>
+    <td style="color:var(--muted);font-size:12px">${esc(p.periode||'—')}</td>
+    <td style="font-weight:600">${fmtEur(p.montant)}</td>
+    <td style="color:var(--muted)">${fmtDate(p.date)||'—'}</td>
+    <td><a href="${esc(p.factureUrl)}" target="_blank" rel="noopener"
+        style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:7px;background:rgba(112,178,222,.12);color:#70B2DE;font-size:12px;font-weight:600;text-decoration:none;border:1px solid rgba(112,178,222,.2)">
+        📥 Télécharger</a></td>
+  </tr>`).join('');
+  tableEl.style.display='table';
 }
 
 function renderClientPanelKPIs(c){
