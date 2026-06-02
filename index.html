@@ -4656,10 +4656,14 @@ function buildAppelsTable(data) {
     }
 
     /* Lecteur audio */
-    const hasAudio = !!appel.enregistrement;
+    const hasAudio = !!(appel.vapiCallId || appel.enregistrement);
+    // Stocker callId et URL de fallback dans data-attributes pour chargement différé
+    const audioDataAttrs = appel.vapiCallId
+      ? `data-callid="${appel.vapiCallId}"`
+      : (appel.enregistrement ? `data-src="${appel.enregistrement}"` : '');
     const audioHtml = `
       <div class="audio-player" style="margin-top:4px${!hasAudio ? ';opacity:0.45;pointer-events:none' : ''}">
-        ${hasAudio ? `<audio id="audioEl-${appel.id}" src="${appel.enregistrement}" preload="metadata" style="display:none"></audio>` : ''}
+        <audio id="audioEl-${appel.id}" preload="none" style="display:none" ${audioDataAttrs}></audio>
         <button class="play-btn" id="playBtn-${appel.id}" onclick="togglePlay('${appel.id}', '${appel.duree}', event)" title="${hasAudio ? 'Lecture' : 'Enregistrement non disponible'}">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" id="playIcon-${appel.id}"><polygon points="5 3 19 12 5 21 5 3"/></svg>
         </button>
@@ -4702,40 +4706,80 @@ function toggleAppelDetail(id) {
   if (chevron) chevron.style.transform = isOpen ? "rotate(180deg)" : "";
 }
 
-/* Lecteur audio — utilise <audio> réel si URL disponible, sinon simulation */
+/* Lecteur audio — utilise <audio> réel avec URL signée Vapi ou URL directe */
 function togglePlay(id, dureeStr, e) {
   e.stopPropagation();
   const audioEl = document.getElementById("audioEl-" + id);
 
   if (audioEl) {
-    /* ---- Lecture réelle ---- */
+    /* Charger l'URL au premier clic si pas encore chargée */
+    if (!audioEl.src || audioEl.src === window.location.href) {
+      const callId = audioEl.dataset.callid;
+      const directSrc = audioEl.dataset.src;
+
+      const doPlay = () => {
+        _bindAudioEvents(audioEl, id, dureeStr);
+        document.querySelectorAll("audio").forEach(a => { if (a !== audioEl && !a.paused) a.pause(); });
+        audioEl.play().catch(err => console.warn("[audio] play() refusé :", err.message));
+        document.getElementById("playIcon-" + id).innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+      };
+
+      if (callId) {
+        // Récupérer URL signée via Netlify Function (auth Vapi)
+        const timeEl = document.getElementById("audioTime-" + id);
+        if (timeEl) timeEl.textContent = "Chargement…";
+        fetch(`/.netlify/functions/get-vapi-recording?callId=${encodeURIComponent(callId)}`)
+          .then(r => r.json())
+          .then(data => {
+            if (data.url) {
+              audioEl.src = data.url;
+              doPlay();
+            } else {
+              if (timeEl) timeEl.textContent = "Indisponible";
+              console.warn("[audio] URL signée non reçue:", data);
+            }
+          })
+          .catch(err => {
+            console.warn("[audio] get-vapi-recording error:", err.message);
+            if (timeEl) timeEl.textContent = "Erreur";
+          });
+        return;
+      } else if (directSrc) {
+        // Fallback : URL directe (anciens enregistrements sans callId)
+        audioEl.src = directSrc;
+      } else {
+        return; // pas d'audio
+      }
+    }
+
+    /* ---- Lecture / pause ---- */
     if (audioEl.paused) {
-      /* Mettre en pause tous les autres lecteurs actifs */
-      document.querySelectorAll("audio").forEach(function(a) {
-        if (a !== audioEl && !a.paused) { a.pause(); }
-      });
-      audioEl.play().catch(function(err) { console.warn("[audio] play() refusé :", err.message); });
+      _bindAudioEvents(audioEl, id, dureeStr);
+      document.querySelectorAll("audio").forEach(a => { if (a !== audioEl && !a.paused) a.pause(); });
+      audioEl.play().catch(err => console.warn("[audio] play() refusé :", err.message));
       document.getElementById("playIcon-" + id).innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
     } else {
       audioEl.pause();
       document.getElementById("playIcon-" + id).innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
     }
-
-    audioEl.ontimeupdate = function() {
-      const dur  = audioEl.duration || parseDuration(dureeStr);
-      const pct  = dur ? (audioEl.currentTime / dur * 100).toFixed(1) : 0;
-      const prog = document.getElementById("progress-" + id);
-      const timeEl = document.getElementById("audioTime-" + id);
-      if (prog)   prog.style.width = pct + "%";
-      if (timeEl) timeEl.textContent = fmtSec(Math.floor(audioEl.currentTime)) + " / " + fmtSec(Math.floor(dur));
-    };
-    audioEl.onended = function() {
-      document.getElementById("playIcon-" + id).innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
-      const prog = document.getElementById("progress-" + id);
-      if (prog) prog.style.width = "0%";
-    };
     return;
   }
+
+function _bindAudioEvents(audioEl, id, dureeStr) {
+  audioEl.ontimeupdate = function() {
+    const dur  = audioEl.duration || parseDuration(dureeStr);
+    const pct  = dur ? (audioEl.currentTime / dur * 100).toFixed(1) : 0;
+    const prog = document.getElementById("progress-" + id);
+    const timeEl = document.getElementById("audioTime-" + id);
+    if (prog)   prog.style.width = pct + "%";
+    if (timeEl) timeEl.textContent = fmtSec(Math.floor(audioEl.currentTime)) + " / " + fmtSec(Math.floor(dur));
+  };
+  audioEl.onended = function() {
+    document.getElementById("playIcon-" + id).innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
+    const prog = document.getElementById("progress-" + id);
+    if (prog) prog.style.width = "0%";
+  };
+}
 
   /* ---- Simulation (pas d'enregistrement) ---- */
   const state = audioState[id] || { playing: false, elapsed: 0, total: parseDuration(dureeStr) };
