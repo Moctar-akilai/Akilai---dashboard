@@ -587,7 +587,7 @@ canvas{max-width:100%!important}
 
       <!-- Charts row -->
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-bottom:20px">
-        <div class="chart-card"><h3>Évolution MRR — 6 mois</h3><div class="chart-wrap"><canvas id="chartMRR"></canvas></div></div>
+        <div class="chart-card"><h3>Évolution MRR — 6 mois</h3><div class="chart-wrap"><canvas id="chartMRRFin"></canvas></div></div>
         <div class="chart-card"><h3>CA par plan</h3><div class="chart-wrap" style="max-height:220px"><canvas id="chartDonut"></canvas></div></div>
       </div>
       <div class="chart-card" style="margin-bottom:20px"><h3>MRR vs Coûts (6 mois)</h3><div class="chart-wrap"><canvas id="chartFinances"></canvas></div></div>
@@ -2958,7 +2958,7 @@ function renderFinances(){
   const mrrIsEstimated=adminPaiements.filter(p=>p.statut==='Payé').length===0&&computeMRR()>0;
   const mrrChartCard=document.querySelector('#page-finances .chart-card h3');
   if(mrrChartCard) mrrChartCard.textContent='ÉVOLUTION MRR — 6 MOIS'+(mrrIsEstimated?' (estimé)':'');
-  drawChart('chartMRR','line',{labels,datasets:[{
+  drawChart('chartMRRFin','line',{labels,datasets:[{
     label:'MRR (€)',data:mrrSeries,borderColor:'#70B2DE',backgroundColor:'rgba(112,178,222,.15)',fill:true,tension:.35,
     pointBackgroundColor:'#70B2DE',pointRadius:4
   }]});
