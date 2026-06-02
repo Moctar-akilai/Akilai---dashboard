@@ -928,6 +928,7 @@ canvas{max-width:100%!important}
         <button class="tab-btn" data-stab="make">Make</button>
         <button class="tab-btn" data-stab="admins">Administrateurs</button>
         <button class="tab-btn" data-stab="support">Support</button>
+        <button class="tab-btn" data-stab="calendly">Calendly</button>
       </div>
 
       <!-- TAB: Tarifs & Plans -->
@@ -1090,6 +1091,30 @@ canvas{max-width:100%!important}
             </div>
           </div>
           <div class="modal-actions"><button class="btn" id="saveSupportBtn">Sauvegarder</button></div>
+        </div>
+      </div>
+
+      <!-- TAB: Calendly -->
+      <div id="stab-calendly" style="display:none">
+        <div class="card">
+          <h3 style="margin-bottom:6px">Intégration Calendly</h3>
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:20px">
+            Configurez le webhook Calendly pour synchroniser automatiquement les RDV dans votre CRM.
+            Cette action est à effectuer une seule fois.
+          </p>
+          <div style="background:var(--bg);border-radius:8px;padding:16px;margin-bottom:16px;font-size:13px">
+            <div style="font-weight:600;margin-bottom:6px">URL du webhook :</div>
+            <code style="font-size:12px;color:var(--accent);word-break:break-all">https://portal-akilai.netlify.app/.netlify/functions/calendly-webhook</code>
+          </div>
+          <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px">
+            Événements écoutés : <strong>invitee.created</strong> (nouveau RDV) · <strong>invitee.canceled</strong> (RDV annulé)
+          </div>
+          <div id="calendlyWebhookStatus" style="display:none;margin-bottom:14px;padding:10px 14px;border-radius:8px;font-size:13px"></div>
+          <div class="modal-actions">
+            <button class="btn" id="setupCalendlyWebhookBtn" onclick="setupCalendlyWebhook()">
+              🔗 Configurer le webhook Calendly
+            </button>
+          </div>
         </div>
       </div>
 
@@ -4626,6 +4651,47 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.getElementById('crmSearch')?.addEventListener('input', renderCRM);
 });
+
+/* =========================================================
+   SETUP CALENDLY WEBHOOK
+   ========================================================= */
+async function setupCalendlyWebhook() {
+  const btn    = document.getElementById('setupCalendlyWebhookBtn');
+  const status = document.getElementById('calendlyWebhookStatus');
+  btn.disabled = true;
+  btn.textContent = 'Configuration en cours…';
+  status.style.display = 'none';
+
+  const data = await adminFetch('/.netlify/functions/setup-calendly-webhook', { method: 'POST' });
+
+  btn.disabled = false;
+  btn.textContent = '🔗 Configurer le webhook Calendly';
+  status.style.display = 'block';
+
+  if (data.missingKey || (data.error && data.error.includes('CALENDLY_API_KEY'))) {
+    status.style.background = 'rgba(239,68,68,.1)';
+    status.style.color = '#f87171';
+    status.textContent = '❌ Clé API Calendly (CALENDLY_API_KEY) non configurée dans les variables Netlify.';
+    return;
+  }
+  if (data.error) {
+    status.style.background = 'rgba(239,68,68,.1)';
+    status.style.color = '#f87171';
+    status.textContent = '❌ Erreur : ' + data.error;
+    return;
+  }
+  if (data.alreadyExists) {
+    status.style.background = 'rgba(34,197,94,.1)';
+    status.style.color = '#4ade80';
+    status.textContent = '✅ Webhook déjà configuré — aucune action nécessaire.';
+    return;
+  }
+  if (data.ok && data.created) {
+    status.style.background = 'rgba(34,197,94,.1)';
+    status.style.color = '#4ade80';
+    status.textContent = '✅ Webhook Calendly configuré avec succès ! Les RDV seront désormais synchronisés dans le CRM.';
+  }
+}
 
 /* =========================================================
    BOOT
