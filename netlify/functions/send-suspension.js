@@ -34,11 +34,13 @@ async function sendSuspensionEmail(email, nom, plan, lienPaiement = "") {
   </td></tr>
 </table></td></tr></table></body></html>`;
 
-  await fetch("https://api.resend.com/emails", {
+  const _rSusp = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
     body: JSON.stringify({ from: "AkilAI <noreply@akilai.fr>", to: email, subject: "🔴 Votre compte AkilAI a été suspendu", html }),
   });
+  const _dSusp = await _rSusp.json();
+  console.log('[email] send-suspension statut:', _dSusp.id || _dSusp.error || _dSusp.message);
 }
 
 exports.handler = async (event) => {

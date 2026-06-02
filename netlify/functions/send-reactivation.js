@@ -27,11 +27,13 @@ async function sendReactivationEmail(email, nom, prochainPaiement) {
   </td></tr>
 </table></td></tr></table></body></html>`;
 
-  await fetch("https://api.resend.com/emails", {
+  const _rReact = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
     body: JSON.stringify({ from: "AkilAI <noreply@akilai.fr>", to: email, subject: "✅ Votre compte AkilAI est réactivé", html }),
   });
+  const _dReact = await _rReact.json();
+  console.log('[email] send-reactivation statut:', _dReact.id || _dReact.error || _dReact.message);
 }
 
 exports.handler = async (event) => {

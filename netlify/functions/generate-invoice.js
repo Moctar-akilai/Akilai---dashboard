@@ -92,7 +92,7 @@ function buildPDF({ numFacture, clientNom, clientEmail, montant, devise, plan, d
 async function sendInvoiceEmail(email, nom, numFacture, pdfBuffer) {
   if (!RESEND_API_KEY) return;
   const b64 = pdfBuffer.toString("base64");
-  await fetch("https://api.resend.com/emails", {
+  const _rInv = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
     body: JSON.stringify({
@@ -105,6 +105,8 @@ async function sendInvoiceEmail(email, nom, numFacture, pdfBuffer) {
       attachments: [{ filename: `${numFacture}.pdf`, content: b64 }],
     }),
   });
+  const _dInv = await _rInv.json();
+  console.log('[email] generate-invoice statut:', _dInv.id || _dInv.error || _dInv.message);
 }
 
 exports.handler = async (event) => {

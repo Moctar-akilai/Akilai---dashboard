@@ -43,7 +43,7 @@ exports.handler = async (event) => {
     // 2. Send welcome email via Resend
     const RESEND_API_KEY = process.env.RESEND_API_KEY || "";
     if (RESEND_API_KEY) {
-      await fetch("https://api.resend.com/emails", {
+      const _rWelcome = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -56,6 +56,8 @@ exports.handler = async (event) => {
           html: `<h2>Bienvenue ${nom} !</h2><p>Votre compte AkilAI a été créé avec le plan <strong>${plan}</strong>.</p><p>Email de connexion : ${email}</p><p>L'équipe AkilAI</p>`,
         }),
       });
+      const _dWelcome = await _rWelcome.json();
+      console.log('[email] admin-create-client statut:', _dWelcome.id || _dWelcome.error || _dWelcome.message);
     }
 
     return ok({ ok: true, id: data.id });

@@ -94,6 +94,7 @@ exports.handler = async (event) => {
     });
 
     const data = await res.json();
+    console.log('[email] send-relance statut:', data.id || data.error || data.message);
     if (!res.ok) return err(data.message || "Resend error");
 
     return ok({ ok: true });
