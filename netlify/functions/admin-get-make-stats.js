@@ -1,56 +1,76 @@
-const { ok, err, preflight, corsHeaders } = require("./config");
-const { verifyAdminToken, unauthorized } = require("./admin-utils");
-
-const MAKE_API_KEY = process.env.MAKE_API_KEY || "";
-const MAKE_BASE = "https://eu1.make.com/api/v2";
-
-function makeHeaders() {
-  return { Authorization: `Token ${MAKE_API_KEY}`, "Content-Type": "application/json" };
-}
+const fetch = require('node-fetch')
+const { verifyAdminToken } = require('./admin-utils')
 
 exports.handler = async (event) => {
-  if (event.httpMethod === "OPTIONS") return preflight();
-  if (!verifyAdminToken(event)) return unauthorized();
+  if (!verifyAdminToken(event)) {
+    return { statusCode: 401, body: JSON.stringify({ error: 'Unauthorized' }) }
+  }
 
-  if (!MAKE_API_KEY) return err("MAKE_API_KEY not configured");
+  const MAKE_API_KEY = process.env.MAKE_API_KEY
+  const headers = {
+    'Authorization': `Token ${MAKE_API_KEY}`,
+    'Content-Type': 'application/json'
+  }
+
+  // Tester eu1 puis us1
+  let BASE = 'https://eu1.make.com/api/v2'
 
   try {
-    // 1. Get team ID from current user
-    const meRes = await fetch(`${MAKE_BASE}/users/me`, { headers: makeHeaders() });
-    const meData = await meRes.json();
-    const teamId = meData?.user?.defaultTeamId || meData?.teams?.[0]?.id || null;
-
-    // 2. Scenarios list
-    const scenUrl = teamId
-      ? `${MAKE_BASE}/scenarios?teamId=${teamId}&pg[limit]=100`
-      : `${MAKE_BASE}/scenarios?pg[limit]=100`;
-    const scenRes = await fetch(scenUrl, { headers: makeHeaders() });
-    const scenData = await scenRes.json();
-    const scenarios = scenData?.scenarios || scenData?.items || [];
-
-    let total = scenarios.length, actifs = 0, inactifs = 0, erreur = 0;
-    for (const s of scenarios) {
-      const st = (s.isActive !== undefined ? s.isActive : s.status) ;
-      if (s.isActive === true || s.status === "active") actifs++;
-      else if (s.status === "error" || s.lastError) erreur++;
-      else inactifs++;
+    // 1. Récupérer le teamId
+    let res = await fetch(`${BASE}/users/me`, { headers })
+    if (!res.ok) {
+      BASE = 'https://us1.make.com/api/v2'
+      res = await fetch(`${BASE}/users/me`, { headers })
     }
+    const me = await res.json()
+    console.log('[make] users/me:', JSON.stringify(me).substring(0, 300))
 
-    // 3. Organisation info
-    let orgNom = "", orgPlan = "";
-    try {
-      const orgRes = await fetch(`${MAKE_BASE}/teams${teamId ? '/'+teamId : ''}`, { headers: makeHeaders() });
-      const orgData = await orgRes.json();
-      orgNom = orgData?.team?.name || orgData?.name || "";
-      orgPlan = orgData?.team?.plan || orgData?.license?.apps || "";
-    } catch {}
+    const teamId = me?.defaultOrganizationId ||
+                   me?.organizationId ||
+                   me?.teams?.[0]?.id
+    console.log('[make] teamId:', teamId)
 
-    return ok({
-      scenarios: { total, actifs, inactifs, erreur },
-      organisation: { nom: orgNom, plan: orgPlan },
-    });
-  } catch (e) {
-    console.error("[admin-get-make-stats]", e.message);
-    return err(e.message);
+    // 2. Récupérer les scénarios
+    const scenRes = await fetch(
+      `${BASE}/scenarios?teamId=${teamId}&pg[limit]=100`,
+      { headers }
+    )
+    const scenData = await scenRes.json()
+    console.log('[make] scenarios:', scenData?.scenarios?.length)
+
+    const scenarios = scenData?.scenarios || []
+    const actifs = scenarios.filter(s => s.isActive).length
+    const erreur = scenarios.filter(s => s.isPaused).length
+    const inactifs = scenarios.length - actifs - erreur
+
+    // 3. Infos organisation
+    const orgRes = await fetch(
+      `${BASE}/organizations/${teamId}`,
+      { headers }
+    )
+    const orgData = await orgRes.json()
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify({
+        scenarios: {
+          total: scenarios.length,
+          actifs,
+          inactifs,
+          erreur
+        },
+        organisation: {
+          nom: orgData?.organization?.name || 'AkilAI',
+          plan: orgData?.organization?.license?.apps || 'Core'
+        },
+        region: BASE.includes('eu1') ? 'EU' : 'US'
+      })
+    }
+  } catch (err) {
+    console.error('[make] erreur:', err.message)
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: err.message })
+    }
   }
-};
+}
