@@ -3871,6 +3871,7 @@ function notifStyle(type){
     inactif:         ['#94a3b8','rgba(148,163,184,.12)','📊'],
     vapi_wallet:     ['#f59e0b','rgba(245,158,11,.12)','💳'],
     ticket_sans_rep: ['#fb923c','rgba(251,146,60,.12)','⏰'],
+    resiliation:     ['#dc2626','rgba(220,38,38,.12)','🔴'],
   })[type]||['#94a3b8','rgba(148,163,184,.12)','•'];
 }
 
@@ -3965,6 +3966,19 @@ function checkAndGenerateNotifications(){
       addNotification({ id:`inactif_${c.id}_${monthKey}`, type:'inactif', priorite:'normale',
         titre:'Client inactif 📊',
         message:`${c.entreprise||c.nom} — aucune activité depuis 30 jours`, lien:'clients', date:new Date().toISOString() });
+    }
+  });
+
+  // Résiliations récentes (depuis lastVisit)
+  adminClients.filter(c=>c.statut==='Résilié').forEach(c=>{
+    // On utilise dateInscription comme proxy si pas de dateModification
+    const ref=c.dateModification||c.dateInscription;
+    if(!ref) return;
+    if(new Date(ref).getTime()>lastVisit){
+      addNotification({ id:`resil_${c.id}`, type:'resiliation', priorite:'haute',
+        titre:'Résiliation 🔴',
+        message:`${c.entreprise||c.nom} — ${c.plan||'—'}`,
+        lien:'clients', date:ref });
     }
   });
 
