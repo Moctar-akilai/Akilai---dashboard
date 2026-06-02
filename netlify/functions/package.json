@@ -1,1 +1,1 @@
-{"type":"commonjs","dependencies":{"cloudinary":"^2.10.0"}}
+{"type":"commonjs","dependencies":{"cloudinary":"^2.10.0","pdfkit":"^0.18.0"}}
