@@ -2553,9 +2553,14 @@ async function openBillingDetail(clientId){
   if(!pays.length){ tb.innerHTML='<tr class="empty-row"><td colspan="7">Aucun paiement enregistré</td></tr>'; }
   else tb.innerHTML=pays.map(p=>{
     const typeLabel=p.typePaiement?`<span class="badge" style="background:rgba(112,178,222,.15);color:#70B2DE;font-size:10px">${esc(p.typePaiement)}</span>`:'—';
-    const factureCell=p.numFacture
-      ?`<span style="font-size:11px;color:var(--accent)">${esc(p.numFacture)}</span> <button class="btn sm ghost" style="font-size:10px;padding:3px 7px;margin-left:4px" onclick="generateInvoice('${p.id}',this,true)" title="Régénérer la facture">🔄</button>`
-      :`<button class="btn sm ghost" style="font-size:10px;padding:3px 7px" onclick="generateInvoice('${p.id}',this)">📄 Facture</button>`;
+    let factureCell='';
+    if(p.numFacture){
+      factureCell=`<span style="font-size:11px;color:var(--accent)">${esc(p.numFacture)}</span>`;
+      if(p.factureUrl) factureCell+=` <a href="${esc(p.factureUrl)}" target="_blank" class="btn sm ghost" style="font-size:10px;padding:3px 7px;margin-left:4px" title="Télécharger">📥</a>`;
+      factureCell+=` <button class="btn sm ghost" style="font-size:10px;padding:3px 7px;margin-left:2px" onclick="generateInvoice('${p.id}',this,true)" title="Régénérer la facture">🔄</button>`;
+    } else {
+      factureCell=`<button class="btn sm ghost" style="font-size:10px;padding:3px 7px" onclick="generateInvoice('${p.id}',this)">📄 Facture</button>`;
+    }
     return `<tr>
     <td>${fmtDate(p.date)||'—'}</td>
     <td>${fmtEur(p.montant)}</td>

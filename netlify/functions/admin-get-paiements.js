@@ -44,6 +44,7 @@ exports.handler = async (event) => {
         userId: f["User ID"] || "",
         email: (f.Email || [])[0] || "",
         numFacture: f["N° Facture"] || "",
+        factureUrl: f["Facture URL"] || "",
         typePaiement: f["Type paiement"] || "",
         createdAt: r.createdTime,
       };
