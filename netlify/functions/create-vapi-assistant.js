@@ -26,6 +26,7 @@ exports.handler = async function(event, context) {
   /* Lire le record client depuis Airtable (VapiAssistantId + Numéro Vapi) */
   let existingAssistantId = null;
   let vapiPhoneNumberId   = null;
+  let clientEmail         = "";
   if (clientId) {
     try {
       const clientRes = await fetch(`${BASE_URL}/Clients/${clientId}`, { headers });
@@ -33,8 +34,10 @@ exports.handler = async function(event, context) {
         const clientData    = await clientRes.json();
         existingAssistantId = clientData.fields?.VapiAssistantId  || null;
         vapiPhoneNumberId   = clientData.fields?.["Numéro Vapi"]  || null;
+        clientEmail         = clientData.fields?.Email            || clientData.fields?.["User ID"] || "";
         console.log("[create-vapi-assistant] VapiAssistantId existant :", existingAssistantId || "aucun");
         console.log("[create-vapi-assistant] Numéro Vapi (phoneNumberId) :", vapiPhoneNumberId || "aucun");
+        console.log("[create-vapi-assistant] clientEmail :", clientEmail || "inconnu");
       }
     } catch (e) {
       console.warn("[create-vapi-assistant] Airtable fetch client:", e.message);
@@ -124,10 +127,18 @@ exports.handler = async function(event, context) {
     if (vapiPhoneNumberId && assistantId) {
       try {
         console.log("[create-vapi-assistant] PATCH /phone-number/" + vapiPhoneNumberId + " → assistantId:", assistantId);
+        const webhookUrl = `${process.env.URL || "https://portal-akilai.netlify.app"}/.netlify/functions/vapi-webhook`;
         const phoneRes = await fetch(`https://api.vapi.ai/phone-number/${vapiPhoneNumberId}`, {
           method:  "PATCH",
           headers: vapiHeaders,
-          body:    JSON.stringify({ assistantId }),
+          body:    JSON.stringify({
+            assistantId,
+            serverUrl: webhookUrl,
+            metadata: {
+              userId:   clientEmail,
+              clientId: clientId || "",
+            },
+          }),
         });
         console.log("[create-vapi-assistant] Vapi phone-number PATCH status:", phoneRes.status);
         if (phoneRes.ok) {
