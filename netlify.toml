@@ -1,5 +1,5 @@
 [build]
-  command   = "npm run build"
+  command   = "npm run build && npm install --prefix netlify/functions/generate-invoice"
   functions = "netlify/functions"
   publish   = "dist"
 
@@ -15,6 +15,9 @@
 [functions."sync-make-status"]
   schedule = "0 8 * * *"
 
+[functions."generate-invoice"]
+  node_bundler = "esbuild"
+
 # Variables d'environnement à configurer dans Netlify → Site settings → Env vars :
 #   AIRTABLE_API_KEY   — clé API Airtable
 #   AIRTABLE_BASE_ID   — ID de la base Airtable (commence par "app...")
@@ -26,4 +29,7 @@
 #   ELEVENLABS_API_KEY             — clé API ElevenLabs (depuis elevenlabs.io → Profile → API key)
 #   ADMIN_PASSWORD                 — mot de passe de la page admin /#admin
 #   NETLIFY_IDENTITY_SERVICE_ROLE  — JWT service role Netlify Identity (Netlify → Identity → Settings → Service role JWT)
+#   CLOUDINARY_CLOUD_NAME          — nom du cloud Cloudinary
+#   CLOUDINARY_API_KEY             — clé API Cloudinary
+#   CLOUDINARY_API_SECRET          — secret API Cloudinary
 #   Note : VAPI_ASSISTANT_ID n'est plus utilisé — chaque client a son propre ID dans Airtable (champ VapiAssistantId)

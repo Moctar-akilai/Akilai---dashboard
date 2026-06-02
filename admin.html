@@ -2553,7 +2553,14 @@ async function openBillingDetail(clientId){
   if(!pays.length){ tb.innerHTML='<tr class="empty-row"><td colspan="7">Aucun paiement enregistré</td></tr>'; }
   else tb.innerHTML=pays.map(p=>{
     const typeLabel=p.typePaiement?`<span class="badge" style="background:rgba(112,178,222,.15);color:#70B2DE;font-size:10px">${esc(p.typePaiement)}</span>`:'—';
-    const factureCell=p.numFacture?`<span style="font-size:11px;color:var(--accent)">${esc(p.numFacture)}</span>`:`<button class="btn sm ghost" style="font-size:10px;padding:3px 7px" onclick="generateInvoice('${p.id}',this)">📄 Facture</button>`;
+    let factureCell='';
+    if(p.numFacture){
+      factureCell=`<span style="font-size:11px;color:var(--accent)">${esc(p.numFacture)}</span>`;
+      if(p.factureUrl) factureCell+=` <a href="${esc(p.factureUrl)}" target="_blank" class="btn sm ghost" style="font-size:10px;padding:3px 7px;margin-left:4px" title="Télécharger">📥</a>`;
+      factureCell+=` <button class="btn sm ghost" style="font-size:10px;padding:3px 7px;margin-left:2px" onclick="generateInvoice('${p.id}',this,true)" title="Régénérer la facture">🔄</button>`;
+    } else {
+      factureCell=`<button class="btn sm ghost" style="font-size:10px;padding:3px 7px" onclick="generateInvoice('${p.id}',this)">📄 Facture</button>`;
+    }
     return `<tr>
     <td>${fmtDate(p.date)||'—'}</td>
     <td>${fmtEur(p.montant)}</td>
@@ -2602,31 +2609,58 @@ async function updateClientNextPayment(clientId){
 async function markPaidById(id, btn){
   btn.disabled=true; btn.textContent='…';
   const res=await adminFetch('/.netlify/functions/admin-update-paiement',{method:'PATCH',body:JSON.stringify({id,statut:'Payé'})});
-  if(res.ok!==false){ toast('Paiement marqué comme payé','success'); if(_bdClientId) openBillingDetail(_bdClientId); if(_bdClientId) updateClientNextPayment(_bdClientId); }
-  else { btn.disabled=false; btn.textContent='✓ Payé'; toast(res.error||'Erreur','error'); }
+  if(res.ok!==false){
+    toast('Paiement marqué comme payé','success');
+    // Auto-generate invoice
+    const c=adminClients.find(x=>x.id===_bdClientId);
+    // Find payment data from the current detail — reload it first
+    if(_bdClientId) {
+      await openBillingDetail(_bdClientId);
+      updateClientNextPayment(_bdClientId);
+      // Now find the payment in the refreshed detail and generate invoice
+      const d2=await adminFetch(`/.netlify/functions/admin-get-paiements?userId=${encodeURIComponent(c?.email||'')}`);
+      const p2=(d2.paiements||[]).find(x=>x.id===id);
+      if(p2 && !p2.numFacture && c) {
+        await _generateInvoiceData(id, c, p2, true);
+      }
+    }
+  } else { btn.disabled=false; btn.textContent='✓ Payé'; toast(res.error||'Erreur','error'); }
 }
 
-async function generateInvoice(paiementId, btn){
+async function generateInvoice(paiementId, btn, isRegen=false){
   const c=adminClients.find(x=>x.id===_bdClientId);
   if(!c) return;
-  const p=adminPaiements.find(x=>x.id===paiementId)||{};
+  // Find payment from current billing detail rows
+  const row=btn?.closest('tr');
+  const p={ id:paiementId };
+  // Read visible cells: date, montant, type, periode from row dataset or refetch
   btn.disabled=true; btn.textContent='…';
+  const d=await adminFetch(`/.netlify/functions/admin-get-paiements?userId=${encodeURIComponent(c.email)}`);
+  const pFull=(d.paiements||[]).find(x=>x.id===paiementId)||p;
+  await _generateInvoiceData(paiementId, c, pFull, true, btn, isRegen);
+}
+
+async function _generateInvoiceData(paiementId, c, p, sendEmail, btn, isRegen){
+  if(btn){ btn.disabled=true; btn.textContent='…'; }
   const res=await adminFetch('/.netlify/functions/generate-invoice',{
     method:'POST',
     body:JSON.stringify({
       paiementId,
-      clientNom: c.entreprise||c.nom,
+      clientNom: c.nom||'',
       clientEmail: c.email,
+      entreprise: c.entreprise||'',
+      pays: c.pays||'',
       montant: p.montant||clientMontant(c),
       devise: 'EUR',
-      plan: c.plan,
+      plan: p.plan||c.plan||'',
       date: p.date||new Date().toISOString().split('T')[0],
       type: p.typePaiement||'Abonnement',
-      sendEmail: true,
+      periode: p.periode||'',
+      sendEmail: !!sendEmail,
     }),
   });
   if(res.ok!==false){
-    toast(`Facture ${res.numFacture} générée et envoyée`,'success');
+    toast(`Facture ${res.numFacture} ${isRegen?'régénérée':'générée'} et envoyée`,'success');
     if(res.pdf){
       const bytes=atob(res.pdf);
       const arr=new Uint8Array(bytes.length);
@@ -2638,7 +2672,10 @@ async function generateInvoice(paiementId, btn){
       a.click();
     }
     if(_bdClientId) openBillingDetail(_bdClientId);
-  } else { btn.disabled=false; btn.textContent='📄 Facture'; toast(res.error||'Erreur','error'); }
+  } else {
+    if(btn){ btn.disabled=false; btn.textContent=isRegen?'🔄':'📄 Facture'; }
+    toast(res.error||'Erreur','error');
+  }
 }
 
 function exportBillingCSV(){

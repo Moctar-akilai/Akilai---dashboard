@@ -1,7 +1,5 @@
 const { BASE_URL, headers, ok, err, preflight, corsHeaders } = require("./config");
 const { verifyAdminToken, unauthorized } = require("./admin-utils");
-const { bienvenue: bienvenueTpl } = require("./email-templates");
-const { getEmailCorps } = require("./email-config");
 
 exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") return preflight();
@@ -36,7 +34,7 @@ exports.handler = async (event) => {
     const airtableRes = await fetch(`${BASE_URL}/Clients`, {
       method: "POST",
       headers,
-      body: JSON.stringify({ fields }),
+      body: JSON.stringify({ fields, typecast: true }),
     });
     const data = await airtableRes.json();
 
@@ -45,20 +43,19 @@ exports.handler = async (event) => {
     // 2. Send welcome email via Resend
     const RESEND_API_KEY = process.env.RESEND_API_KEY || "";
     if (RESEND_API_KEY) {
-      const _rWelcome = await fetch("https://api.resend.com/emails", {
+      await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${RESEND_API_KEY}`,
         },
-        body: JSON.stringify(await (async () => {
-          const corps = await getEmailCorps('bienvenue').catch(() => null);
-          const tpl = bienvenueTpl({ nom, plan, email, dateInscription: new Date().toLocaleDateString('fr-FR'), corps });
-          return { from: "AkilAI <noreply@akilai.fr>", to: email, subject: tpl.subject, html: tpl.html };
-        })()),
+        body: JSON.stringify({
+          from: "AkilAI <noreply@akilai.fr>",
+          to: email,
+          subject: "Bienvenue chez AkilAI — Votre accès est prêt",
+          html: `<h2>Bienvenue ${nom} !</h2><p>Votre compte AkilAI a été créé avec le plan <strong>${plan}</strong>.</p><p>Email de connexion : ${email}</p><p>L'équipe AkilAI</p>`,
+        }),
       });
-      const _dWelcome = await _rWelcome.json();
-      console.log('[email] admin-create-client statut:', _dWelcome.id || _dWelcome.error || _dWelcome.message);
     }
 
     return ok({ ok: true, id: data.id });

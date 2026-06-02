@@ -2367,6 +2367,20 @@
         <span class="nav-label">Analytics</span>
       </div>
 
+      <!-- FACTURATION -->
+      <div class="nav-section-label" style="margin-top:8px">Mon abonnement</div>
+
+      <div class="nav-item" data-section="factures" onclick="navigate('factures')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
+        </svg>
+        <span class="nav-label">Mes factures</span>
+      </div>
+
     </nav>
 
     <div class="sidebar-footer">
@@ -3166,6 +3180,39 @@
         </div>
       </div>
 
+      <!-- ── MES FACTURES ────────────────────────────────────────────── -->
+      <div class="page" id="page-factures">
+        <div class="page-header">
+          <div>
+            <div class="breadcrumb">Mon abonnement <span>/ Mes factures</span></div>
+            <h1 class="page-title">Mes factures</h1>
+            <p class="page-subtitle">Téléchargez vos factures et justificatifs de paiement.</p>
+          </div>
+        </div>
+
+        <div class="card" style="overflow:hidden">
+          <div id="facturesLoading" style="padding:40px;text-align:center;color:var(--text-muted);font-size:13px">
+            Chargement des factures…
+          </div>
+          <div id="facturesEmpty" style="display:none;padding:40px;text-align:center;color:var(--text-muted);font-size:13px">
+            Aucune facture disponible pour le moment.
+          </div>
+          <table id="facturesTable" style="display:none;width:100%;border-collapse:collapse">
+            <thead>
+              <tr style="border-bottom:1px solid var(--border);font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em">
+                <th style="padding:10px 16px;text-align:left;font-weight:600">N° Facture</th>
+                <th style="padding:10px 16px;text-align:left;font-weight:600">Période</th>
+                <th style="padding:10px 16px;text-align:right;font-weight:600">Montant</th>
+                <th style="padding:10px 16px;text-align:left;font-weight:600">Date</th>
+                <th style="padding:10px 16px;text-align:left;font-weight:600">Statut</th>
+                <th style="padding:10px 16px;text-align:center;font-weight:600">Télécharger</th>
+              </tr>
+            </thead>
+            <tbody id="facturesTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
     </div><!-- /content -->
   </div><!-- /main -->
 </div><!-- /app -->
@@ -3741,6 +3788,7 @@ function navigate(sectionId) {
   if (sectionId === 'appels')      { loadHistoriqueFromAirtable(); }
   if (sectionId === 'whatsapp')    { loadHistoriqueFromAirtable(); }
   if (sectionId === 'voix-ia')     { loadVoixConfig(); }
+  if (sectionId === 'factures')    { loadFactures(); }
 
   currentSection = sectionId;
   try { localStorage.setItem('akilai_section', sectionId); } catch(e) {}
@@ -6527,6 +6575,62 @@ function exportAnalytics() {
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
   showToast(`Exporté : ${filename}`, "success");
+}
+
+/* ============================================================
+   MES FACTURES
+============================================================ */
+async function loadFactures() {
+  const email = _getActiveEmail();
+  const loadEl  = document.getElementById('facturesLoading');
+  const emptyEl = document.getElementById('facturesEmpty');
+  const tableEl = document.getElementById('facturesTable');
+  const tbody   = document.getElementById('facturesTbody');
+  if (!loadEl) return;
+
+  loadEl.style.display  = 'block';
+  emptyEl.style.display = 'none';
+  tableEl.style.display = 'none';
+
+  try {
+    if (!email) { loadEl.textContent = 'Connectez-vous pour voir vos factures.'; return; }
+    const data = await apiFetch(`/.netlify/functions/get-factures?userId=${encodeURIComponent(email)}`);
+    const factures = data.factures || [];
+    loadEl.style.display = 'none';
+
+    if (!factures.length) { emptyEl.style.display = 'block'; return; }
+
+    const fmtEurF = (v) => Number(v||0).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' EUR';
+    const fmtDateF = (d) => d ? new Date(d).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+    const statutBadge = (s) => {
+      const colors = {'Payé':'#4ade80','En attente':'#fb923c','Annulé':'#f87171'};
+      const col = colors[s] || '#94a3b8';
+      return `<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;background:${col}22;color:${col}">${s||'—'}</span>`;
+    };
+
+    tbody.innerHTML = factures.map(f => `
+      <tr style="border-bottom:1px solid var(--border);font-size:13px">
+        <td style="padding:12px 16px;font-weight:600;color:var(--accent)">${f.numFacture}</td>
+        <td style="padding:12px 16px;color:var(--text-muted)">${f.periode || '—'}</td>
+        <td style="padding:12px 16px;text-align:right;font-weight:600">${fmtEurF(f.montant)}</td>
+        <td style="padding:12px 16px;color:var(--text-muted)">${fmtDateF(f.date)}</td>
+        <td style="padding:12px 16px">${statutBadge(f.statut)}</td>
+        <td style="padding:12px 16px;text-align:center">
+          ${f.factureUrl
+            ? `<a href="${f.factureUrl}" target="_blank" rel="noopener noreferrer"
+                 style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;background:rgba(112,178,222,.12);color:#70B2DE;font-size:12px;font-weight:600;text-decoration:none;border:1px solid rgba(112,178,222,.25)">
+                 📥 Télécharger
+               </a>`
+            : `<span style="color:var(--text-muted);font-size:12px">Non disponible</span>`
+          }
+        </td>
+      </tr>`).join('');
+
+    tableEl.style.display = 'table';
+  } catch(e) {
+    loadEl.textContent = 'Erreur lors du chargement des factures.';
+    console.error('[factures]', e);
+  }
 }
 
 async function createTicket() {
