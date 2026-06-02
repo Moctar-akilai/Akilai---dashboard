@@ -2530,6 +2530,7 @@ let _bdClientId=null;
 async function openBillingDetail(clientId){
   const c=adminClients.find(x=>x.id===clientId); if(!c) return;
   _bdClientId=clientId;
+  console.log('[billing] ouverture fiche client:', clientId, '| email:', c.email, '| entreprise:', c.entreprise||c.nom);
   document.getElementById('bdTitle').textContent=`${c.entreprise||c.nom} — Historique paiements`;
   document.getElementById('bdSub').textContent=`${c.email} · Plan ${c.plan||'—'}`;
   document.getElementById('bdNext').textContent=c.prochainPaiement?`${fmtDate(c.prochainPaiement)} · ${fmtEur(clientMontant(c))}`:'—';
@@ -2539,7 +2540,11 @@ async function openBillingDetail(clientId){
   document.getElementById('bdAddBtn').onclick=()=>openAddPaiement(c);
   document.getElementById('bdRelanceBtn').onclick=()=>{ relanceClient(c.id); };
 
-  const d=await adminFetch(`/.netlify/functions/admin-get-paiements?userId=${encodeURIComponent(c.email)}`);
+  const params=new URLSearchParams();
+  if(c.email) params.set('userId', c.email);
+  if(c.id)    params.set('clientRecordId', c.id);
+  console.log('[billing] appel admin-get-paiements:', params.toString());
+  const d=await adminFetch(`/.netlify/functions/admin-get-paiements?${params.toString()}`);
   const pays=d.paiements||[];
 
   const total=pays.filter(p=>p.statut==='Payé').reduce((s,p)=>s+Number(p.montant||0),0);
@@ -2618,7 +2623,8 @@ async function markPaidById(id, btn){
       await openBillingDetail(_bdClientId);
       updateClientNextPayment(_bdClientId);
       // Now find the payment in the refreshed detail and generate invoice
-      const d2=await adminFetch(`/.netlify/functions/admin-get-paiements?userId=${encodeURIComponent(c?.email||'')}`);
+      const _p3=new URLSearchParams(); if(c?.email) _p3.set('userId',c.email); if(c?.id) _p3.set('clientRecordId',c.id);
+      const d2=await adminFetch(`/.netlify/functions/admin-get-paiements?${_p3.toString()}`);
       const p2=(d2.paiements||[]).find(x=>x.id===id);
       if(p2 && !p2.numFacture && c) {
         await _generateInvoiceData(id, c, p2, true);
@@ -2635,7 +2641,8 @@ async function generateInvoice(paiementId, btn, isRegen=false){
   const p={ id:paiementId };
   // Read visible cells: date, montant, type, periode from row dataset or refetch
   btn.disabled=true; btn.textContent='…';
-  const d=await adminFetch(`/.netlify/functions/admin-get-paiements?userId=${encodeURIComponent(c.email)}`);
+  const _p2=new URLSearchParams(); if(c.email) _p2.set('userId',c.email); if(c.id) _p2.set('clientRecordId',c.id);
+  const d=await adminFetch(`/.netlify/functions/admin-get-paiements?${_p2.toString()}`);
   const pFull=(d.paiements||[]).find(x=>x.id===paiementId)||p;
   await _generateInvoiceData(paiementId, c, pFull, true, btn, isRegen);
 }
