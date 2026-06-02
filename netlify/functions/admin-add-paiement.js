@@ -21,7 +21,14 @@ exports.handler = async (event) => {
       "User ID": userId || "",
     };
     if (clientRecordId) fields.Clients = [clientRecordId];
-    if (plan) fields.Plan = plan;
+    // Plan est un singleSelect strict — on filtre sur les valeurs connues pour éviter
+    // "Insufficient permissions to create new select option"
+    const PLANS_VALIDES = [
+      "Starter WhatsApp", "Business WhatsApp", "Premium WhatsApp",
+      "Starter Vocal",    "Business Vocal",    "Premium Vocal",
+      "Starter Combo",    "Business Combo",    "Premium Combo",
+    ];
+    if (plan && PLANS_VALIDES.includes(plan)) fields.Plan = plan;
     if (periode) fields.Période = periode;
     if (reference) fields["Stripe payment ID"] = reference;
     if (type) fields["Type paiement"] = type;
