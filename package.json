@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
+    "cloudinary": "^2.10.0",
+    "pdfkit": "^0.18.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6"
   },
