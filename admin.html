@@ -716,6 +716,147 @@ canvas{max-width:100%!important}
       <div class="notif-list" id="notifList"></div>
     </section>
 
+    <!-- ===== CALENDLY ===== -->
+    <section class="page" id="page-calendly">
+      <div class="kpi-row" id="calendlyKpis" style="margin-bottom:20px">
+        <div class="kpi-card"><div class="kpi-label">RDV à venir (60j)</div><div class="kpi-value" id="kpiRdvAvenir">—</div></div>
+        <div class="kpi-card"><div class="kpi-label">RDV passés (30j)</div><div class="kpi-value" id="kpiRdvPast">—</div></div>
+        <div class="kpi-card"><div class="kpi-label">Types d'événements</div><div class="kpi-value" id="kpiEventTypes">—</div></div>
+        <div class="kpi-card">
+          <div class="kpi-label">Lien réservation</div>
+          <div style="font-size:13px;margin-top:6px"><a id="calendlySchedulingUrl" href="#" target="_blank" style="color:var(--accent)">—</a></div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+        <div class="card">
+          <h3 style="margin-bottom:14px">Types d'événements</h3>
+          <div id="calendlyEventTypesList" style="display:flex;flex-direction:column;gap:8px">
+            <p style="color:var(--text-muted);font-size:13px">Chargement…</p>
+          </div>
+        </div>
+        <div class="card">
+          <h3 style="margin-bottom:14px">Prochains RDV</h3>
+          <div id="calendlyUpcomingList" style="display:flex;flex-direction:column;gap:10px;max-height:420px;overflow-y:auto">
+            <p style="color:var(--text-muted);font-size:13px">Chargement…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <h3>Tous les RDV à venir</h3>
+          <button class="btn sm ghost" onclick="loadCalendly()">Rafraîchir</button>
+        </div>
+        <div class="table-wrap">
+          <table class="hist-table">
+            <thead><tr><th>Événement</th><th>Date</th><th>Heure</th><th>Invité(s)</th><th>Lieu / Lien</th></tr></thead>
+            <tbody id="calendlyTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== CRM ===== -->
+    <section class="page" id="page-crm">
+      <div class="toolbar" style="flex-wrap:wrap;gap:8px;margin-bottom:20px">
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn sm ghost crm-filter-btn active" data-filter="all">Tous</button>
+          <button class="btn sm ghost crm-filter-btn" data-filter="Prospect">Prospect</button>
+          <button class="btn sm ghost crm-filter-btn" data-filter="Contacté">Contacté</button>
+          <button class="btn sm ghost crm-filter-btn" data-filter="Démo planifiée">Démo</button>
+          <button class="btn sm ghost crm-filter-btn" data-filter="Proposition envoyée">Proposition</button>
+          <button class="btn sm ghost crm-filter-btn" data-filter="Gagné">Gagné</button>
+          <button class="btn sm ghost crm-filter-btn" data-filter="Perdu">Perdu</button>
+        </div>
+        <div class="spacer"></div>
+        <input id="crmSearch" placeholder="Rechercher un lead…" style="padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--card-bg);color:var(--text);font-size:13px;width:200px">
+        <button class="btn sm" onclick="openLeadModal()">+ Nouveau lead</button>
+      </div>
+
+      <div class="kpi-row" style="margin-bottom:20px">
+        <div class="kpi-card"><div class="kpi-label">Total leads</div><div class="kpi-value" id="crmKpiTotal">—</div></div>
+        <div class="kpi-card"><div class="kpi-label">Démo planifiée</div><div class="kpi-value" id="crmKpiDemo">—</div></div>
+        <div class="kpi-card"><div class="kpi-label">Taux de conversion</div><div class="kpi-value" id="crmKpiConv">—</div></div>
+        <div class="kpi-card"><div class="kpi-label">CA pipeline estimé</div><div class="kpi-value" id="crmKpiPipeline">—</div></div>
+      </div>
+
+      <!-- Kanban board -->
+      <div id="crmKanban" style="display:flex;gap:14px;overflow-x:auto;padding-bottom:10px">
+        <!-- Columns injected by JS -->
+      </div>
+
+      <!-- List fallback (hidden by default, shown on mobile) -->
+      <div id="crmList" style="display:none">
+        <div class="table-wrap">
+          <table class="hist-table">
+            <thead><tr><th>Nom</th><th>Entreprise</th><th>Statut</th><th>Source</th><th>Montant €</th><th>Dernière action</th><th>Actions</th></tr></thead>
+            <tbody id="crmTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Modal Lead -->
+    <div class="modal-overlay" id="modalLead" style="display:none">
+      <div class="modal" style="max-width:560px;width:100%">
+        <div class="modal-header"><h2 id="modalLeadTitle">Nouveau lead</h2><button class="modal-close" onclick="closeLeadModal()">×</button></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:20px 0">
+          <div class="field"><label>Prénom</label><input id="lfPrenom" placeholder="Jean"></div>
+          <div class="field"><label>Nom *</label><input id="lfNom" placeholder="Dupont"></div>
+          <div class="field"><label>Email *</label><input id="lfEmail" type="email" placeholder="jean@example.com"></div>
+          <div class="field"><label>Téléphone</label><input id="lfTel" placeholder="+33 6 00 00 00 00"></div>
+          <div class="field"><label>Entreprise</label><input id="lfEntreprise" placeholder="Acme SAS"></div>
+          <div class="field"><label>Source</label>
+            <select id="lfSource">
+              <option value="">—</option>
+              <option>Site web</option><option>Calendly</option><option>LinkedIn</option>
+              <option>Référence</option><option>Publicité</option><option>Autre</option>
+            </select>
+          </div>
+          <div class="field"><label>Statut</label>
+            <select id="lfStatut">
+              <option>Prospect</option><option>Contacté</option><option>Démo planifiée</option>
+              <option>Proposition envoyée</option><option>Gagné</option><option>Perdu</option>
+            </select>
+          </div>
+          <div class="field"><label>Secteur</label>
+            <select id="lfSecteur">
+              <option value="">—</option>
+              <option>E-commerce</option><option>Immobilier</option><option>Santé</option>
+              <option>Finance</option><option>Education</option><option>Retail</option>
+              <option>Industrie</option><option>Services</option><option>Tech</option><option>Autre</option>
+            </select>
+          </div>
+          <div class="field"><label>Montant estimé (€)</label><input id="lfMontant" type="number" min="0" placeholder="0"></div>
+          <div class="field"><label>Pays</label><input id="lfPays" placeholder="France"></div>
+          <div class="field" style="grid-column:span 2"><label>Lien RDV Calendly</label><input id="lfLienRdv" placeholder="https://calendly.com/…"></div>
+          <div class="field" style="grid-column:span 2"><label>Raison perte</label>
+            <select id="lfRaisonPerte">
+              <option value="">—</option>
+              <option>Prix</option><option>Concurrent</option><option>Pas de budget</option>
+              <option>Pas de besoin</option><option>Injoignable</option><option>Autre</option>
+            </select>
+          </div>
+          <div class="field" style="grid-column:span 2"><label>Notes</label><textarea id="lfNotes" rows="3" style="width:100%;resize:vertical"></textarea></div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn ghost" onclick="closeLeadModal()">Annuler</button>
+          <button class="btn danger sm" id="lfDeleteBtn" style="display:none;margin-right:auto" onclick="deleteLead()">Supprimer</button>
+          <button class="btn" onclick="saveLead()">Enregistrer</button>
+        </div>
+        <div id="lfConvertBlock" style="display:none;border-top:1px solid var(--border);padding-top:14px;margin-top:4px">
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:10px">Convertir ce lead en client AkilAI :</p>
+          <div style="display:flex;gap:10px;align-items:center">
+            <select id="lfConvertPlan" style="flex:1;padding:7px;border-radius:6px;border:1px solid var(--border);background:var(--card-bg);color:var(--text)">
+              <option>Starter</option><option>Growth</option><option>Pro</option><option>Enterprise</option>
+            </select>
+            <button class="btn sm" style="background:#22c55e" onclick="convertLead()">Convertir en client</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ===== SETTINGS ===== -->
     <section class="page" id="page-settings">
       <!-- Settings tabs -->
@@ -1284,6 +1425,8 @@ const NAV = [
   ["billing","Facturation",'<path d="M3 6h18v12H3z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 10h18" stroke="currentColor" stroke-width="2"/>'],
   ["finances","Finances",'<path d="M3 3v18h18M7 14l4-4 3 3 5-6" fill="none" stroke="currentColor" stroke-width="2"/>'],
   ["notifications","Notifications",'<path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4a1.5 1.5 0 0 0-3 0v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>'],
+  ["calendly","Calendly",'<path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zM7 12h5v5H7z"/>'],
+  ["crm","CRM",'<path d="M20 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zm-9 8H7v-2h4v2zm6-4H7v-2h10v2z"/>'],
   ["settings","Paramètres",'<path d="M19.14 12.94a7.49 7.49 0 0 0 0-1.88l2.03-1.58-2-3.46-2.39.96a7.03 7.03 0 0 0-1.62-.94l-.36-2.54h-4l-.36 2.54c-.58.24-1.12.56-1.62.94l-2.39-.96-2 3.46 2.03 1.58a7.49 7.49 0 0 0 0 1.88L2.05 14.5l2 3.46 2.39-.96c.5.38 1.04.7 1.62.94l.36 2.56h4l.36-2.54c.58-.24 1.12-.56 1.62-.94l2.39.96 2-3.46-2.06-1.58zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/>']
 ];
 const TITLES = Object.fromEntries(NAV.map(n=>[n[0],n[1]]));
@@ -1395,6 +1538,8 @@ function navigate(id) {
   if (id==='notifications'){ renderNotifications(); updateSidebarBadges(); }
   if (id==='settings'){ renderSettings(); }
   if (id==='automations') ensureRealAutomations().then(()=>{ populateAutoClientFilter(); renderAutomations(); });
+  if (id==='calendly') loadCalendly();
+  if (id==='crm') loadLeads();
 }
 
 /* =========================================================
@@ -4107,6 +4252,288 @@ function markAllNotifsRead(){
   saveNotifications(all); renderNotifications();
   toast('Toutes les notifications marquées comme lues');
 }
+
+/* =========================================================
+   CALENDLY
+   ========================================================= */
+let calendlyData = null;
+
+async function loadCalendly() {
+  document.getElementById('calendlyTableBody').innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted)">Chargement…</td></tr>';
+  document.getElementById('calendlyEventTypesList').innerHTML = '<p style="color:var(--text-muted);font-size:13px">Chargement…</p>';
+  document.getElementById('calendlyUpcomingList').innerHTML   = '<p style="color:var(--text-muted);font-size:13px">Chargement…</p>';
+
+  const data = await adminFetch('/.netlify/functions/admin-get-calendly');
+  if (data.error) { toast('Erreur Calendly: ' + data.error, true); return; }
+  calendlyData = data;
+  renderCalendly(data);
+}
+
+function renderCalendly(data) {
+  const { rdvs = [], pastCount = 0, eventTypes = [], schedulingUrl = '' } = data;
+
+  // KPIs
+  document.getElementById('kpiRdvAvenir').textContent   = rdvs.length;
+  document.getElementById('kpiRdvPast').textContent     = pastCount;
+  document.getElementById('kpiEventTypes').textContent  = eventTypes.length;
+  const urlEl = document.getElementById('calendlySchedulingUrl');
+  if (schedulingUrl) { urlEl.href = schedulingUrl; urlEl.textContent = schedulingUrl.replace('https://',''); }
+  else { urlEl.textContent = '—'; }
+
+  // Event types
+  const etList = document.getElementById('calendlyEventTypesList');
+  if (!eventTypes.length) { etList.innerHTML = '<p style="color:var(--text-muted);font-size:13px">Aucun type d\'événement</p>'; }
+  else {
+    etList.innerHTML = eventTypes.map(et => `
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg);border-radius:8px">
+        <span style="width:8px;height:8px;border-radius:50%;background:${et.active?'#22c55e':'#94a3b8'};flex-shrink:0"></span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(et.name)}</div>
+          <div style="font-size:11px;color:var(--text-muted)">${et.duration} min</div>
+        </div>
+        ${et.bookingUrl ? `<a href="${esc(et.bookingUrl)}" target="_blank" class="btn sm ghost" style="font-size:11px;padding:2px 8px">Lien</a>` : ''}
+      </div>`).join('');
+  }
+
+  // Upcoming (first 5)
+  const upList = document.getElementById('calendlyUpcomingList');
+  if (!rdvs.length) { upList.innerHTML = '<p style="color:var(--text-muted);font-size:13px">Aucun RDV à venir</p>'; }
+  else {
+    upList.innerHTML = rdvs.slice(0, 5).map(rdv => {
+      const dt   = new Date(rdv.startTime);
+      const dateStr = dt.toLocaleDateString('fr-FR', { weekday:'short', day:'numeric', month:'short' });
+      const timeStr = dt.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+      const inv  = rdv.invitees[0];
+      return `
+        <div style="padding:10px 12px;background:var(--bg);border-radius:8px;border-left:3px solid var(--accent)">
+          <div style="font-size:13px;font-weight:500">${esc(rdv.name)}</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px">${dateStr} à ${timeStr}</div>
+          ${inv ? `<div style="font-size:12px;margin-top:4px">${esc(inv.name)} — <span style="color:var(--text-muted)">${esc(inv.email)}</span></div>` : ''}
+        </div>`;
+    }).join('');
+  }
+
+  // Full table
+  const tbody = document.getElementById('calendlyTableBody');
+  if (!rdvs.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted)">Aucun RDV</td></tr>'; return; }
+  tbody.innerHTML = rdvs.map(rdv => {
+    const dt      = new Date(rdv.startTime);
+    const dtEnd   = new Date(rdv.endTime);
+    const dateStr = dt.toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric' });
+    const timeStr = dt.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' }) + '–' + dtEnd.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+    const invNames = rdv.invitees.map(i => esc(i.name || i.email)).join(', ') || '—';
+    const loc = rdv.location ? `<a href="${esc(rdv.location)}" target="_blank" style="color:var(--accent);font-size:12px">Lien visio</a>` : '—';
+    return `<tr>
+      <td>${esc(rdv.name)}</td>
+      <td>${dateStr}</td>
+      <td>${timeStr}</td>
+      <td style="max-width:200px">${invNames}</td>
+      <td>${loc}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* =========================================================
+   CRM / LEADS
+   ========================================================= */
+let allLeads = [];
+let crmFilter = 'all';
+let editingLeadId = null;
+
+const CRM_STATUT_COLORS = {
+  'Prospect':              '#94a3b8',
+  'Contacté':              '#60a5fa',
+  'Démo planifiée':        '#a78bfa',
+  'Proposition envoyée':   '#f59e0b',
+  'Gagné':                 '#22c55e',
+  'Perdu':                 '#ef4444',
+};
+const CRM_KANBAN_COLS = ['Prospect','Contacté','Démo planifiée','Proposition envoyée','Gagné','Perdu'];
+
+async function loadLeads() {
+  const data = await adminFetch('/.netlify/functions/admin-get-leads');
+  if (data.error) { toast('Erreur CRM: ' + data.error, true); return; }
+  allLeads = data.leads || [];
+  renderCRM();
+}
+
+function renderCRM() {
+  const search  = (document.getElementById('crmSearch')?.value || '').toLowerCase();
+  const filter  = crmFilter;
+
+  let leads = allLeads;
+  if (filter !== 'all') leads = leads.filter(l => l.statut === filter);
+  if (search) leads = leads.filter(l =>
+    (l.nom + ' ' + l.prenom + ' ' + l.entreprise + ' ' + l.email).toLowerCase().includes(search));
+
+  // KPIs
+  document.getElementById('crmKpiTotal').textContent   = allLeads.length;
+  document.getElementById('crmKpiDemo').textContent    = allLeads.filter(l=>l.statut==='Démo planifiée').length;
+  const conv = allLeads.filter(l=>l.statut==='Gagné').length;
+  document.getElementById('crmKpiConv').textContent    = allLeads.length ? Math.round(conv / allLeads.length * 100) + '%' : '0%';
+  const pipeline = allLeads.filter(l=>!['Gagné','Perdu'].includes(l.statut)).reduce((s,l)=>s+(l.montantEstime||0),0);
+  document.getElementById('crmKpiPipeline').textContent = pipeline ? pipeline.toLocaleString('fr-FR') + ' €' : '—';
+
+  // Kanban
+  const kanban = document.getElementById('crmKanban');
+  kanban.innerHTML = CRM_KANBAN_COLS.map(col => {
+    const colLeads = leads.filter(l => l.statut === col);
+    const color    = CRM_STATUT_COLORS[col] || '#94a3b8';
+    const total    = colLeads.reduce((s,l)=>s+(l.montantEstime||0),0);
+    return `
+      <div style="min-width:220px;flex:0 0 220px;background:var(--card-bg);border-radius:10px;padding:12px;border-top:3px solid ${color}">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <span style="font-size:13px;font-weight:600">${col}</span>
+          <span style="font-size:11px;color:var(--text-muted);background:var(--bg);border-radius:10px;padding:1px 7px">${colLeads.length}</span>
+        </div>
+        ${total ? `<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">${total.toLocaleString('fr-FR')} € estimé</div>` : ''}
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${colLeads.length ? colLeads.map(l => renderLeadCard(l)).join('') : '<div style="font-size:12px;color:var(--text-muted);text-align:center;padding:12px 0">Aucun lead</div>'}
+        </div>
+        <button class="btn sm ghost" style="width:100%;margin-top:10px;font-size:12px" onclick="openLeadModal(null,'${col}')">+ Ajouter</button>
+      </div>`;
+  }).join('');
+}
+
+function renderLeadCard(l) {
+  const color   = CRM_STATUT_COLORS[l.statut] || '#94a3b8';
+  const initials = ((l.prenom||'').charAt(0) + (l.nom||'').charAt(0)).toUpperCase() || '?';
+  const date     = l.dateDerniereAction ? new Date(l.dateDerniereAction).toLocaleDateString('fr-FR') : '';
+  return `
+    <div onclick="openLeadModal('${l.id}')" style="cursor:pointer;background:var(--bg);border-radius:8px;padding:10px;border:1px solid var(--border);transition:border-color .15s" onmouseover="this.style.borderColor='${color}'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <div style="width:28px;height:28px;border-radius:50%;background:${color}22;color:${color};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${initials}</div>
+        <div style="min-width:0">
+          <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc((l.prenom+' '+l.nom).trim() || l.email)}</div>
+          ${l.entreprise ? `<div style="font-size:11px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(l.entreprise)}</div>` : ''}
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        ${l.montantEstime ? `<span style="font-size:11px;font-weight:600;color:${color}">${l.montantEstime.toLocaleString('fr-FR')} €</span>` : '<span></span>'}
+        ${date ? `<span style="font-size:10px;color:var(--text-muted)">${date}</span>` : ''}
+      </div>
+      ${l.source ? `<div style="font-size:10px;color:var(--text-muted);margin-top:4px">${esc(l.source)}</div>` : ''}
+    </div>`;
+}
+
+function openLeadModal(id, defaultStatut) {
+  editingLeadId = id || null;
+  const modal = document.getElementById('modalLead');
+  modal.style.display = 'flex';
+  document.getElementById('modalLeadTitle').textContent = id ? 'Modifier le lead' : 'Nouveau lead';
+  document.getElementById('lfDeleteBtn').style.display  = id ? 'inline-flex' : 'none';
+  document.getElementById('lfConvertBlock').style.display = 'none';
+
+  if (id) {
+    const l = allLeads.find(x => x.id === id);
+    if (!l) return;
+    document.getElementById('lfPrenom').value      = l.prenom || '';
+    document.getElementById('lfNom').value         = l.nom || '';
+    document.getElementById('lfEmail').value       = l.email || '';
+    document.getElementById('lfTel').value         = l.telephone || '';
+    document.getElementById('lfEntreprise').value  = l.entreprise || '';
+    document.getElementById('lfSource').value      = l.source || '';
+    document.getElementById('lfStatut').value      = l.statut || 'Prospect';
+    document.getElementById('lfSecteur').value     = l.secteur || '';
+    document.getElementById('lfMontant').value     = l.montantEstime || '';
+    document.getElementById('lfPays').value        = l.pays || '';
+    document.getElementById('lfLienRdv').value     = l.lienRdv || '';
+    document.getElementById('lfRaisonPerte').value = l.raisonPerte || '';
+    document.getElementById('lfNotes').value       = l.notes || '';
+    // Show convert block if not already converted
+    if (!l.converti && !['Gagné','Perdu'].includes(l.statut)) {
+      document.getElementById('lfConvertBlock').style.display = 'block';
+    }
+  } else {
+    ['lfPrenom','lfNom','lfEmail','lfTel','lfEntreprise','lfMontant','lfPays','lfLienRdv','lfNotes'].forEach(id => { document.getElementById(id).value = ''; });
+    document.getElementById('lfSource').value      = '';
+    document.getElementById('lfStatut').value      = defaultStatut || 'Prospect';
+    document.getElementById('lfSecteur').value     = '';
+    document.getElementById('lfRaisonPerte').value = '';
+  }
+}
+
+function closeLeadModal() {
+  document.getElementById('modalLead').style.display = 'none';
+  editingLeadId = null;
+}
+
+async function saveLead() {
+  const nom = document.getElementById('lfNom').value.trim();
+  if (!nom) { toast('Le nom est requis', true); return; }
+
+  const payload = {
+    prenom:        document.getElementById('lfPrenom').value.trim(),
+    nom,
+    email:         document.getElementById('lfEmail').value.trim(),
+    telephone:     document.getElementById('lfTel').value.trim(),
+    entreprise:    document.getElementById('lfEntreprise').value.trim(),
+    source:        document.getElementById('lfSource').value,
+    statut:        document.getElementById('lfStatut').value,
+    secteur:       document.getElementById('lfSecteur').value,
+    montantEstime: document.getElementById('lfMontant').value || 0,
+    pays:          document.getElementById('lfPays').value.trim(),
+    lienRdv:       document.getElementById('lfLienRdv').value.trim(),
+    raisonPerte:   document.getElementById('lfRaisonPerte').value,
+    notes:         document.getElementById('lfNotes').value.trim(),
+  };
+
+  let data;
+  if (editingLeadId) {
+    data = await adminFetch('/.netlify/functions/admin-update-lead', { method:'POST', body: JSON.stringify({ id: editingLeadId, ...payload }) });
+  } else {
+    data = await adminFetch('/.netlify/functions/admin-create-lead', { method:'POST', body: JSON.stringify(payload) });
+  }
+
+  if (data.error) { toast('Erreur: ' + data.error, true); return; }
+  toast(editingLeadId ? 'Lead mis à jour' : 'Lead créé');
+  closeLeadModal();
+  loadLeads();
+}
+
+async function deleteLead() {
+  if (!editingLeadId) return;
+  if (!confirm('Supprimer ce lead ?')) return;
+  // Mark as Perdu (soft delete) — no hard delete endpoint
+  const data = await adminFetch('/.netlify/functions/admin-update-lead', {
+    method: 'POST',
+    body: JSON.stringify({ id: editingLeadId, statut: 'Perdu', raisonPerte: 'Supprimé' }),
+  });
+  if (data.error) { toast('Erreur: ' + data.error, true); return; }
+  toast('Lead supprimé');
+  closeLeadModal();
+  loadLeads();
+}
+
+async function convertLead() {
+  if (!editingLeadId) return;
+  const plan = document.getElementById('lfConvertPlan').value;
+  const l    = allLeads.find(x => x.id === editingLeadId);
+  if (!l?.email) { toast('Email requis pour la conversion', true); return; }
+  if (!confirm(`Convertir ${l.prenom} ${l.nom} en client AkilAI avec le plan ${plan} ?`)) return;
+
+  const data = await adminFetch('/.netlify/functions/admin-convert-lead', {
+    method: 'POST',
+    body: JSON.stringify({ leadId: editingLeadId, plan, montant: l.montantEstime }),
+  });
+  if (data.error) { toast('Erreur conversion: ' + data.error, true); return; }
+  toast('Lead converti en client !');
+  closeLeadModal();
+  loadLeads();
+}
+
+// CRM filter buttons
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.crm-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.crm-filter-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      crmFilter = btn.dataset.filter;
+      renderCRM();
+    });
+  });
+  document.getElementById('crmSearch')?.addEventListener('input', renderCRM);
+});
 
 /* =========================================================
    BOOT
