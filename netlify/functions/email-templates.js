@@ -240,4 +240,52 @@ function ticketResolu({ nom, numTicket, sujet, dateResolution, reponseAkilai, co
   };
 }
 
-module.exports = { bienvenue, relanceJ7, relanceJ3, suspension, reactivation, facture, ticketResolu };
+// ─── 8. Résiliation (client) ─────────────────────────────────────────────────
+function resiliationClient({ nom, plan, dateResiliation, raison }) {
+  const dr = dateResiliation || new Date().toLocaleDateString('fr-FR');
+  const body = `
+    ${GREETING(nom)}
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#2a1515;border-left:4px solid #ef4444;border-radius:0 8px 8px 0;padding:16px 20px;margin:0 0 20px;">
+      <tr><td style="color:#fca5a5;font-size:14px;line-height:1.6;">
+        Nous vous confirmons la résiliation de votre compte AkilAI à compter du <strong>${dr}</strong>.
+      </td></tr>
+    </table>
+    ${INFO_BLOCK([
+      ['Plan résilié', plan || '—'],
+      ['Date de résiliation', dr],
+      ['Raison', raison || '—'],
+    ], '#ef4444', '#2a1515')}
+    ${TEXT('Vos données sont conservées pendant 12 mois.')}
+    ${TEXT('Si vous souhaitez revenir ou avez des questions, contactez-nous à <a href="mailto:bonjour@akilai.fr" style="color:#70B2DE;">bonjour@akilai.fr</a>', true)}
+    ${TEXT('Merci d\'avoir fait confiance à AkilAI.', true)}
+    ${DIVIDER}
+    ${SIGNATURE}`;
+  return {
+    subject: `Résiliation de votre compte AkilAI`,
+    html: BASE('#ef4444', 'Résiliation de compte', 'Résiliation de votre compte AkilAI', body),
+  };
+}
+
+// ─── 9. Résiliation (admin notif) ────────────────────────────────────────────
+function resiliationAdmin({ entreprise, nom, email, plan, montant, raison, commentaire, date }) {
+  const dr = date || new Date().toLocaleDateString('fr-FR');
+  const body = `
+    <p style="color:#e0e0e0;font-size:15px;line-height:1.7;margin:0 0 20px;">Un client vient de résilier son compte AkilAI.</p>
+    ${INFO_BLOCK([
+      ['Client', entreprise || nom || '—'],
+      ['Nom', nom || '—'],
+      ['Email', email || '—'],
+      ['Plan', plan || '—'],
+      ['MRR perdu', montant ? `${montant} €/mois` : '—'],
+      ['Raison', raison || '—'],
+      ['Date', dr],
+    ], '#ef4444', '#2a1515')}
+    ${commentaire ? `${TEXT('Commentaire :')}
+    <div style="background:#252525;border-radius:8px;padding:16px 20px;margin:0 0 20px;color:#e0e0e0;font-size:14px;line-height:1.7;">${commentaire}</div>` : ''}`;
+  return {
+    subject: `🔴 Résiliation — ${entreprise || nom || email}`,
+    html: BASE('#ef4444', 'Résiliation client', '🔴 Résiliation client', body),
+  };
+}
+
+module.exports = { bienvenue, relanceJ7, relanceJ3, suspension, reactivation, facture, ticketResolu, resiliationClient, resiliationAdmin };

@@ -341,7 +341,7 @@ canvas{max-width:100%!important}
       </div>
       <!-- Ligne 2 : opérations & santé -->
       <div class="kpi-grid kpi-grid-ops">
-        <div class="kpi-card"><div class="k-icon" style="background:rgba(239,68,68,.12)">📉</div><div class="k-label">Churn du mois</div><div class="k-value" id="kpiChurn">0</div><div class="k-sub">clients suspendus</div></div>
+        <div class="kpi-card"><div class="k-icon" style="background:rgba(239,68,68,.12)">📉</div><div class="k-label">Churn du mois</div><div class="k-value" id="kpiChurn">0</div><div class="k-sub">clients résiliés</div></div>
         <div class="kpi-card"><div class="k-icon" style="background:rgba(245,158,11,.12)">🎫</div><div class="k-label">Tickets ouverts</div><div class="k-value" id="kpiTicketsOuverts">0</div><div class="k-sub">à traiter</div></div>
         <div class="kpi-card"><div class="k-icon" style="background:rgba(148,163,184,.1)">🏗️</div><div class="k-label">Coûts infra / mois</div><div class="k-value" id="kpiCouts">0 €</div><div class="k-sub">infrastructure</div></div>
         <div class="kpi-card kpi-violet"><div class="k-icon" style="background:rgba(167,139,250,.12)">🎙️</div><div class="k-label">Minutes consommées</div><div class="k-value" id="kpiMinutes">0</div><div class="k-sub">appels vocaux</div></div>
@@ -1106,6 +1106,10 @@ canvas{max-width:100%!important}
         <option value="Autre">Autre</option>
       </select>
     </div>
+    <div class="field" style="margin-bottom:20px">
+      <label style="font-size:13px;font-weight:600;margin-bottom:6px;display:block">Commentaire <span style="color:var(--muted);font-weight:400">(optionnel)</span></label>
+      <textarea id="resilCommentaire" rows="3" placeholder="Contexte supplémentaire…" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface-2,#1a1a2e);color:var(--text);font-size:14px;resize:vertical;box-sizing:border-box"></textarea>
+    </div>
     <div class="modal-actions">
       <button class="btn ghost sm" data-close>Annuler</button>
       <button class="btn sm" id="resilConfirmBtn" style="background:#dc2626;color:#fff;border-color:#dc2626">Résilier définitivement</button>
@@ -1609,7 +1613,7 @@ function updateOverview(){
   document.getElementById('kpiClientsTotal').textContent=adminClients.length;
   const mrr=computeMRR();
   document.getElementById('kpiMRR').textContent=fmtEur(mrr);
-  const churn=adminClients.filter(c=>c.statut==='Suspendu').length;
+  const churn=adminClients.filter(c=>c.statut==='Résilié').length;
   document.getElementById('kpiChurn').textContent=churn;
   const openT=adminTickets.filter(t=>t.statut==='Ouvert').length;
   document.getElementById('kpiTicketsOuverts').textContent=openT;
@@ -2155,6 +2159,7 @@ function openResilierModal(c){
   document.getElementById('resilMsg').textContent=
     `Vous êtes sur le point de résilier définitivement le compte de ${c.entreprise||c.nom||'ce client'}. Cette action bloquera l'accès au dashboard client.`;
   document.getElementById('resilRaison').value='';
+  document.getElementById('resilCommentaire').value='';
   const overlay=document.getElementById('modalResilier');
   overlay.classList.add('show');
   document.getElementById('resilConfirmBtn').onclick=()=>resilierClient(c);
@@ -2164,30 +2169,39 @@ async function resilierClient(c){
   const raison=document.getElementById('resilRaison').value;
   if(!raison){ document.getElementById('resilRaison').style.outline='2px solid #f87171'; return; }
   document.getElementById('resilRaison').style.outline='';
+  const commentaire=(document.getElementById('resilCommentaire').value||'').trim();
   const btn=document.getElementById('resilConfirmBtn');
   btn.disabled=true; btn.textContent='Résiliation…';
 
-  const notes=(c.notes||'')+(c.notes?'\n':'')+`[${new Date().toLocaleDateString('fr-FR')}] Résilié — ${raison}`;
-  const res=await adminFetch('/.netlify/functions/admin-update-client',{
-    method:'PATCH',
-    body:JSON.stringify({id:c.id,fields:{Statut:'Résilié',Notes:notes}})
+  // Estimer MRR perdu depuis les paiements en mémoire
+  const mrr=adminPaiements.filter(p=>p.clientRecordId===c.id&&p.statut==='Payé')
+    .reduce((s,p)=>s+Number(p.montant||0),0);
+
+  const res=await adminFetch('/.netlify/functions/admin-resilier-client',{
+    method:'POST',
+    body:JSON.stringify({
+      id:c.id,raison,commentaire,
+      entreprise:c.entreprise,nom:c.nom,email:c.email,
+      plan:c.plan,montant:mrr||null,notes:c.notes
+    })
   });
   btn.disabled=false; btn.textContent='Résilier définitivement';
 
   if(res.ok!==false){
-    c.statut='Résilié'; c.notes=notes;
+    c.statut='Résilié'; c.notes=res.notes||c.notes;
     document.getElementById('modalResilier').classList.remove('show');
     document.getElementById('cpResiliBtn').style.display='none';
     document.getElementById('cpResiliBadge').style.display='';
-    document.getElementById('cpToggleBtn').textContent='Activer';
+    document.getElementById('cpToggleBtn').textContent='Résilié';
+    document.getElementById('cpToggleBtn').disabled=true;
     document.getElementById('cpBadges').innerHTML=
       statutBadge(c.statut)+
       `<span class="badge badge-accent">${esc(c.plan||'—')}</span>`+
       (c.pays?`<span class="badge badge-muted">${esc(c.pays)}</span>`:'')+
       (c.secteur?`<span class="badge badge-muted">${esc(c.secteur)}</span>`:'');
-    document.getElementById('cpNotes').value=notes;
+    if(res.notes) document.getElementById('cpNotes').value=res.notes;
     await setClientAutomationsStatut(c,'Inactif');
-    toast('Compte résilié — automatisations désactivées','success');
+    toast('Compte résilié — emails envoyés, automatisations désactivées','success');
     await loadClients(); renderClients(); updateOverview();
   } else toast(res.error||'Erreur lors de la résiliation','error');
 }
@@ -3128,9 +3142,9 @@ function renderFinances(){
   const costs=totalCosts();
   const marge=mrr-costs;
   const tauxMarge=mrr>0?Math.round(marge/mrr*100):0;
-  const totalClients=adminClients.filter(c=>c.statut==='Actif'||c.statut==='Suspendu'||c.statut==='Essai').length;
-  const suspended=adminClients.filter(c=>c.statut==='Suspendu').length;
-  const churnRate=totalClients>0?Math.round(suspended/totalClients*100):0;
+  const totalClients=adminClients.filter(c=>c.statut==='Actif'||c.statut==='Suspendu'||c.statut==='Essai'||c.statut==='Résilié').length;
+  const resilies=adminClients.filter(c=>c.statut==='Résilié').length;
+  const churnRate=totalClients>0?Math.round(resilies/totalClients*100):0;
   const cac=adminFinances.cac||0;
   const actifs=adminClients.filter(c=>c.statut==='Actif');
   const mrrPerClient=mrr>0&&actifs.length>0?mrr/actifs.length:0;
@@ -3162,7 +3176,7 @@ function renderFinances(){
   document.getElementById('finTauxMarge').style.color=tauxMarge>60?'#22c55e':tauxMarge>=40?'#f59e0b':'#ef4444';
   document.getElementById('finChurn').textContent=churnRate+'%';
   document.getElementById('finChurn').style.color=churnRate<5?'#22c55e':churnRate<10?'#f59e0b':'#ef4444';
-  document.getElementById('finChurnSub').textContent=`${suspended} suspendu(s) / ${totalClients} clients`;
+  document.getElementById('finChurnSub').textContent=`${resilies} résilié(s) / ${totalClients} clients`;
 
   // LTV / CAC
   document.getElementById('finLTV').textContent=ltv>0?fmtEur(ltv):'— €';
