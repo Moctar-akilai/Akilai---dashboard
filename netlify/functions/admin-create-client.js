@@ -1,5 +1,6 @@
 const { BASE_URL, headers, ok, err, preflight, corsHeaders } = require("./config");
 const { verifyAdminToken, unauthorized } = require("./admin-utils");
+const { bienvenue: bienvenueTpl } = require("./email-templates");
 
 exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") return preflight();
@@ -49,12 +50,10 @@ exports.handler = async (event) => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${RESEND_API_KEY}`,
         },
-        body: JSON.stringify({
-          from: "AkilAI <noreply@akilai.fr>",
-          to: email,
-          subject: "Bienvenue chez AkilAI — Votre accès est prêt",
-          html: `<h2>Bienvenue ${nom} !</h2><p>Votre compte AkilAI a été créé avec le plan <strong>${plan}</strong>.</p><p>Email de connexion : ${email}</p><p>L'équipe AkilAI</p>`,
-        }),
+        body: JSON.stringify((() => {
+          const tpl = bienvenueTpl({ nom, plan, email, dateInscription: new Date().toLocaleDateString('fr-FR') });
+          return { from: "AkilAI <noreply@akilai.fr>", to: email, subject: tpl.subject, html: tpl.html };
+        })()),
       });
       const _dWelcome = await _rWelcome.json();
       console.log('[email] admin-create-client statut:', _dWelcome.id || _dWelcome.error || _dWelcome.message);

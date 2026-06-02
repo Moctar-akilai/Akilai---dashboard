@@ -89,19 +89,20 @@ function buildPDF({ numFacture, clientNom, clientEmail, montant, devise, plan, d
   });
 }
 
-async function sendInvoiceEmail(email, nom, numFacture, pdfBuffer) {
+const { facture: factureTpl } = require("./email-templates");
+
+async function sendInvoiceEmail(email, nom, numFacture, pdfBuffer, periode, montantTTC, plan) {
   if (!RESEND_API_KEY) return;
   const b64 = pdfBuffer.toString("base64");
+  const tpl = factureTpl({ nom: nom || email, numFacture, periode, montantTTC, plan });
   const _rInv = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
     body: JSON.stringify({
       from: "AkilAI <noreply@akilai.fr>",
       to: email,
-      subject: `Votre facture AkilAI — ${numFacture}`,
-      html: `<p>Bonjour <strong>${nom || email}</strong>,</p>
-<p>Veuillez trouver ci-joint votre facture <strong>${numFacture}</strong>.</p>
-<p>Merci de votre confiance,<br/>L'équipe AkilAI</p>`,
+      subject: tpl.subject,
+      html: tpl.html,
       attachments: [{ filename: `${numFacture}.pdf`, content: b64 }],
     }),
   });
@@ -140,7 +141,7 @@ exports.handler = async (event) => {
 
     // Send email if requested
     if (sendEmail && clientEmail) {
-      await sendInvoiceEmail(clientEmail, clientNom, numFacture, pdfBuffer);
+      await sendInvoiceEmail(clientEmail, clientNom, numFacture, pdfBuffer, date, montant, plan);
     }
 
     // Return PDF as base64 so frontend can trigger download
