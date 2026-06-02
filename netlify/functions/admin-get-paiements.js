@@ -47,7 +47,10 @@ exports.handler = async (event) => {
     } while (offset);
 
     console.log("[get-paiements] Nb paiements:", allRecords.length);
-    if (allRecords[0]) console.log("[get-paiements] Premier record:", JSON.stringify(allRecords[0].fields).substring(0, 200));
+    if (allRecords[0]) {
+      console.log("[get-paiements] Field keys:", JSON.stringify(Object.keys(allRecords[0].fields)));
+      console.log("[get-paiements] Premier record:", JSON.stringify(allRecords[0].fields).substring(0, 300));
+    }
 
     const paiements = allRecords.map((r) => {
       const f = r.fields || {};
@@ -64,7 +67,7 @@ exports.handler = async (event) => {
         reference: f["Stripe payment ID"] || "",
         userId: f["User ID"] || "",
         email: (f.Email || [])[0] || "",
-        numFacture: f["N° Facture"] || "",
+        numFacture: f["N° Facture"] || f["N° Facture"] || f["No Facture"] || "",
         factureUrl: f["Facture URL"] || "",
         typePaiement: f["Type paiement"] || "",
         createdAt: r.createdTime,
