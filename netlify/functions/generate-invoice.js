@@ -1,6 +1,6 @@
 const { BASE_URL, headers, ok, err, preflight, corsHeaders } = require("./config");
 const { verifyAdminToken, unauthorized } = require("./admin-utils");
-const PDFDocument = require("pdfkit");
+const { PDFDocument, rgb, StandardFonts } = require("pdf-lib");
 const { v2: cloudinary } = require("cloudinary");
 
 const PAIEMENTS_TABLE = "tblgoPGS5jbhWwXQl";
@@ -55,133 +55,137 @@ async function getAgencyInfo() {
   }
 }
 
-// --- PDF builder ---
+// --- Helpers ---
 
 const TVA_PAYS = ["France", "Belgique", "france", "belgique", "FR", "BE"];
 
-function buildPDF({ numFacture, agence, clientNom, clientEmail, entreprise, pays, montant, devise, plan, date, type, periode }) {
-  return new Promise((resolve, reject) => {
-    try {
-      console.log("[invoice] Génération PDF...");
-      const doc = new PDFDocument({ size: "A4", margin: 50 });
-      const chunks = [];
-      doc.on("data", (c) => chunks.push(c));
-      doc.on("end", () => resolve(Buffer.concat(chunks)));
-      doc.on("error", (e) => { console.error("[invoice] PDFKit error:", e.message); reject(e); });
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  return rgb(r, g, b);
+}
 
-      const fmtDate = (d) =>
-        d ? new Date(d).toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" }) : "—";
-      const fmtMoney = (v) =>
-        Number(v || 0).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " " + (devise || "EUR");
+function fmtMoney(v, devise) {
+  return Number(v || 0).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " " + (devise || "EUR");
+}
 
-      const hasTVA = TVA_PAYS.includes(pays || "");
-      const montantHT = hasTVA ? (Number(montant) / 1.2).toFixed(2) : Number(montant).toFixed(2);
-      const tvaAmount = hasTVA ? (Number(montant) - Number(montantHT)).toFixed(2) : null;
-      const montantTTC = Number(montant).toFixed(2);
+function fmtDate(d) {
+  return d ? new Date(d).toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" }) : "-";
+}
 
-      const BLACK = "#0f172a";
-      const MUTED = "#64748b";
-      const LIGHT = "#e2e8f0";
+// pdf-lib draws from bottom-left; helper converts top-relative Y on A4 (841.89pt)
+function ty(y) { return 841.89 - y; }
 
-      // ── Header banner ──────────────────────────────────────────────────────────
-      doc.rect(50, 40, 495, 80).fill("#0f0f0f");
+// --- PDF builder using pdf-lib ---
 
-      doc.fontSize(22).fillColor("#ffffff").font("Helvetica-Bold")
-        .text(agence.nom || "AkilAI", 65, 60, { width: 200 });
-      doc.fontSize(9).fillColor("#aaaaaa").font("Helvetica")
-        .text(agence.email || "bonjour@akilai.fr", 65, 87)
-        .text(agence.site || "akilai.fr", 65, 99);
+async function buildPDF({ numFacture, agence, clientNom, clientEmail, entreprise, pays, montant, devise, plan, date, type, periode }) {
+  console.log("[invoice] Génération PDF (pdf-lib)...");
 
-      doc.fontSize(28).fillColor("#ffffff").font("Helvetica-Bold")
-        .text("FACTURE", 350, 55, { width: 180, align: "right" });
-      doc.fontSize(11).fillColor("#aaaaaa").font("Helvetica")
-        .text(`N° ${numFacture}`, 350, 90, { width: 180, align: "right" });
+  const pdfDoc = await PDFDocument.create();
+  const page = pdfDoc.addPage([595.28, 841.89]); // A4
 
-      // ── Two-column info block ──────────────────────────────────────────────────
-      const colY = 145;
+  const regular = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const bold    = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-      doc.fontSize(8).fillColor(MUTED).font("Helvetica").text("ÉMETTEUR", 50, colY);
-      doc.fontSize(10).fillColor(BLACK).font("Helvetica-Bold").text(agence.nom || "AkilAI", 50, colY + 14);
-      doc.fontSize(9).fillColor(MUTED).font("Helvetica");
-      if (agence.adresse) doc.text(agence.adresse, 50, doc.y + 2, { width: 230 });
-      if (agence.siret) doc.text(`SIRET : ${agence.siret}`, 50, doc.y + 2);
-      if (agence.tel) doc.text(`Tél : ${agence.tel}`, 50, doc.y + 2);
+  const hasTVA    = TVA_PAYS.includes(pays || "");
+  const montantHT = hasTVA ? (Number(montant) / 1.2).toFixed(2) : Number(montant).toFixed(2);
+  const tvaAmount = hasTVA ? (Number(montant) - Number(montantHT)).toFixed(2) : null;
+  const montantTTC = Number(montant).toFixed(2);
 
-      doc.fontSize(8).fillColor(MUTED).font("Helvetica").text("FACTURÉ À", 320, colY);
-      doc.fontSize(10).fillColor(BLACK).font("Helvetica-Bold").text(entreprise || clientNom || clientEmail, 320, colY + 14, { width: 225 });
-      doc.fontSize(9).fillColor(MUTED).font("Helvetica");
-      if (clientEmail && (entreprise || clientNom)) doc.text(clientEmail, 320, doc.y + 2, { width: 225 });
-      if (pays) doc.text(pays, 320, doc.y + 2, { width: 225 });
+  const BLACK  = hexToRgb("#0f172a");
+  const MUTED  = hexToRgb("#64748b");
+  const LIGHT  = hexToRgb("#e2e8f0");
+  const WHITE  = rgb(1, 1, 1);
+  const DARK   = rgb(0.06, 0.06, 0.06);
+  const BGROW  = hexToRgb("#f1f5f9");
 
-      const infoY = colY + 14;
-      doc.fontSize(9).fillColor(MUTED).text(`Date : ${fmtDate(date)}`, 320, infoY + 55, { width: 225, align: "right" });
-      if (periode) doc.text(`Période : ${periode}`, 320, doc.y + 2, { width: 225, align: "right" });
+  // ── Header banner (dark bg) ───────────────────────────────────────────────
+  page.drawRectangle({ x: 50, y: ty(120), width: 495, height: 80, color: DARK });
 
-      // ── Table ──────────────────────────────────────────────────────────────────
-      const tableY = Math.max(doc.y, 270) + 20;
+  // Agency name
+  page.drawText(agence.nom || "AkilAI", { x: 65, y: ty(72), size: 20, font: bold, color: WHITE });
+  page.drawText(agence.email || "bonjour@akilai.fr", { x: 65, y: ty(88), size: 8, font: regular, color: rgb(0.67, 0.67, 0.67) });
+  page.drawText(agence.site  || "akilai.fr",         { x: 65, y: ty(98), size: 8, font: regular, color: rgb(0.67, 0.67, 0.67) });
 
-      doc.rect(50, tableY, 495, 22).fill("#f1f5f9");
-      doc.fontSize(9).fillColor(MUTED).font("Helvetica");
-      doc.text("Description", 60, tableY + 6, { width: 250 });
-      doc.text("Qté", 310, tableY + 6, { width: 50, align: "center" });
-      doc.text("Prix HT", 360, tableY + 6, { width: 80, align: "right" });
-      doc.text("Total HT", 440, tableY + 6, { width: 95, align: "right" });
+  // FACTURE label (right-aligned manually)
+  page.drawText("FACTURE", { x: 370, y: ty(72), size: 24, font: bold, color: WHITE });
+  page.drawText(`N\xB0 ${numFacture}`, { x: 390, y: ty(90), size: 9, font: regular, color: rgb(0.67, 0.67, 0.67) });
 
-      const rowY = tableY + 22;
-      const desc = plan ? `Abonnement ${plan}${periode ? ` — ${periode}` : ""}` : (type || "Prestation AkilAI");
-      doc.rect(50, rowY, 495, 28).fill("#ffffff").strokeColor(LIGHT).lineWidth(0.5).stroke();
-      doc.fontSize(10).fillColor(BLACK).font("Helvetica");
-      doc.text(desc, 60, rowY + 8, { width: 250 });
-      doc.text("1", 310, rowY + 8, { width: 50, align: "center" });
-      doc.text(fmtMoney(montantHT), 360, rowY + 8, { width: 80, align: "right" });
-      doc.text(fmtMoney(montantHT), 440, rowY + 8, { width: 95, align: "right" });
+  // ── Two-column info ───────────────────────────────────────────────────────
+  let leftY = 140;
 
-      // ── Totals ────────────────────────────────────────────────────────────────
-      const totY = rowY + 44;
-      const totX = 350;
-      const valX = 440;
-      const valW = 95;
+  page.drawText("EMETTEUR", { x: 50, y: ty(leftY), size: 7, font: bold, color: MUTED });
+  leftY += 14;
+  page.drawText(agence.nom || "AkilAI", { x: 50, y: ty(leftY), size: 10, font: bold, color: BLACK });
+  leftY += 13;
+  if (agence.adresse) { page.drawText(agence.adresse, { x: 50, y: ty(leftY), size: 8, font: regular, color: MUTED, maxWidth: 220 }); leftY += 12; }
+  if (agence.siret)   { page.drawText(`SIRET : ${agence.siret}`, { x: 50, y: ty(leftY), size: 8, font: regular, color: MUTED }); leftY += 12; }
+  if (agence.tel)     { page.drawText(`Tel : ${agence.tel}`,     { x: 50, y: ty(leftY), size: 8, font: regular, color: MUTED }); leftY += 12; }
 
-      doc.moveTo(50, totY - 8).lineTo(545, totY - 8).strokeColor(LIGHT).lineWidth(0.5).stroke();
+  let rightY = 140;
+  page.drawText("FACTURE A", { x: 320, y: ty(rightY), size: 7, font: bold, color: MUTED });
+  rightY += 14;
+  page.drawText(entreprise || clientNom || clientEmail || "-", { x: 320, y: ty(rightY), size: 10, font: bold, color: BLACK, maxWidth: 220 });
+  rightY += 13;
+  if (clientEmail && (entreprise || clientNom)) { page.drawText(clientEmail, { x: 320, y: ty(rightY), size: 8, font: regular, color: MUTED }); rightY += 12; }
+  if (pays) { page.drawText(pays, { x: 320, y: ty(rightY), size: 8, font: regular, color: MUTED }); rightY += 12; }
 
-      doc.fontSize(9).fillColor(MUTED).font("Helvetica");
-      doc.text("Sous-total HT", totX, totY, { width: 85, align: "right" });
-      doc.fontSize(9).fillColor(BLACK);
-      doc.text(fmtMoney(montantHT), valX, totY, { width: valW, align: "right" });
+  // Date / period
+  rightY = 200;
+  page.drawText(`Date : ${fmtDate(date)}`, { x: 320, y: ty(rightY), size: 8, font: regular, color: MUTED });
+  if (periode) { page.drawText(`Periode : ${periode}`, { x: 320, y: ty(rightY + 12), size: 8, font: regular, color: MUTED }); }
 
-      if (hasTVA) {
-        doc.fontSize(9).fillColor(MUTED).font("Helvetica");
-        doc.text("TVA 20 %", totX, totY + 16, { width: 85, align: "right" });
-        doc.fontSize(9).fillColor(BLACK);
-        doc.text(fmtMoney(tvaAmount), valX, totY + 16, { width: valW, align: "right" });
+  // ── Table ─────────────────────────────────────────────────────────────────
+  const tableY = 260;
 
-        doc.moveTo(350, totY + 32).lineTo(545, totY + 32).strokeColor(LIGHT).lineWidth(0.5).stroke();
-        doc.rect(350, totY + 36, 195, 24).fill("#0f0f0f");
-        doc.fontSize(11).fillColor("#ffffff").font("Helvetica-Bold");
-        doc.text("Total TTC", 360, totY + 42, { width: 75, align: "right" });
-        doc.text(fmtMoney(montantTTC), valX, totY + 42, { width: valW, align: "right" });
-      } else {
-        doc.fontSize(8).fillColor(MUTED).font("Helvetica")
-          .text("TVA non applicable (art. 293 B CGI)", totX, totY + 16, { width: 185, align: "right" });
+  // Header row
+  page.drawRectangle({ x: 50, y: ty(tableY + 20), width: 495, height: 20, color: BGROW });
+  page.drawText("Description",  { x: 60,  y: ty(tableY + 13), size: 8, font: bold, color: MUTED });
+  page.drawText("Qte",          { x: 312, y: ty(tableY + 13), size: 8, font: bold, color: MUTED });
+  page.drawText("Prix HT",      { x: 380, y: ty(tableY + 13), size: 8, font: bold, color: MUTED });
+  page.drawText("Total HT",     { x: 460, y: ty(tableY + 13), size: 8, font: bold, color: MUTED });
 
-        doc.moveTo(350, totY + 32).lineTo(545, totY + 32).strokeColor(LIGHT).lineWidth(0.5).stroke();
-        doc.rect(350, totY + 36, 195, 24).fill("#0f0f0f");
-        doc.fontSize(11).fillColor("#ffffff").font("Helvetica-Bold");
-        doc.text("Total", 360, totY + 42, { width: 75, align: "right" });
-        doc.text(fmtMoney(montantTTC), valX, totY + 42, { width: valW, align: "right" });
-      }
+  // Data row
+  const rowY = tableY + 20;
+  page.drawRectangle({ x: 50, y: ty(rowY + 26), width: 495, height: 26, color: rgb(1, 1, 1), borderColor: LIGHT, borderWidth: 0.5 });
+  const desc = plan ? `Abonnement ${plan}${periode ? ` - ${periode}` : ""}` : (type || "Prestation AkilAI");
+  page.drawText(desc,                    { x: 60,  y: ty(rowY + 16), size: 9, font: regular, color: BLACK, maxWidth: 240 });
+  page.drawText("1",                     { x: 314, y: ty(rowY + 16), size: 9, font: regular, color: BLACK });
+  page.drawText(fmtMoney(montantHT, devise), { x: 355, y: ty(rowY + 16), size: 9, font: regular, color: BLACK });
+  page.drawText(fmtMoney(montantHT, devise), { x: 445, y: ty(rowY + 16), size: 9, font: regular, color: BLACK });
 
-      // ── Footer ────────────────────────────────────────────────────────────────
-      doc.fontSize(8).fillColor(MUTED).font("Helvetica")
-        .text(`${agence.nom || "AkilAI"} — ${agence.email || "bonjour@akilai.fr"} — ${agence.site || "akilai.fr"}`, 50, 780, { align: "center", width: 495 })
-        .text(`Facture ${numFacture} — générée automatiquement`, 50, 790, { align: "center", width: 495 });
+  // ── Totals ────────────────────────────────────────────────────────────────
+  let totY = rowY + 46;
 
-      doc.end();
-    } catch (e) {
-      console.error("[invoice] buildPDF exception:", e.message, e.stack);
-      reject(e);
-    }
-  });
+  page.drawLine({ start: { x: 50, y: ty(totY - 6) }, end: { x: 545, y: ty(totY - 6) }, thickness: 0.5, color: LIGHT });
+
+  page.drawText("Sous-total HT",          { x: 350, y: ty(totY + 10), size: 8, font: regular, color: MUTED });
+  page.drawText(fmtMoney(montantHT, devise), { x: 445, y: ty(totY + 10), size: 8, font: regular, color: BLACK });
+  totY += 20;
+
+  if (hasTVA) {
+    page.drawText("TVA 20 %",               { x: 350, y: ty(totY + 10), size: 8, font: regular, color: MUTED });
+    page.drawText(fmtMoney(tvaAmount, devise), { x: 445, y: ty(totY + 10), size: 8, font: regular, color: BLACK });
+    totY += 20;
+  } else {
+    page.drawText("TVA non applicable (art. 293 B CGI)", { x: 290, y: ty(totY + 10), size: 7, font: regular, color: MUTED });
+    totY += 20;
+  }
+
+  page.drawLine({ start: { x: 340, y: ty(totY) }, end: { x: 545, y: ty(totY) }, thickness: 0.5, color: LIGHT });
+  totY += 4;
+  page.drawRectangle({ x: 340, y: ty(totY + 22), width: 205, height: 22, color: DARK });
+  page.drawText(hasTVA ? "Total TTC" : "Total", { x: 350, y: ty(totY + 14), size: 10, font: bold, color: WHITE });
+  page.drawText(fmtMoney(montantTTC, devise),    { x: 440, y: ty(totY + 14), size: 10, font: bold, color: WHITE });
+
+  // ── Footer ────────────────────────────────────────────────────────────────
+  const footer = `${agence.nom || "AkilAI"}  |  ${agence.email || "bonjour@akilai.fr"}  |  ${agence.site || "akilai.fr"}`;
+  page.drawText(footer,                       { x: 50, y: ty(820), size: 7, font: regular, color: MUTED });
+  page.drawText(`Facture ${numFacture}`,      { x: 50, y: ty(830), size: 7, font: regular, color: MUTED });
+
+  const pdfBytes = await pdfDoc.save();
+  return Buffer.from(pdfBytes);
 }
 
 // --- Cloudinary upload ---
@@ -210,16 +214,13 @@ const { getEmailCorps } = require("./email-config");
 
 async function sendInvoiceEmail(email, nom, numFacture, pdfBuffer, periode, montant, plan, pdfUrl) {
   if (!RESEND_API_KEY || !email) return;
-  console.log("[invoice] Envoi email à:", email);
+  console.log("[invoice] Envoi email a:", email);
   const b64 = pdfBuffer.toString("base64");
   const _corps = await getEmailCorps("facture").catch(() => null);
-
-  // Append download link to corps
   const downloadLink = pdfUrl
-    ? `\n\nVous pouvez aussi télécharger votre facture : <a href="${pdfUrl}" target="_blank">Télécharger la facture ${numFacture}</a>`
+    ? `\n\nVous pouvez aussi telecharger votre facture : <a href="${pdfUrl}" target="_blank">Telecharger la facture ${numFacture}</a>`
     : "";
   const corpsFinal = (_corps || "") + downloadLink;
-
   const tpl = factureTpl({ nom: nom || email, numFacture, periode, montantTTC: montant, plan, corps: corpsFinal });
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -262,7 +263,7 @@ exports.handler = async (event) => {
       montant, devise, plan, date, type, periode,
     });
 
-    // Upload vers Cloudinary si configuré
+    // Upload vers Cloudinary si configure
     let pdfUrl = null;
     if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
       try {
@@ -271,7 +272,7 @@ exports.handler = async (event) => {
         console.error("[invoice] Cloudinary upload error:", e.message);
       }
     } else {
-      console.warn("[invoice] Cloudinary non configuré — skip upload");
+      console.warn("[invoice] Cloudinary non configure - skip upload");
     }
 
     // PATCH Airtable : N° Facture + Facture URL
@@ -288,7 +289,6 @@ exports.handler = async (event) => {
       console.error("[invoice] Airtable patch error:", t);
     }
 
-    // Envoi email
     if (sendEmail && clientEmail) {
       await sendInvoiceEmail(clientEmail, entreprise || clientNom, numFacture, pdfBuffer, periode, montant, plan, pdfUrl);
     }
