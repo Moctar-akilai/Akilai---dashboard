@@ -6,6 +6,8 @@ function currentMonthKey() {
   return `${n.getFullYear()}_${String(n.getMonth() + 1).padStart(2, "0")}`;
 }
 
+const DEFAULT_COUTS = { vapi: 0, elevenlabs: 0, make: 0, twilio: 0, netlify: 0, openai: 0, autres: 0 };
+
 exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") return preflight();
   if (!verifyAdminToken(event)) return unauthorized();
@@ -14,79 +16,55 @@ exports.handler = async (event) => {
     const listRes = await fetch(`${BASE_URL}/Configurations?maxRecords=1`, { headers });
     const listData = await listRes.json();
     if (listData.error) return err(listData.error.message || "Airtable error");
-    const existingRecord = listData.records && listData.records[0];
+    const record = listData.records?.[0] || null;
 
     if (event.httpMethod === "GET") {
-      const defaultCouts = { vapi: 0, elevenlabs: 0, make: 0, twilio: 0, netlify: 0, openai: 0, autres: 0 };
-      if (!existingRecord) return ok({ couts: defaultCouts, cac: 0, updatedAt: null });
+      if (!record) return ok({ couts: DEFAULT_COUTS, cac: 0, updatedAt: null });
 
-      const f = existingRecord.fields || {};
+      const raw = record.fields?.Finances;
+      let data = { months: {}, cac: 0 };
+      try { if (raw) data = JSON.parse(raw); } catch (e) {}
+
       const monthKey = currentMonthKey();
+      const couts = data.months?.[monthKey] || DEFAULT_COUTS;
+      const cac = data.cac || 0;
 
-      // Couts field stores a map: { "2026_06": {...}, "2026_05": {...} }
-      // or legacy flat object for backwards compat
-      let couts = defaultCouts;
-      try {
-        const raw = f.Couts;
-        if (raw) {
-          const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
-          // If it has a month-keyed structure, extract current month
-          if (parsed[monthKey] && typeof parsed[monthKey] === "object") {
-            couts = parsed[monthKey];
-          } else if (parsed.vapi !== undefined || parsed.make !== undefined) {
-            // legacy flat object
-            couts = parsed;
-          }
-        }
-      } catch (e) { /* keep defaults */ }
-
-      let cac = 0;
-      try { cac = Number(f.CAC || 0); } catch (e) {}
-
-      return ok({ couts, cac, updatedAt: f.UpdatedAt || existingRecord.createdTime });
+      return ok({ couts, cac, updatedAt: data.updatedAt || null });
     }
 
     if (event.httpMethod === "POST") {
       const { couts, cac } = JSON.parse(event.body || "{}");
-      if (!couts) return err("couts is required");
+      if (!couts) return err("couts requis", 400);
 
       const monthKey = currentMonthKey();
 
-      // Read existing monthly map to merge
-      let monthlyMap = {};
+      // Merge with existing months
+      let existing = { months: {}, cac: 0 };
       try {
-        const raw = existingRecord?.fields?.Couts;
-        if (raw) {
-          const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
-          // If it already has month keys, keep them; otherwise start fresh
-          if (parsed && typeof parsed === "object" && !parsed.vapi) {
-            monthlyMap = parsed;
-          }
-        }
+        const raw = record?.fields?.Finances;
+        if (raw) existing = JSON.parse(raw);
       } catch (e) {}
 
-      monthlyMap[monthKey] = couts;
+      existing.months = existing.months || {};
+      existing.months[monthKey] = couts;
+      existing.cac = cac ?? existing.cac;
+      existing.updatedAt = new Date().toISOString();
 
-      const fields = {
-        Couts: JSON.stringify(monthlyMap),
-        UpdatedAt: new Date().toISOString(),
-      };
-      if (cac != null) fields.CAC = Number(cac);
+      const fields = { Finances: JSON.stringify(existing) };
 
-      if (existingRecord) {
-        const patchRes = await fetch(`${BASE_URL}/Configurations/${existingRecord.id}`, {
+      let res;
+      if (record) {
+        res = await fetch(`${BASE_URL}/Configurations/${record.id}`, {
           method: "PATCH", headers, body: JSON.stringify({ fields }),
         });
-        const patchData = await patchRes.json();
-        if (patchData.error) return err(patchData.error.message || "Airtable error");
       } else {
-        const createRes = await fetch(`${BASE_URL}/Configurations`, {
+        res = await fetch(`${BASE_URL}/Configurations`, {
           method: "POST", headers, body: JSON.stringify({ fields }),
         });
-        const createData = await createRes.json();
-        if (createData.error) return err(createData.error.message || "Airtable error");
       }
 
+      const data = await res.json();
+      if (data.error) return err(data.error.message || "Airtable error");
       return ok({ ok: true });
     }
 
