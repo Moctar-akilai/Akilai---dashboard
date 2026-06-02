@@ -32,7 +32,7 @@ function buildPDF({ numFacture, clientNom, clientEmail, montant, devise, plan, d
 
     // Header
     doc.fontSize(22).fillColor("#0f172a").text("AkilAI", 50, 50);
-    doc.fontSize(10).fillColor("#64748b").text("contact@akilai.fr  ·  akilai.fr", 50, 78);
+    doc.fontSize(10).fillColor("#64748b").text("bonjour@akilai.fr  ·  akilai.fr", 50, 78);
     doc.moveDown(2);
 
     doc.fontSize(20).fillColor("#0f172a").text("FACTURE", { align: "right" });

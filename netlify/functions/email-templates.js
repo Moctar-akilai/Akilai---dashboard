@@ -13,7 +13,7 @@ const BASE = (headerBg, headerTitle, headerSub, body) => `<!DOCTYPE html>
     <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#1a1a1a;border-radius:12px;overflow:hidden;border:1px solid #2a2a2a;">
       <!-- Header -->
       <tr><td style="background:${headerBg};padding:32px 40px;text-align:center;">
-        <div style="color:#ffffff;font-size:28px;font-weight:700;letter-spacing:-0.5px;">Akilai.</div>
+        <img src="https://portal-akilai.netlify.app/logo.png" alt="AkilAI" width="120" style="display:block;margin:0 auto 8px auto;"/>
         <div style="color:rgba(255,255,255,0.8);font-size:14px;margin-top:6px;">${headerSub}</div>
       </td></tr>
       <!-- Body -->
@@ -23,7 +23,7 @@ const BASE = (headerBg, headerTitle, headerSub, body) => `<!DOCTYPE html>
       <!-- Footer -->
       <tr><td style="background:#111111;padding:24px 40px;text-align:center;border-top:1px solid #2a2a2a;">
         <p style="color:#a0a0a0;font-size:12px;margin:0 0 6px;">© ${YEAR} AkilAI — Tous droits réservés</p>
-        <p style="color:#a0a0a0;font-size:12px;margin:0 0 6px;">akilai.fr | contact@akilai.fr</p>
+        <p style="color:#a0a0a0;font-size:12px;margin:0 0 6px;">akilai.fr | bonjour@akilai.fr</p>
         <p style="color:#555555;font-size:11px;margin:0;">Vous recevez cet email car vous êtes client AkilAI</p>
       </td></tr>
     </table>
@@ -96,7 +96,7 @@ function relanceJ7({ nom, plan, montant, dateEcheance, lienPaiement }) {
     ], '#f59e0b', '#252515')}
     ${lienPaiement ? CTA('Renouveler mon abonnement', lienPaiement, '#f59e0b') : ''}
     ${DIVIDER}
-    ${TEXT('Besoin d\'aide ? Contactez-nous à <a href="mailto:contact@akilai.fr" style="color:#70B2DE;">contact@akilai.fr</a>', true)}
+    ${TEXT('Besoin d\'aide ? Contactez-nous à <a href="mailto:bonjour@akilai.fr" style="color:#70B2DE;">bonjour@akilai.fr</a>', true)}
     ${SIGNATURE}`;
   return {
     subject: `Votre abonnement AkilAI expire dans 7 jours`,
@@ -122,7 +122,7 @@ function relanceJ3({ nom, plan, montant, dateEcheance, lienPaiement }) {
     ], '#ef4444', '#2a1515')}
     ${lienPaiement ? CTA('Renouveler maintenant', lienPaiement, '#ef4444') : ''}
     ${DIVIDER}
-    ${TEXT('Besoin d\'aide ? Contactez-nous à <a href="mailto:contact@akilai.fr" style="color:#70B2DE;">contact@akilai.fr</a>', true)}
+    ${TEXT('Besoin d\'aide ? Contactez-nous à <a href="mailto:bonjour@akilai.fr" style="color:#70B2DE;">bonjour@akilai.fr</a>', true)}
     ${SIGNATURE}`;
   return {
     subject: `⚠️ Plus que 3 jours pour renouveler votre abonnement AkilAI`,
