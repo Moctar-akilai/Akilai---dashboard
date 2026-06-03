@@ -3380,8 +3380,25 @@
             </div>
             <p style="font-size:13px;color:var(--text-muted);margin:0">Choisissez où stocker vos contacts après chaque appel.</p>
 
-            <!-- Options radio CRM -->
-            <div style="display:flex;flex-direction:column;gap:12px">
+            <!-- Vue : CRM actif (affiché quand CRM déjà configuré) -->
+            <div id="crm-active-view" style="display:none;flex-direction:column;gap:12px">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.2);border-radius:10px">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <span style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block;flex-shrink:0"></span>
+                  <span style="font-size:13px;font-weight:600" id="crm-active-label">CRM AkilAI actif</span>
+                </div>
+                <button class="btn btn-secondary btn-sm" onclick="showCRMEditMode()" style="font-size:12px">Changer de CRM</button>
+              </div>
+            </div>
+
+            <!-- Vue : Formulaire de choix (affiché au premier choix ou après "Changer") -->
+            <div id="crm-edit-view" style="display:flex;flex-direction:column;gap:12px">
+
+              <!-- Avertissement changement -->
+              <div id="crm-change-warning" style="display:none;padding:12px 14px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:10px;font-size:12px;color:#f59e0b;line-height:1.5">
+                ⚠️ <strong>Attention :</strong> vos contacts existants dans <span id="crm-prev-name">AkilAI CRM</span> resteront disponibles.
+                Les nouveaux appels seront synchronisés vers <span id="crm-next-name">le nouveau CRM</span> uniquement.
+              </div>
 
               <!-- AkilAI -->
               <label style="display:flex;align-items:flex-start;gap:12px;padding:14px;border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:border-color .15s" id="crm-opt-akilai"
@@ -3400,7 +3417,7 @@
                 <div style="flex:1">
                   <div style="font-weight:600;font-size:13px">Notion</div>
                   <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Synchronisez avec votre workspace Notion.</div>
-                  <div id="crm-notion-fields" style="display:none;margin-top:10px;display:flex;flex-direction:column;gap:8px">
+                  <div id="crm-notion-fields" style="display:none;margin-top:10px;flex-direction:column;gap:8px">
                     <input id="crm-notion-key" type="text" class="input" placeholder="Clé d'intégration (secret_…)" style="font-size:13px;padding:8px 12px" onclick="event.stopPropagation()" />
                     <div style="position:relative">
                       <input id="crm-notion-db" type="text" class="input" placeholder="Database ID Notion" style="font-size:13px;padding:8px 12px;padding-right:28px" onclick="event.stopPropagation()" />
@@ -3418,17 +3435,21 @@
                 <div style="flex:1">
                   <div style="font-weight:600;font-size:13px">Airtable</div>
                   <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Synchronisez avec votre base Airtable externe.</div>
-                  <div id="crm-airtable-fields" style="display:none;margin-top:10px;display:flex;flex-direction:column;gap:8px">
-                    <input id="crm-at-key"     type="text" class="input" placeholder="Clé API Airtable (patXXX…)" style="font-size:13px;padding:8px 12px" onclick="event.stopPropagation()" />
-                    <input id="crm-at-base"    type="text" class="input" placeholder="Base ID (appXXXXX)" style="font-size:13px;padding:8px 12px" onclick="event.stopPropagation()" />
-                    <input id="crm-at-table"   type="text" class="input" placeholder="Table ID (tblXXXXX)" style="font-size:13px;padding:8px 12px" onclick="event.stopPropagation()" />
+                  <div id="crm-airtable-fields" style="display:none;margin-top:10px;flex-direction:column;gap:8px">
+                    <input id="crm-at-key"   type="text" class="input" placeholder="Clé API Airtable (patXXX…)" style="font-size:13px;padding:8px 12px" onclick="event.stopPropagation()" />
+                    <input id="crm-at-base"  type="text" class="input" placeholder="Base ID (appXXXXX)" style="font-size:13px;padding:8px 12px" onclick="event.stopPropagation()" />
+                    <input id="crm-at-table" type="text" class="input" placeholder="Table ID (tblXXXXX)" style="font-size:13px;padding:8px 12px" onclick="event.stopPropagation()" />
                   </div>
                 </div>
               </label>
 
-            </div>
+              <!-- Boutons action -->
+              <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                <button id="crm-save-btn" class="btn btn-primary btn-sm" onclick="saveCRMChoice()">Sauvegarder mon choix CRM</button>
+                <button id="crm-cancel-btn" class="btn btn-secondary btn-sm" onclick="cancelCRMEdit()" style="display:none">Annuler</button>
+              </div>
 
-            <button class="btn btn-primary btn-sm" onclick="saveCRMChoice()" style="align-self:flex-start">Sauvegarder mon choix CRM</button>
+            </div>
           </div>
 
           <!-- Gmail -->
@@ -7768,17 +7789,61 @@ async function submitNewContact() {
 }
 
 /* ---- CRM option dans Intégrations ---- */
+let _crmPreviousType = null; // CRM actif avant modification
+
 function selectCRMOption(type) {
   document.querySelectorAll("input[name='crm-type']").forEach(r => r.checked = r.value === type);
   const notionFields   = document.getElementById("crm-notion-fields");
   const airtableFields = document.getElementById("crm-airtable-fields");
   if (notionFields)   notionFields.style.display   = (type === "Notion")   ? "flex" : "none";
   if (airtableFields) airtableFields.style.display = (type === "Airtable") ? "flex" : "none";
-  // Highlight selected option border
   ["akilai","notion","airtable"].forEach(k => {
     const el = document.getElementById("crm-opt-" + k);
     if (el) el.style.borderColor = (k.charAt(0).toUpperCase() + k.slice(1) === type) ? "var(--accent)" : "var(--border)";
   });
+
+  // Afficher avertissement si on change depuis un CRM déjà configuré
+  const warning  = document.getElementById("crm-change-warning");
+  const prevName = document.getElementById("crm-prev-name");
+  const nextName = document.getElementById("crm-next-name");
+  if (warning && _crmPreviousType && type !== _crmPreviousType) {
+    if (prevName) prevName.textContent = _crmPreviousType + " CRM";
+    if (nextName) nextName.textContent = type;
+    warning.style.display = "block";
+    const saveBtn = document.getElementById("crm-save-btn");
+    if (saveBtn) saveBtn.textContent = "Confirmer le changement";
+  } else if (warning) {
+    warning.style.display = "none";
+    const saveBtn = document.getElementById("crm-save-btn");
+    if (saveBtn) saveBtn.textContent = _crmPreviousType ? "Confirmer le changement" : "Sauvegarder mon choix CRM";
+  }
+}
+
+function showCRMEditMode() {
+  const client = (typeof clients !== "undefined" && clients[0]) || {};
+  _crmPreviousType = client.crmType || "AkilAI";
+
+  document.getElementById("crm-active-view").style.display = "none";
+  document.getElementById("crm-edit-view").style.display   = "flex";
+
+  const cancelBtn = document.getElementById("crm-cancel-btn");
+  if (cancelBtn) cancelBtn.style.display = "inline-flex";
+  const saveBtn = document.getElementById("crm-save-btn");
+  if (saveBtn) saveBtn.textContent = "Confirmer le changement";
+
+  // Pré-sélectionner le CRM actuel
+  selectCRMOption(_crmPreviousType);
+  // Masquer l'avertissement tant qu'on n'a pas changé
+  const warning = document.getElementById("crm-change-warning");
+  if (warning) warning.style.display = "none";
+}
+
+function cancelCRMEdit() {
+  const client = (typeof clients !== "undefined" && clients[0]) || {};
+  _crmPreviousType = null;
+  // Revenir à la vue active
+  document.getElementById("crm-active-view").style.display = "flex";
+  document.getElementById("crm-edit-view").style.display   = "none";
 }
 
 async function saveCRMChoice() {
@@ -7791,8 +7856,8 @@ async function saveCRMChoice() {
 
   let creds = {};
   if (crmType === "Notion") {
-    const key  = (document.getElementById("crm-notion-key").value || "").trim();
-    const db   = (document.getElementById("crm-notion-db").value  || "").trim();
+    const key = (document.getElementById("crm-notion-key").value || "").trim();
+    const db  = (document.getElementById("crm-notion-db").value  || "").trim();
     if (!key || !key.startsWith("secret_")) { showToast("Clé Notion invalide (doit commencer par secret_)", "warning"); return; }
     creds = { notionKey: key, notionDatabaseId: db };
   } else if (crmType === "Airtable") {
@@ -7812,6 +7877,7 @@ async function saveCRMChoice() {
     const data = await res.json();
     if (data.success) {
       if (clients[0]) clients[0].crmType = crmType;
+      _crmPreviousType = null;
       showToast(`CRM ${crmType} configuré ✅`, "success");
       renderIntegrations();
     } else {
@@ -7881,20 +7947,39 @@ function renderIntegrations() {
     }
   }
 
-  // ── CRM badge + radio init ──
-  const crmTypeBadge = document.getElementById("crm-type-badge");
+  // ── CRM badge + vue active/édition ──
+  const crmTypeBadge  = document.getElementById("crm-type-badge");
+  const crmActiveView = document.getElementById("crm-active-view");
+  const crmEditView   = document.getElementById("crm-edit-view");
+  const crmActiveLabel= document.getElementById("crm-active-label");
+  const crmCancelBtn  = document.getElementById("crm-cancel-btn");
+  const crmSaveBtn    = document.getElementById("crm-save-btn");
+
   if (crmTypeBadge) {
     const ct = client.crmType || "AkilAI";
-    crmTypeBadge.innerHTML = `<span style="background:rgba(99,102,241,0.15);color:var(--accent);padding:2px 8px;border-radius:20px">${ct}</span>`;
-    selectCRMOption(ct);
-    // Pré-remplir credentials si existants
-    if (ct === "Notion") {
-      if (client.notionKey)        { const el = document.getElementById("crm-notion-key"); if (el) el.value = client.notionKey; }
-      if (client.notionDatabaseId) { const el = document.getElementById("crm-notion-db");  if (el) el.value = client.notionDatabaseId; }
-    } else if (ct === "Airtable") {
-      if (client.airtableExternalKey)     { const el = document.getElementById("crm-at-key");   if (el) el.value = client.airtableExternalKey; }
-      if (client.airtableExternalBaseId)  { const el = document.getElementById("crm-at-base");  if (el) el.value = client.airtableExternalBaseId; }
-      if (client.airtableExternalTableId) { const el = document.getElementById("crm-at-table"); if (el) el.value = client.airtableExternalTableId; }
+    crmTypeBadge.innerHTML = `<span style="background:rgba(34,197,94,0.15);color:#22c55e;padding:2px 8px;border-radius:20px">&#10003; ${ct} actif</span>`;
+
+    // Si CRM déjà configuré → vue active, sinon formulaire
+    const alreadySet = !!client.crmType;
+    if (alreadySet && _crmPreviousType === null) {
+      if (crmActiveView) { crmActiveView.style.display = "flex"; }
+      if (crmEditView)   { crmEditView.style.display   = "none"; }
+      if (crmActiveLabel) crmActiveLabel.textContent = ct + " actif";
+    } else {
+      if (crmActiveView) { crmActiveView.style.display = "none"; }
+      if (crmEditView)   { crmEditView.style.display   = "flex"; }
+      if (crmCancelBtn)  { crmCancelBtn.style.display  = alreadySet ? "inline-flex" : "none"; }
+      if (crmSaveBtn)    { crmSaveBtn.textContent       = alreadySet ? "Confirmer le changement" : "Sauvegarder mon choix CRM"; }
+      selectCRMOption(ct);
+      // Pré-remplir credentials si existants
+      if (ct === "Notion") {
+        if (client.notionKey)        { const el = document.getElementById("crm-notion-key"); if (el) el.value = client.notionKey; }
+        if (client.notionDatabaseId) { const el = document.getElementById("crm-notion-db");  if (el) el.value = client.notionDatabaseId; }
+      } else if (ct === "Airtable") {
+        if (client.airtableExternalKey)     { const el = document.getElementById("crm-at-key");   if (el) el.value = client.airtableExternalKey; }
+        if (client.airtableExternalBaseId)  { const el = document.getElementById("crm-at-base");  if (el) el.value = client.airtableExternalBaseId; }
+        if (client.airtableExternalTableId) { const el = document.getElementById("crm-at-table"); if (el) el.value = client.airtableExternalTableId; }
+      }
     }
   }
 

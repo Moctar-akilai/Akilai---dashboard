@@ -85,7 +85,7 @@ exports.handler = async function(event) {
     const patchRes = await fetch(`${BASE_URL}/Clients/${recordId}`, {
       method: "PATCH",
       headers,
-      body: JSON.stringify({ fields }),
+      body: JSON.stringify({ fields, typecast: true }),
     });
 
     if (!patchRes.ok) {
