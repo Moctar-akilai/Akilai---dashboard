@@ -2,6 +2,7 @@ const { preflight, corsHeaders } = require("./config");
 
 const HISTORIQUE_TABLE  = "tblxXBGjv6iZU41XY";
 const AUTOMATIONS_TABLE = "tble4KroqvA1JodJs";
+const CLIENTS_TABLE     = "tble0g9eMTjAfw6OO";
 
 exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") return preflight();
@@ -48,62 +49,61 @@ exports.handler = async (event) => {
     return { statusCode: 400, headers: corsHeaders, body: "No call data" };
   }
 
+  // ── Extraction selon structure réelle confirmée ──
   const callId      = call.id;
+  const assistantId = call.assistantId || "";
   const cout        = message.cost        || call.cost        || 0;
   const endedReason = message.endedReason || call.endedReason || "";
 
-  // Métadonnées : chercher dans tous les emplacements possibles
-  const metadata =
-    message.assistant?.metadata            ||
-    message.assistantOverrides?.metadata   ||
-    call.assistantOverrides?.metadata      ||
-    call.assistant?.metadata               || {};
-  const userId   = metadata.userId   || "";
-  const clientId = metadata.clientId || "";
-
-  // Numéro client
-  const numeroClient = message.customer?.number || call.customer?.number || "";
-
-  // Transcription : message.artifact en priorité
-  const transcription =
-    message.artifact?.transcript ||
-    message.transcript            ||
-    call.transcript               || "";
+  // Transcription
+  const transcription = message.transcript || message.artifact?.transcript || "";
 
   // Durée
-  let duree = Math.round(message.durationSeconds || message.artifact?.duration || call.duration || 0);
-  if (!duree && (call.startedAt || message.startedAt) && (call.endedAt || message.endedAt)) {
-    duree = Math.round(
-      (new Date(call.endedAt || message.endedAt) - new Date(call.startedAt || message.startedAt)) / 1000
-    );
-  }
+  const duree = Math.round(
+    message.durationSeconds ||
+    (message.durationMs ? message.durationMs / 1000 : 0) ||
+    call.duration           || 0
+  );
 
   // Résumé
-  const resume =
-    message.analysis?.summary ||
-    message.summary            ||
-    call.analysis?.summary     ||
-    call.summary               || "";
+  const resume = message.analysis?.summary || message.summary || "";
+
+  // Statut : "true" → Succès, tout autre valeur → Échec
+  const statut = message.analysis?.successEvaluation === "true" ? "Succès" : "Échec";
 
   // Enregistrement
-  const enregistrement =
-    message.artifact?.recordingUrl ||
-    message.recordingUrl            ||
-    call.recordingUrl               || "";
+  const enregistrement = message.artifact?.recordingUrl || message.recordingUrl || "";
 
-  // Statut
-  const successEval = message.analysis?.successEvaluation ?? call.analysis?.successEvaluation;
-  const statut = successEval === "false" ? "Échec" : "Succès";
+  // Numéro client
+  const numeroClient = message.call?.customer?.number || message.customer?.number || "";
 
-  // Debug logs
-  console.log("[vapi-webhook] callId:", callId);
-  console.log("[vapi-webhook] userId:", userId, "| clientId:", clientId);
-  console.log("[vapi-webhook] durée calculée:", duree, "| statut:", statut);
-  console.log("[vapi-webhook] call keys:", Object.keys(call).join(", "));
-  console.log("[vapi-webhook] message keys:", Object.keys(message).join(", "));
-  console.log("[vapi-webhook] analysis:", JSON.stringify(message.analysis || call.analysis));
-  console.log("[vapi-webhook] metadata:", JSON.stringify(metadata));
-  console.log("[vapi-webhook] artifact keys:", Object.keys(message.artifact || {}).join(", "));
+  // Metadata → userId/clientId
+  const metadata = message.assistant?.metadata || {};
+  let userId   = metadata.userId   || "";
+  let clientId = metadata.clientId || "";
+
+  // Fallback : chercher le client par VapiAssistantId si userId vide
+  if (!userId && assistantId) {
+    try {
+      const searchUrl  = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${CLIENTS_TABLE}?filterByFormula={VapiAssistantId}="${assistantId}"&maxRecords=1`;
+      const searchRes  = await fetch(searchUrl, { headers: { Authorization: `Bearer ${AIRTABLE_API_KEY}` } });
+      const searchData = await searchRes.json();
+      if (searchData.records?.length > 0) {
+        const client = searchData.records[0];
+        userId   = client.fields["User ID"] || client.fields["Email"] || "";
+        clientId = client.id;
+        console.log("[vapi-webhook] client trouvé par assistantId:", userId);
+      }
+    } catch (e) {
+      console.warn("[vapi-webhook] lookup client par assistantId échec:", e.message);
+    }
+  }
+
+  console.log("[vapi-webhook] userId final:", userId);
+  console.log("[vapi-webhook] clientId final:", clientId);
+  console.log("[vapi-webhook] durée:", duree);
+  console.log("[vapi-webhook] transcript length:", transcription.length);
+  console.log("[vapi-webhook] statut:", statut, "| enregistrement:", enregistrement ? "oui" : "non");
 
   const fields = {
     "Titre":               `Appel vocal — ${numeroClient || "Inconnu"}`,
