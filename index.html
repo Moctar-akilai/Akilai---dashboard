@@ -2381,6 +2381,16 @@
         <span class="nav-label">Mes factures</span>
       </div>
 
+      <div class="nav-section-label" style="margin-top:8px">Outils</div>
+
+      <div class="nav-item" data-section="integrations" onclick="navigate('integrations')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+        </svg>
+        <span class="nav-label">Intégrations</span>
+      </div>
+
     </nav>
 
     <div class="sidebar-footer">
@@ -3213,6 +3223,124 @@
         </div>
       </div>
 
+      <!-- ====================================================
+           INTÉGRATIONS
+      ==================================================== -->
+      <div class="page" id="page-integrations">
+        <div class="page-header">
+          <div>
+            <div class="breadcrumb">Outils <span>/ Intégrations</span></div>
+            <h1 class="page-title">Mes intégrations</h1>
+            <p class="page-subtitle">Connectez vos outils à votre assistant AkilAI.</p>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px">
+
+          <!-- Google Calendar -->
+          <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <svg width="36" height="36" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                <rect x="6" y="6" width="36" height="36" rx="4" fill="#fff" stroke="#dadce0" stroke-width="1.5"/>
+                <rect x="6" y="14" width="36" height="6" fill="#1a73e8"/>
+                <text x="24" y="36" font-size="16" font-weight="700" fill="#1a73e8" text-anchor="middle" font-family="Arial,sans-serif">31</text>
+                <rect x="15" y="6" width="3" height="8" rx="1.5" fill="#5f6368"/>
+                <rect x="30" y="6" width="3" height="8" rx="1.5" fill="#5f6368"/>
+              </svg>
+              <div>
+                <div style="font-weight:600;font-size:15px">Google Calendar</div>
+                <div id="gcal-badge" style="font-size:11px;margin-top:2px"></div>
+              </div>
+            </div>
+            <p style="font-size:13px;color:var(--text-muted);margin:0">
+              Créez des RDV automatiquement dans votre agenda après chaque appel.
+            </p>
+            <div id="gcal-actions"></div>
+          </div>
+
+          <!-- Calendly -->
+          <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <svg width="36" height="36" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="48" height="48" rx="8" fill="#006BFF"/>
+                <text x="24" y="31" font-size="18" font-weight="800" fill="#fff" text-anchor="middle" font-family="Arial,sans-serif">C</text>
+              </svg>
+              <div>
+                <div style="font-weight:600;font-size:15px">Calendly</div>
+                <div id="calendly-badge" style="font-size:11px;margin-top:2px"></div>
+              </div>
+            </div>
+            <p style="font-size:13px;color:var(--text-muted);margin:0">
+              Partagez votre lien de prise de rendez-vous avec vos prospects.
+            </p>
+            <input id="calendly-input" type="text" class="input" placeholder="https://calendly.com/votre-lien"
+              style="font-size:13px;padding:8px 12px"
+              oninput="updateCalendlyBadge()" />
+            <button class="btn btn-primary btn-sm" onclick="saveCalendlyLink()">Sauvegarder</button>
+          </div>
+
+          <!-- Notion -->
+          <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <svg width="36" height="36" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="48" height="48" rx="8" fill="#fff" stroke="#e0e0e0" stroke-width="1.5"/>
+                <text x="24" y="32" font-size="22" font-weight="900" fill="#000" text-anchor="middle" font-family="Arial,sans-serif">N</text>
+              </svg>
+              <div>
+                <div style="font-weight:600;font-size:15px">Notion</div>
+                <div id="notion-badge" style="font-size:11px;margin-top:2px"></div>
+              </div>
+            </div>
+            <p style="font-size:13px;color:var(--text-muted);margin:0">
+              Synchronisez vos résumés d'appels dans votre workspace Notion.
+            </p>
+            <input id="notion-input" type="text" class="input" placeholder="Clé d'intégration Notion"
+              style="font-size:13px;padding:8px 12px"
+              oninput="updateNotionBadge()" />
+            <button class="btn btn-primary btn-sm" onclick="saveNotionKey()">Sauvegarder</button>
+          </div>
+
+          <!-- Gmail -->
+          <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <svg width="36" height="36" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                <rect width="48" height="48" rx="8" fill="#fff" stroke="#dadce0" stroke-width="1.5"/>
+                <path d="M8 14h32v20a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2V14z" fill="#fff"/>
+                <path d="M8 14l16 13L40 14" stroke="#EA4335" stroke-width="2.5" fill="none"/>
+                <path d="M8 14v20" stroke="#34A853" stroke-width="2"/>
+                <path d="M40 14v20" stroke="#FBBC04" stroke-width="2"/>
+              </svg>
+              <div>
+                <div style="font-weight:600;font-size:15px">Gmail</div>
+                <span style="font-size:11px;background:rgba(100,100,100,0.15);color:var(--text-muted);padding:2px 8px;border-radius:20px">Bientôt disponible</span>
+              </div>
+            </div>
+            <p style="font-size:13px;color:var(--text-muted);margin:0">
+              Envoyez des confirmations par email après chaque appel.
+            </p>
+            <button class="btn btn-secondary btn-sm" disabled style="opacity:0.5;cursor:not-allowed">Connecter</button>
+          </div>
+
+          <!-- WhatsApp -->
+          <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <svg width="36" height="36" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="48" height="48" rx="8" fill="#25D366"/>
+                <path d="M24 10C16.27 10 10 16.27 10 24c0 2.46.67 4.77 1.84 6.76L10 38l7.5-1.8A13.94 13.94 0 0 0 24 38c7.73 0 14-6.27 14-14S31.73 10 24 10zm7.1 19.4c-.3.84-1.76 1.6-2.42 1.7-.62.1-1.4.14-2.26-.14-.52-.17-1.19-.4-2.04-.78-3.58-1.55-5.92-5.17-6.1-5.41-.18-.24-1.46-1.94-1.46-3.7s.92-2.63 1.25-2.99c.33-.36.72-.45.96-.45.24 0 .48.01.69.02.22.01.52-.08.81.62.3.72 1.02 2.48 1.11 2.66.09.18.15.4.03.64-.12.24-.18.39-.36.6-.18.21-.38.47-.54.63-.18.18-.37.37-.16.73.21.36.94 1.55 2.02 2.51 1.39 1.24 2.56 1.62 2.92 1.8.36.18.57.15.78-.09.21-.24.9-1.05 1.14-1.41.24-.36.48-.3.81-.18.33.12 2.1.99 2.46 1.17.36.18.6.27.69.42.09.14.09.84-.21 1.68z" fill="#fff"/>
+              </svg>
+              <div>
+                <div style="font-weight:600;font-size:15px">WhatsApp</div>
+                <div id="whatsapp-badge" style="font-size:11px;margin-top:2px"></div>
+              </div>
+            </div>
+            <p style="font-size:13px;color:var(--text-muted);margin:0">
+              Votre assistant WhatsApp est configuré et géré par AkilAI.
+            </p>
+          </div>
+
+        </div>
+      </div>
+
     </div><!-- /content -->
   </div><!-- /main -->
 </div><!-- /app -->
@@ -3788,7 +3916,8 @@ function navigate(sectionId) {
   if (sectionId === 'appels')      { loadHistoriqueFromAirtable(); }
   if (sectionId === 'whatsapp')    { loadHistoriqueFromAirtable(); }
   if (sectionId === 'voix-ia')     { loadVoixConfig(); }
-  if (sectionId === 'factures')    { loadFactures(); }
+  if (sectionId === 'factures')      { loadFactures(); }
+  if (sectionId === 'integrations')  { renderIntegrations(); }
 
   currentSection = sectionId;
   try { localStorage.setItem('akilai_section', sectionId); } catch(e) {}
@@ -7178,6 +7307,116 @@ const RECO_ICONS = {
   warning: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
   accent:  `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
 };
+
+/* ============================================================
+   INTÉGRATIONS
+============================================================ */
+function renderIntegrations() {
+  const client = (typeof clients !== "undefined" && clients[0]) || {};
+
+  // Google Calendar
+  const gcalBadge   = document.getElementById("gcal-badge");
+  const gcalActions = document.getElementById("gcal-actions");
+  if (gcalBadge && gcalActions) {
+    if (client.googleConnected) {
+      gcalBadge.innerHTML   = '<span style="background:rgba(34,197,94,0.15);color:#22c55e;padding:2px 8px;border-radius:20px">&#10003; Connecté</span>';
+      gcalActions.innerHTML = '<button class="btn btn-secondary btn-sm" onclick="disconnectGoogle()" style="color:#ef4444;border-color:rgba(239,68,68,0.3)">Déconnecter</button>';
+    } else {
+      gcalBadge.innerHTML   = '<span style="color:var(--text-muted)">Non connecté</span>';
+      gcalActions.innerHTML = '<button class="btn btn-primary btn-sm" onclick="connectGoogle()">Connecter</button>';
+    }
+  }
+
+  // WhatsApp badge
+  const waBadge = document.getElementById("whatsapp-badge");
+  if (waBadge) {
+    const hasWhatsApp = client.plan && (client.plan === "Premium" || client.plan === "Business" || client.plan === "Enterprise");
+    waBadge.innerHTML = hasWhatsApp
+      ? '<span style="background:rgba(37,211,102,0.15);color:#25D366;padding:2px 8px;border-radius:20px">&#10003; Actif</span>'
+      : '<span style="background:rgba(100,100,100,0.15);color:var(--text-muted);padding:2px 8px;border-radius:20px">Non inclus</span>';
+  }
+
+  // Restore saved Calendly / Notion from localStorage
+  try {
+    const savedCalendly = localStorage.getItem("akilai_calendly_link") || "";
+    const savedNotion   = localStorage.getItem("akilai_notion_key")    || "";
+    const ci = document.getElementById("calendly-input");
+    const ni = document.getElementById("notion-input");
+    if (ci) { ci.value = savedCalendly; updateCalendlyBadge(); }
+    if (ni) { ni.value = savedNotion;   updateNotionBadge(); }
+  } catch(e) {}
+}
+
+function connectGoogle() {
+  const client = (typeof clients !== "undefined" && clients[0]) || {};
+  const userId = client.email || "";
+  if (!userId) { showToast("Impossible de récupérer votre identifiant", "error"); return; }
+  window.location.href = "/.netlify/functions/google-oauth-start?userId=" + encodeURIComponent(userId);
+}
+
+function disconnectGoogle() {
+  if (!confirm("Déconnecter Google Calendar ?")) return;
+  showToast("Déconnexion Google Calendar… (à implémenter côté Airtable)", "info");
+}
+
+function updateCalendlyBadge() {
+  const val   = (document.getElementById("calendly-input") || {}).value || "";
+  const badge = document.getElementById("calendly-badge");
+  if (!badge) return;
+  badge.innerHTML = val.trim()
+    ? '<span style="background:rgba(34,197,94,0.15);color:#22c55e;padding:2px 8px;border-radius:20px">&#10003; Configuré</span>'
+    : '';
+}
+
+function saveCalendlyLink() {
+  const val = ((document.getElementById("calendly-input") || {}).value || "").trim();
+  try { localStorage.setItem("akilai_calendly_link", val); } catch(e) {}
+  showToast(val ? "Lien Calendly sauvegardé ✅" : "Lien Calendly effacé", "success");
+  updateCalendlyBadge();
+}
+
+function updateNotionBadge() {
+  const val   = (document.getElementById("notion-input") || {}).value || "";
+  const badge = document.getElementById("notion-badge");
+  if (!badge) return;
+  badge.innerHTML = val.trim()
+    ? '<span style="background:rgba(34,197,94,0.15);color:#22c55e;padding:2px 8px;border-radius:20px">&#10003; Configuré</span>'
+    : '';
+}
+
+function saveNotionKey() {
+  const val = ((document.getElementById("notion-input") || {}).value || "").trim();
+  try { localStorage.setItem("akilai_notion_key", val); } catch(e) {}
+  showToast(val ? "Clé Notion sauvegardée ✅" : "Clé Notion effacée", "success");
+  updateNotionBadge();
+}
+
+// Show toast if redirected after Google OAuth
+(function checkGoogleOAuthReturn() {
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const googleStatus = urlParams.get("google");
+    if (googleStatus === "connected") {
+      window.addEventListener("DOMContentLoaded", function() {
+        setTimeout(function() {
+          showToast("Google Calendar connecté ✅", "success");
+          navigate("integrations");
+          // Clean URL
+          const clean = window.location.pathname;
+          history.replaceState(null, "", clean);
+        }, 800);
+      });
+    } else if (googleStatus === "error") {
+      window.addEventListener("DOMContentLoaded", function() {
+        setTimeout(function() {
+          showToast("Erreur lors de la connexion Google Calendar", "error");
+          const clean = window.location.pathname;
+          history.replaceState(null, "", clean);
+        }, 800);
+      });
+    }
+  } catch(e) {}
+})();
 
 function renderRecommandations(alerts) {
   const grid = document.getElementById("recoGrid");

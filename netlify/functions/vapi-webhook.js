@@ -83,6 +83,7 @@ exports.handler = async (event) => {
   let clientId = metadata.clientId || "";
 
   // Fallback : chercher le client par VapiAssistantId si userId vide
+  let clientFields = {};
   if (!userId && assistantId) {
     try {
       const searchUrl  = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${CLIENTS_TABLE}?filterByFormula={VapiAssistantId}="${assistantId}"&maxRecords=1`;
@@ -90,12 +91,28 @@ exports.handler = async (event) => {
       const searchData = await searchRes.json();
       if (searchData.records?.length > 0) {
         const client = searchData.records[0];
-        userId   = client.fields["User ID"] || client.fields["Email"] || "";
-        clientId = client.id;
+        userId       = client.fields["User ID"] || client.fields["Email"] || "";
+        clientId     = client.id;
+        clientFields = client.fields;
         console.log("[vapi-webhook] client trouvé par assistantId:", userId);
       }
     } catch (e) {
       console.warn("[vapi-webhook] lookup client par assistantId échec:", e.message);
+    }
+  }
+
+  // Charger les champs Google si on a userId mais pas encore clientFields
+  if (userId && !clientFields["Google Connected"]) {
+    try {
+      const cUrl  = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${CLIENTS_TABLE}?filterByFormula={User ID}="${userId}"&maxRecords=1`;
+      const cRes  = await fetch(cUrl, { headers: { Authorization: `Bearer ${AIRTABLE_API_KEY}` } });
+      const cData = await cRes.json();
+      if (cData.records?.length > 0) {
+        clientId     = clientId || cData.records[0].id;
+        clientFields = cData.records[0].fields;
+      }
+    } catch (e) {
+      console.warn("[vapi-webhook] lookup client par userId échec:", e.message);
     }
   }
 
@@ -158,6 +175,37 @@ exports.handler = async (event) => {
         }
       } catch (e) {
         console.warn("[vapi-webhook] compteur auto échec (non bloquant):", e.message);
+      }
+    }
+
+    // ── Google Calendar : détecter RDV dans la transcription ──
+    const transcriptLower = transcription.toLowerCase();
+    const rdvDetecte =
+      transcriptLower.includes("rendez-vous") ||
+      transcriptLower.includes("rdv") ||
+      transcriptLower.includes("appointment");
+
+    if (rdvDetecte && clientFields["Google Connected"]) {
+      console.log("[vapi-webhook] RDV détecté + Google Calendar connecté — création événement…");
+      try {
+        await fetch(
+          `${process.env.URL || "https://portal-akilai.netlify.app"}/.netlify/functions/google-calendar-create-event`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              userId,
+              titre:       `RDV — ${numeroClient || userId}`,
+              description: resume || "",
+              dateDebut:   new Date(Date.now() + 86400000).toISOString(),
+              dateFin:     new Date(Date.now() + 86400000 + 3600000).toISOString(),
+              inviteEmail: "",
+            }),
+          }
+        );
+        console.log("[vapi-webhook] RDV créé dans Google Calendar");
+      } catch (calErr) {
+        console.error("[vapi-webhook] Erreur création RDV Google Calendar:", calErr.message);
       }
     }
 
