@@ -61,6 +61,8 @@ exports.handler = async function(event, context) {
         promptSysteme:    f.PromptSysteme              || "",
         vitesseParole:    Number(f.VitesseParole)      || 1.0,
         notes,
+        googleConnected:  f["Google Connected"]        || false,
+        googleCalendarId: f["Google Calendar ID"]      || "primary",
       };
     });
 
