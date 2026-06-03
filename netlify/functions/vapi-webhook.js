@@ -45,17 +45,29 @@ exports.handler = async (event) => {
   const userId        = call.assistant?.metadata?.userId   || message.metadata?.userId   || "";
   const clientId      = call.assistant?.metadata?.clientId || message.metadata?.clientId || "";
   const numeroClient  = call.customer?.number || "";
-  const duree         = Math.round(call.duration || 0);
   const transcription = call.transcript || "";
   const resume        = call.analysis?.summary || call.summary || message.summary || "";
-  const statut        = call.analysis?.successEvaluation === "true" ? "Succès" : "Traité";
   const enregistrement = call.recordingUrl || message.recordingUrl || "";
   const cout          = call.cost || 0;
   const endedReason   = call.endedReason || "";
 
+  // Durée : call.duration → calcul startedAt/endedAt en fallback
+  let duree = Math.round(call.duration || 0);
+  if (!duree && call.startedAt && call.endedAt) {
+    duree = Math.round((new Date(call.endedAt) - new Date(call.startedAt)) / 1000);
+  }
+  console.log("[vapi-webhook] durée calculée:", duree);
+
+  // Statut : Échec uniquement si successEvaluation est explicitement "false"
+  const statut = call.analysis?.successEvaluation === "false" ? "Échec" : "Succès";
+
+  // Debug logs
   console.log("[vapi-webhook] callId:", callId);
   console.log("[vapi-webhook] userId:", userId, "| clientId:", clientId);
   console.log("[vapi-webhook] durée:", duree, "| statut:", statut);
+  console.log("[vapi-webhook] call keys:", Object.keys(call).join(", "));
+  console.log("[vapi-webhook] analysis:", JSON.stringify(call.analysis));
+  console.log("[vapi-webhook] metadata:", JSON.stringify(call.assistant?.metadata));
 
   const fields = {
     "Titre":               `Appel vocal — ${numeroClient || "Inconnu"}`,
