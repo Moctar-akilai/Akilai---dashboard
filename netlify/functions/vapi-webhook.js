@@ -29,6 +29,7 @@ exports.handler = async (event) => {
   const message = body.message || body;
   const msgType = message.type || "";
   console.log("[vapi-webhook] type:", msgType);
+  console.log("[vapi-webhook] body complet:", JSON.stringify(body).substring(0, 2000));
 
   if (msgType !== "end-of-call-report") {
     console.log("[vapi-webhook] événement ignoré:", msgType);
@@ -41,33 +42,62 @@ exports.handler = async (event) => {
     return { statusCode: 400, headers: corsHeaders, body: "No call data" };
   }
 
-  const callId        = call.id;
-  const userId        = call.assistant?.metadata?.userId   || message.metadata?.userId   || "";
-  const clientId      = call.assistant?.metadata?.clientId || message.metadata?.clientId || "";
-  const numeroClient  = call.customer?.number || "";
-  const transcription = call.transcript || "";
-  const resume        = call.analysis?.summary || call.summary || message.summary || "";
-  const enregistrement = call.recordingUrl || message.recordingUrl || "";
-  const cout          = call.cost || 0;
-  const endedReason   = call.endedReason || "";
+  const callId      = call.id;
+  const cout        = message.cost        || call.cost        || 0;
+  const endedReason = message.endedReason || call.endedReason || "";
 
-  // Durée : call.duration → calcul startedAt/endedAt en fallback
-  let duree = Math.round(call.duration || 0);
-  if (!duree && call.startedAt && call.endedAt) {
-    duree = Math.round((new Date(call.endedAt) - new Date(call.startedAt)) / 1000);
+  // Métadonnées : chercher dans tous les emplacements possibles
+  const metadata =
+    message.assistant?.metadata            ||
+    message.assistantOverrides?.metadata   ||
+    call.assistantOverrides?.metadata      ||
+    call.assistant?.metadata               || {};
+  const userId   = metadata.userId   || "";
+  const clientId = metadata.clientId || "";
+
+  // Numéro client
+  const numeroClient = message.customer?.number || call.customer?.number || "";
+
+  // Transcription : message.artifact en priorité
+  const transcription =
+    message.artifact?.transcript ||
+    message.transcript            ||
+    call.transcript               || "";
+
+  // Durée
+  let duree = Math.round(message.durationSeconds || message.artifact?.duration || call.duration || 0);
+  if (!duree && (call.startedAt || message.startedAt) && (call.endedAt || message.endedAt)) {
+    duree = Math.round(
+      (new Date(call.endedAt || message.endedAt) - new Date(call.startedAt || message.startedAt)) / 1000
+    );
   }
-  console.log("[vapi-webhook] durée calculée:", duree);
 
-  // Statut : Échec uniquement si successEvaluation est explicitement "false"
-  const statut = call.analysis?.successEvaluation === "false" ? "Échec" : "Succès";
+  // Résumé
+  const resume =
+    message.analysis?.summary ||
+    message.summary            ||
+    call.analysis?.summary     ||
+    call.summary               || "";
+
+  // Enregistrement
+  const enregistrement =
+    message.artifact?.recordingUrl ||
+    message.recordingUrl            ||
+    call.recordingUrl               || "";
+
+  // Statut
+  const successEval = message.analysis?.successEvaluation ?? call.analysis?.successEvaluation;
+  const statut = successEval === "false" ? "Échec" : "Succès";
 
   // Debug logs
   console.log("[vapi-webhook] callId:", callId);
   console.log("[vapi-webhook] userId:", userId, "| clientId:", clientId);
-  console.log("[vapi-webhook] durée:", duree, "| statut:", statut);
+  console.log("[vapi-webhook] durée calculée:", duree, "| statut:", statut);
   console.log("[vapi-webhook] call keys:", Object.keys(call).join(", "));
-  console.log("[vapi-webhook] analysis:", JSON.stringify(call.analysis));
-  console.log("[vapi-webhook] metadata:", JSON.stringify(call.assistant?.metadata));
+  console.log("[vapi-webhook] message keys:", Object.keys(message).join(", "));
+  console.log("[vapi-webhook] analysis:", JSON.stringify(message.analysis || call.analysis));
+  console.log("[vapi-webhook] metadata:", JSON.stringify(metadata));
+  console.log("[vapi-webhook] artifact keys:", Object.keys(message.artifact || {}).join(", "));
 
   const fields = {
     "Titre":               `Appel vocal — ${numeroClient || "Inconnu"}`,
