@@ -44,9 +44,12 @@ exports.handler = async function(event, context) {
     }
   }
 
+  const WEBHOOK_URL = `${process.env.URL || "https://portal-akilai.netlify.app"}/.netlify/functions/vapi-webhook`;
+
   /* Payload Vapi — structure officielle */
   const vapiPayload = {
     name: nomAssistant,
+    serverUrl: WEBHOOK_URL,
     model: {
       provider: "openai",
       model:    "gpt-4o",

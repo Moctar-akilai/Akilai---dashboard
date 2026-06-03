@@ -1018,7 +1018,11 @@ canvas{max-width:100%!important}
           </div>
         </div>
         <div class="card">
-          <h3>Assistants Vapi</h3>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+            <h3 style="margin:0">Assistants Vapi</h3>
+            <button class="btn sm" id="setupVapiWebhooksBtn" onclick="setupVapiWebhooks()">🔗 Configurer webhooks sur tous les assistants</button>
+          </div>
+          <div id="vapiWebhookSetupStatus" style="display:none;margin-bottom:12px;padding:10px 14px;border-radius:8px;font-size:13px"></div>
           <div class="table-wrap" style="border:none">
             <table class="hist-table">
               <thead><tr><th>Nom</th><th>Modèle</th><th>Voix</th><th>Statut</th></tr></thead>
@@ -4773,6 +4777,47 @@ function updateKanbanCounts() {
 function onLeadCardClick(event, id) {
   if (_didDrag) { _didDrag = false; return; }
   openLeadModal(id);
+}
+
+/* =========================================================
+   SETUP VAPI WEBHOOKS
+   ========================================================= */
+async function setupVapiWebhooks() {
+  const btn    = document.getElementById('setupVapiWebhooksBtn');
+  const status = document.getElementById('vapiWebhookSetupStatus');
+  btn.disabled    = true;
+  btn.textContent = 'Configuration en cours…';
+  status.style.display = 'none';
+
+  const data = await adminFetch('/.netlify/functions/setup-vapi-webhooks', { method: 'POST' });
+
+  btn.disabled    = false;
+  btn.textContent = '🔗 Configurer webhooks sur tous les assistants';
+  status.style.display = 'block';
+
+  if (data.missingKey || (data.error && data.error.includes('VAPI_API_KEY'))) {
+    status.style.background = 'rgba(239,68,68,.1)';
+    status.style.color = '#f87171';
+    status.textContent = '❌ Clé API Vapi (VAPI_API_KEY) non configurée dans les variables Netlify.';
+    return;
+  }
+  if (data.error) {
+    status.style.background = 'rgba(239,68,68,.1)';
+    status.style.color = '#f87171';
+    status.textContent = '❌ Erreur : ' + data.error;
+    return;
+  }
+
+  const failed = (data.results || []).filter(r => !r.ok);
+  if (failed.length === 0) {
+    status.style.background = 'rgba(34,197,94,.1)';
+    status.style.color = '#4ade80';
+    status.textContent = `✅ ${data.success} assistant${data.success > 1 ? 's' : ''} configuré${data.success > 1 ? 's' : ''} avec succès.`;
+  } else {
+    status.style.background = 'rgba(245,158,11,.1)';
+    status.style.color = '#fbbf24';
+    status.textContent = `⚠️ ${data.success}/${data.total} configurés. Échec : ${failed.map(r => r.name).join(', ')}`;
+  }
 }
 
 /* =========================================================
