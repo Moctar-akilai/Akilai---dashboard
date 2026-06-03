@@ -1,15 +1,7 @@
-/**
- * vapi-webhook.js
- * Reçoit les événements webhook Vapi (end-of-call-report).
- * PATCH le record Historique correspondant pour ajouter "Vapi Call ID"
- * afin de permettre la lecture audio authentifiée via get-vapi-recording.
- *
- * Configurer dans Vapi Dashboard → Assistants → Server URL :
- *   https://{votre-site}.netlify.app/.netlify/functions/vapi-webhook
- */
+const { preflight, corsHeaders } = require("./config");
 
-const { BASE_URL, headers, preflight, corsHeaders } = require("./config");
-const HISTORIQUE_TABLE = "tblxXBGjv6iZU41XY";
+const HISTORIQUE_TABLE  = "tblxXBGjv6iZU41XY";
+const AUTOMATIONS_TABLE = "tble4KroqvA1JodJs";
 
 exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") return preflight();
@@ -17,86 +9,117 @@ exports.handler = async (event) => {
     return { statusCode: 405, headers: corsHeaders, body: "Method not allowed" };
   }
 
+  const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
+  const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+    console.error("[vapi-webhook] AIRTABLE_API_KEY ou AIRTABLE_BASE_ID non configuré");
+    return { statusCode: 500, headers: corsHeaders, body: "Airtable non configuré" };
+  }
+
+  const airtableHeaders = {
+    Authorization:  `Bearer ${AIRTABLE_API_KEY}`,
+    "Content-Type": "application/json",
+  };
+
   let body;
   try { body = JSON.parse(event.body || "{}"); } catch (e) {
     return { statusCode: 400, headers: corsHeaders, body: "JSON invalide" };
   }
 
-  const msgType = body.message?.type || body.type || "";
+  const message = body.message || body;
+  const msgType = message.type || "";
   console.log("[vapi-webhook] type:", msgType);
 
-  // On ne traite que end-of-call-report
   if (msgType !== "end-of-call-report") {
+    console.log("[vapi-webhook] événement ignoré:", msgType);
     return { statusCode: 200, headers: corsHeaders, body: JSON.stringify({ ok: true, ignored: true }) };
   }
 
-  const call = body.message?.call || body.call || {};
-  const callId = call.id || body.message?.callId || "";
-  if (!callId) {
-    console.warn("[vapi-webhook] callId absent");
-    return { statusCode: 200, headers: corsHeaders, body: JSON.stringify({ ok: true, ignored: true }) };
+  const call = message.call || {};
+  if (!call.id) {
+    console.error("[vapi-webhook] pas de call.id dans le body");
+    return { statusCode: 400, headers: corsHeaders, body: "No call data" };
   }
 
-  // Récupérer le userId depuis les metadata de l'appel
-  const metadata = call.metadata || body.message?.metadata || {};
-  const userId = metadata.userId || metadata.user_id || call.assistantId || "";
+  const callId        = call.id;
+  const userId        = call.assistant?.metadata?.userId   || message.metadata?.userId   || "";
+  const clientId      = call.assistant?.metadata?.clientId || message.metadata?.clientId || "";
+  const numeroClient  = call.customer?.number || "";
+  const duree         = Math.round(call.duration || 0);
+  const transcription = call.transcript || "";
+  const resume        = call.analysis?.summary || call.summary || message.summary || "";
+  const statut        = call.analysis?.successEvaluation === "true" ? "Succès" : "Traité";
+  const enregistrement = call.recordingUrl || message.recordingUrl || "";
+  const cout          = call.cost || 0;
+  const endedReason   = call.endedReason || "";
 
-  console.log("[vapi-webhook] callId:", callId, "userId:", userId);
+  console.log("[vapi-webhook] callId:", callId);
+  console.log("[vapi-webhook] userId:", userId, "| clientId:", clientId);
+  console.log("[vapi-webhook] durée:", duree, "| statut:", statut);
+
+  const fields = {
+    "Titre":               `Appel vocal — ${numeroClient || "Inconnu"}`,
+    "Type":                "Voix",
+    "Canal":               "Vocal",
+    "Statut":              statut,
+    "User ID":             userId,
+    "Numéro client":       numeroClient,
+    "Durée":               duree,
+    "Transcription":       transcription,
+    "Résumé":              resume,
+    "Enregistrement audio": enregistrement,
+    "Vapi Call ID":        callId,
+    "Détails":             `Coût: $${cout}${endedReason ? " | Fin: " + endedReason : ""}`,
+  };
+
+  if (clientId) fields["Client"] = [clientId];
 
   try {
-    // Chercher le record Historique créé aujourd'hui pour ce userId
-    // (Make crée le record juste après la fin d'appel)
-    const today = new Date().toISOString().split("T")[0];
-    const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+    // ── Créer le record Historique ──
+    const histRes  = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${HISTORIQUE_TABLE}`, {
+      method: "POST",
+      headers: airtableHeaders,
+      body: JSON.stringify({ records: [{ fields }], typecast: true }),
+    });
+    const histData = await histRes.json();
 
-    let filterFormula = `AND({Type}="Voix",OR(DATESTR({Date de creation})="${today}",DATESTR({Date de creation})="${yesterday}"))`;
+    if (!histRes.ok) {
+      console.error("[vapi-webhook] Airtable Historique error:", JSON.stringify(histData));
+      return { statusCode: 500, headers: corsHeaders, body: "Airtable error" };
+    }
+
+    const recordId = histData.records[0].id;
+    console.log("[vapi-webhook] record créé:", recordId);
+
+    // ── Incrémenter "Appels traités" sur l'automatisation ──
     if (userId) {
-      filterFormula = `AND({User ID}="${userId}",{Type}="Voix",OR(DATESTR({Date de creation})="${today}",DATESTR({Date de creation})="${yesterday}"))`;
+      try {
+        const autoUrl  = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AUTOMATIONS_TABLE}?filterByFormula={User ID}="${userId}"&maxRecords=1`;
+        const autoRes  = await fetch(autoUrl, { headers: { Authorization: `Bearer ${AIRTABLE_API_KEY}` } });
+        const autoData = await autoRes.json();
+
+        if (autoData.records?.length > 0) {
+          const auto  = autoData.records[0];
+          const count = Number(auto.fields["Appels traités"] || 0);
+          await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AUTOMATIONS_TABLE}/${auto.id}`, {
+            method: "PATCH",
+            headers: airtableHeaders,
+            body: JSON.stringify({ fields: { "Appels traités": count + 1 } }),
+          });
+          console.log("[vapi-webhook] compteur Appels traités:", count + 1);
+        }
+      } catch (e) {
+        console.warn("[vapi-webhook] compteur auto échec (non bloquant):", e.message);
+      }
     }
 
-    const params = new URLSearchParams({
-      filterByFormula: filterFormula,
-      "sort[0][field]": "Date de creation",
-      "sort[0][direction]": "desc",
-      maxRecords: "5",
-    });
-
-    const searchRes = await fetch(`${BASE_URL}/${HISTORIQUE_TABLE}?${params}`, { headers });
-    const searchData = await searchRes.json();
-    const records = searchData.records || [];
-
-    console.log("[vapi-webhook] records trouvés:", records.length);
-
-    // Trouver le record sans Vapi Call ID (le plus récent)
-    const target = records.find(r => !r.fields["Vapi Call ID"]);
-
-    if (!target) {
-      console.warn("[vapi-webhook] aucun record Historique à patcher pour callId:", callId);
-      // Pas d'erreur — Make n'a peut-être pas encore créé le record, on ignore
-      return { statusCode: 200, headers: corsHeaders, body: JSON.stringify({ ok: true, patched: false }) };
-    }
-
-    // PATCH le record avec le callId
-    const patchRes = await fetch(`${BASE_URL}/${HISTORIQUE_TABLE}/${target.id}`, {
-      method: "PATCH",
-      headers,
-      body: JSON.stringify({ fields: { "Vapi Call ID": callId } }),
-    });
-    const patchData = await patchRes.json();
-
-    if (patchData.error) {
-      console.error("[vapi-webhook] Airtable patch error:", patchData.error.message);
-      return { statusCode: 200, headers: corsHeaders, body: JSON.stringify({ ok: false, error: patchData.error.message }) };
-    }
-
-    console.log("[vapi-webhook] Patché record", target.id, "avec callId:", callId);
     return {
       statusCode: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      body: JSON.stringify({ ok: true, patched: true, recordId: target.id }),
+      body: JSON.stringify({ success: true, recordId }),
     };
-  } catch (e) {
-    console.error("[vapi-webhook] Exception:", e.message);
-    return { statusCode: 500, headers: corsHeaders, body: JSON.stringify({ error: e.message }) };
+  } catch (err) {
+    console.error("[vapi-webhook] erreur:", err.message);
+    return { statusCode: 500, headers: corsHeaders, body: err.message };
   }
 };
