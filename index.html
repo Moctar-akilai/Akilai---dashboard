@@ -3271,12 +3271,17 @@
               </div>
             </div>
             <p style="font-size:13px;color:var(--text-muted);margin:0">
-              Partagez votre lien de prise de rendez-vous avec vos prospects.
+              Partagez votre lien de prise de rendez-vous avec vos prospects après chaque appel.
             </p>
-            <input id="calendly-input" type="text" class="input" placeholder="https://calendly.com/votre-lien"
-              style="font-size:13px;padding:8px 12px"
-              oninput="updateCalendlyBadge()" />
-            <button class="btn btn-primary btn-sm" onclick="saveCalendlyLink()">Sauvegarder</button>
+            <div id="calendly-form" style="display:flex;flex-direction:column;gap:8px">
+              <input id="calendly-input" type="url" class="input" placeholder="https://calendly.com/votre-lien"
+                style="font-size:13px;padding:8px 12px" />
+              <button class="btn btn-primary btn-sm" onclick="saveCalendlyLink()">Sauvegarder</button>
+            </div>
+            <div id="calendly-connected-view" style="display:none;flex-direction:column;gap:8px">
+              <div id="calendly-link-display" style="font-size:12px;color:var(--text-muted);word-break:break-all"></div>
+              <button class="btn btn-secondary btn-sm" onclick="disconnectCalendly()" style="color:#ef4444;border-color:rgba(239,68,68,0.3)">Déconnecter</button>
+            </div>
           </div>
 
           <!-- Notion -->
@@ -3294,10 +3299,21 @@
             <p style="font-size:13px;color:var(--text-muted);margin:0">
               Synchronisez vos résumés d'appels dans votre workspace Notion.
             </p>
-            <input id="notion-input" type="text" class="input" placeholder="Clé d'intégration Notion"
-              style="font-size:13px;padding:8px 12px"
-              oninput="updateNotionBadge()" />
-            <button class="btn btn-primary btn-sm" onclick="saveNotionKey()">Sauvegarder</button>
+            <div id="notion-form" style="display:flex;flex-direction:column;gap:8px">
+              <input id="notion-input" type="text" class="input" placeholder="Clé d'intégration (secret_…)"
+                style="font-size:13px;padding:8px 12px" />
+              <div style="position:relative">
+                <input id="notion-db-input" type="text" class="input" placeholder="Database ID (optionnel)"
+                  style="font-size:13px;padding:8px 12px;padding-right:28px" />
+                <span title="Trouvez l'ID dans l'URL de votre base Notion : notion.so/xxx/{DATABASE_ID}"
+                  style="position:absolute;right:8px;top:50%;transform:translateY(-50%);cursor:help;color:var(--text-muted);font-size:13px;line-height:1">ⓘ</span>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="saveNotionKey()">Sauvegarder</button>
+            </div>
+            <div id="notion-connected-view" style="display:none;flex-direction:column;gap:8px">
+              <div style="font-size:12px;color:var(--text-muted)">Intégration active — les fiches sont créées automatiquement après chaque appel.</div>
+              <button class="btn btn-secondary btn-sm" onclick="disconnectNotion()" style="color:#ef4444;border-color:rgba(239,68,68,0.3)">Déconnecter</button>
+            </div>
           </div>
 
           <!-- Gmail -->
@@ -7311,40 +7327,71 @@ const RECO_ICONS = {
 /* ============================================================
    INTÉGRATIONS
 ============================================================ */
+const BADGE_ON  = '<span style="background:rgba(34,197,94,0.15);color:#22c55e;padding:2px 8px;border-radius:20px">&#10003; Connecté</span>';
+const BADGE_OFF = '<span style="color:var(--text-muted)">Non connecté</span>';
+
 function renderIntegrations() {
   const client = (typeof clients !== "undefined" && clients[0]) || {};
 
-  // Google Calendar
+  // ── Google Calendar ──
   const gcalBadge   = document.getElementById("gcal-badge");
   const gcalActions = document.getElementById("gcal-actions");
   if (gcalBadge && gcalActions) {
     if (client.googleConnected) {
-      gcalBadge.innerHTML   = '<span style="background:rgba(34,197,94,0.15);color:#22c55e;padding:2px 8px;border-radius:20px">&#10003; Connecté</span>';
+      gcalBadge.innerHTML   = BADGE_ON;
       gcalActions.innerHTML = '<button class="btn btn-secondary btn-sm" onclick="disconnectGoogle()" style="color:#ef4444;border-color:rgba(239,68,68,0.3)">Déconnecter</button>';
     } else {
-      gcalBadge.innerHTML   = '<span style="color:var(--text-muted)">Non connecté</span>';
+      gcalBadge.innerHTML   = BADGE_OFF;
       gcalActions.innerHTML = '<button class="btn btn-primary btn-sm" onclick="connectGoogle()">Connecter</button>';
     }
   }
 
-  // WhatsApp badge
+  // ── Calendly ──
+  const calendlyBadge = document.getElementById("calendly-badge");
+  const calendlyForm  = document.getElementById("calendly-form");
+  const calendlyView  = document.getElementById("calendly-connected-view");
+  const calendlyDisp  = document.getElementById("calendly-link-display");
+  if (calendlyBadge) {
+    if (client.calendlyConnected && client.calendlyLink) {
+      calendlyBadge.innerHTML = BADGE_ON;
+      if (calendlyForm) calendlyForm.style.display = "none";
+      if (calendlyView) { calendlyView.style.display = "flex"; }
+      if (calendlyDisp) calendlyDisp.textContent = client.calendlyLink;
+    } else {
+      calendlyBadge.innerHTML = BADGE_OFF;
+      if (calendlyForm) calendlyForm.style.display = "flex";
+      if (calendlyView) calendlyView.style.display = "none";
+      // Pré-remplir avec la valeur existante si pas encore "connected"
+      const ci = document.getElementById("calendly-input");
+      if (ci && client.calendlyLink) ci.value = client.calendlyLink;
+    }
+  }
+
+  // ── Notion ──
+  const notionBadge = document.getElementById("notion-badge");
+  const notionForm  = document.getElementById("notion-form");
+  const notionView  = document.getElementById("notion-connected-view");
+  if (notionBadge) {
+    if (client.notionConnected && client.notionKey) {
+      notionBadge.innerHTML = BADGE_ON;
+      if (notionForm) notionForm.style.display = "none";
+      if (notionView) notionView.style.display = "flex";
+    } else {
+      notionBadge.innerHTML = BADGE_OFF;
+      if (notionForm) notionForm.style.display = "flex";
+      if (notionView) notionView.style.display = "none";
+    }
+  }
+
+  // ── WhatsApp ──
   const waBadge = document.getElementById("whatsapp-badge");
   if (waBadge) {
-    const hasWhatsApp = client.plan && (client.plan === "Premium" || client.plan === "Business" || client.plan === "Enterprise");
+    const planLow = (client.plan || "").toLowerCase();
+    const hasWhatsApp = planLow === "premium" || planLow === "business" || planLow === "enterprise";
     waBadge.innerHTML = hasWhatsApp
       ? '<span style="background:rgba(37,211,102,0.15);color:#25D366;padding:2px 8px;border-radius:20px">&#10003; Actif</span>'
       : '<span style="background:rgba(100,100,100,0.15);color:var(--text-muted);padding:2px 8px;border-radius:20px">Non inclus</span>';
   }
-
-  // Restore saved Calendly / Notion from localStorage
-  try {
-    const savedCalendly = localStorage.getItem("akilai_calendly_link") || "";
-    const savedNotion   = localStorage.getItem("akilai_notion_key")    || "";
-    const ci = document.getElementById("calendly-input");
-    const ni = document.getElementById("notion-input");
-    if (ci) { ci.value = savedCalendly; updateCalendlyBadge(); }
-    if (ni) { ni.value = savedNotion;   updateNotionBadge(); }
-  } catch(e) {}
 }
 
 function connectGoogle() {
@@ -7354,64 +7401,156 @@ function connectGoogle() {
   window.location.href = "/.netlify/functions/google-oauth-start?userId=" + encodeURIComponent(userId);
 }
 
-function disconnectGoogle() {
+async function disconnectGoogle() {
   if (!confirm("Déconnecter Google Calendar ?")) return;
-  showToast("Déconnexion Google Calendar… (à implémenter côté Airtable)", "info");
+  const client = (typeof clients !== "undefined" && clients[0]) || {};
+  const userId = client.email || "";
+  if (!userId) { showToast("Identifiant introuvable", "error"); return; }
+  try {
+    const res = await fetch("/.netlify/functions/save-integration", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, type: "disconnect_google" }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      if (clients[0]) { clients[0].googleConnected = false; }
+      showToast("Google Calendar déconnecté", "info");
+      renderIntegrations();
+    } else {
+      showToast("Erreur lors de la déconnexion", "error");
+    }
+  } catch(e) {
+    showToast("Erreur réseau", "error");
+  }
 }
 
-function updateCalendlyBadge() {
-  const val   = (document.getElementById("calendly-input") || {}).value || "";
-  const badge = document.getElementById("calendly-badge");
-  if (!badge) return;
-  badge.innerHTML = val.trim()
-    ? '<span style="background:rgba(34,197,94,0.15);color:#22c55e;padding:2px 8px;border-radius:20px">&#10003; Configuré</span>'
-    : '';
-}
-
-function saveCalendlyLink() {
+async function saveCalendlyLink() {
   const val = ((document.getElementById("calendly-input") || {}).value || "").trim();
-  try { localStorage.setItem("akilai_calendly_link", val); } catch(e) {}
-  showToast(val ? "Lien Calendly sauvegardé ✅" : "Lien Calendly effacé", "success");
-  updateCalendlyBadge();
+  if (!val) { showToast("Veuillez saisir un lien Calendly", "warning"); return; }
+  if (!val.startsWith("https://calendly.com/")) {
+    showToast("Le lien doit commencer par https://calendly.com/", "warning");
+    return;
+  }
+  const client = (typeof clients !== "undefined" && clients[0]) || {};
+  const userId = client.email || "";
+  if (!userId) { showToast("Identifiant introuvable", "error"); return; }
+  try {
+    const res = await fetch("/.netlify/functions/save-integration", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, type: "calendly", value1: val }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      if (clients[0]) { clients[0].calendlyConnected = true; clients[0].calendlyLink = val; }
+      showToast("Calendly connecté ✅", "success");
+      renderIntegrations();
+    } else {
+      showToast("Erreur lors de la sauvegarde", "error");
+    }
+  } catch(e) {
+    showToast("Erreur réseau", "error");
+  }
 }
 
-function updateNotionBadge() {
-  const val   = (document.getElementById("notion-input") || {}).value || "";
-  const badge = document.getElementById("notion-badge");
-  if (!badge) return;
-  badge.innerHTML = val.trim()
-    ? '<span style="background:rgba(34,197,94,0.15);color:#22c55e;padding:2px 8px;border-radius:20px">&#10003; Configuré</span>'
-    : '';
+async function disconnectCalendly() {
+  if (!confirm("Déconnecter Calendly ?")) return;
+  const client = (typeof clients !== "undefined" && clients[0]) || {};
+  const userId = client.email || "";
+  if (!userId) { showToast("Identifiant introuvable", "error"); return; }
+  try {
+    const res = await fetch("/.netlify/functions/save-integration", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, type: "disconnect_calendly" }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      if (clients[0]) { clients[0].calendlyConnected = false; clients[0].calendlyLink = ""; }
+      showToast("Calendly déconnecté", "info");
+      renderIntegrations();
+    } else {
+      showToast("Erreur lors de la déconnexion", "error");
+    }
+  } catch(e) {
+    showToast("Erreur réseau", "error");
+  }
 }
 
-function saveNotionKey() {
-  const val = ((document.getElementById("notion-input") || {}).value || "").trim();
-  try { localStorage.setItem("akilai_notion_key", val); } catch(e) {}
-  showToast(val ? "Clé Notion sauvegardée ✅" : "Clé Notion effacée", "success");
-  updateNotionBadge();
+async function saveNotionKey() {
+  const key  = ((document.getElementById("notion-input")    || {}).value || "").trim();
+  const dbId = ((document.getElementById("notion-db-input") || {}).value || "").trim();
+  if (!key) { showToast("Veuillez saisir une clé Notion", "warning"); return; }
+  if (!key.startsWith("secret_")) {
+    showToast("La clé doit commencer par secret_", "warning");
+    return;
+  }
+  const client = (typeof clients !== "undefined" && clients[0]) || {};
+  const userId = client.email || "";
+  if (!userId) { showToast("Identifiant introuvable", "error"); return; }
+  try {
+    const res = await fetch("/.netlify/functions/save-integration", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, type: "notion", value1: key, value2: dbId || undefined }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      if (clients[0]) { clients[0].notionConnected = true; clients[0].notionKey = key; }
+      showToast("Notion connecté ✅", "success");
+      renderIntegrations();
+    } else {
+      showToast("Erreur lors de la sauvegarde", "error");
+    }
+  } catch(e) {
+    showToast("Erreur réseau", "error");
+  }
 }
 
-// Show toast if redirected after Google OAuth
+async function disconnectNotion() {
+  if (!confirm("Déconnecter Notion ?")) return;
+  const client = (typeof clients !== "undefined" && clients[0]) || {};
+  const userId = client.email || "";
+  if (!userId) { showToast("Identifiant introuvable", "error"); return; }
+  try {
+    const res = await fetch("/.netlify/functions/save-integration", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, type: "disconnect_notion" }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      if (clients[0]) { clients[0].notionConnected = false; clients[0].notionKey = ""; }
+      showToast("Notion déconnecté", "info");
+      renderIntegrations();
+    } else {
+      showToast("Erreur lors de la déconnexion", "error");
+    }
+  } catch(e) {
+    showToast("Erreur réseau", "error");
+  }
+}
+
+// Toast après retour OAuth Google
 (function checkGoogleOAuthReturn() {
   try {
-    const urlParams = new URLSearchParams(window.location.search);
+    const urlParams    = new URLSearchParams(window.location.search);
     const googleStatus = urlParams.get("google");
     if (googleStatus === "connected") {
       window.addEventListener("DOMContentLoaded", function() {
         setTimeout(function() {
           showToast("Google Calendar connecté ✅", "success");
+          if (clients[0]) clients[0].googleConnected = true;
           navigate("integrations");
-          // Clean URL
-          const clean = window.location.pathname;
-          history.replaceState(null, "", clean);
+          history.replaceState(null, "", window.location.pathname);
         }, 800);
       });
     } else if (googleStatus === "error") {
       window.addEventListener("DOMContentLoaded", function() {
         setTimeout(function() {
           showToast("Erreur lors de la connexion Google Calendar", "error");
-          const clean = window.location.pathname;
-          history.replaceState(null, "", clean);
+          history.replaceState(null, "", window.location.pathname);
         }, 800);
       });
     }

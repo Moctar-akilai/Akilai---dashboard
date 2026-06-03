@@ -101,8 +101,8 @@ exports.handler = async (event) => {
     }
   }
 
-  // Charger les champs Google si on a userId mais pas encore clientFields
-  if (userId && !clientFields["Google Connected"]) {
+  // Charger les champs client si on a userId mais pas encore clientFields
+  if (userId && !clientFields["Google Connected"] && !clientFields["Notion Connected"]) {
     try {
       const cUrl  = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${CLIENTS_TABLE}?filterByFormula={User ID}="${userId}"&maxRecords=1`;
       const cRes  = await fetch(cUrl, { headers: { Authorization: `Bearer ${AIRTABLE_API_KEY}` } });
@@ -207,6 +207,34 @@ exports.handler = async (event) => {
       } catch (calErr) {
         console.error("[vapi-webhook] Erreur création RDV Google Calendar:", calErr.message);
       }
+    }
+
+    // ── Notion — créer fiche après chaque appel ──
+    if (clientFields["Notion Connected"] && userId) {
+      try {
+        await fetch(
+          `${process.env.URL || "https://portal-akilai.netlify.app"}/.netlify/functions/notion-create-page`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              userId,
+              titre:   `Appel — ${numeroClient || "Inconnu"} — ${new Date().toLocaleDateString("fr-FR")}`,
+              contenu: resume || transcription.substring(0, 500),
+              metadata: { duree, statut, numeroClient },
+            }),
+          }
+        );
+        console.log("[vapi-webhook] fiche Notion créée");
+      } catch (notionErr) {
+        console.error("[vapi-webhook] Erreur création fiche Notion:", notionErr.message);
+      }
+    }
+
+    // ── Calendly — log du lien (envoi SMS à implémenter) ──
+    if (clientFields["Calendly Connected"] && numeroClient) {
+      console.log("[vapi-webhook] lien Calendly à envoyer:", clientFields["Calendly Link"]);
+      // TODO: envoyer SMS avec lien Calendly via Twilio
     }
 
     return {

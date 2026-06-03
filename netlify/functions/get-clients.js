@@ -75,6 +75,10 @@ exports.handler = async function(event, context) {
         notes,
         googleConnected:  f["Google Connected"]        || false,
         googleCalendarId: f["Google Calendar ID"]      || "primary",
+        calendlyLink:     f["Calendly Link"]           || "",
+        calendlyConnected: f["Calendly Connected"]     || false,
+        notionKey:        f["Notion Key"]              || "",
+        notionConnected:  f["Notion Connected"]        || false,
       };
     });
 
