@@ -84,6 +84,10 @@ exports.handler = async function(event, context) {
         airtableExternalKey:   f["Airtable External Key"]        || "",
         airtableExternalBaseId: f["Airtable External Base ID"]   || "",
         airtableExternalTableId: f["Airtable External Table ID"] || "",
+        googleSheetsId:        f["Google Sheets ID"]            || "",
+        googleSheetsConnected: f["Google Sheets Connected"]     || false,
+        microsoftConnected:    f["Microsoft Connected"]         || false,
+        excelFileId:           f["Excel File ID"]               || "",
       };
     });
 

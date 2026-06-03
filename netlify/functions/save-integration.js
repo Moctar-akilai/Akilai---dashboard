@@ -61,6 +61,29 @@ exports.handler = async function(event) {
         };
         break;
 
+      case "google_sheets":
+        fields = {
+          "Google Sheets ID":        value1 || "",
+          "Google Sheets Connected": !!(value1),
+        };
+        break;
+
+      case "disconnect_microsoft":
+        fields = {
+          "Microsoft Access Token":  "",
+          "Microsoft Refresh Token": "",
+          "Microsoft Connected":     false,
+          "Excel File ID":           "",
+        };
+        break;
+
+      case "excel_file":
+        // value1 = Excel File ID selected by user
+        fields = {
+          "Excel File ID": value1 || "",
+        };
+        break;
+
       case "crm":
         // value1 = crmType ("AkilAI"|"Notion"|"Airtable")
         // value2 = JSON string of crm-specific credentials

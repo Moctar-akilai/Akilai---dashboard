@@ -7,11 +7,7 @@ exports.handler = async function(event) {
   const errorParam   = params.error;
 
   if (errorParam || !code || !userId) {
-    return {
-      statusCode: 302,
-      headers: { Location: "https://portal-akilai.netlify.app?google=error" },
-      body: "",
-    };
+    return { statusCode: 302, headers: { Location: "https://portal-akilai.netlify.app?google=error" }, body: "" };
   }
 
   try {
@@ -52,16 +48,17 @@ exports.handler = async function(event) {
 
     const recordId = clientData.records[0].id;
 
-    // PATCH Airtable record
+    // PATCH Airtable — tokens partagés pour Calendar + Sheets
     const patchRes = await fetch(`${BASE_URL}/Clients/${recordId}`, {
       method: "PATCH",
       headers: airtableHeaders,
       body: JSON.stringify({
         fields: {
-          "Google Access Token":  access_token,
-          "Google Refresh Token": refresh_token || "",
-          "Google Connected":     true,
-          "Google Calendar ID":   "primary",
+          "Google Access Token":    access_token,
+          "Google Refresh Token":   refresh_token || "",
+          "Google Connected":       true,
+          "Google Calendar ID":     "primary",
+          "Google Sheets Connected": true,
         },
       }),
     });

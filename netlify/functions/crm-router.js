@@ -182,6 +182,34 @@ exports.handler = async function(event) {
       return { statusCode: 200, headers: corsHeaders, body: JSON.stringify({ success: true, crm: "Airtable" }) };
     }
 
+    // ── Google Sheets (parallel logging) ──
+    if (cf["Google Sheets Connected"] && cf["Google Sheets ID"]) {
+      try {
+        await fetch(`${BASE_SITE}/.netlify/functions/google-sheets-add-row`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId, rowData: callData }),
+        });
+        console.log("[crm-router] Google Sheets: ligne ajoutée");
+      } catch (e2) {
+        console.error("[crm-router] Google Sheets erreur:", e2.message);
+      }
+    }
+
+    // ── Excel/Microsoft (parallel logging) ──
+    if (cf["Microsoft Connected"] && cf["Excel File ID"]) {
+      try {
+        await fetch(`${BASE_SITE}/.netlify/functions/excel-add-row`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId, rowData: callData }),
+        });
+        console.log("[crm-router] Excel: ligne ajoutée");
+      } catch (e2) {
+        console.error("[crm-router] Excel erreur:", e2.message);
+      }
+    }
+
     return { statusCode: 200, headers: corsHeaders, body: JSON.stringify({ success: true, crm: crmType, skipped: true }) };
   } catch (e) {
     console.error("[crm-router] Exception:", e.message, e.stack);

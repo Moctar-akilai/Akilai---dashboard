@@ -3452,6 +3452,71 @@
             </div>
           </div>
 
+          <!-- Google Sheets -->
+          <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <svg width="36" height="36" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                <rect width="48" height="48" rx="8" fill="#0f9d58"/>
+                <rect x="13" y="12" width="22" height="24" rx="2" fill="#fff" opacity=".9"/>
+                <rect x="16" y="18" width="16" height="2" rx="1" fill="#0f9d58"/>
+                <rect x="16" y="22" width="16" height="2" rx="1" fill="#0f9d58"/>
+                <rect x="16" y="26" width="10" height="2" rx="1" fill="#0f9d58"/>
+              </svg>
+              <div>
+                <div style="font-weight:600;font-size:15px">Google Sheets</div>
+                <div id="gsheets-badge" style="font-size:11px;margin-top:2px"></div>
+              </div>
+            </div>
+            <p style="font-size:13px;color:var(--text-muted);margin:0">
+              Enregistrez chaque appel dans une feuille Google Sheets automatiquement.
+            </p>
+            <!-- Déconnecté -->
+            <div id="gsheets-disconnected-view">
+              <button class="btn btn-secondary btn-sm" style="width:100%" onclick="connectGoogleSheets()">
+                Connecter Google (Sheets + Calendar)
+              </button>
+            </div>
+            <!-- Connecté -->
+            <div id="gsheets-connected-view" style="display:none;flex-direction:column;gap:8px">
+              <input id="gsheets-id-input" type="text" class="input" placeholder="ID de la Google Sheets" style="font-size:13px;padding:8px 12px" />
+              <div style="font-size:11px;color:var(--text-muted)">Copiez l'ID depuis l'URL : docs.google.com/spreadsheets/d/<strong>ID</strong>/edit</div>
+              <button class="btn btn-primary btn-sm" onclick="saveGoogleSheetsId()">Sauvegarder</button>
+            </div>
+          </div>
+
+          <!-- Excel / Microsoft -->
+          <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <svg width="36" height="36" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                <rect width="48" height="48" rx="8" fill="#1D6F42"/>
+                <path d="M10 12h16v24H10z" fill="#21A366"/>
+                <path d="M26 12h12v24H26z" fill="#107C41"/>
+                <text x="19" y="28" font-size="14" font-weight="800" fill="#fff" text-anchor="middle" font-family="Arial,sans-serif">X</text>
+              </svg>
+              <div>
+                <div style="font-weight:600;font-size:15px">Excel / OneDrive</div>
+                <div id="excel-badge" style="font-size:11px;margin-top:2px"></div>
+              </div>
+            </div>
+            <p style="font-size:13px;color:var(--text-muted);margin:0">
+              Enregistrez chaque appel dans un fichier Excel sur OneDrive.
+            </p>
+            <!-- Déconnecté -->
+            <div id="excel-disconnected-view">
+              <button class="btn btn-secondary btn-sm" style="width:100%" onclick="connectMicrosoft()">
+                Connecter Microsoft
+              </button>
+            </div>
+            <!-- Connecté -->
+            <div id="excel-connected-view" style="display:none;flex-direction:column;gap:8px">
+              <select id="excel-file-select" class="input" style="font-size:13px;padding:8px 12px">
+                <option value="">Chargement des fichiers…</option>
+              </select>
+              <button class="btn btn-primary btn-sm" onclick="saveExcelFile()">Sauvegarder</button>
+              <button class="btn btn-secondary btn-sm" onclick="disconnectMicrosoft()" style="color:#ef4444;border-color:rgba(239,68,68,0.3)">Déconnecter Microsoft</button>
+            </div>
+          </div>
+
           <!-- Gmail -->
           <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px">
             <div style="display:flex;align-items:center;gap:12px">
@@ -7983,6 +8048,41 @@ function renderIntegrations() {
     }
   }
 
+  // ── Google Sheets ──
+  const gsheetsBadge   = document.getElementById("gsheets-badge");
+  const gsheetsDisconn = document.getElementById("gsheets-disconnected-view");
+  const gsheetsConn    = document.getElementById("gsheets-connected-view");
+  const gsheetsInput   = document.getElementById("gsheets-id-input");
+  if (gsheetsBadge) {
+    if (client.googleConnected) {
+      gsheetsBadge.innerHTML = client.googleSheetsConnected && client.googleSheetsId ? BADGE_ON : BADGE_OFF;
+      if (gsheetsDisconn) gsheetsDisconn.style.display = "none";
+      if (gsheetsConn)    gsheetsConn.style.display    = "flex";
+      if (gsheetsInput && client.googleSheetsId) gsheetsInput.value = client.googleSheetsId;
+    } else {
+      gsheetsBadge.innerHTML = BADGE_OFF;
+      if (gsheetsDisconn) gsheetsDisconn.style.display = "block";
+      if (gsheetsConn)    gsheetsConn.style.display    = "none";
+    }
+  }
+
+  // ── Excel / Microsoft ──
+  const excelBadge   = document.getElementById("excel-badge");
+  const excelDisconn = document.getElementById("excel-disconnected-view");
+  const excelConn    = document.getElementById("excel-connected-view");
+  if (excelBadge) {
+    if (client.microsoftConnected) {
+      excelBadge.innerHTML = client.excelFileId ? BADGE_ON : BADGE_OFF;
+      if (excelDisconn) excelDisconn.style.display = "none";
+      if (excelConn)    excelConn.style.display    = "flex";
+      loadExcelFiles(client);
+    } else {
+      excelBadge.innerHTML = BADGE_OFF;
+      if (excelDisconn) excelDisconn.style.display = "block";
+      if (excelConn)    excelConn.style.display    = "none";
+    }
+  }
+
   // ── WhatsApp ──
   const waBadge = document.getElementById("whatsapp-badge");
   if (waBadge) {
@@ -8132,6 +8232,111 @@ async function disconnectNotion() {
   }
 }
 
+// ── Google Sheets ──
+function connectGoogleSheets() {
+  const client = (typeof clients !== "undefined" && clients[0]) || {};
+  const userId = client.email || "";
+  if (!userId) { showToast("Impossible de récupérer votre identifiant", "error"); return; }
+  window.location.href = "/.netlify/functions/google-oauth-start?userId=" + encodeURIComponent(userId);
+}
+
+async function saveGoogleSheetsId() {
+  const val = ((document.getElementById("gsheets-id-input") || {}).value || "").trim();
+  if (!val) { showToast("Veuillez saisir l'ID de votre Google Sheets", "warning"); return; }
+  const client = (typeof clients !== "undefined" && clients[0]) || {};
+  const userId = client.email || "";
+  if (!userId) { showToast("Identifiant introuvable", "error"); return; }
+  try {
+    const res = await fetch("/.netlify/functions/save-integration", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, type: "google_sheets", value1: val }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      if (clients[0]) { clients[0].googleSheetsId = val; clients[0].googleSheetsConnected = true; }
+      showToast("Google Sheets configuré ✅", "success");
+      renderIntegrations();
+    } else {
+      showToast("Erreur lors de la sauvegarde", "error");
+    }
+  } catch(e) { showToast("Erreur réseau", "error"); }
+}
+
+// ── Excel / Microsoft ──
+function connectMicrosoft() {
+  const client = (typeof clients !== "undefined" && clients[0]) || {};
+  const userId = client.email || "";
+  if (!userId) { showToast("Impossible de récupérer votre identifiant", "error"); return; }
+  window.location.href = "/.netlify/functions/microsoft-oauth-start?userId=" + encodeURIComponent(userId);
+}
+
+async function loadExcelFiles(client) {
+  const select = document.getElementById("excel-file-select");
+  if (!select) return;
+  const userId = (client || {}).email || "";
+  if (!userId) return;
+  try {
+    const res = await fetch("/.netlify/functions/get-excel-files?userId=" + encodeURIComponent(userId));
+    const data = await res.json();
+    if (data.files && data.files.length > 0) {
+      select.innerHTML = data.files.map(f =>
+        `<option value="${f.id}" ${f.id === ((client || {}).excelFileId || "") ? "selected" : ""}>${f.name}</option>`
+      ).join("");
+    } else {
+      select.innerHTML = '<option value="">Aucun fichier .xlsx trouvé</option>';
+    }
+  } catch(e) {
+    select.innerHTML = '<option value="">Erreur de chargement</option>';
+  }
+}
+
+async function saveExcelFile() {
+  const select = document.getElementById("excel-file-select");
+  const val = select ? select.value : "";
+  if (!val) { showToast("Veuillez sélectionner un fichier Excel", "warning"); return; }
+  const client = (typeof clients !== "undefined" && clients[0]) || {};
+  const userId = client.email || "";
+  if (!userId) { showToast("Identifiant introuvable", "error"); return; }
+  try {
+    const res = await fetch("/.netlify/functions/save-integration", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, type: "excel_file", value1: val }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      if (clients[0]) clients[0].excelFileId = val;
+      showToast("Fichier Excel configuré ✅", "success");
+      renderIntegrations();
+    } else {
+      showToast("Erreur lors de la sauvegarde", "error");
+    }
+  } catch(e) { showToast("Erreur réseau", "error"); }
+}
+
+async function disconnectMicrosoft() {
+  if (!confirm("Déconnecter Microsoft / Excel ?")) return;
+  const client = (typeof clients !== "undefined" && clients[0]) || {};
+  const userId = client.email || "";
+  if (!userId) { showToast("Identifiant introuvable", "error"); return; }
+  try {
+    const res = await fetch("/.netlify/functions/save-integration", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, type: "disconnect_microsoft" }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      if (clients[0]) { clients[0].microsoftConnected = false; clients[0].excelFileId = ""; }
+      showToast("Microsoft déconnecté", "info");
+      renderIntegrations();
+    } else {
+      showToast("Erreur lors de la déconnexion", "error");
+    }
+  } catch(e) { showToast("Erreur réseau", "error"); }
+}
+
 // Toast après retour OAuth Google
 (function checkGoogleOAuthReturn() {
   try {
@@ -8150,6 +8355,31 @@ async function disconnectNotion() {
       window.addEventListener("DOMContentLoaded", function() {
         setTimeout(function() {
           showToast("Erreur lors de la connexion Google Calendar", "error");
+          history.replaceState(null, "", window.location.pathname);
+        }, 800);
+      });
+    }
+  } catch(e) {}
+})();
+
+// Toast après retour OAuth Microsoft
+(function checkMicrosoftOAuthReturn() {
+  try {
+    const urlParams       = new URLSearchParams(window.location.search);
+    const microsoftStatus = urlParams.get("microsoft");
+    if (microsoftStatus === "connected") {
+      window.addEventListener("DOMContentLoaded", function() {
+        setTimeout(function() {
+          showToast("Microsoft connecté ✅", "success");
+          if (clients[0]) clients[0].microsoftConnected = true;
+          navigate("integrations");
+          history.replaceState(null, "", window.location.pathname);
+        }, 800);
+      });
+    } else if (microsoftStatus === "error") {
+      window.addEventListener("DOMContentLoaded", function() {
+        setTimeout(function() {
+          showToast("Erreur lors de la connexion Microsoft", "error");
           history.replaceState(null, "", window.location.pathname);
         }, 800);
       });
