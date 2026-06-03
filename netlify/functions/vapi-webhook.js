@@ -209,6 +209,24 @@ exports.handler = async (event) => {
       }
     }
 
+    // ── CRM Router — mettre à jour le contact ──
+    if (numeroClient) {
+      try {
+        await fetch(`${process.env.URL || "https://portal-akilai.netlify.app"}/.netlify/functions/crm-router`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId,
+            contactData: { numero: numeroClient, nom: "", source: "Appel vocal" },
+            callData:    { date: new Date().toISOString(), duree, resume, statut, transcript: transcription.substring(0, 500) },
+          }),
+        });
+        console.log("[vapi-webhook] CRM mis à jour");
+      } catch (crmErr) {
+        console.error("[vapi-webhook] Erreur CRM Router:", crmErr.message);
+      }
+    }
+
     // ── Notion — créer fiche après chaque appel ──
     if (clientFields["Notion Connected"] && userId) {
       try {

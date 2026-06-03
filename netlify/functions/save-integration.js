@@ -61,6 +61,23 @@ exports.handler = async function(event) {
         };
         break;
 
+      case "crm":
+        // value1 = crmType ("AkilAI"|"Notion"|"Airtable")
+        // value2 = JSON string of crm-specific credentials
+        if (!value1) return err("crmType requis", 400);
+        fields = { "CRM Type": value1 };
+        if (value2) {
+          try {
+            const creds = JSON.parse(value2);
+            if (creds.notionKey)              fields["Notion Key"]                   = creds.notionKey;
+            if (creds.notionDatabaseId)       fields["Notion Database ID"]           = creds.notionDatabaseId;
+            if (creds.airtableKey)            fields["Airtable External Key"]        = creds.airtableKey;
+            if (creds.airtableBaseId)         fields["Airtable External Base ID"]    = creds.airtableBaseId;
+            if (creds.airtableTableId)        fields["Airtable External Table ID"]   = creds.airtableTableId;
+          } catch(e) { /* credentials optionnels */ }
+        }
+        break;
+
       default:
         return err(`Type inconnu : ${type}`, 400);
     }

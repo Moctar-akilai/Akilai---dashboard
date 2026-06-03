@@ -75,10 +75,15 @@ exports.handler = async function(event, context) {
         notes,
         googleConnected:  f["Google Connected"]        || false,
         googleCalendarId: f["Google Calendar ID"]      || "primary",
-        calendlyLink:     f["Calendly Link"]           || "",
-        calendlyConnected: f["Calendly Connected"]     || false,
-        notionKey:        f["Notion Key"]              || "",
-        notionConnected:  f["Notion Connected"]        || false,
+        calendlyLink:          f["Calendly Link"]               || "",
+        calendlyConnected:     f["Calendly Connected"]           || false,
+        notionKey:             f["Notion Key"]                   || "",
+        notionDatabaseId:      f["Notion Database ID"]           || "",
+        notionConnected:       f["Notion Connected"]             || false,
+        crmType:               f["CRM Type"]                     || "AkilAI",
+        airtableExternalKey:   f["Airtable External Key"]        || "",
+        airtableExternalBaseId: f["Airtable External Base ID"]   || "",
+        airtableExternalTableId: f["Airtable External Table ID"] || "",
       };
     });
 
