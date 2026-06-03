@@ -28,8 +28,14 @@ exports.handler = async (event) => {
 
   const message = body.message || body;
   const msgType = message.type || "";
+
+  // ── Logs de diagnostic complets ──
+  console.log("[vapi-webhook] PAYLOAD COMPLET:", JSON.stringify(body).substring(0, 3000));
+  console.log("[vapi-webhook] MESSAGE KEYS:", Object.keys(message).join(", "));
+  if (message.call) {
+    console.log("[vapi-webhook] CALL KEYS:", Object.keys(message.call).join(", "));
+  }
   console.log("[vapi-webhook] type:", msgType);
-  console.log("[vapi-webhook] body complet:", JSON.stringify(body).substring(0, 2000));
 
   if (msgType !== "end-of-call-report") {
     console.log("[vapi-webhook] événement ignoré:", msgType);
