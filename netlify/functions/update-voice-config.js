@@ -19,7 +19,8 @@ exports.handler = async function(event, context) {
   let body;
   try { body = JSON.parse(event.body || "{}"); } catch(e) { return err("JSON invalide", 400); }
 
-  const { id, nomAssistant, langue, tonalite, promptSysteme, vitesseParole, voiceId } = body;
+  const { id, nomAssistant, langue, tonalite, promptSysteme, vitesseParole, voiceId,
+          capaciteCreneau, dureeRDV, heureOuverture, heureFermeture } = body;
 
   if (!id) return err("Champ id obligatoire", 400);
 
@@ -31,8 +32,12 @@ exports.handler = async function(event, context) {
     if (langue        !== undefined) fields["Langue"]        = langue;
     if (tonalite      !== undefined) fields["Tonalite"]      = tonalite;
     if (promptSysteme !== undefined) fields["PromptSysteme"] = promptSysteme;
-    if (vitesseParole !== undefined) fields["VitesseParole"] = Number(vitesseParole);
-    if (voiceId       !== undefined) fields["VoiceId"]       = voiceId;
+    if (vitesseParole   !== undefined) fields["VitesseParole"]   = Number(vitesseParole);
+    if (voiceId         !== undefined) fields["VoiceId"]         = voiceId;
+    if (capaciteCreneau !== undefined) fields["Capacite Creneau"] = Number(capaciteCreneau);
+    if (dureeRDV        !== undefined) fields["Duree RDV"]       = Number(dureeRDV);
+    if (heureOuverture  !== undefined) fields["Heure Ouverture"] = heureOuverture;
+    if (heureFermeture  !== undefined) fields["Heure Fermeture"] = heureFermeture;
 
     const res = await fetch(`${BASE_URL}/Clients/${id}`, {
       method: "PATCH",

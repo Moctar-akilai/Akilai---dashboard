@@ -95,6 +95,10 @@ exports.handler = async function(event, context) {
         slackConnected:        f["Slack Connected"]             || false,
         hubspotConnected:      f["HubSpot Connected"]           || false,
         teamsConnected:        f["Teams Connected"]             || false,
+        capaciteCreneau:       Number(f["Capacite Creneau"])    || 1,
+        dureeRDV:              Number(f["Duree RDV"])           || 30,
+        heureOuverture:        f["Heure Ouverture"]             || "08:00",
+        heureFermeture:        f["Heure Fermeture"]             || "19:00",
       };
     });
 

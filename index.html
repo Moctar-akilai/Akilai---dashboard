@@ -3024,6 +3024,74 @@
               </div>
             </div>
 
+            <!-- Paramètres RDV -->
+            <div class="card">
+              <div style="font-weight:600;font-size:13px;color:var(--text-main);margin-bottom:14px">Paramètres de prise de RDV</div>
+
+              <!-- Capacité par créneau -->
+              <div class="form-group">
+                <div class="form-label" style="display:flex;align-items:center;gap:6px">
+                  Capacité par créneau
+                  <span title="Nombre de RDV simultanés acceptés. 1 pour un cabinet médical ou salon de coiffure, plus pour un restaurant ou salle de sport." style="cursor:help;color:var(--text-faint);font-size:13px">ⓘ</span>
+                </div>
+                <input type="number" id="cfgCapacite" min="1" max="100" value="1"
+                  style="width:90px;padding:7px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg-card);color:var(--text-main);font-size:13px"
+                  oninput="updatePreview()" />
+                <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+                  <button type="button" onclick="document.getElementById('cfgCapacite').value=1;updatePreview()"
+                    style="font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-hover);color:var(--text-sub);cursor:pointer">Cabinet médical : 1</button>
+                  <button type="button" onclick="document.getElementById('cfgCapacite').value=20;updatePreview()"
+                    style="font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-hover);color:var(--text-sub);cursor:pointer">Restaurant : 20</button>
+                  <button type="button" onclick="document.getElementById('cfgCapacite').value=15;updatePreview()"
+                    style="font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-hover);color:var(--text-sub);cursor:pointer">Salle de sport : 15</button>
+                  <button type="button" onclick="document.getElementById('cfgCapacite').value=30;updatePreview()"
+                    style="font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-hover);color:var(--text-sub);cursor:pointer">Formation : 30</button>
+                </div>
+              </div>
+
+              <!-- Durée RDV -->
+              <div class="form-group" style="margin-top:14px">
+                <div class="form-label">Durée d'un RDV (minutes)</div>
+                <select id="cfgDureeRDV"
+                  style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg-card);color:var(--text-main);font-size:13px"
+                  onchange="updatePreview()">
+                  <option value="15">15 min</option>
+                  <option value="30" selected>30 min</option>
+                  <option value="45">45 min</option>
+                  <option value="60">1h</option>
+                  <option value="90">1h30</option>
+                  <option value="120">2h</option>
+                </select>
+              </div>
+
+              <!-- Horaires d'ouverture -->
+              <div class="form-group" style="margin-top:14px;margin-bottom:0">
+                <div class="form-label">Horaires d'ouverture</div>
+                <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+                  <div style="display:flex;align-items:center;gap:6px">
+                    <span style="font-size:12px;color:var(--text-sub)">Ouverture</span>
+                    <select id="cfgHeureOuv"
+                      style="padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg-card);color:var(--text-main);font-size:13px"
+                      onchange="updatePreview()">
+                      <option>06:00</option><option>07:00</option><option value="08:00" selected>08:00</option>
+                      <option>09:00</option><option>10:00</option><option>11:00</option><option>12:00</option>
+                    </select>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:6px">
+                    <span style="font-size:12px;color:var(--text-sub)">Fermeture</span>
+                    <select id="cfgHeureFerm"
+                      style="padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg-card);color:var(--text-main);font-size:13px"
+                      onchange="updatePreview()">
+                      <option>12:00</option><option>13:00</option><option>14:00</option>
+                      <option>15:00</option><option>16:00</option><option>17:00</option>
+                      <option>18:00</option><option value="19:00" selected>19:00</option>
+                      <option>20:00</option><option>21:00</option><option>22:00</option><option>23:00</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- Toggle interruptions -->
             <div class="card">
               <div class="inline-toggle">
@@ -6002,10 +6070,14 @@ function getVoixFormValues() {
     personnalite: document.querySelector("input[name='personnalite']:checked")?.value || "efficace",
     langPrimaire: document.getElementById("cfgLangPrimaire").value,
     langSecours:  document.getElementById("cfgLangSecours").value,
-    vitesse:      document.getElementById("cfgVitesse").value,
-    silence:      document.getElementById("cfgSilence").value,
-    interruptions:document.getElementById("cfgInterruptions").checked,
-    prompt:       document.getElementById("cfgPrompt").value
+    vitesse:         document.getElementById("cfgVitesse").value,
+    silence:         document.getElementById("cfgSilence").value,
+    interruptions:   document.getElementById("cfgInterruptions").checked,
+    prompt:          document.getElementById("cfgPrompt").value,
+    capaciteCreneau: parseInt(document.getElementById("cfgCapacite")?.value || "1"),
+    dureeRDV:        parseInt(document.getElementById("cfgDureeRDV")?.value || "30"),
+    heureOuverture:  document.getElementById("cfgHeureOuv")?.value  || "08:00",
+    heureFermeture:  document.getElementById("cfgHeureFerm")?.value || "19:00",
   };
 }
 
@@ -6070,7 +6142,11 @@ async function loadVoixConfig() {
       vitesse:      String(client.vitesseParole || VOIX_CONFIG_DEFAULT.vitesse),
       silence:      VOIX_CONFIG_DEFAULT.silence,
       interruptions:VOIX_CONFIG_DEFAULT.interruptions,
-      prompt:       isNewClient ? "" : (client.promptSysteme || VOIX_CONFIG_DEFAULT.prompt),
+      prompt:           isNewClient ? "" : (client.promptSysteme || VOIX_CONFIG_DEFAULT.prompt),
+      capaciteCreneau:  client.capaciteCreneau  || 1,
+      dureeRDV:         client.dureeRDV          || 30,
+      heureOuverture:   client.heureOuverture    || "08:00",
+      heureFermeture:   client.heureFermeture    || "19:00",
     };
     console.log("[loadVoixConfig] Pré-remplissage depuis clients[0] :", client.nom, "isNewClient:", isNewClient, "voiceId:", client.voiceId, "tonalite:", client.tonalite);
   } else if (!window._airtableConnected) {
@@ -6107,6 +6183,11 @@ function _applyVoixConfig(cfg) {
   document.getElementById("cfgVitesse").value      = cfg.vitesse      || "1.0";
   document.getElementById("cfgSilence").value      = cfg.silence      || "8";
   document.getElementById("cfgInterruptions").checked = Boolean(cfg.interruptions);
+  /* Paramètres RDV */
+  const capEl = document.getElementById("cfgCapacite");  if (capEl) capEl.value = cfg.capaciteCreneau || 1;
+  const durEl = document.getElementById("cfgDureeRDV");  if (durEl) durEl.value = String(cfg.dureeRDV || 30);
+  const ouvEl = document.getElementById("cfgHeureOuv");  if (ouvEl) ouvEl.value = cfg.heureOuverture  || "08:00";
+  const fermEl= document.getElementById("cfgHeureFerm"); if (fermEl) fermEl.value= cfg.heureFermeture || "19:00";
   const promptVal = cfg.prompt || "";
   document.getElementById("cfgPrompt").value = promptVal;
   const countEl = document.getElementById("cfgPromptCount");
@@ -6137,25 +6218,33 @@ async function saveVoixConfig() {
 
   try {
     const data = await apiFetchPost("/.netlify/functions/update-voice-config", {
-      id:            clientId,
-      nomAssistant:  cfg.nom,
-      langue:        cfg.langPrimaire,
-      tonalite:      cfg.tonalite,
-      promptSysteme: cfg.prompt,
-      vitesseParole: parseFloat(cfg.vitesse),
-      voiceId:       cfg.voiceId || cfg.voix || "",
+      id:              clientId,
+      nomAssistant:    cfg.nom,
+      langue:          cfg.langPrimaire,
+      tonalite:        cfg.tonalite,
+      promptSysteme:   cfg.prompt,
+      vitesseParole:   parseFloat(cfg.vitesse),
+      voiceId:         cfg.voiceId || cfg.voix || "",
+      capaciteCreneau: cfg.capaciteCreneau,
+      dureeRDV:        cfg.dureeRDV,
+      heureOuverture:  cfg.heureOuverture,
+      heureFermeture:  cfg.heureFermeture,
     });
     console.log("[saveVoixConfig] Airtable réponse :", data);
     if (data.ok) {
       showToast("Configuration sauvegardée. Votre assistant sera mis à jour sous 24h.", "success");
       /* Mettre à jour le cache local du client */
       if (clients[0]) {
-        clients[0].nomAssistant  = cfg.nom;
-        clients[0].langue        = cfg.langPrimaire;
-        clients[0].tonalite      = cfg.tonalite;
-        clients[0].promptSysteme = cfg.prompt;
-        clients[0].vitesseParole = parseFloat(cfg.vitesse);
-        clients[0].voiceId       = cfg.voiceId || cfg.voix || "";
+        clients[0].nomAssistant    = cfg.nom;
+        clients[0].langue          = cfg.langPrimaire;
+        clients[0].tonalite        = cfg.tonalite;
+        clients[0].promptSysteme   = cfg.prompt;
+        clients[0].vitesseParole   = parseFloat(cfg.vitesse);
+        clients[0].voiceId         = cfg.voiceId || cfg.voix || "";
+        clients[0].capaciteCreneau = cfg.capaciteCreneau;
+        clients[0].dureeRDV        = cfg.dureeRDV;
+        clients[0].heureOuverture  = cfg.heureOuverture;
+        clients[0].heureFermeture  = cfg.heureFermeture;
       }
     } else {
       showToast("Erreur lors de la sauvegarde Airtable", "warning");
@@ -6438,13 +6527,17 @@ async function updateVapiTools() {
     const cfg  = getVoixFormValues();
     const data = await apiFetchPost("/.netlify/functions/create-vapi-assistant", {
       clientId,
-      nomAssistant:  cfg.nom,
-      voiceId:       cfg.voiceId,
-      langue:        cfg.langPrimaire,
-      promptSysteme: cfg.prompt,
-      vitesseParole: parseFloat(cfg.vitesse),
-      silenceMax:    parseInt(cfg.silence),
-      interruptions: cfg.interruptions,
+      nomAssistant:    cfg.nom,
+      voiceId:         cfg.voiceId,
+      langue:          cfg.langPrimaire,
+      promptSysteme:   cfg.prompt,
+      vitesseParole:   parseFloat(cfg.vitesse),
+      silenceMax:      parseInt(cfg.silence),
+      interruptions:   cfg.interruptions,
+      capaciteCreneau: cfg.capaciteCreneau,
+      dureeRDV:        cfg.dureeRDV,
+      heureOuverture:  cfg.heureOuverture,
+      heureFermeture:  cfg.heureFermeture,
     });
 
     if (data.ok) {
@@ -6483,26 +6576,34 @@ async function createOrUpdateVapiAssistant() {
   try {
     const data = await apiFetchPost("/.netlify/functions/create-vapi-assistant", {
       clientId,
-      nomAssistant:  cfg.nom,
-      voiceId:       cfg.voiceId,
-      langue:        cfg.langPrimaire,
-      promptSysteme: cfg.prompt,
-      vitesseParole: parseFloat(cfg.vitesse),
-      silenceMax:    parseInt(cfg.silence),
-      interruptions: cfg.interruptions,
+      nomAssistant:    cfg.nom,
+      voiceId:         cfg.voiceId,
+      langue:          cfg.langPrimaire,
+      promptSysteme:   cfg.prompt,
+      vitesseParole:   parseFloat(cfg.vitesse),
+      silenceMax:      parseInt(cfg.silence),
+      interruptions:   cfg.interruptions,
+      capaciteCreneau: cfg.capaciteCreneau,
+      dureeRDV:        cfg.dureeRDV,
+      heureOuverture:  cfg.heureOuverture,
+      heureFermeture:  cfg.heureFermeture,
     });
 
     if (data.ok) {
       _vapiAssistantId = data.assistantId;
       /* Mettre à jour le cache local — tous les champs pour survivre au refresh */
       if (client) {
-        client.vapiAssistantId = data.assistantId;
-        client.nomAssistant    = cfg.nom;
-        client.promptSysteme   = cfg.prompt;
-        client.langue          = cfg.langPrimaire;
-        client.tonalite        = cfg.tonalite;
-        client.voiceId         = cfg.voiceId || cfg.voix || "";
-        client.vitesseParole   = parseFloat(cfg.vitesse);
+        client.vapiAssistantId   = data.assistantId;
+        client.nomAssistant      = cfg.nom;
+        client.promptSysteme     = cfg.prompt;
+        client.langue            = cfg.langPrimaire;
+        client.tonalite          = cfg.tonalite;
+        client.voiceId           = cfg.voiceId || cfg.voix || "";
+        client.vitesseParole     = parseFloat(cfg.vitesse);
+        client.capaciteCreneau   = cfg.capaciteCreneau;
+        client.dureeRDV          = cfg.dureeRDV;
+        client.heureOuverture    = cfg.heureOuverture;
+        client.heureFermeture    = cfg.heureFermeture;
       }
       _updateVapiButton();
       loadVapiPhoneNumber();

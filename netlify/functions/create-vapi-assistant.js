@@ -12,13 +12,17 @@ exports.handler = async function(event, context) {
 
   const {
     clientId,
-    nomAssistant  = "Assistant",
+    nomAssistant    = "Assistant",
     voiceId,
-    langue        = "fr",
-    promptSysteme = "",
-    vitesseParole = 1.0,
-    silenceMax    = 8,
-    interruptions = true,
+    langue          = "fr",
+    promptSysteme   = "",
+    vitesseParole   = 1.0,
+    silenceMax      = 8,
+    interruptions   = true,
+    capaciteCreneau: bodyCapacite,
+    dureeRDV:        bodyDuree,
+    heureOuverture:  bodyHeureOuv,
+    heureFermeture:  bodyHeureFerm,
   } = body;
 
   console.log("[create-vapi-assistant] clientId:", clientId, "nom:", nomAssistant, "voiceId:", voiceId, "langue:", langue);
@@ -37,6 +41,7 @@ exports.handler = async function(event, context) {
         existingAssistantId = clientFields.VapiAssistantId  || null;
         vapiPhoneNumberId   = clientFields["Numéro Vapi"]   || null;
         clientEmail         = clientFields.Email             || clientFields["User ID"] || "";
+        console.log("[create-vapi-assistant] capacite:", clientFields["Capacite Creneau"], "duree:", clientFields["Duree RDV"]);
         console.log("[create-vapi-assistant] VapiAssistantId existant :", existingAssistantId || "aucun");
         console.log("[create-vapi-assistant] Numéro Vapi (phoneNumberId) :", vapiPhoneNumberId || "aucun");
         console.log("[create-vapi-assistant] clientEmail :", clientEmail || "inconnu");
@@ -46,9 +51,22 @@ exports.handler = async function(event, context) {
     }
   }
 
-  const SERVER_URL = process.env.URL || "https://portal-akilai.netlify.app";
-  const WEBHOOK_URL = `${SERVER_URL}/.netlify/functions/vapi-webhook`;
-  const TOOLS_BASE  = `${SERVER_URL}/.netlify/functions`;
+  const SERVER_URL    = process.env.URL || "https://portal-akilai.netlify.app";
+  const WEBHOOK_URL   = `${SERVER_URL}/.netlify/functions/vapi-webhook`;
+  const TOOLS_BASE    = `${SERVER_URL}/.netlify/functions`;
+  /* Body values (from frontend form) take priority over Airtable stored values */
+  const capaciteCreneau = String(bodyCapacite   || clientFields["Capacite Creneau"] || 1);
+  const dureeRDV        = String(bodyDuree      || clientFields["Duree RDV"]        || 30);
+  const heureOuverture  = bodyHeureOuv  || clientFields["Heure Ouverture"] || "08:00";
+  const heureFermeture  = bodyHeureFerm || clientFields["Heure Fermeture"] || "19:00";
+  const toolHeaders     = {
+    "X-User-Id":          clientEmail,
+    "X-Client-Id":        clientId || "",
+    "X-Capacite":         capaciteCreneau,
+    "X-Duree-RDV":        dureeRDV,
+    "X-Heure-Ouverture":  heureOuverture,
+    "X-Heure-Fermeture":  heureFermeture,
+  };
 
   /* ── Construire les tools dynamiquement selon les intégrations ── */
   const tools = [];
@@ -68,7 +86,7 @@ exports.handler = async function(event, context) {
           required: ["date"],
         },
       },
-      server: { url: `${TOOLS_BASE}/vapi-tool-check-availability`, timeoutSeconds: 10, headers: { "X-User-Id": clientEmail, "X-Client-Id": clientId || "" } },
+      server: { url: `${TOOLS_BASE}/vapi-tool-check-availability`, timeoutSeconds: 10, headers: toolHeaders },
     });
 
     tools.push({
@@ -89,7 +107,7 @@ exports.handler = async function(event, context) {
           required: ["dateDebut", "dateFin", "nomPatient"],
         },
       },
-      server: { url: `${TOOLS_BASE}/vapi-tool-create-appointment`, timeoutSeconds: 10, headers: { "X-User-Id": clientEmail, "X-Client-Id": clientId || "" } },
+      server: { url: `${TOOLS_BASE}/vapi-tool-create-appointment`, timeoutSeconds: 10, headers: toolHeaders },
     });
   }
 
@@ -107,7 +125,7 @@ exports.handler = async function(event, context) {
           required: ["date"],
         },
       },
-      server: { url: `${TOOLS_BASE}/vapi-tool-get-calendly-slots`, timeoutSeconds: 10, headers: { "X-User-Id": clientEmail, "X-Client-Id": clientId || "" } },
+      server: { url: `${TOOLS_BASE}/vapi-tool-get-calendly-slots`, timeoutSeconds: 10, headers: toolHeaders },
     });
   }
 
@@ -126,7 +144,7 @@ exports.handler = async function(event, context) {
         required: ["to", "message"],
       },
     },
-    server: { url: `${TOOLS_BASE}/vapi-tool-send-sms`, timeoutSeconds: 10, headers: { "X-User-Id": clientEmail, "X-Client-Id": clientId || "" } },
+    server: { url: `${TOOLS_BASE}/vapi-tool-send-sms`, timeoutSeconds: 10, headers: toolHeaders },
   });
 
   // CRM — toujours disponible
@@ -147,7 +165,7 @@ exports.handler = async function(event, context) {
         required: ["telephone"],
       },
     },
-    server: { url: `${TOOLS_BASE}/vapi-tool-create-contact`, timeoutSeconds: 10, headers: { "X-User-Id": clientEmail, "X-Client-Id": clientId || "" } },
+    server: { url: `${TOOLS_BASE}/vapi-tool-create-contact`, timeoutSeconds: 10, headers: toolHeaders },
   });
 
   console.log("[create-vapi-assistant] tools construits :", tools.map(t => t.function.name));
@@ -228,10 +246,14 @@ exports.handler = async function(event, context) {
       /* Sauvegarder l'ID + config voix dans Airtable */
       if (clientId && assistantId) {
         const airtableFields = { VapiAssistantId: assistantId };
-        if (nomAssistant  !== undefined) airtableFields.NomAssistant  = nomAssistant;
-        if (langue        !== undefined) airtableFields.Langue        = langue;
-        if (promptSysteme !== undefined) airtableFields.PromptSysteme = promptSysteme;
-        if (vitesseParole !== undefined) airtableFields.VitesseParole = Number(vitesseParole);
+        if (nomAssistant  !== undefined) airtableFields.NomAssistant       = nomAssistant;
+        if (langue        !== undefined) airtableFields.Langue             = langue;
+        if (promptSysteme !== undefined) airtableFields.PromptSysteme      = promptSysteme;
+        if (vitesseParole !== undefined) airtableFields.VitesseParole      = Number(vitesseParole);
+        airtableFields["Capacite Creneau"] = Number(capaciteCreneau) || 1;
+        airtableFields["Duree RDV"]        = Number(dureeRDV)        || 30;
+        airtableFields["Heure Ouverture"]  = heureOuverture;
+        airtableFields["Heure Fermeture"]  = heureFermeture;
         const patchRes = await fetch(`${BASE_URL}/Clients/${clientId}`, {
           method: "PATCH",
           headers,
@@ -280,10 +302,14 @@ exports.handler = async function(event, context) {
       /* Sauvegarder la config voix (et le nouvel ID si fallback) dans Airtable */
       if (clientId) {
         const updateFields = { VapiAssistantId: assistantId };
-        if (nomAssistant  !== undefined) updateFields.NomAssistant  = nomAssistant;
-        if (langue        !== undefined) updateFields.Langue        = langue;
-        if (promptSysteme !== undefined) updateFields.PromptSysteme = promptSysteme;
-        if (vitesseParole !== undefined) updateFields.VitesseParole = Number(vitesseParole);
+        if (nomAssistant  !== undefined) updateFields.NomAssistant       = nomAssistant;
+        if (langue        !== undefined) updateFields.Langue             = langue;
+        if (promptSysteme !== undefined) updateFields.PromptSysteme      = promptSysteme;
+        if (vitesseParole !== undefined) updateFields.VitesseParole      = Number(vitesseParole);
+        updateFields["Capacite Creneau"] = Number(capaciteCreneau) || 1;
+        updateFields["Duree RDV"]        = Number(dureeRDV)        || 30;
+        updateFields["Heure Ouverture"]  = heureOuverture;
+        updateFields["Heure Fermeture"]  = heureFermeture;
         const patchRes = await fetch(`${BASE_URL}/Clients/${clientId}`, {
           method: "PATCH",
           headers,

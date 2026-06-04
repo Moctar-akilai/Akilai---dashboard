@@ -22,53 +22,22 @@ async function refreshGoogleToken(recordId, refreshToken) {
   return data.access_token;
 }
 
-function buildSlots(busyList, dayStart, dayEnd, durationMin) {
-  const slots = [];
-  const dur   = (durationMin || 30) * 60 * 1000;
-  const step  = dur;
-  const WORK_START = 8 * 60;  // 08:00
-  const WORK_END   = 19 * 60; // 19:00
-
-  let cursor = new Date(dayStart);
-  if (cursor.getUTCHours() * 60 + cursor.getUTCMinutes() < WORK_START) {
-    cursor = new Date(cursor);
-    cursor.setUTCHours(Math.floor(WORK_START / 60), WORK_START % 60, 0, 0);
-  }
-
-  while (cursor.getTime() + dur <= Math.min(new Date(dayEnd).getTime(), new Date(dayStart).setUTCHours(WORK_END / 60 | 0, WORK_END % 60, 0, 0))) {
-    const slotEnd = new Date(cursor.getTime() + dur);
-    const overlap = busyList.some(b => {
-      const bs = new Date(b.start).getTime();
-      const be = new Date(b.end).getTime();
-      return cursor.getTime() < be && slotEnd.getTime() > bs;
-    });
-    if (!overlap) {
-      slots.push({
-        start: cursor.toISOString().replace("Z", "+00:00"),
-        end:   slotEnd.toISOString().replace("Z", "+00:00"),
-      });
-    }
-    cursor = new Date(cursor.getTime() + step);
-  }
-  return slots;
-}
-
 exports.handler = async function(event) {
   if (event.httpMethod === "OPTIONS") return preflight();
   if (event.httpMethod !== "POST") return { statusCode: 405, body: "Method Not Allowed" };
 
   try {
-    const body      = JSON.parse(event.body || "{}");
-    const vapiMsg   = body.message || body;
-    const toolCall  = vapiMsg.toolCallList?.[0] || vapiMsg.toolCalls?.[0];
+    const body       = JSON.parse(event.body || "{}");
+    const vapiMsg    = body.message || body;
+    const toolCall   = vapiMsg.toolCallList?.[0] || vapiMsg.toolCalls?.[0];
     const toolCallId = toolCall?.id || "tool-call-1";
-    const args      = toolCall?.function?.arguments || body.arguments || body;
-    const userId    =
+    const args       = toolCall?.function?.arguments || body.arguments || body;
+    const userId     =
       event.headers?.["x-user-id"] ||
       event.headers?.["X-User-Id"] ||
       args.userId ||
       body.userId || "";
-    const duration  = parseInt(args.duration || body.duration || "30");
+    const duration   = parseInt(args.duration || body.duration || event.headers?.["x-duree-rdv"] || "30");
 
     /* Corriger l'année si dans le passé */
     let date = args.date || body.date || "";
@@ -107,7 +76,13 @@ exports.handler = async function(event) {
     const refreshToken = fields["Google Refresh Token"] || "";
     const calendarId   = fields["Google Calendar ID"]   || "primary";
 
-    console.log("[check-availability] étape 2: token récupéré:", !!accessToken, "| refreshToken:", !!refreshToken);
+    /* Paramètres RDV — headers en priorité (plus récents), puis Airtable */
+    const capacite   = parseInt(event.headers?.["x-capacite"])         || Number(fields["Capacite Creneau"]) || 1;
+    const dureeMin   = parseInt(event.headers?.["x-duree-rdv"])        || Number(fields["Duree RDV"])        || duration || 30;
+    const heureOuv   = event.headers?.["x-heure-ouverture"]           || fields["Heure Ouverture"]           || "08:00";
+    const heureFerm  = event.headers?.["x-heure-fermeture"]           || fields["Heure Fermeture"]           || "19:00";
+
+    console.log("[check-availability] étape 2: token:", !!accessToken, "| capacite:", capacite, "| duree:", dureeMin, "| horaires:", heureOuv, "-", heureFerm);
 
     if (!accessToken && !refreshToken) {
       return vapiError("Google Calendar non connecté.");
@@ -121,7 +96,7 @@ exports.handler = async function(event) {
       timeMax:      dayEnd,
       singleEvents: "true",
       orderBy:      "startTime",
-      maxResults:   "100",
+      maxResults:   "250",
     });
 
     console.log("[check-availability] étape 3: appel Google Calendar API");
@@ -140,7 +115,6 @@ exports.handler = async function(event) {
         `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${params}`,
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
-      console.log("[check-availability] après refresh, status Google:", gcalRes.status);
     }
 
     if (!gcalRes.ok) {
@@ -150,24 +124,52 @@ exports.handler = async function(event) {
     }
 
     const gcalData = await gcalRes.json();
-    const busy = (gcalData.items || [])
-      .filter(e => e.status !== "cancelled" && e.start?.dateTime)
-      .map(e => ({ start: e.start.dateTime, end: e.end.dateTime }));
+    const events   = gcalData.items || [];
+    console.log("[check-availability] étape 5: nb events:", events.length);
 
-    console.log("[check-availability] étape 5: nb events:", busy.length);
+    /* ── Générer les créneaux selon horaires d'ouverture ── */
+    const [startH, startM] = heureOuv.split(":").map(Number);
+    const [endH,   endM]   = heureFerm.split(":").map(Number);
+    const startMinutes     = startH * 60 + startM;
+    const endMinutes       = endH   * 60 + endM;
 
-    const slots     = buildSlots(busy, dayStart, dayEnd, duration);
-    const dateLabel = new Date(date + "T12:00:00Z").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+    const availableSlots = [];
+    for (let m = startMinutes; m + dureeMin <= endMinutes; m += dureeMin) {
+      const hh  = Math.floor(m / 60).toString().padStart(2, "0");
+      const mm  = (m % 60).toString().padStart(2, "0");
+      const slotStart = new Date(`${date}T${hh}:${mm}:00`);
+      const slotEnd   = new Date(slotStart.getTime() + dureeMin * 60000);
+
+      /* Compter les RDV existants qui chevauchent ce créneau */
+      const overlapping = events.filter(ev => {
+        const evStart = new Date(ev.start?.dateTime || ev.start?.date);
+        const evEnd   = new Date(ev.end?.dateTime   || ev.end?.date);
+        return ev.status !== "cancelled" && evStart < slotEnd && evEnd > slotStart;
+      });
+
+      if (overlapping.length < capacite) {
+        const remaining = capacite - overlapping.length;
+        if (capacite === 1) {
+          availableSlots.push(`${hh}:${mm}`);
+        } else {
+          availableSlots.push(`${hh}:${mm} (${remaining} place${remaining > 1 ? "s" : ""} restante${remaining > 1 ? "s" : ""})`);
+        }
+      }
+    }
+
+    const dateLabel = new Date(date + "T12:00:00Z").toLocaleDateString("fr-FR", {
+      weekday: "long", day: "numeric", month: "long", year: "numeric",
+    });
 
     let resultText;
-    if (slots.length === 0) {
-      resultText = `Aucun créneau disponible le ${dateLabel}.`;
+    if (availableSlots.length === 0) {
+      resultText = `Aucun créneau disponible le ${dateLabel}. Voulez-vous que je vérifie une autre date ?`;
     } else {
-      const slotLabels = slots.slice(0, 6).map(s => {
-        const t = new Date(s.start);
-        return t.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" });
-      });
-      resultText = `Créneaux disponibles le ${dateLabel} : ${slotLabels.join(", ")}.`;
+      const shown = availableSlots.slice(0, 6);
+      resultText = `Créneaux disponibles le ${dateLabel} : ${shown.join(", ")}.`;
+      if (availableSlots.length > 6) {
+        resultText += ` Et ${availableSlots.length - 6} autres créneaux.`;
+      }
     }
 
     console.log("[check-availability] résultat:", resultText);
@@ -175,9 +177,7 @@ exports.handler = async function(event) {
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        results: [{ toolCallId, result: resultText }],
-      }),
+      body: JSON.stringify({ results: [{ toolCallId, result: resultText }] }),
     };
 
   } catch (e) {
@@ -185,9 +185,7 @@ exports.handler = async function(event) {
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        results: [{ toolCallId: "tool-call-1", result: "Erreur lors de la vérification: " + e.message }],
-      }),
+      body: JSON.stringify({ results: [{ toolCallId: "tool-call-1", result: "Erreur lors de la vérification: " + e.message }] }),
     };
   }
 };
