@@ -4345,6 +4345,8 @@ function navigate(sectionId) {
   if (sectionId === 'factures')      { loadFactures(); }
   if (sectionId === 'crm')           { loadCRM(); }
   if (sectionId === 'integrations')  { renderIntegrations(); }
+  if (sectionId === 'google-calendar') { initGoogleCalendar(); }
+  if (sectionId === 'calendly')        { loadCalendlyPage(); }
 
   currentSection = sectionId;
   try { localStorage.setItem('akilai_section', sectionId); } catch(e) {}
@@ -4471,6 +4473,8 @@ function updateSidebarUser() {
 
   const headerNom = document.getElementById("headerClientName");
   if (headerNom && entreprise) headerNom.textContent = entreprise;
+
+  updateAgendaSidebarVisibility();
 }
 
 /* ============================================================
@@ -4867,6 +4871,7 @@ async function loadClientsFromAirtable() {
   applyPlanFilter();
   updateSidebarUser();
   if (clients.length) checkSuspensionState(clients[0]);
+  updateAgendaSidebarVisibility();
 }
 
 function checkSuspensionState(client) {
