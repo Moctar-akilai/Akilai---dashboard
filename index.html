@@ -6056,8 +6056,9 @@ async function loadVoixConfig() {
   const client = clients[0] || null;
   if (client) {
     _vapiAssistantId = client.vapiAssistantId || null;
+    const isNewClient = !client.nomAssistant && !client.vapiAssistantId;
     cfg = {
-      nom:          client.nomAssistant     || VOIX_CONFIG_DEFAULT.nom,
+      nom:          isNewClient ? "" : (client.nomAssistant || VOIX_CONFIG_DEFAULT.nom),
       voix:         client.voiceId          || "",
       voiceId:      client.voiceId          || "",
       voiceName:    "",
@@ -6068,9 +6069,9 @@ async function loadVoixConfig() {
       vitesse:      String(client.vitesseParole || VOIX_CONFIG_DEFAULT.vitesse),
       silence:      VOIX_CONFIG_DEFAULT.silence,
       interruptions:VOIX_CONFIG_DEFAULT.interruptions,
-      prompt:       client.promptSysteme    || VOIX_CONFIG_DEFAULT.prompt,
+      prompt:       isNewClient ? "" : (client.promptSysteme || VOIX_CONFIG_DEFAULT.prompt),
     };
-    console.log("[loadVoixConfig] Pré-remplissage depuis clients[0] :", client.nom, "voiceId:", client.voiceId, "tonalite:", client.tonalite);
+    console.log("[loadVoixConfig] Pré-remplissage depuis clients[0] :", client.nom, "isNewClient:", isNewClient, "voiceId:", client.voiceId, "tonalite:", client.tonalite);
   } else if (!window._airtableConnected) {
     /* Fallback localStorage si Airtable non connecté */
     const stored = localStorage.getItem("voixConfig");

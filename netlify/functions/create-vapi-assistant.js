@@ -285,39 +285,49 @@ exports.handler = async function(event, context) {
     try {
       const AUTOMATIONS_TABLE = "tble4KroqvA1JodJs";
       const userId = clientEmail;
+      console.log("[create-vapi] userId pour automatisation:", userId || "(vide — clientEmail manquant)");
+
       if (userId && assistantId) {
+        console.log("[create-vapi] recherche automatisation existante...");
         const searchFormula = encodeURIComponent(`AND({User ID}="${userId}",{Type}="Vocal")`);
         const autoSearchRes  = await fetch(`${BASE_URL}/${AUTOMATIONS_TABLE}?filterByFormula=${searchFormula}&maxRecords=1`, { headers });
         const autoSearchData = autoSearchRes.ok ? await autoSearchRes.json() : { records: [] };
-        const existing       = autoSearchData.records && autoSearchData.records[0];
+        const records        = autoSearchData.records || [];
+        const existing       = records[0];
+        console.log("[create-vapi] nb automatisations trouvées:", records.length, "| searchRes.status:", autoSearchRes.status);
+
+        console.log("[create-vapi] action:", existing ? "PATCH" : "POST");
 
         if (existing) {
           const patchAuto = await fetch(`${BASE_URL}/${AUTOMATIONS_TABLE}/${existing.id}`, {
             method: "PATCH",
             headers,
             body: JSON.stringify({ fields: {
-              "Nom":            nomAssistant || "Assistant Vocal",
-              "Statut":         "Actif",
+              "Nom":             nomAssistant || "Assistant Vocal",
+              "Statut":          "Actif",
               "VapiAssistantId": assistantId,
             }, typecast: true }),
           });
-          console.log("[create-vapi] automatisation mise à jour:", existing.id, "status:", patchAuto.status);
+          const patchData = patchAuto.ok ? await patchAuto.json() : {};
+          console.log("[create-vapi] résultat automatisation:", JSON.stringify(patchData).substring(0, 200));
         } else {
           const createAuto = await fetch(`${BASE_URL}/${AUTOMATIONS_TABLE}`, {
             method: "POST",
             headers,
             body: JSON.stringify({ fields: {
-              "Nom":            nomAssistant || "Assistant Vocal",
-              "Type":           "Vocal",
-              "Statut":         "Actif",
-              "User ID":        userId,
-              "Description":    `Assistant vocal IA — ${langue || "fr"}`,
+              "Nom":             nomAssistant || "Assistant Vocal",
+              "Type":            "Vocal",
+              "Statut":          "Actif",
+              "User ID":         userId,
+              "Description":     `Assistant vocal IA — ${langue || "fr"}`,
               "VapiAssistantId": assistantId,
             }, typecast: true }),
           });
           const autoData = createAuto.ok ? await createAuto.json() : {};
-          console.log("[create-vapi] automatisation créée:", autoData.id, "status:", createAuto.status);
+          console.log("[create-vapi] résultat automatisation:", JSON.stringify(autoData).substring(0, 200));
         }
+      } else {
+        console.warn("[create-vapi] automatisation ignorée — userId:", userId || "(vide)", "| assistantId:", assistantId || "(vide)");
       }
     } catch (e2) {
       console.warn("[create-vapi-assistant] automatisation sync error:", e2.message);
