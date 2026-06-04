@@ -12,18 +12,18 @@ exports.handler = async function(event) {
 
   try {
     const body     = JSON.parse(event.body || "{}");
-    const msg      = body.message || body;
-    const toolCall = msg.toolCallList?.[0] || msg.toolCalls?.[0];
+    const vapiMsg  = body.message || body;
+    const toolCall = vapiMsg.toolCallList?.[0] || vapiMsg.toolCalls?.[0];
     const args     = toolCall?.function?.arguments || body.arguments || body;
     const userId   =
       args.userId ||
-      msg.call?.assistantOverrides?.metadata?.userId ||
-      msg.call?.assistant?.metadata?.userId ||
-      msg.call?.metadata?.userId ||
+      vapiMsg.call?.assistantOverrides?.metadata?.userId ||
+      vapiMsg.call?.assistant?.metadata?.userId ||
+      vapiMsg.call?.metadata?.userId ||
       body.userId || "";
     console.log("[vapi-tool-send-sms] userId:", userId, "| args:", JSON.stringify(args));
     const to      = args.to      || body.to      || "";
-    const message = args.message || body.message || "";
+    const message = args.message || body.smsText || "";
 
     if (!to)      return err("to requis", 400);
     if (!message) return err("message requis", 400);
