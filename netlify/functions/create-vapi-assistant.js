@@ -173,19 +173,17 @@ exports.handler = async function(event, context) {
   const currentYear = new Date().getFullYear();
 
   /* ── Instructions tools injectées dans le prompt système ── */
-  let toolInstructions = `\n\nIMPORTANT : Nous sommes en ${currentYear}. Toujours utiliser l'année ${currentYear} (ou ${currentYear + 1} si la date est dépassée) pour les rendez-vous. Ne jamais utiliser une année passée.\n\nOUTILS DISPONIBLES :\n`;
+  let toolInstructions = `\n\nIMPORTANT : Nous sommes en ${currentYear}. Toujours utiliser l'année ${currentYear} (ou ${currentYear + 1} si la date est dépassée). Ne jamais utiliser une année passée.\n\nRÈGLES ABSOLUES POUR LES RENDEZ-VOUS :\n1. Tu NE DOIS JAMAIS inventer ou supposer des disponibilités — TOUJOURS appeler check_availability et attendre le résultat avant de répondre.\n2. Si check_availability retourne une erreur ou timeout → dire "Je vérifie les disponibilités, un instant..." et réessayer UNE fois.\n3. Ne JAMAIS confirmer un RDV sans avoir appelé create_appointment et reçu une confirmation de succès.\n4. Si create_appointment échoue → ne pas confirmer le RDV, proposer de rappeler.\n5. Utiliser EXACTEMENT les créneaux retournés par check_availability, pas d'autres.\n6. ATTENDRE le résultat de chaque tool call AVANT de poursuivre la conversation.\n\nOUTILS DISPONIBLES :\n`;
 
   if (clientFields["Google Connected"]) {
-    toolInstructions += `- check_availability : TOUJOURS appeler ce tool avant de proposer un créneau pour vérifier la disponibilité réelle de l'agenda.
-- create_appointment : appeler ce tool une fois que le patient a confirmé le créneau choisi. Annoncer ensuite : "Votre RDV est confirmé le [date] à [heure]."\n`;
+    toolInstructions += `- check_availability : OBLIGATOIRE avant de proposer tout créneau. Paramètre date au format YYYY-MM-DD.\n- create_appointment : appeler UNIQUEMENT après confirmation explicite du patient. Annoncer : "Votre RDV est confirmé le [date] à [heure]."\n`;
   }
 
   if (clientFields["Calendly Connected"] && clientFields["Calendly Link"]) {
-    toolInstructions += `- get_calendly_slots : appeler ce tool pour proposer des créneaux via Calendly.\n`;
+    toolInstructions += `- get_calendly_slots : appeler pour proposer des créneaux via Calendly.\n`;
   }
 
-  toolInstructions += `- send_sms : appeler ce tool en fin d'appel pour envoyer une confirmation par SMS au patient.
-- create_contact : appeler ce tool pour enregistrer le nom, téléphone et résumé du patient dans la base de données.\n`;
+  toolInstructions += `- send_sms : appeler en fin d'appel pour envoyer une confirmation SMS au patient.\n- create_contact : appeler pour enregistrer nom, téléphone et résumé dans la base de données.\n`;
 
   const promptComplet = (promptSysteme || "") + toolInstructions;
 
@@ -198,11 +196,11 @@ exports.handler = async function(event, context) {
       clientId: clientId || "",
     },
     model: {
-      provider: "openai",
-      model:    "gpt-4o",
-      messages: [
-        { role: "system", content: promptComplet },
-      ],
+      provider:    "groq",
+      model:       "llama-3.3-70b-versatile",
+      messages:    [{ role: "system", content: promptComplet }],
+      temperature: 0.3,
+      toolChoice:  "auto",
       tools,
     },
     voice: {

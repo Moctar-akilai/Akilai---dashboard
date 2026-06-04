@@ -68,7 +68,9 @@ exports.handler = async function(event) {
     if (!date)   return vapiError("Erreur: date manquante.");
 
     console.log("[check-availability] étape 1: recherche client Airtable");
-    const searchUrl  = `${BASE_URL}/Clients?filterByFormula=${encodeURIComponent(`{User ID}="${userId}"`)}&maxRecords=1`;
+    const tokenFields = ["Google Access Token", "Google Refresh Token", "Google Calendar ID", "Capacite Creneau", "Duree RDV", "Heure Ouverture", "Heure Fermeture"]
+      .map(f => `fields[]=${encodeURIComponent(f)}`).join("&");
+    const searchUrl  = `${BASE_URL}/Clients?filterByFormula=${encodeURIComponent(`{User ID}="${userId}"`)}&maxRecords=1&${tokenFields}`;
     const clientRes  = await fetch(searchUrl, { headers: airtableHeaders });
     const clientData = await clientRes.json();
     if (!clientData.records?.length) return vapiError("Client introuvable.");
