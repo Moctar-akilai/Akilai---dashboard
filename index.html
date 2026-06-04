@@ -3600,6 +3600,34 @@
           </div>
         </div>
         <div class="card" style="padding:20px">
+          <style>
+            #fullcalendar-container { background: transparent; }
+            .fc .fc-toolbar { background: transparent; padding: 8px 0; margin-bottom: 16px; }
+            .fc .fc-toolbar-title { color: var(--text, #fff); font-size: 18px; font-weight: 600; }
+            .fc .fc-button { background: var(--surface-2, #252525) !important; border: 1px solid var(--border, #333) !important; color: var(--text, #fff) !important; border-radius: 8px !important; padding: 6px 12px !important; font-size: 13px !important; box-shadow: none !important; }
+            .fc .fc-button:hover { background: #333 !important; border-color: #70B2DE !important; }
+            .fc .fc-button-active, .fc .fc-button-primary:not(:disabled).fc-button-active { background: #70B2DE !important; border-color: #70B2DE !important; color: #000 !important; }
+            .fc .fc-scrollgrid { border-color: var(--border, #2a2a2a) !important; border-radius: 8px; overflow: hidden; }
+            .fc .fc-scrollgrid-section > td { border-color: var(--border, #2a2a2a) !important; }
+            .fc .fc-col-header-cell { background: var(--surface, #141414) !important; border-color: var(--border, #2a2a2a) !important; padding: 10px 0 !important; }
+            .fc .fc-col-header-cell-cushion { color: var(--text-muted, #a0a0a0) !important; font-size: 12px !important; font-weight: 600 !important; text-transform: uppercase !important; letter-spacing: 0.5px !important; text-decoration: none !important; }
+            .fc .fc-daygrid-day, .fc .fc-timegrid-col { background: transparent !important; border-color: var(--border, #2a2a2a) !important; }
+            .fc .fc-day-today { background: rgba(112, 178, 222, 0.08) !important; }
+            .fc .fc-day-today .fc-col-header-cell-cushion { color: #70B2DE !important; }
+            .fc .fc-timegrid-slot-label-cushion { color: var(--text-muted, #666) !important; font-size: 11px !important; }
+            .fc .fc-timegrid-slot { border-color: var(--border, #222) !important; height: 40px !important; }
+            .fc .fc-timegrid-now-indicator-line { border-color: #70B2DE !important; border-width: 2px !important; }
+            .fc .fc-timegrid-now-indicator-arrow { border-top-color: #70B2DE !important; border-bottom-color: #70B2DE !important; }
+            .fc .fc-event { background: #70B2DE !important; border: none !important; border-radius: 6px !important; padding: 2px 6px !important; font-size: 12px !important; font-weight: 500 !important; color: #000 !important; cursor: pointer !important; transition: transform .1s, background .1s; }
+            .fc .fc-event:hover { background: #5a9bc9 !important; transform: scale(1.02); }
+            .fc .fc-event-title, .fc .fc-event-time { color: #000 !important; }
+            .fc .fc-daygrid-day-number { color: var(--text-muted, #a0a0a0) !important; font-size: 13px !important; text-decoration: none !important; }
+            .fc .fc-day-today .fc-daygrid-day-number { color: #70B2DE !important; font-weight: 700 !important; }
+            .fc .fc-timegrid-divider { background: var(--border, #2a2a2a) !important; }
+            .fc .fc-scroller::-webkit-scrollbar { width: 4px; }
+            .fc .fc-scroller::-webkit-scrollbar-track { background: transparent; }
+            .fc .fc-scroller::-webkit-scrollbar-thumb { background: var(--border, #333); border-radius: 2px; }
+          </style>
           <div id="fullcalendar-container"></div>
         </div>
       </div>
@@ -8602,6 +8630,9 @@ function initGoogleCalendar() {
     eventColor: "#70B2DE",
     height: "auto",
     themeSystem: "standard",
+    scrollTime: "08:00:00",
+    slotMinTime: "07:00:00",
+    slotMaxTime: "22:00:00",
   });
 
   _gcalInstance.render();

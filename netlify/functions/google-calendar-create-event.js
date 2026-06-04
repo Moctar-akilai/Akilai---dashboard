@@ -86,8 +86,8 @@ exports.handler = async function(event) {
       return err(`Calendar API ${calRes.status}`, 502);
     }
 
-    const event = await calRes.json();
-    return ok({ success: true, eventId: event.id, eventLink: event.htmlLink });
+    const calendarEvent = await calRes.json();
+    return ok({ success: true, eventId: calendarEvent.id, eventLink: calendarEvent.htmlLink });
   } catch (e) {
     console.error("[google-calendar-create-event] Exception:", e.message);
     return err(e.message);
