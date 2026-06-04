@@ -247,27 +247,43 @@ exports.handler = async function(event, context) {
 
       console.log("[create-vapi-assistant] Vapi UPDATE status:", updateRes.status);
 
-      if (!updateRes.ok) {
+      if (updateRes.status === 404) {
+        /* Assistant supprimé dans Vapi → fallback CREATE */
+        console.log("[create-vapi-assistant] assistant introuvable dans Vapi (404) → fallback CREATE");
+        const fallbackRes = await fetch("https://api.vapi.ai/assistant", {
+          method:  "POST",
+          headers: vapiHeaders,
+          body:    JSON.stringify(vapiPayload),
+        });
+        console.log("[create-vapi-assistant] Vapi fallback CREATE status:", fallbackRes.status);
+        if (!fallbackRes.ok) {
+          const text = await fallbackRes.text();
+          console.error("[create-vapi-assistant] Vapi fallback CREATE error:", text);
+          return err(`Vapi API ${fallbackRes.status}: ${text}`, 502);
+        }
+        const fallbackData = await fallbackRes.json();
+        assistantId = fallbackData.id;
+        created     = true;
+        console.log("[create-vapi-assistant] nouvel assistantId (fallback):", assistantId);
+      } else if (!updateRes.ok) {
         const text = await updateRes.text();
         console.error("[create-vapi-assistant] Vapi UPDATE error:", text);
         return err(`Vapi API ${updateRes.status}: ${text}`, 502);
       }
 
-      /* Sauvegarder la config voix dans Airtable même en UPDATE */
+      /* Sauvegarder la config voix (et le nouvel ID si fallback) dans Airtable */
       if (clientId) {
-        const updateFields = {};
+        const updateFields = { VapiAssistantId: assistantId };
         if (nomAssistant  !== undefined) updateFields.NomAssistant  = nomAssistant;
         if (langue        !== undefined) updateFields.Langue        = langue;
         if (promptSysteme !== undefined) updateFields.PromptSysteme = promptSysteme;
         if (vitesseParole !== undefined) updateFields.VitesseParole = Number(vitesseParole);
-        if (Object.keys(updateFields).length > 0) {
-          const patchRes = await fetch(`${BASE_URL}/Clients/${clientId}`, {
-            method: "PATCH",
-            headers,
-            body:   JSON.stringify({ fields: updateFields }),
-          });
-          console.log("[create-vapi-assistant] Airtable PATCH Clients (update) status:", patchRes.status, "| fields:", Object.keys(updateFields).join(", "));
-        }
+        const patchRes = await fetch(`${BASE_URL}/Clients/${clientId}`, {
+          method: "PATCH",
+          headers,
+          body:   JSON.stringify({ fields: updateFields }),
+        });
+        console.log("[create-vapi-assistant] Airtable PATCH Clients (update) status:", patchRes.status, "| fields:", Object.keys(updateFields).join(", "));
       }
     }
 
