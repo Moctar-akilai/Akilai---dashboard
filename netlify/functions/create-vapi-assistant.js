@@ -68,7 +68,7 @@ exports.handler = async function(event, context) {
           required: ["date"],
         },
       },
-      server: { url: `${TOOLS_BASE}/vapi-tool-check-availability`, timeoutSeconds: 10 },
+      server: { url: `${TOOLS_BASE}/vapi-tool-check-availability`, timeoutSeconds: 10, headers: { "X-User-Id": clientEmail, "X-Client-Id": clientId || "" } },
     });
 
     tools.push({
@@ -89,7 +89,7 @@ exports.handler = async function(event, context) {
           required: ["dateDebut", "dateFin", "nomPatient"],
         },
       },
-      server: { url: `${TOOLS_BASE}/vapi-tool-create-appointment`, timeoutSeconds: 10 },
+      server: { url: `${TOOLS_BASE}/vapi-tool-create-appointment`, timeoutSeconds: 10, headers: { "X-User-Id": clientEmail, "X-Client-Id": clientId || "" } },
     });
   }
 
@@ -107,7 +107,7 @@ exports.handler = async function(event, context) {
           required: ["date"],
         },
       },
-      server: { url: `${TOOLS_BASE}/vapi-tool-get-calendly-slots`, timeoutSeconds: 10 },
+      server: { url: `${TOOLS_BASE}/vapi-tool-get-calendly-slots`, timeoutSeconds: 10, headers: { "X-User-Id": clientEmail, "X-Client-Id": clientId || "" } },
     });
   }
 
@@ -126,7 +126,7 @@ exports.handler = async function(event, context) {
         required: ["to", "message"],
       },
     },
-    server: { url: `${TOOLS_BASE}/vapi-tool-send-sms`, timeoutSeconds: 10 },
+    server: { url: `${TOOLS_BASE}/vapi-tool-send-sms`, timeoutSeconds: 10, headers: { "X-User-Id": clientEmail, "X-Client-Id": clientId || "" } },
   });
 
   // CRM — toujours disponible
@@ -147,7 +147,7 @@ exports.handler = async function(event, context) {
         required: ["telephone"],
       },
     },
-    server: { url: `${TOOLS_BASE}/vapi-tool-create-contact`, timeoutSeconds: 10 },
+    server: { url: `${TOOLS_BASE}/vapi-tool-create-contact`, timeoutSeconds: 10, headers: { "X-User-Id": clientEmail, "X-Client-Id": clientId || "" } },
   });
 
   console.log("[create-vapi-assistant] tools construits :", tools.map(t => t.function.name));

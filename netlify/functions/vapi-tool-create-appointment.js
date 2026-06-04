@@ -32,10 +32,9 @@ exports.handler = async function(event) {
     const toolCall = vapiMsg.toolCallList?.[0] || vapiMsg.toolCalls?.[0];
     const args     = toolCall?.function?.arguments || body.arguments || body;
     const userId   =
+      event.headers?.["x-user-id"] ||
+      event.headers?.["X-User-Id"] ||
       args.userId ||
-      vapiMsg.call?.assistantOverrides?.metadata?.userId ||
-      vapiMsg.call?.assistant?.metadata?.userId ||
-      vapiMsg.call?.metadata?.userId ||
       body.userId || "";
     console.log("[vapi-tool-create-appointment] userId:", userId, "| args:", JSON.stringify(args));
 

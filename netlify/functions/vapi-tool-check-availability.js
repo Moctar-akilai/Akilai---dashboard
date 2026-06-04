@@ -62,17 +62,13 @@ exports.handler = async function(event) {
 
   try {
     const body     = JSON.parse(event.body || "{}");
-    console.log("[vapi-tool-check-availability] body:", JSON.stringify(body).substring(0, 2000));
     const vapiMsg  = body.message || body;
     const toolCall = vapiMsg.toolCallList?.[0] || vapiMsg.toolCalls?.[0];
     const args     = toolCall?.function?.arguments || body.arguments || body;
-    const call     = vapiMsg.call || body.call || {};
     const userId   =
+      event.headers?.["x-user-id"] ||
+      event.headers?.["X-User-Id"] ||
       args.userId ||
-      call?.assistantOverrides?.metadata?.userId ||
-      call?.assistant?.metadata?.userId ||
-      call?.metadata?.userId ||
-      vapiMsg.metadata?.userId ||
       body.userId || "";
     const date   = args.date || body.date || "";
     console.log("[vapi-tool-check-availability] userId:", userId, "| args:", JSON.stringify(args));
