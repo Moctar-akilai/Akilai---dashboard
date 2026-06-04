@@ -2238,6 +2238,7 @@
       .login-logo { font-size: 24px; }
     }
   </style>
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
 </head>
 <body>
 
@@ -2399,6 +2400,33 @@
           <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
         </svg>
         <span class="nav-label">Intégrations</span>
+      </div>
+
+      <!-- AGENDA -->
+      <div class="nav-section-label" id="nav-agenda-label" style="margin-top:8px;display:none">Agenda</div>
+
+      <div class="nav-item" id="nav-google-calendar" data-section="google-calendar" onclick="navigate('google-calendar')" style="display:none">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        <span class="nav-label">Google Calendar</span>
+      </div>
+
+      <div class="nav-item" id="nav-calendly" data-section="calendly" onclick="navigate('calendly')" style="display:none">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#006BFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+          <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>
+        </svg>
+        <span class="nav-label">Calendly</span>
+      </div>
+
+      <!-- Message si aucune intégration agenda -->
+      <div id="nav-agenda-hint" style="display:none;padding:6px 12px 6px 14px;font-size:11px;color:var(--text-muted);line-height:1.4;cursor:pointer" onclick="navigate('integrations')">
+        💡 Connectez votre agenda dans Intégrations
       </div>
 
     </nav>
@@ -3558,9 +3586,123 @@
         </div>
       </div>
 
+      <!-- ====================================================
+           PAGE GOOGLE CALENDAR
+      ==================================================== -->
+      <div class="page" id="page-google-calendar">
+        <div class="page-header">
+          <div>
+            <div class="breadcrumb">Agenda <span>/ Google Calendar</span></div>
+            <h1 class="page-title">Mon agenda</h1>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center">
+            <button class="btn btn-primary btn-sm" onclick="openNewEventModal()">+ Nouveau RDV</button>
+          </div>
+        </div>
+        <div class="card" style="padding:20px">
+          <div id="fullcalendar-container"></div>
+        </div>
+      </div>
+
+      <!-- ====================================================
+           PAGE CALENDLY
+      ==================================================== -->
+      <div class="page" id="page-calendly">
+        <div class="page-header">
+          <div>
+            <div class="breadcrumb">Agenda <span>/ Calendly</span></div>
+            <h1 class="page-title">Calendly</h1>
+          </div>
+        </div>
+
+        <!-- Onglets -->
+        <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:20px">
+          <button id="calendly-tab-rdv" class="btn btn-secondary btn-sm" onclick="switchCalendlyTab('rdv')" style="border-radius:8px 8px 0 0;border-bottom:none;background:var(--accent);color:#fff">Mes RDV</button>
+          <button id="calendly-tab-book" class="btn btn-secondary btn-sm" onclick="switchCalendlyTab('book')" style="border-radius:8px 8px 0 0;border-bottom:none;margin-left:4px">Prendre un RDV</button>
+          <button id="calendly-tab-stats" class="btn btn-secondary btn-sm" onclick="switchCalendlyTab('stats')" style="border-radius:8px 8px 0 0;border-bottom:none;margin-left:4px">Stats</button>
+        </div>
+
+        <!-- Onglet Mes RDV -->
+        <div id="calendly-panel-rdv">
+          <div class="card" style="padding:0;overflow:hidden">
+            <div id="calendly-events-table" style="padding:20px;font-size:13px;color:var(--text-muted)">Chargement…</div>
+          </div>
+        </div>
+
+        <!-- Onglet Prendre un RDV -->
+        <div id="calendly-panel-book" style="display:none">
+          <div class="card" style="padding:20px">
+            <div id="calendly-widget-container"></div>
+          </div>
+        </div>
+
+        <!-- Onglet Stats -->
+        <div id="calendly-panel-stats" style="display:none">
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px">
+            <div class="card" style="padding:20px;text-align:center">
+              <div style="font-size:28px;font-weight:700" id="cal-stat-month">—</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:4px">RDV ce mois</div>
+            </div>
+            <div class="card" style="padding:20px;text-align:center">
+              <div style="font-size:28px;font-weight:700" id="cal-stat-upcoming">—</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:4px">RDV à venir (7j)</div>
+            </div>
+            <div class="card" style="padding:20px;text-align:center">
+              <div style="font-size:28px;font-weight:700" id="cal-stat-rate">—</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:4px">Taux de présence</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div><!-- /content -->
   </div><!-- /main -->
 </div><!-- /app -->
+
+<!-- ============================================================
+     MODAL — DETAIL ÉVÉNEMENT GOOGLE CALENDAR
+============================================================ -->
+<div id="gcalEventModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.55);align-items:center;justify-content:center" onclick="if(event.target===this)closeGCalModal()">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;width:min(520px,95vw);max-height:85vh;overflow-y:auto;padding:28px;position:relative">
+    <button onclick="closeGCalModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:18px">✕</button>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+      <div style="width:12px;height:48px;border-radius:4px;background:#70B2DE;flex-shrink:0" id="gcalEventColor"></div>
+      <div>
+        <div style="font-size:17px;font-weight:700" id="gcalEventTitle">—</div>
+        <div style="font-size:13px;color:var(--text-muted);margin-top:2px" id="gcalEventDate">—</div>
+      </div>
+    </div>
+    <div id="gcalEventDesc" style="font-size:13px;color:var(--text-muted);margin-bottom:12px;white-space:pre-wrap"></div>
+    <div id="gcalEventLocation" style="font-size:13px;margin-bottom:8px"></div>
+    <div id="gcalEventMeet" style="margin-bottom:8px"></div>
+    <div id="gcalEventAttendees" style="font-size:12px;color:var(--text-muted);margin-bottom:16px"></div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-secondary btn-sm" onclick="deleteGCalEvent()" style="color:#ef4444;border-color:rgba(239,68,68,0.3)">Supprimer</button>
+      <button class="btn btn-secondary btn-sm" onclick="closeGCalModal()">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL — NOUVEAU RDV GOOGLE CALENDAR
+============================================================ -->
+<div id="gcalNewEventModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.55);align-items:center;justify-content:center" onclick="if(event.target===this)closeGCalNewModal()">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;width:min(480px,95vw);padding:28px;position:relative">
+    <button onclick="closeGCalNewModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:18px">✕</button>
+    <h2 style="font-size:17px;font-weight:700;margin-bottom:20px">Nouveau RDV</h2>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <input id="gcal-new-title"   type="text"     class="input" placeholder="Titre *" style="font-size:13px;padding:9px 12px" />
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <input id="gcal-new-start" type="datetime-local" class="input" style="font-size:13px;padding:9px 12px" />
+        <input id="gcal-new-end"   type="datetime-local" class="input" style="font-size:13px;padding:9px 12px" />
+      </div>
+      <input id="gcal-new-guest"  type="email"    class="input" placeholder="Email invité (optionnel)" style="font-size:13px;padding:9px 12px" />
+      <input id="gcal-new-loc"    type="text"     class="input" placeholder="Lieu ou lien visio" style="font-size:13px;padding:9px 12px" />
+      <textarea id="gcal-new-desc" class="input" rows="2" placeholder="Description" style="font-size:13px;padding:9px 12px;resize:vertical;font-family:inherit"></textarea>
+      <button class="btn btn-primary" style="margin-top:4px" onclick="submitNewGCalEvent()">Créer le RDV</button>
+    </div>
+  </div>
+</div>
 
 <!-- ============================================================
      MODAL — FICHE CONTACT CRM
@@ -8386,6 +8528,333 @@ async function disconnectMicrosoft() {
     }
   } catch(e) {}
 })();
+
+/* ============================================================
+   SIDEBAR VISIBILITY — Google Calendar & Calendly
+============================================================ */
+function updateAgendaSidebarVisibility() {
+  const client = (typeof clients !== "undefined" && clients[0]) || {};
+  const showGCal     = !!client.googleConnected;
+  const showCalendly = !!(client.calendlyLink);
+  const showEither   = showGCal || showCalendly;
+
+  const gcalEl    = document.getElementById("nav-google-calendar");
+  const calEl     = document.getElementById("nav-calendly");
+  const labelEl   = document.getElementById("nav-agenda-label");
+  const hintEl    = document.getElementById("nav-agenda-hint");
+
+  if (gcalEl)  gcalEl.style.display  = showGCal     ? "flex" : "none";
+  if (calEl)   calEl.style.display   = showCalendly ? "flex" : "none";
+  if (labelEl) labelEl.style.display = showEither   ? "block" : "none";
+  if (hintEl)  hintEl.style.display  = showEither   ? "none"  : "block";
+}
+
+/* ============================================================
+   GOOGLE CALENDAR — FullCalendar integration
+============================================================ */
+let _gcalInstance = null;
+let _gcalCurrentEventId = null;
+
+function initGoogleCalendar() {
+  const client = (typeof clients !== "undefined" && clients[0]) || {};
+  const userId = client.email || "";
+  if (!userId || !client.googleConnected) return;
+
+  const calendarEl = document.getElementById("fullcalendar-container");
+  if (!calendarEl) return;
+
+  // Destroy previous instance if any
+  if (_gcalInstance) { _gcalInstance.destroy(); _gcalInstance = null; }
+
+  if (typeof FullCalendar === "undefined") {
+    calendarEl.innerHTML = '<div style="padding:20px;color:var(--text-muted)">FullCalendar non chargé</div>';
+    return;
+  }
+
+  _gcalInstance = new FullCalendar.Calendar(calendarEl, {
+    initialView: "timeGridWeek",
+    locale: "fr",
+    headerToolbar: {
+      left:   "prev,next today",
+      center: "title",
+      right:  "dayGridMonth,timeGridWeek,timeGridDay",
+    },
+    buttonText: { today: "Aujourd'hui", month: "Mois", week: "Semaine", day: "Jour" },
+    events: async function(info, successCallback, failureCallback) {
+      try {
+        const res = await fetch(
+          `/.netlify/functions/get-google-calendar-events?userId=${encodeURIComponent(userId)}&start=${encodeURIComponent(info.startStr)}&end=${encodeURIComponent(info.endStr)}`
+        );
+        const data = await res.json();
+        successCallback(data.events || []);
+      } catch(e) {
+        console.error("[GCal] load error:", e);
+        failureCallback(e);
+      }
+    },
+    eventClick: function(info) { openEventModal(info.event); },
+    dateClick:  function(info) { openNewEventModal(info.dateStr); },
+    eventColor: "#70B2DE",
+    height: "auto",
+    themeSystem: "standard",
+  });
+
+  _gcalInstance.render();
+}
+
+function openEventModal(event) {
+  _gcalCurrentEventId = event.extendedProps.googleId || event.id;
+  const modal = document.getElementById("gcalEventModal");
+  if (!modal) return;
+
+  const fmt = (dt) => dt ? new Date(dt).toLocaleString("fr-FR", { dateStyle: "long", timeStyle: "short" }) : "";
+
+  document.getElementById("gcalEventColor").style.background = event.backgroundColor || "#70B2DE";
+  document.getElementById("gcalEventTitle").textContent       = event.title || "—";
+  document.getElementById("gcalEventDate").textContent        = fmt(event.start) + (event.end ? " → " + fmt(event.end) : "");
+  document.getElementById("gcalEventDesc").textContent        = event.extendedProps.description || "";
+
+  const locEl = document.getElementById("gcalEventLocation");
+  locEl.innerHTML = event.extendedProps.location
+    ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ${event.extendedProps.location}` : "";
+
+  const meetEl = document.getElementById("gcalEventMeet");
+  meetEl.innerHTML = event.extendedProps.meetLink
+    ? `<a href="${event.extendedProps.meetLink}" target="_blank" class="btn btn-secondary btn-sm" style="font-size:12px">Rejoindre Google Meet</a>` : "";
+
+  const attEl = document.getElementById("gcalEventAttendees");
+  const atts = event.extendedProps.attendees || [];
+  attEl.textContent = atts.length ? "Participants : " + atts.join(", ") : "";
+
+  modal.style.display = "flex";
+}
+
+function closeGCalModal() {
+  const modal = document.getElementById("gcalEventModal");
+  if (modal) { modal.style.display = "none"; _gcalCurrentEventId = null; }
+}
+
+async function deleteGCalEvent() {
+  if (!_gcalCurrentEventId) return;
+  if (!confirm("Supprimer cet événement ?")) return;
+  const client = (typeof clients !== "undefined" && clients[0]) || {};
+  const userId = client.email || "";
+  try {
+    const res = await fetch("/.netlify/functions/delete-google-calendar-event", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, eventId: _gcalCurrentEventId }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast("Événement supprimé", "success");
+      closeGCalModal();
+      if (_gcalInstance) _gcalInstance.refetchEvents();
+    } else {
+      showToast("Erreur lors de la suppression", "error");
+    }
+  } catch(e) { showToast("Erreur réseau", "error"); }
+}
+
+function openNewEventModal(dateStr) {
+  const modal = document.getElementById("gcalNewEventModal");
+  if (!modal) return;
+
+  // Default: next hour
+  const now  = dateStr ? new Date(dateStr) : new Date();
+  const plus1 = new Date(now.getTime() + 3600000);
+  const toLocal = (d) => {
+    const pad = n => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
+  const s = document.getElementById("gcal-new-start");
+  const e = document.getElementById("gcal-new-end");
+  if (s) s.value = toLocal(now);
+  if (e) e.value = toLocal(plus1);
+
+  document.getElementById("gcal-new-title").value = "";
+  document.getElementById("gcal-new-guest").value = "";
+  document.getElementById("gcal-new-loc").value   = "";
+  document.getElementById("gcal-new-desc").value  = "";
+
+  modal.style.display = "flex";
+}
+
+function closeGCalNewModal() {
+  const modal = document.getElementById("gcalNewEventModal");
+  if (modal) modal.style.display = "none";
+}
+
+async function submitNewGCalEvent() {
+  const title    = (document.getElementById("gcal-new-title")?.value || "").trim();
+  const startVal = document.getElementById("gcal-new-start")?.value || "";
+  const endVal   = document.getElementById("gcal-new-end")?.value   || "";
+  const guest    = (document.getElementById("gcal-new-guest")?.value || "").trim();
+  const loc      = (document.getElementById("gcal-new-loc")?.value  || "").trim();
+  const desc     = (document.getElementById("gcal-new-desc")?.value || "").trim();
+
+  if (!title)    { showToast("Le titre est obligatoire", "warning"); return; }
+  if (!startVal) { showToast("La date de début est obligatoire", "warning"); return; }
+
+  const client = (typeof clients !== "undefined" && clients[0]) || {};
+  const userId = client.email || "";
+  if (!userId) { showToast("Identifiant introuvable", "error"); return; }
+
+  try {
+    const res = await fetch("/.netlify/functions/google-calendar-create-event", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId,
+        titre:      title,
+        description: (loc ? `Lieu : ${loc}\n` : "") + desc,
+        dateDebut:  new Date(startVal).toISOString(),
+        dateFin:    endVal ? new Date(endVal).toISOString() : new Date(new Date(startVal).getTime() + 3600000).toISOString(),
+        inviteEmail: guest || undefined,
+      }),
+    });
+    const data = await res.json();
+    if (data.success || data.eventId) {
+      showToast("RDV créé ✅", "success");
+      closeGCalNewModal();
+      if (_gcalInstance) _gcalInstance.refetchEvents();
+    } else {
+      showToast("Erreur lors de la création", "error");
+    }
+  } catch(e) { showToast("Erreur réseau", "error"); }
+}
+
+/* ============================================================
+   CALENDLY — Page
+============================================================ */
+let _calendlyEvents = [];
+
+function switchCalendlyTab(tab) {
+  ["rdv", "book", "stats"].forEach(t => {
+    const panel = document.getElementById("calendly-panel-" + t);
+    const btn   = document.getElementById("calendly-tab-"   + t);
+    if (!panel || !btn) return;
+    const active = t === tab;
+    panel.style.display = active ? "block" : "none";
+    btn.style.background = active ? "var(--accent)" : "";
+    btn.style.color      = active ? "#fff" : "";
+  });
+  if (tab === "book") loadCalendlyWidget();
+  if (tab === "stats") renderCalendlyStats();
+}
+
+async function loadCalendlyPage() {
+  const client = (typeof clients !== "undefined" && clients[0]) || {};
+  const userId = client.email || "";
+  if (!userId) return;
+
+  // Reset tabs
+  switchCalendlyTab("rdv");
+
+  // Load events
+  const container = document.getElementById("calendly-events-table");
+  if (container) container.innerHTML = "Chargement…";
+
+  try {
+    const res = await fetch(`/.netlify/functions/get-client-calendly-events?userId=${encodeURIComponent(userId)}`);
+    const data = await res.json();
+    _calendlyEvents = data.events || [];
+    renderCalendlyEventsTable();
+  } catch(e) {
+    if (container) container.innerHTML = "Impossible de charger les RDV";
+  }
+}
+
+function renderCalendlyEventsTable() {
+  const container = document.getElementById("calendly-events-table");
+  if (!container) return;
+  if (!_calendlyEvents.length) {
+    container.innerHTML = '<div style="padding:20px;color:var(--text-muted)">Aucun RDV trouvé</div>';
+    return;
+  }
+  const fmt = (dt) => dt ? new Date(dt).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" }) : "—";
+  const statusBadge = (s) => {
+    const colors = { active: "#22c55e", cancelled: "#ef4444" };
+    return `<span style="background:${colors[s] || "#888"}22;color:${colors[s] || "#888"};padding:2px 8px;border-radius:20px;font-size:11px">${s}</span>`;
+  };
+  container.innerHTML = `
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead>
+        <tr style="border-bottom:1px solid var(--border)">
+          ${["Type", "Date début", "Date fin", "Statut", ""].map(h => `<th style="text-align:left;padding:10px 12px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);font-weight:600">${h}</th>`).join("")}
+        </tr>
+      </thead>
+      <tbody>
+        ${_calendlyEvents.map(ev => `
+          <tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:10px 12px">${ev.name || "—"}</td>
+            <td style="padding:10px 12px">${fmt(ev.startTime)}</td>
+            <td style="padding:10px 12px">${fmt(ev.endTime)}</td>
+            <td style="padding:10px 12px">${statusBadge(ev.status)}</td>
+            <td style="padding:10px 12px">${ev.joinUrl ? `<a href="${ev.joinUrl}" target="_blank" style="font-size:12px;color:var(--accent)">Rejoindre</a>` : ""}</td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>
+  `;
+}
+
+function loadCalendlyWidget() {
+  const client = (typeof clients !== "undefined" && clients[0]) || {};
+  const link = client.calendlyLink || "";
+  const container = document.getElementById("calendly-widget-container");
+  if (!container) return;
+
+  if (!link) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:40px;color:var(--text-muted)">
+        <p>Renseignez votre lien Calendly dans Intégrations pour activer cette section.</p>
+        <button class="btn btn-primary btn-sm" style="margin-top:12px" onclick="navigate('integrations')">Configurer</button>
+      </div>`;
+    return;
+  }
+
+  // Load Calendly widget script if not already loaded
+  if (!document.getElementById("calendly-widget-script")) {
+    const s = document.createElement("script");
+    s.id  = "calendly-widget-script";
+    s.src = "https://assets.calendly.com/assets/external/widget.js";
+    s.async = true;
+    document.head.appendChild(s);
+  }
+
+  container.innerHTML = `<div class="calendly-inline-widget" data-url="${link}" style="min-width:320px;height:700px"></div>`;
+  if (window.Calendly) window.Calendly.initInlineWidgets();
+}
+
+function renderCalendlyStats() {
+  const now    = new Date();
+  const month  = now.getMonth();
+  const year   = now.getFullYear();
+  const plus7  = new Date(now.getTime() + 7 * 86400000);
+
+  const thisMonth = _calendlyEvents.filter(ev => {
+    const d = new Date(ev.startTime);
+    return d.getMonth() === month && d.getFullYear() === year;
+  }).length;
+
+  const upcoming = _calendlyEvents.filter(ev => {
+    const d = new Date(ev.startTime);
+    return d >= now && d <= plus7;
+  }).length;
+
+  const total  = _calendlyEvents.length;
+  const active = _calendlyEvents.filter(ev => ev.status === "active").length;
+  const rate   = total ? Math.round((active / total) * 100) + "%" : "—";
+
+  const s = document.getElementById("cal-stat-month");
+  const u = document.getElementById("cal-stat-upcoming");
+  const r = document.getElementById("cal-stat-rate");
+  if (s) s.textContent = thisMonth;
+  if (u) u.textContent = upcoming;
+  if (r) r.textContent = rate;
+}
 
 function renderRecommandations(alerts) {
   const grid = document.getElementById("recoGrid");
