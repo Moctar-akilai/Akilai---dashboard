@@ -252,30 +252,35 @@ exports.handler = async function(event, context) {
     /* ── Assigner le numéro de téléphone Vapi à l'assistant ── */
     let phoneAssigned = false;
     if (vapiPhoneNumberId && assistantId) {
-      try {
-        console.log("[create-vapi-assistant] PATCH /phone-number/" + vapiPhoneNumberId + " → assistantId:", assistantId);
-        const webhookUrl = `${process.env.URL || "https://portal-akilai.netlify.app"}/.netlify/functions/vapi-webhook`;
-        const phoneRes = await fetch(`https://api.vapi.ai/phone-number/${vapiPhoneNumberId}`, {
-          method:  "PATCH",
-          headers: vapiHeaders,
-          body:    JSON.stringify({
-            assistantId,
-            serverUrl: webhookUrl,
-            metadata: {
-              userId:   clientEmail,
-              clientId: clientId || "",
-            },
-          }),
-        });
-        console.log("[create-vapi-assistant] Vapi phone-number PATCH status:", phoneRes.status);
-        if (phoneRes.ok) {
-          phoneAssigned = true;
-        } else {
-          const text = await phoneRes.text();
-          console.warn("[create-vapi-assistant] Vapi phone-number PATCH error:", phoneRes.status, text);
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(vapiPhoneNumberId);
+      if (!isUUID) {
+        console.warn("[create-vapi-assistant] phoneNumberId invalide (pas un UUID), skip PATCH phone-number:", vapiPhoneNumberId);
+      } else {
+        try {
+          console.log("[create-vapi-assistant] PATCH /phone-number/" + vapiPhoneNumberId + " → assistantId:", assistantId);
+          const webhookUrl = `${process.env.URL || "https://portal-akilai.netlify.app"}/.netlify/functions/vapi-webhook`;
+          const phoneRes = await fetch(`https://api.vapi.ai/phone-number/${vapiPhoneNumberId}`, {
+            method:  "PATCH",
+            headers: vapiHeaders,
+            body:    JSON.stringify({
+              assistantId,
+              serverUrl: webhookUrl,
+              metadata: {
+                userId:   clientEmail,
+                clientId: clientId || "",
+              },
+            }),
+          });
+          console.log("[create-vapi-assistant] Vapi phone-number PATCH status:", phoneRes.status);
+          if (phoneRes.ok) {
+            phoneAssigned = true;
+          } else {
+            const text = await phoneRes.text();
+            console.warn("[create-vapi-assistant] Vapi phone-number PATCH error:", phoneRes.status, text);
+          }
+        } catch (e) {
+          console.warn("[create-vapi-assistant] phone-number PATCH exception:", e.message);
         }
-      } catch (e) {
-        console.warn("[create-vapi-assistant] phone-number PATCH exception:", e.message);
       }
     } else {
       console.warn("[create-vapi-assistant] Aucun numéro Vapi configuré pour ce client — assignation ignorée");
@@ -299,32 +304,44 @@ exports.handler = async function(event, context) {
         console.log("[create-vapi] action:", existing ? "PATCH" : "POST");
 
         if (existing) {
-          const patchAuto = await fetch(`${BASE_URL}/${AUTOMATIONS_TABLE}/${existing.id}`, {
-            method: "PATCH",
-            headers,
-            body: JSON.stringify({ fields: {
+          const patchBody = {
+            fields: {
               "Nom":             nomAssistant || "Assistant Vocal",
               "Statut":          "Actif",
               "VapiAssistantId": assistantId,
-            }, typecast: true }),
-          });
-          const patchData = patchAuto.ok ? await patchAuto.json() : {};
-          console.log("[create-vapi] résultat automatisation:", JSON.stringify(patchData).substring(0, 200));
-        } else {
-          const createAuto = await fetch(`${BASE_URL}/${AUTOMATIONS_TABLE}`, {
-            method: "POST",
+            },
+            typecast: true,
+          };
+          console.log("[create-vapi] PATCH body:", JSON.stringify(patchBody).substring(0, 500));
+          const patchAuto = await fetch(`${BASE_URL}/${AUTOMATIONS_TABLE}/${existing.id}`, {
+            method: "PATCH",
             headers,
-            body: JSON.stringify({ fields: {
+            body: JSON.stringify(patchBody),
+          });
+          console.log("[create-vapi] PATCH status:", patchAuto.status);
+          const patchText = await patchAuto.text();
+          console.log("[create-vapi] résultat automatisation:", patchText.substring(0, 500));
+        } else {
+          const postBody = {
+            fields: {
               "Nom":             nomAssistant || "Assistant Vocal",
               "Type":            "Vocal",
               "Statut":          "Actif",
               "User ID":         userId,
               "Description":     `Assistant vocal IA — ${langue || "fr"}`,
               "VapiAssistantId": assistantId,
-            }, typecast: true }),
+            },
+            typecast: true,
+          };
+          console.log("[create-vapi] POST body:", JSON.stringify(postBody).substring(0, 500));
+          const createAuto = await fetch(`${BASE_URL}/${AUTOMATIONS_TABLE}`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify(postBody),
           });
-          const autoData = createAuto.ok ? await createAuto.json() : {};
-          console.log("[create-vapi] résultat automatisation:", JSON.stringify(autoData).substring(0, 200));
+          console.log("[create-vapi] POST status:", createAuto.status);
+          const postText = await createAuto.text();
+          console.log("[create-vapi] POST response:", postText.substring(0, 500));
         }
       } else {
         console.warn("[create-vapi] automatisation ignorée — userId:", userId || "(vide)", "| assistantId:", assistantId || "(vide)");
