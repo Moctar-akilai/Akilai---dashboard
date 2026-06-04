@@ -3636,20 +3636,56 @@
             .fc .fc-scroller::-webkit-scrollbar-thumb { background: var(--border, #333); border-radius: 2px; }
           </style>
           <!-- Skeleton loader -->
-          <div id="gcal-skeleton" style="display:none;position:relative;border-radius:8px;overflow:hidden">
+          <div id="gcal-skeleton" style="position:relative;border-radius:8px;overflow:hidden">
             <style>
-              @keyframes gcal-shimmer { 0%{transform:translateX(-100%)} 100%{transform:translateX(100%)} }
-              .gcal-skel-row { height:40px; background:rgba(255,255,255,0.04); border-radius:6px; margin-bottom:6px; position:relative; overflow:hidden; }
-              .gcal-skel-row::after { content:''; position:absolute; inset:0; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.06),transparent); animation:gcal-shimmer 1.4s infinite; }
+              @keyframes gcal-shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+              .gcal-skel { background:linear-gradient(90deg,rgba(255,255,255,0.03) 25%,rgba(255,255,255,0.07) 50%,rgba(255,255,255,0.03) 75%); background-size:200% 100%; animation:gcal-shimmer 1.5s infinite; border-radius:6px; }
             </style>
-            <div class="gcal-skel-row" style="width:40%;margin-bottom:12px;height:24px"></div>
-            <div style="display:grid;grid-template-columns:60px repeat(7,1fr);gap:6px;margin-bottom:6px">
-              <div class="gcal-skel-row" style="margin:0;height:32px;background:transparent"></div>
-              ${Array(7).fill('<div class="gcal-skel-row" style="margin:0;height:32px"></div>').join("")}
+            <!-- toolbar skeleton -->
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:12px">
+              <div class="gcal-skel" style="height:32px;width:160px"></div>
+              <div class="gcal-skel" style="height:32px;width:220px"></div>
+              <div class="gcal-skel" style="height:32px;width:180px"></div>
             </div>
-            ${Array(8).fill(null).map(()=>`<div style="display:grid;grid-template-columns:60px repeat(7,1fr);gap:6px;margin-bottom:4px">${'<div class="gcal-skel-row" style="margin:0"></div>'.repeat(8)}</div>`).join("")}
+            <!-- day headers -->
+            <div style="display:grid;grid-template-columns:52px repeat(7,1fr);gap:4px;margin-bottom:4px">
+              <div></div>
+              <div class="gcal-skel" style="height:40px"></div>
+              <div class="gcal-skel" style="height:40px"></div>
+              <div class="gcal-skel" style="height:40px"></div>
+              <div class="gcal-skel" style="height:40px"></div>
+              <div class="gcal-skel" style="height:40px"></div>
+              <div class="gcal-skel" style="height:40px"></div>
+              <div class="gcal-skel" style="height:40px"></div>
+            </div>
+            <!-- time grid rows -->
+            <div style="display:grid;grid-template-columns:52px repeat(7,1fr);gap:4px;margin-bottom:4px">
+              <div class="gcal-skel" style="height:36px;opacity:.4"></div>
+              <div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:52px repeat(7,1fr);gap:4px;margin-bottom:4px">
+              <div class="gcal-skel" style="height:36px;opacity:.4"></div>
+              <div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:52px repeat(7,1fr);gap:4px;margin-bottom:4px">
+              <div class="gcal-skel" style="height:36px;opacity:.4"></div>
+              <div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:52px repeat(7,1fr);gap:4px;margin-bottom:4px">
+              <div class="gcal-skel" style="height:36px;opacity:.4"></div>
+              <div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:52px repeat(7,1fr);gap:4px;margin-bottom:4px">
+              <div class="gcal-skel" style="height:36px;opacity:.4"></div>
+              <div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:52px repeat(7,1fr);gap:4px;margin-bottom:4px">
+              <div class="gcal-skel" style="height:36px;opacity:.4"></div>
+              <div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div>
+            </div>
           </div>
-          <div id="fullcalendar-container"></div>
+          <!-- Calendrier — invisible jusqu'à ce qu'il soit prêt -->
+          <div id="fullcalendar-container" style="visibility:hidden;opacity:0;transition:opacity 0.3s ease"></div>
         </div>
       </div>
 
@@ -8627,6 +8663,23 @@ function _gcalHideSkeleton() {
   if (el) el.style.display = "none";
 }
 
+async function _gcalFetchEvents(userId, startStr, endStr) {
+  const cacheKey = `${startStr}_${endStr}`;
+  if (_calendarEventsCache[cacheKey]) return _calendarEventsCache[cacheKey];
+  try {
+    const res = await fetch(
+      `/.netlify/functions/get-google-calendar-events?userId=${encodeURIComponent(userId)}&start=${encodeURIComponent(startStr)}&end=${encodeURIComponent(endStr)}`
+    );
+    const data = await res.json();
+    const events = data.events || [];
+    _calendarEventsCache[cacheKey] = events;
+    return events;
+  } catch(e) {
+    console.error("[GCal] fetch error:", e);
+    return [];
+  }
+}
+
 function initGoogleCalendar() {
   const client = (typeof clients !== "undefined" && clients[0]) || {};
   const userId = client.email || "";
@@ -8635,14 +8688,17 @@ function initGoogleCalendar() {
   const calendarEl = document.getElementById("fullcalendar-container");
   if (!calendarEl) return;
 
-  // Destroy previous instance if any
   if (_gcalInstance) { _gcalInstance.destroy(); _gcalInstance = null; }
 
   if (typeof FullCalendar === "undefined") {
     calendarEl.innerHTML = '<div style="padding:20px;color:var(--text-muted)">FullCalendar non chargé</div>';
+    _gcalHideSkeleton();
     return;
   }
 
+  // Reset visibility — skeleton is visible, calendar hidden
+  calendarEl.style.visibility = "hidden";
+  calendarEl.style.opacity    = "0";
   _gcalShowSkeleton();
 
   _gcalInstance = new FullCalendar.Calendar(calendarEl, {
@@ -8654,31 +8710,22 @@ function initGoogleCalendar() {
       right:  "dayGridMonth,timeGridWeek,timeGridDay",
     },
     buttonText: { today: "Aujourd'hui", month: "Mois", week: "Semaine", day: "Jour" },
-    events: async function(info, successCallback, failureCallback) {
-      const cacheKey = `${info.startStr}_${info.endStr}`;
-      if (_calendarEventsCache[cacheKey]) {
-        successCallback(_calendarEventsCache[cacheKey]);
-        return;
-      }
-      _gcalShowSpinner();
-      try {
-        const res = await fetch(
-          `/.netlify/functions/get-google-calendar-events?userId=${encodeURIComponent(userId)}&start=${encodeURIComponent(info.startStr)}&end=${encodeURIComponent(info.endStr)}`
-        );
-        const data = await res.json();
-        const events = data.events || [];
-        _calendarEventsCache[cacheKey] = events;
-        successCallback(events);
-      } catch(e) {
-        console.error("[GCal] load error:", e);
-        failureCallback(e);
-      } finally {
-        _gcalHideSpinner();
-        _gcalHideSkeleton();
-      }
+    // Start empty — events loaded in background after render
+    events: [],
+    eventsSet: function() {
+      // Reveal calendar and hide skeleton once events are set
+      _gcalHideSkeleton();
+      calendarEl.style.visibility = "visible";
+      calendarEl.style.opacity    = "1";
+      calendarEl.style.transition = "opacity 0.3s ease";
     },
+    // Spinner for subsequent navigations (prev/next month)
     loading: function(isLoading) {
-      if (isLoading) { _gcalShowSpinner(); } else { _gcalHideSpinner(); _gcalHideSkeleton(); }
+      if (isLoading) { _gcalShowSpinner(); } else { _gcalHideSpinner(); }
+    },
+    datesSet: function(info) {
+      // Lazy-load events when user navigates to a new range
+      _gcalLoadRangeIntoCalendar(userId, info.startStr, info.endStr);
     },
     eventClick: function(info) { openEventModal(info.event); },
     dateClick:  function(info) { openNewEventModal(info.dateStr); },
@@ -8692,17 +8739,26 @@ function initGoogleCalendar() {
 
   _gcalInstance.render();
 
-  // Précharger la semaine actuelle en arrière-plan
-  const now   = new Date();
-  const start = new Date(now); start.setDate(start.getDate() - start.getDay() + 1);
-  const end   = new Date(start); end.setDate(end.getDate() + 7);
-  const cacheKey = `${start.toISOString().split("T")[0]}_${end.toISOString().split("T")[0]}`;
-  if (!_calendarEventsCache[cacheKey]) {
-    fetch(`/.netlify/functions/get-google-calendar-events?userId=${encodeURIComponent(userId)}&start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}`)
-      .then(r => r.json())
-      .then(d => { _calendarEventsCache[cacheKey] = d.events || []; })
-      .catch(() => {});
-  }
+  // Load initial week immediately in background
+  const view = _gcalInstance.view;
+  _gcalLoadRangeIntoCalendar(userId, view.activeStart.toISOString(), view.activeEnd.toISOString());
+}
+
+async function _gcalLoadRangeIntoCalendar(userId, startStr, endStr) {
+  const cacheKey = `${startStr}_${endStr}`;
+  // Already cached and added — skip
+  if (_calendarEventsCache[cacheKey + "_added"]) return;
+  _gcalShowSpinner();
+  const events = await _gcalFetchEvents(userId, startStr, endStr);
+  _gcalHideSpinner();
+  if (!_gcalInstance) return;
+  // Remove old events for this range, then add new ones
+  _gcalInstance.getEvents().forEach(e => {
+    const eStart = e.start ? e.start.toISOString() : "";
+    if (eStart >= startStr && eStart <= endStr) e.remove();
+  });
+  events.forEach(e => _gcalInstance.addEvent(e));
+  _calendarEventsCache[cacheKey + "_added"] = true;
 }
 
 function openEventModal(event) {
