@@ -3596,11 +3596,18 @@
             <h1 class="page-title">Mon agenda</h1>
           </div>
           <div style="display:flex;gap:10px;align-items:center">
+            <!-- Spinner discret affiché pendant les fetches -->
+            <div id="gcal-loading-spinner" style="display:none;width:18px;height:18px">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;animation:spin 0.8s linear infinite">
+                <circle cx="12" cy="12" r="10" stroke="#70B2DE" stroke-width="3" stroke-dasharray="31.4" stroke-dashoffset="10" stroke-linecap="round"/>
+              </svg>
+            </div>
             <button class="btn btn-primary btn-sm" onclick="openNewEventModal()">+ Nouveau RDV</button>
           </div>
         </div>
         <div class="card" style="padding:20px">
           <style>
+            @keyframes spin { to { transform: rotate(360deg); } }
             #fullcalendar-container { background: transparent; }
             .fc .fc-toolbar { background: transparent; padding: 8px 0; margin-bottom: 16px; }
             .fc .fc-toolbar-title { color: var(--text, #fff); font-size: 18px; font-weight: 600; }
@@ -3628,6 +3635,20 @@
             .fc .fc-scroller::-webkit-scrollbar-track { background: transparent; }
             .fc .fc-scroller::-webkit-scrollbar-thumb { background: var(--border, #333); border-radius: 2px; }
           </style>
+          <!-- Skeleton loader -->
+          <div id="gcal-skeleton" style="display:none;position:relative;border-radius:8px;overflow:hidden">
+            <style>
+              @keyframes gcal-shimmer { 0%{transform:translateX(-100%)} 100%{transform:translateX(100%)} }
+              .gcal-skel-row { height:40px; background:rgba(255,255,255,0.04); border-radius:6px; margin-bottom:6px; position:relative; overflow:hidden; }
+              .gcal-skel-row::after { content:''; position:absolute; inset:0; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.06),transparent); animation:gcal-shimmer 1.4s infinite; }
+            </style>
+            <div class="gcal-skel-row" style="width:40%;margin-bottom:12px;height:24px"></div>
+            <div style="display:grid;grid-template-columns:60px repeat(7,1fr);gap:6px;margin-bottom:6px">
+              <div class="gcal-skel-row" style="margin:0;height:32px;background:transparent"></div>
+              ${Array(7).fill('<div class="gcal-skel-row" style="margin:0;height:32px"></div>').join("")}
+            </div>
+            ${Array(8).fill(null).map(()=>`<div style="display:grid;grid-template-columns:60px repeat(7,1fr);gap:6px;margin-bottom:4px">${'<div class="gcal-skel-row" style="margin:0"></div>'.repeat(8)}</div>`).join("")}
+          </div>
           <div id="fullcalendar-container"></div>
         </div>
       </div>
@@ -8585,8 +8606,26 @@ function updateAgendaSidebarVisibility() {
 /* ============================================================
    GOOGLE CALENDAR — FullCalendar integration
 ============================================================ */
-let _gcalInstance = null;
-let _gcalCurrentEventId = null;
+let _gcalInstance        = null;
+let _gcalCurrentEventId  = null;
+let _calendarEventsCache = {};
+
+function _gcalShowSpinner() {
+  const el = document.getElementById("gcal-loading-spinner");
+  if (el) el.style.display = "inline-block";
+}
+function _gcalHideSpinner() {
+  const el = document.getElementById("gcal-loading-spinner");
+  if (el) el.style.display = "none";
+}
+function _gcalShowSkeleton() {
+  const el = document.getElementById("gcal-skeleton");
+  if (el) el.style.display = "block";
+}
+function _gcalHideSkeleton() {
+  const el = document.getElementById("gcal-skeleton");
+  if (el) el.style.display = "none";
+}
 
 function initGoogleCalendar() {
   const client = (typeof clients !== "undefined" && clients[0]) || {};
@@ -8604,6 +8643,8 @@ function initGoogleCalendar() {
     return;
   }
 
+  _gcalShowSkeleton();
+
   _gcalInstance = new FullCalendar.Calendar(calendarEl, {
     initialView: "timeGridWeek",
     locale: "fr",
@@ -8614,16 +8655,30 @@ function initGoogleCalendar() {
     },
     buttonText: { today: "Aujourd'hui", month: "Mois", week: "Semaine", day: "Jour" },
     events: async function(info, successCallback, failureCallback) {
+      const cacheKey = `${info.startStr}_${info.endStr}`;
+      if (_calendarEventsCache[cacheKey]) {
+        successCallback(_calendarEventsCache[cacheKey]);
+        return;
+      }
+      _gcalShowSpinner();
       try {
         const res = await fetch(
           `/.netlify/functions/get-google-calendar-events?userId=${encodeURIComponent(userId)}&start=${encodeURIComponent(info.startStr)}&end=${encodeURIComponent(info.endStr)}`
         );
         const data = await res.json();
-        successCallback(data.events || []);
+        const events = data.events || [];
+        _calendarEventsCache[cacheKey] = events;
+        successCallback(events);
       } catch(e) {
         console.error("[GCal] load error:", e);
         failureCallback(e);
+      } finally {
+        _gcalHideSpinner();
+        _gcalHideSkeleton();
       }
+    },
+    loading: function(isLoading) {
+      if (isLoading) { _gcalShowSpinner(); } else { _gcalHideSpinner(); _gcalHideSkeleton(); }
     },
     eventClick: function(info) { openEventModal(info.event); },
     dateClick:  function(info) { openNewEventModal(info.dateStr); },
@@ -8636,6 +8691,18 @@ function initGoogleCalendar() {
   });
 
   _gcalInstance.render();
+
+  // Précharger la semaine actuelle en arrière-plan
+  const now   = new Date();
+  const start = new Date(now); start.setDate(start.getDate() - start.getDay() + 1);
+  const end   = new Date(start); end.setDate(end.getDate() + 7);
+  const cacheKey = `${start.toISOString().split("T")[0]}_${end.toISOString().split("T")[0]}`;
+  if (!_calendarEventsCache[cacheKey]) {
+    fetch(`/.netlify/functions/get-google-calendar-events?userId=${encodeURIComponent(userId)}&start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}`)
+      .then(r => r.json())
+      .then(d => { _calendarEventsCache[cacheKey] = d.events || []; })
+      .catch(() => {});
+  }
 }
 
 function openEventModal(event) {
