@@ -152,8 +152,10 @@ exports.handler = async function(event, context) {
 
   console.log("[create-vapi-assistant] tools construits :", tools.map(t => t.function.name));
 
+  const currentYear = new Date().getFullYear();
+
   /* ── Instructions tools injectées dans le prompt système ── */
-  let toolInstructions = "\n\nOUTILS DISPONIBLES :\n";
+  let toolInstructions = `\n\nIMPORTANT : Nous sommes en ${currentYear}. Toujours utiliser l'année ${currentYear} (ou ${currentYear + 1} si la date est dépassée) pour les rendez-vous. Ne jamais utiliser une année passée.\n\nOUTILS DISPONIBLES :\n`;
 
   if (clientFields["Google Connected"]) {
     toolInstructions += `- check_availability : TOUJOURS appeler ce tool avant de proposer un créneau pour vérifier la disponibilité réelle de l'agenda.

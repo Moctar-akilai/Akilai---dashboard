@@ -1,17 +1,18 @@
-const { ok, err, preflight } = require("./config");
+const { preflight } = require("./config");
 
 const BASE_SITE = process.env.URL || "https://portal-akilai.netlify.app";
 
 exports.handler = async function(event) {
   if (event.httpMethod === "OPTIONS") return preflight();
-  if (event.httpMethod !== "POST") return err("Method Not Allowed", 405);
+  if (event.httpMethod !== "POST") return { statusCode: 405, body: "Method Not Allowed" };
 
   try {
-    const body     = JSON.parse(event.body || "{}");
-    const vapiMsg  = body.message || body;
-    const toolCall = vapiMsg.toolCallList?.[0] || vapiMsg.toolCalls?.[0];
-    const args     = toolCall?.function?.arguments || body.arguments || body;
-    const userId   =
+    const body       = JSON.parse(event.body || "{}");
+    const vapiMsg    = body.message || body;
+    const toolCall   = vapiMsg.toolCallList?.[0] || vapiMsg.toolCalls?.[0];
+    const toolCallId = toolCall?.id || "tool-call-1";
+    const args       = toolCall?.function?.arguments || body.arguments || body;
+    const userId     =
       event.headers?.["x-user-id"] ||
       event.headers?.["X-User-Id"] ||
       args.userId ||
@@ -24,10 +25,16 @@ exports.handler = async function(event) {
     const email     = args.email     || body.email     || "";
     const resume    = args.resume    || body.resume    || "";
 
-    if (!userId)    return err("userId requis", 400);
-    if (!telephone) return err("telephone requis", 400);
+    const vapiError = (msg) => ({
+      statusCode: 200,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ results: [{ toolCallId, result: msg }] }),
+    });
 
-    const res = await fetch(`${BASE_SITE}/.netlify/functions/crm-router`, {
+    if (!userId)    return vapiError("Erreur: userId manquant.");
+    if (!telephone) return vapiError("Erreur: téléphone manquant.");
+
+    const res  = await fetch(`${BASE_SITE}/.netlify/functions/crm-router`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -37,16 +44,21 @@ exports.handler = async function(event) {
       }),
     });
 
-    const data = await res.json();
+    const data       = await res.json();
+    const resultText = `Contact ${nom || telephone} enregistré dans le CRM.`;
     console.log("[vapi-tool-create-contact] crm-router:", data);
 
-    return ok({
-      success:   true,
-      contactId: data.id || null,
-      message:   `Contact ${nom || telephone} enregistré dans le CRM.`,
-    });
+    return {
+      statusCode: 200,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ results: [{ toolCallId, result: resultText }] }),
+    };
   } catch (e) {
-    console.error("[vapi-tool-create-contact] Exception:", e.message);
-    return err(e.message);
+    console.error("[vapi-tool-create-contact] ERREUR:", e.message, e.stack);
+    return {
+      statusCode: 200,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ results: [{ toolCallId: "tool-call-1", result: "Erreur: " + e.message }] }),
+    };
   }
 };

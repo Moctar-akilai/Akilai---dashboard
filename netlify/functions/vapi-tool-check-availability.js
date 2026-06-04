@@ -1,4 +1,4 @@
-const { BASE_URL, headers: airtableHeaders, ok, err, preflight } = require("./config");
+const { BASE_URL, headers: airtableHeaders, preflight } = require("./config");
 
 async function refreshGoogleToken(recordId, refreshToken) {
   const res = await fetch("https://oauth2.googleapis.com/token", {
@@ -30,15 +30,12 @@ function buildSlots(busyList, dayStart, dayEnd, durationMin) {
   const WORK_END   = 19 * 60; // 19:00
 
   let cursor = new Date(dayStart);
-  // Align to work hours start
   if (cursor.getUTCHours() * 60 + cursor.getUTCMinutes() < WORK_START) {
     cursor = new Date(cursor);
     cursor.setUTCHours(Math.floor(WORK_START / 60), WORK_START % 60, 0, 0);
   }
 
-  const end = new Date(dayEnd);
-
-  while (cursor.getTime() + dur <= Math.min(end.getTime(), new Date(dayStart).setUTCHours(WORK_END / 60 | 0, WORK_END % 60, 0, 0))) {
+  while (cursor.getTime() + dur <= Math.min(new Date(dayEnd).getTime(), new Date(dayStart).setUTCHours(WORK_END / 60 | 0, WORK_END % 60, 0, 0))) {
     const slotEnd = new Date(cursor.getTime() + dur);
     const overlap = busyList.some(b => {
       const bs = new Date(b.start).getTime();
@@ -58,29 +55,50 @@ function buildSlots(busyList, dayStart, dayEnd, durationMin) {
 
 exports.handler = async function(event) {
   if (event.httpMethod === "OPTIONS") return preflight();
-  if (event.httpMethod !== "POST") return err("Method Not Allowed", 405);
+  if (event.httpMethod !== "POST") return { statusCode: 405, body: "Method Not Allowed" };
 
   try {
-    const body     = JSON.parse(event.body || "{}");
-    const vapiMsg  = body.message || body;
-    const toolCall = vapiMsg.toolCallList?.[0] || vapiMsg.toolCalls?.[0];
-    const args     = toolCall?.function?.arguments || body.arguments || body;
-    const userId   =
+    const body      = JSON.parse(event.body || "{}");
+    const vapiMsg   = body.message || body;
+    const toolCall  = vapiMsg.toolCallList?.[0] || vapiMsg.toolCalls?.[0];
+    const toolCallId = toolCall?.id || "tool-call-1";
+    const args      = toolCall?.function?.arguments || body.arguments || body;
+    const userId    =
       event.headers?.["x-user-id"] ||
       event.headers?.["X-User-Id"] ||
       args.userId ||
       body.userId || "";
-    const date   = args.date || body.date || "";
-    console.log("[vapi-tool-check-availability] userId:", userId, "| args:", JSON.stringify(args));
-    const duration = parseInt(args.duration || body.duration || "30");
+    const duration  = parseInt(args.duration || body.duration || "30");
 
-    if (!userId) return err("userId requis", 400);
-    if (!date)   return err("date requise", 400);
+    /* Corriger l'année si dans le passé */
+    let date = args.date || body.date || "";
+    if (date) {
+      const dateObj = new Date(date);
+      const now     = new Date();
+      if (dateObj < now) {
+        dateObj.setFullYear(now.getFullYear());
+        if (dateObj < now) dateObj.setFullYear(now.getFullYear() + 1);
+        date = dateObj.toISOString().split("T")[0];
+        console.log("[check-availability] date corrigée:", date);
+      }
+    }
 
-    const searchUrl = `${BASE_URL}/Clients?filterByFormula=${encodeURIComponent(`{User ID}="${userId}"`)}&maxRecords=1`;
+    console.log("[check-availability] userId:", userId, "| date:", date, "| duration:", duration);
+
+    const vapiError = (msg) => ({
+      statusCode: 200,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ results: [{ toolCallId, result: msg }] }),
+    });
+
+    if (!userId) return vapiError("Erreur: userId manquant.");
+    if (!date)   return vapiError("Erreur: date manquante.");
+
+    console.log("[check-availability] étape 1: recherche client Airtable");
+    const searchUrl  = `${BASE_URL}/Clients?filterByFormula=${encodeURIComponent(`{User ID}="${userId}"`)}&maxRecords=1`;
     const clientRes  = await fetch(searchUrl, { headers: airtableHeaders });
     const clientData = await clientRes.json();
-    if (!clientData.records?.length) return err("Client introuvable", 404);
+    if (!clientData.records?.length) return vapiError("Client introuvable.");
 
     const record       = clientData.records[0];
     const recordId     = record.id;
@@ -89,8 +107,10 @@ exports.handler = async function(event) {
     const refreshToken = fields["Google Refresh Token"] || "";
     const calendarId   = fields["Google Calendar ID"]   || "primary";
 
+    console.log("[check-availability] étape 2: token récupéré:", !!accessToken, "| refreshToken:", !!refreshToken);
+
     if (!accessToken && !refreshToken) {
-      return ok({ available: false, slots: [], message: "Google Calendar non connecté." });
+      return vapiError("Google Calendar non connecté.");
     }
 
     const dayStart = new Date(date + "T00:00:00Z").toISOString();
@@ -104,25 +124,29 @@ exports.handler = async function(event) {
       maxResults:   "100",
     });
 
+    console.log("[check-availability] étape 3: appel Google Calendar API");
     let gcalRes = await fetch(
       `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${params}`,
       { headers: { Authorization: `Bearer ${accessToken}` } }
     );
+    console.log("[check-availability] étape 4: status Google:", gcalRes.status);
 
     if (gcalRes.status === 401 && refreshToken) {
+      console.log("[check-availability] token expiré → refresh");
       const newToken = await refreshGoogleToken(recordId, refreshToken);
-      if (!newToken) return err("Impossible de rafraîchir le token Google", 502);
+      if (!newToken) return vapiError("Impossible de rafraîchir le token Google.");
       accessToken = newToken;
       gcalRes = await fetch(
         `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${params}`,
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
+      console.log("[check-availability] après refresh, status Google:", gcalRes.status);
     }
 
     if (!gcalRes.ok) {
       const t = await gcalRes.text();
-      console.error("[vapi-tool-check-availability] Google API error:", gcalRes.status, t);
-      return err(`Google API ${gcalRes.status}`, 502);
+      console.error("[check-availability] Google API error:", gcalRes.status, t);
+      return vapiError(`Erreur Google Calendar ${gcalRes.status}.`);
     }
 
     const gcalData = await gcalRes.json();
@@ -130,24 +154,40 @@ exports.handler = async function(event) {
       .filter(e => e.status !== "cancelled" && e.start?.dateTime)
       .map(e => ({ start: e.start.dateTime, end: e.end.dateTime }));
 
-    const slots = buildSlots(busy, dayStart, dayEnd, duration);
+    console.log("[check-availability] étape 5: nb events:", busy.length);
 
-    const dateLabel = new Date(date).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+    const slots     = buildSlots(busy, dayStart, dayEnd, duration);
+    const dateLabel = new Date(date + "T12:00:00Z").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 
-    let message;
+    let resultText;
     if (slots.length === 0) {
-      message = `Aucun créneau disponible le ${dateLabel}.`;
+      resultText = `Aucun créneau disponible le ${dateLabel}.`;
     } else {
       const slotLabels = slots.slice(0, 6).map(s => {
         const t = new Date(s.start);
-        return `${t.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" })}`;
+        return t.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" });
       });
-      message = `Créneaux disponibles le ${dateLabel} : ${slotLabels.join(", ")}.`;
+      resultText = `Créneaux disponibles le ${dateLabel} : ${slotLabels.join(", ")}.`;
     }
 
-    return ok({ available: slots.length > 0, slots: slots.slice(0, 10), message });
+    console.log("[check-availability] résultat:", resultText);
+
+    return {
+      statusCode: 200,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        results: [{ toolCallId, result: resultText }],
+      }),
+    };
+
   } catch (e) {
-    console.error("[vapi-tool-check-availability] Exception:", e.message);
-    return err(e.message);
+    console.error("[check-availability] ERREUR:", e.message, e.stack);
+    return {
+      statusCode: 200,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        results: [{ toolCallId: "tool-call-1", result: "Erreur lors de la vérification: " + e.message }],
+      }),
+    };
   }
 };

@@ -27,16 +27,23 @@ exports.handler = async function(event) {
   if (event.httpMethod !== "POST") return err("Method Not Allowed", 405);
 
   try {
-    const body     = JSON.parse(event.body || "{}");
-    const vapiMsg  = body.message || body;
-    const toolCall = vapiMsg.toolCallList?.[0] || vapiMsg.toolCalls?.[0];
-    const args     = toolCall?.function?.arguments || body.arguments || body;
-    const userId   =
+    const body       = JSON.parse(event.body || "{}");
+    const vapiMsg    = body.message || body;
+    const toolCall   = vapiMsg.toolCallList?.[0] || vapiMsg.toolCalls?.[0];
+    const toolCallId = toolCall?.id || "tool-call-1";
+    const args       = toolCall?.function?.arguments || body.arguments || body;
+    const userId     =
       event.headers?.["x-user-id"] ||
       event.headers?.["X-User-Id"] ||
       args.userId ||
       body.userId || "";
     console.log("[vapi-tool-create-appointment] userId:", userId, "| args:", JSON.stringify(args));
+
+    const vapiError = (msg) => ({
+      statusCode: 200,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ results: [{ toolCallId, result: msg }] }),
+    });
 
     const titre        = args.titre        || body.titre        || "";
     const dateDebut    = args.dateDebut    || body.dateDebut    || "";
@@ -45,14 +52,14 @@ exports.handler = async function(event) {
     const emailPatient = args.emailPatient || body.emailPatient || "";
     const telephone    = args.telephone    || body.telephone    || "";
 
-    if (!userId)    return err("userId requis", 400);
-    if (!dateDebut) return err("dateDebut requis", 400);
-    if (!dateFin)   return err("dateFin requis", 400);
+    if (!userId)    return vapiError("Erreur: userId manquant.");
+    if (!dateDebut) return vapiError("Erreur: dateDebut manquante.");
+    if (!dateFin)   return vapiError("Erreur: dateFin manquante.");
 
     const searchUrl = `${BASE_URL}/Clients?filterByFormula=${encodeURIComponent(`{User ID}="${userId}"`)}&maxRecords=1`;
     const clientRes  = await fetch(searchUrl, { headers: airtableHeaders });
     const clientData = await clientRes.json();
-    if (!clientData.records?.length) return err("Client introuvable", 404);
+    if (!clientData.records?.length) return vapiError("Client introuvable.");
 
     const record       = clientData.records[0];
     const recordId     = record.id;
@@ -61,7 +68,7 @@ exports.handler = async function(event) {
     const refreshToken = fields["Google Refresh Token"] || "";
     const calendarId   = fields["Google Calendar ID"]   || "primary";
 
-    if (!accessToken && !refreshToken) return err("Google Calendar non connecté", 400);
+    if (!accessToken && !refreshToken) return vapiError("Google Calendar non connecté.");
 
     const eventBody = {
       summary:     titre || `RDV — ${nomPatient}`,
@@ -93,7 +100,7 @@ exports.handler = async function(event) {
     if (!calRes.ok) {
       const t = await calRes.text();
       console.error("[vapi-tool-create-appointment] Google API error:", calRes.status, t);
-      return err(`Google API ${calRes.status}`, 502);
+      return vapiError(`Erreur Google Calendar ${calRes.status}.`);
     }
 
     const calendarEvent = await calRes.json();
@@ -101,15 +108,21 @@ exports.handler = async function(event) {
     const dateObj  = new Date(dateDebut);
     const dateFmt  = dateObj.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Paris" });
     const heureFmt = dateObj.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" });
+    const resultText = `RDV confirmé le ${dateFmt} à ${heureFmt} pour ${nomPatient}.`;
 
-    return ok({
-      success:   true,
-      eventId:   calendarEvent.id,
-      eventLink: calendarEvent.htmlLink,
-      message:   `RDV confirmé le ${dateFmt} à ${heureFmt} pour ${nomPatient}.`,
-    });
+    console.log("[vapi-tool-create-appointment] résultat:", resultText);
+
+    return {
+      statusCode: 200,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ results: [{ toolCallId, result: resultText }] }),
+    };
   } catch (e) {
-    console.error("[vapi-tool-create-appointment] Exception:", e.message);
-    return err(e.message);
+    console.error("[vapi-tool-create-appointment] ERREUR:", e.message, e.stack);
+    return {
+      statusCode: 200,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ results: [{ toolCallId: "tool-call-1", result: "Erreur: " + e.message }] }),
+    };
   }
 };
