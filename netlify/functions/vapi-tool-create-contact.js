@@ -8,14 +8,14 @@ exports.handler = async function(event) {
 
   try {
     const body     = JSON.parse(event.body || "{}");
-    const message  = body.message || body;
-    const toolCall = message.toolCallList?.[0] || message.toolCalls?.[0];
+    const vapiMsg  = body.message || body;
+    const toolCall = vapiMsg.toolCallList?.[0] || vapiMsg.toolCalls?.[0];
     const args     = toolCall?.function?.arguments || body.arguments || body;
     const userId   =
       args.userId ||
-      message.call?.assistantOverrides?.metadata?.userId ||
-      message.call?.assistant?.metadata?.userId ||
-      message.call?.metadata?.userId ||
+      vapiMsg.call?.assistantOverrides?.metadata?.userId ||
+      vapiMsg.call?.assistant?.metadata?.userId ||
+      vapiMsg.call?.metadata?.userId ||
       body.userId || "";
     console.log("[vapi-tool-create-contact] userId:", userId, "| args:", JSON.stringify(args));
 
