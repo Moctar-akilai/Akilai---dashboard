@@ -173,6 +173,10 @@ exports.handler = async function(event, context) {
   const vapiPayload = {
     name: nomAssistant,
     serverUrl: WEBHOOK_URL,
+    metadata: {
+      userId:   clientEmail,
+      clientId: clientId || "",
+    },
     model: {
       provider: "openai",
       model:    "gpt-4o",

@@ -11,8 +11,17 @@ exports.handler = async function(event) {
   if (!SID || !TOKEN || !FROM) return err("Twilio non configuré", 500);
 
   try {
-    const body    = JSON.parse(event.body || "{}");
-    const args    = body.message?.toolCallList?.[0]?.function?.arguments || body;
+    const body     = JSON.parse(event.body || "{}");
+    const msg      = body.message || body;
+    const toolCall = msg.toolCallList?.[0] || msg.toolCalls?.[0];
+    const args     = toolCall?.function?.arguments || body.arguments || body;
+    const userId   =
+      args.userId ||
+      msg.call?.assistantOverrides?.metadata?.userId ||
+      msg.call?.assistant?.metadata?.userId ||
+      msg.call?.metadata?.userId ||
+      body.userId || "";
+    console.log("[vapi-tool-send-sms] userId:", userId, "| args:", JSON.stringify(args));
     const to      = args.to      || body.to      || "";
     const message = args.message || body.message || "";
 

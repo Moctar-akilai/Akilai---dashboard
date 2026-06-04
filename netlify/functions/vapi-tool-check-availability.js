@@ -61,11 +61,18 @@ exports.handler = async function(event) {
   if (event.httpMethod !== "POST") return err("Method Not Allowed", 405);
 
   try {
-    const body = JSON.parse(event.body || "{}");
-    // Vapi wraps tool args under message.toolCallList[0].function.arguments
-    const args   = body.message?.toolCallList?.[0]?.function?.arguments || body;
-    const userId = body.userId || body.message?.metadata?.userId || "";
+    const body     = JSON.parse(event.body || "{}");
+    const message  = body.message || body;
+    const toolCall = message.toolCallList?.[0] || message.toolCalls?.[0];
+    const args     = toolCall?.function?.arguments || body.arguments || body;
+    const userId   =
+      args.userId ||
+      message.call?.assistantOverrides?.metadata?.userId ||
+      message.call?.assistant?.metadata?.userId ||
+      message.call?.metadata?.userId ||
+      body.userId || "";
     const date   = args.date || body.date || "";
+    console.log("[vapi-tool-check-availability] userId:", userId, "| args:", JSON.stringify(args));
     const duration = parseInt(args.duration || body.duration || "30");
 
     if (!userId) return err("userId requis", 400);
