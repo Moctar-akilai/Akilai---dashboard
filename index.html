@@ -2888,9 +2888,9 @@
                 </button>
               </div>
               <!-- Recherche voix -->
-              <input type="text" id="voixSearch" class="form-input" placeholder="Rechercher une voix…"
+              <input type="search" id="voixSearch" class="form-input" placeholder="Rechercher une voix…"
                 style="margin-bottom:10px;font-size:12px;padding:7px 10px"
-                autocomplete="new-password" name="voice-search-x7k2"
+                autocomplete="off" name="voice-search-x7k2"
                 oninput="_filterVoiceCards(this.value)" />
               <!-- Grille de cartes voix (chargée dynamiquement) -->
               <div id="voixCardsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;min-height:80px">
@@ -6083,7 +6083,7 @@ async function loadVoixConfig() {
   _updateVapiButton();
   loadVapiPhoneNumber();
   const _vs = document.getElementById("voixSearch");
-  if (_vs) _vs.value = "";
+  if (_vs) { _vs.value = ""; setTimeout(() => { _vs.value = ""; }, 200); }
 }
 
 function _checkVoixIaPlan() {
