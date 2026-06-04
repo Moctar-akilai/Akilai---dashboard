@@ -281,6 +281,48 @@ exports.handler = async function(event, context) {
       console.warn("[create-vapi-assistant] Aucun numéro Vapi configuré pour ce client — assignation ignorée");
     }
 
+    /* ── Créer / mettre à jour le record Automatisations ── */
+    try {
+      const AUTOMATIONS_TABLE = "tble4KroqvA1JodJs";
+      const userId = clientEmail;
+      if (userId && assistantId) {
+        const searchFormula = encodeURIComponent(`AND({User ID}="${userId}",{Type}="Vocal")`);
+        const autoSearchRes  = await fetch(`${BASE_URL}/${AUTOMATIONS_TABLE}?filterByFormula=${searchFormula}&maxRecords=1`, { headers });
+        const autoSearchData = autoSearchRes.ok ? await autoSearchRes.json() : { records: [] };
+        const existing       = autoSearchData.records && autoSearchData.records[0];
+
+        if (existing) {
+          const patchAuto = await fetch(`${BASE_URL}/${AUTOMATIONS_TABLE}/${existing.id}`, {
+            method: "PATCH",
+            headers,
+            body: JSON.stringify({ fields: {
+              "Nom":            nomAssistant || "Assistant Vocal",
+              "Statut":         "Actif",
+              "VapiAssistantId": assistantId,
+            }, typecast: true }),
+          });
+          console.log("[create-vapi] automatisation mise à jour:", existing.id, "status:", patchAuto.status);
+        } else {
+          const createAuto = await fetch(`${BASE_URL}/${AUTOMATIONS_TABLE}`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({ fields: {
+              "Nom":            nomAssistant || "Assistant Vocal",
+              "Type":           "Vocal",
+              "Statut":         "Actif",
+              "User ID":        userId,
+              "Description":    `Assistant vocal IA — ${langue || "fr"}`,
+              "VapiAssistantId": assistantId,
+            }, typecast: true }),
+          });
+          const autoData = createAuto.ok ? await createAuto.json() : {};
+          console.log("[create-vapi] automatisation créée:", autoData.id, "status:", createAuto.status);
+        }
+      }
+    } catch (e2) {
+      console.warn("[create-vapi-assistant] automatisation sync error:", e2.message);
+    }
+
     return ok({ ok: true, assistantId, created, phoneAssigned, hasPhone: !!vapiPhoneNumberId, tools: tools.map(t => t.function.name) });
   } catch (e) {
     console.error("[create-vapi-assistant] Exception:", e.message);

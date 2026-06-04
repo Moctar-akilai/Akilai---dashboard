@@ -59,13 +59,15 @@ exports.handler = async function(event, context) {
       return {
         id:             r.id,
         _seq:           i + 1,
-        nom:            f.Nom                 || "Automation sans nom",
+        nom:            f.Nom                 || "Automatisation sans nom",
         type,
+        rawType:        rawType,
         statut:         f.Statut              || "Actif",
         derniere_exec:  f.DerniereExec        || null,
         prochaine_exec: f.ProchaineExec       || null,
         client_id:      f["User ID"]          || null,
         makeScenarioId:   f["Make scenario ID"] || f.MakeScenarioId || null,
+        vapiAssistantId:  f["VapiAssistantId"] || null,
         messages_traites: Number(f["Messages traités"]) || 0,
         rdv_pris:         Number(f["RDV pris"]) || 0,
         schedule: {

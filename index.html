@@ -2304,7 +2304,7 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
         </svg>
-        <span class="nav-label">Automations</span>
+        <span class="nav-label">Automatisations</span>
       </div>
 
       <!-- HISTORIQUE -->
@@ -2539,7 +2539,7 @@
           <div>
             <div class="breadcrumb">Général <span>/ Vue d'ensemble</span></div>
             <h1 class="page-title">Vue d'ensemble</h1>
-            <p class="page-subtitle" id="overviewSubtitle">Bienvenue, Moctar — voici l'état de vos automations.</p>
+            <p class="page-subtitle" id="overviewSubtitle">Bienvenue, Moctar — voici l'état de vos automatisations.</p>
           </div>
           <div class="period-filter">
             <button class="period-btn active" data-period="7"  onclick="setPeriod(7,  this)">7j</button>
@@ -2665,12 +2665,12 @@
           </div>
         </div>
 
-        <!-- Ligne 4 — Statuts automations (50%) + Graphique WA ou derniers appels (50%) -->
+        <!-- Ligne 4 — Statuts automatisations (50%) + Graphique WA ou derniers appels (50%) -->
         <div class="overview-row-4">
           <div class="chart-card">
             <div class="chart-header">
               <div>
-                <div class="chart-title">Statuts automations</div>
+                <div class="chart-title">Statuts automatisations</div>
                 <div class="chart-subtitle">Répartition actuelle</div>
               </div>
             </div>
@@ -3114,7 +3114,7 @@
           <div>
             <div class="breadcrumb">Configuration <span>/ Programmation</span></div>
             <h1 class="page-title">Programmation</h1>
-            <p class="page-subtitle">Vue calendrier hebdomadaire de vos automations.</p>
+            <p class="page-subtitle">Vue calendrier hebdomadaire de vos automatisations.</p>
           </div>
           <button class="btn btn-primary btn-sm" onclick="openScheduleModal(null)">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -3185,7 +3185,7 @@
           <div>
             <div class="breadcrumb">Support <span>/ Analytics</span></div>
             <h1 class="page-title">Analytics</h1>
-            <p class="page-subtitle">Analyse des performances de vos automations et interactions.</p>
+            <p class="page-subtitle">Analyse des performances de vos automatisations et interactions.</p>
           </div>
           <button class="btn btn-ghost" onclick="exportAnalytics()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -3239,7 +3239,7 @@
             </div>
           </div>
           <div class="chart-card">
-            <div class="chart-card-title">Performance automations <span>taux de succès</span></div>
+            <div class="chart-card-title">Performance automatisations <span>taux de succès</span></div>
             <div id="autoPerfList" style="margin-top:8px"></div>
           </div>
         </div>
@@ -5023,7 +5023,7 @@ function _applySessionToUI(session) {
   /* Subtitle bienvenue — prénom du contact */
   const prenom   = contact.split(' ')[0] || contact;
   const subtitle = document.getElementById('overviewSubtitle');
-  if (subtitle) subtitle.textContent = `Bienvenue, ${prenom} — voici l'état de vos automations.`;
+  if (subtitle) subtitle.textContent = `Bienvenue, ${prenom} — voici l'état de vos automatisations.`;
 
   /* Filtrage sidebar selon plan */
   applyPlanFilterFromSession(plan);
@@ -6590,10 +6590,16 @@ function statusBadgeHtml(statut) {
 
 function typeChipHtml(type) {
   const t = (type || "").toLowerCase();
-  const isWa = t === "whatsapp" || t === "wa";
-  const label = isWa ? "WhatsApp" : "Assistant vocal IA";
-  const color = isWa ? "#25D366" : "#70B2DE";
-  return `<span class="type-chip" style="border-color:${color}22;color:${color}">${label}</span>`;
+  if (t === "whatsapp" || t === "wa") {
+    return `<span class="type-chip" style="border-color:#25D36622;color:#25D366">WhatsApp</span>`;
+  }
+  if (t === "vocal" || t === "assistant vocal ia" || t === "rdv") {
+    return `<span class="type-chip" style="border-color:#7c3aed22;color:#7c3aed">📞 Vocal</span>`;
+  }
+  if (t === "instagram") {
+    return `<span class="type-chip" style="border-color:#e1306c22;color:#e1306c">Instagram</span>`;
+  }
+  return `<span class="type-chip" style="border-color:#70B2DE22;color:#70B2DE">${type || "IA"}</span>`;
 }
 
 function _buildLogsHtml(autoId) {
@@ -6646,24 +6652,27 @@ function buildAutoTable() {
 
   console.log('[AkilAI] buildAutoTable — nb automatisations total:', automations.length, '— email actif:', _getActiveEmail());
   automations.filter(a => _matchesCurrentClient(a.client_id)).forEach(a => {
-    const statut = autoState[a.id] || a.statut || "Actif";
+    const statut   = autoState[a.id] || a.statut || "Actif";
+    const isVocal  = (a.rawType || "").toLowerCase() === "vocal" || (a.type || "").toLowerCase().includes("vocal");
 
-    /* Ligne principale — 5 colonnes (sans Dernière / Prochaine exéc.) */
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td colspan="2">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-          <div class="cell-name">${a.nom}</div>
-          <label class="toggle" title="${statut === 'Actif' ? 'Désactiver' : 'Activer'}" style="flex-shrink:0">
-            <input type="checkbox" ${statut === 'Actif' ? 'checked' : ''} onchange="toggleAuto('${a.id}', this)">
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-      </td>
-      <td>${typeChipHtml(a.type)}</td>
-      <td id="badge-${a.id}">${statusBadgeHtml(statut)}</td>
-      <td>
-        <div style="display:flex;gap:6px">
+    /* Colonne Nom — icône téléphone + nom pour les automations Vocal */
+    const nomHtml = isVocal
+      ? `<div class="cell-name"><span style="margin-right:6px">📞</span>${a.nom}</div>`
+      : `<div class="cell-name">${a.nom}</div>`;
+
+    /* Bouton actions — "Configurer" pour Vocal, "Programmer" + "Logs" pour les autres */
+    const actionsHtml = isVocal
+      ? `<div style="display:flex;gap:6px">
+          <button class="btn btn-ghost btn-sm" onclick="navigate('voix-ia')" title="Configurer l'assistant vocal"
+            style="color:var(--accent);border-color:rgba(112,178,222,0.3)">
+            ⚙️ Configurer
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="toggleLogs('${a.id}')" title="Voir logs">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            Logs
+          </button>
+        </div>`
+      : `<div style="display:flex;gap:6px">
           <button class="btn btn-ghost btn-sm" onclick="openScheduleModal('${a.id}')" title="Programmer">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
             Programmer
@@ -6672,8 +6681,23 @@ function buildAutoTable() {
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
             Logs
           </button>
+        </div>`;
+
+    /* Ligne principale */
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td colspan="2">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+          ${nomHtml}
+          <label class="toggle" title="${statut === 'Actif' ? 'Désactiver' : 'Activer'}" style="flex-shrink:0">
+            <input type="checkbox" ${statut === 'Actif' ? 'checked' : ''} onchange="toggleAuto('${a.id}', this)">
+            <span class="toggle-slider"></span>
+          </label>
         </div>
       </td>
+      <td>${typeChipHtml(a.rawType || a.type)}</td>
+      <td id="badge-${a.id}">${statusBadgeHtml(statut)}</td>
+      <td>${actionsHtml}</td>
     `;
     tbody.appendChild(tr);
 
@@ -7784,7 +7808,7 @@ function checkAlerts(data) {
           icon:     "⚠️",
           title:    `Automatisation en erreur : ${a.nom}`,
           message:  `En erreur depuis ${Math.floor(heures/24)} jour(s). Dernière exécution : ${a.derniere_exec || "inconnue"}.`,
-          cta:      { label:"Voir automations", section:"automations" },
+          cta:      { label:"Voir automatisations", section:"automations" },
           time:     "Maintenant",
         });
       }
@@ -9576,7 +9600,7 @@ function renderRecommandations(alerts) {
           <div class="reco-icon accent">✅</div>
           <div class="reco-body">
             <div class="reco-title" style="color:#22c55e">Tout fonctionne correctement</div>
-            <div class="reco-desc">Aucune alerte active — toutes vos automations sont opérationnelles.</div>
+            <div class="reco-desc">Aucune alerte active — toutes vos automatisations sont opérationnelles.</div>
           </div>
         </div>
       </div>`;
