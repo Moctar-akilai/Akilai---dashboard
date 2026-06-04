@@ -6494,8 +6494,16 @@ async function createOrUpdateVapiAssistant() {
 
     if (data.ok) {
       _vapiAssistantId = data.assistantId;
-      /* Mettre à jour le cache local */
-      if (client) client.vapiAssistantId = data.assistantId;
+      /* Mettre à jour le cache local — tous les champs pour survivre au refresh */
+      if (client) {
+        client.vapiAssistantId = data.assistantId;
+        client.nomAssistant    = cfg.nom;
+        client.promptSysteme   = cfg.prompt;
+        client.langue          = cfg.langPrimaire;
+        client.tonalite        = cfg.tonalite;
+        client.voiceId         = cfg.voiceId || cfg.voix || "";
+        client.vitesseParole   = parseFloat(cfg.vitesse);
+      }
       _updateVapiButton();
       loadVapiPhoneNumber();
       renderVapiTools(data.tools || []);
