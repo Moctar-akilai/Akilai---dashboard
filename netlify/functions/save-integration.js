@@ -101,6 +101,34 @@ exports.handler = async function(event) {
         }
         break;
 
+      case "brevo":
+        fields = { "Brevo API Key": value1 || "", "Brevo Connected": !!(value1) };
+        break;
+
+      case "resend_client":
+        fields = { "Resend API Key Client": value1 || "", "Resend Connected": !!(value1) };
+        break;
+
+      case "shopify":
+        fields = { "Shopify API Key": value1 || "", "Shopify Store URL": value2 || "", "Shopify Connected": !!(value1) };
+        break;
+
+      case "slack":
+        fields = { "Slack Webhook URL": value1 || "", "Slack Connected": !!(value1) };
+        break;
+
+      case "hubspot":
+        fields = { "HubSpot API Key": value1 || "", "HubSpot Connected": !!(value1) };
+        break;
+
+      case "teams":
+        fields = { "Teams Webhook URL": value1 || "", "Teams Connected": !!(value1) };
+        break;
+
+      case "disconnect_outlook":
+        fields = { "Outlook Access Token": "", "Outlook Refresh Token": "", "Outlook Connected": false };
+        break;
+
       default:
         return err(`Type inconnu : ${type}`, 400);
     }

@@ -3346,7 +3346,10 @@
           </div>
         </div>
 
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px">
+        <!-- ── Agenda & RDV ── -->
+        <div style="margin-bottom:4px">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:12px">Agenda &amp; RDV</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px">
 
           <!-- Google Calendar -->
           <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px">
@@ -3394,6 +3397,14 @@
               <button class="btn btn-secondary btn-sm" onclick="disconnectCalendly()" style="color:#ef4444;border-color:rgba(239,68,68,0.3)">Déconnecter</button>
             </div>
           </div>
+
+          </div><!-- end Agenda grid -->
+        </div><!-- end Agenda section -->
+
+        <!-- ── CRM & Données ── -->
+        <div style="margin-bottom:4px">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:12px">CRM &amp; Données</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px">
 
           <!-- CRM -->
           <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px;grid-column:span 2">
@@ -3481,6 +3492,41 @@
             </div>
           </div>
 
+          <!-- HubSpot -->
+          <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <svg width="36" height="36" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="48" height="48" rx="8" fill="#FF7A59"/>
+                <circle cx="30" cy="18" r="5" fill="#fff"/>
+                <circle cx="30" cy="18" r="2.5" fill="#FF7A59"/>
+                <path d="M22 18h-6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2z" fill="#fff"/>
+              </svg>
+              <div>
+                <div style="font-weight:600;font-size:15px">HubSpot</div>
+                <div id="hubspot-badge" style="font-size:11px;margin-top:2px"></div>
+              </div>
+            </div>
+            <p style="font-size:13px;color:var(--text-muted);margin:0">
+              Créez et mettez à jour vos contacts HubSpot automatiquement après chaque appel.
+            </p>
+            <div id="hubspot-disconnected-view">
+              <input id="hubspot-api-input" type="text" class="input" placeholder="Clé API HubSpot (pat-…)" style="font-size:13px;padding:8px 12px;margin-bottom:8px" />
+              <button class="btn btn-primary btn-sm" style="width:100%" onclick="saveHubspot()">Connecter HubSpot</button>
+            </div>
+            <div id="hubspot-connected-view" style="display:none;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#22c55e"><span style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block"></span>HubSpot connecté</div>
+              <button class="btn btn-secondary btn-sm" onclick="disconnectHubspot()" style="color:#ef4444;border-color:rgba(239,68,68,0.3)">Déconnecter</button>
+            </div>
+          </div>
+
+          </div><!-- end CRM grid -->
+        </div><!-- end CRM section -->
+
+        <!-- ── Tableurs ── -->
+        <div style="margin-bottom:4px">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:12px">Tableurs</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px">
+
           <!-- Google Sheets -->
           <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px">
             <div style="display:flex;align-items:center;gap:12px">
@@ -3546,6 +3592,121 @@
             </div>
           </div>
 
+          <!-- Shopify -->
+          <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <svg width="36" height="36" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="48" height="48" rx="8" fill="#96BF48"/>
+                <path d="M32 14c-.1-.6-.6-1-1.2-1-.1 0-2.3-.2-2.3-.2S26.2 10.6 26 10.4c-.2-.2-.5-.1-.6-.1L24 11c-.5-1.5-1.4-2.9-3-2.9h-.2C20.3 7.4 19.8 7 19.2 7c-4.8 0-7.1 6-7.8 9L8 17.5l-1 .3.7 15.7L34 36l4-2.3L32 14zm-8.6-2.6c-.4.1-.9.3-1.3.4 0-.7 0-1.7-.4-2.5.9.2 1.4 1.2 1.7 2.1zm-2.2.7c-.8.2-1.7.5-2.5.8.5-1.9 1.4-3.7 2.5-4.5v3.7zm-1.1-4.6c.1 0 .3.1.4.2-1.3 1.2-2.2 3.3-2.7 5.2l-2 .6c.7-2.3 2.2-6 4.3-6z" fill="#fff"/>
+              </svg>
+              <div>
+                <div style="font-weight:600;font-size:15px">Shopify</div>
+                <div id="shopify-badge" style="font-size:11px;margin-top:2px"></div>
+              </div>
+            </div>
+            <p style="font-size:13px;color:var(--text-muted);margin:0">
+              Ajoutez une note client dans Shopify automatiquement après chaque appel.
+            </p>
+            <div id="shopify-disconnected-view" style="display:flex;flex-direction:column;gap:8px">
+              <input id="shopify-api-input" type="text" class="input" placeholder="Clé API Shopify (shpat_…)" style="font-size:13px;padding:8px 12px" />
+              <input id="shopify-store-input" type="text" class="input" placeholder="URL boutique (votre-shop.myshopify.com)" style="font-size:13px;padding:8px 12px" />
+              <button class="btn btn-primary btn-sm" onclick="saveShopify()">Connecter Shopify</button>
+            </div>
+            <div id="shopify-connected-view" style="display:none;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#22c55e"><span style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block"></span>Shopify connecté</div>
+              <button class="btn btn-secondary btn-sm" onclick="disconnectShopify()" style="color:#ef4444;border-color:rgba(239,68,68,0.3)">Déconnecter</button>
+            </div>
+          </div>
+
+          </div><!-- end Tableurs grid -->
+        </div><!-- end Tableurs section -->
+
+        <!-- ── Communication ── -->
+        <div style="margin-bottom:4px">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:12px">Communication</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px">
+
+          <!-- Outlook -->
+          <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <svg width="36" height="36" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="48" height="48" rx="8" fill="#0078D4"/>
+                <path d="M10 16h16v16H10z" fill="#fff" opacity=".15"/>
+                <path d="M18 12a8 8 0 1 0 0 16 8 8 0 0 0 0-16z" fill="#fff" opacity=".9"/>
+                <path d="M18 15a5 5 0 1 0 0 10 5 5 0 0 0 0-10z" fill="#0078D4"/>
+                <path d="M28 20h9v12H28z" fill="#fff" opacity=".85"/>
+                <path d="M28 20l4.5 5 4.5-5" stroke="#0078D4" stroke-width="1.5" fill="none"/>
+              </svg>
+              <div>
+                <div style="font-weight:600;font-size:15px">Outlook</div>
+                <div id="outlook-badge" style="font-size:11px;margin-top:2px"></div>
+              </div>
+            </div>
+            <p style="font-size:13px;color:var(--text-muted);margin:0">
+              Envoyez des emails de suivi via Outlook après chaque appel.
+            </p>
+            <div id="outlook-disconnected-view">
+              <button class="btn btn-secondary btn-sm" style="width:100%" onclick="connectOutlook()">Connecter Outlook</button>
+            </div>
+            <div id="outlook-connected-view" style="display:none;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#22c55e"><span style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block"></span>Outlook connecté</div>
+              <button class="btn btn-secondary btn-sm" onclick="disconnectOutlook()" style="color:#ef4444;border-color:rgba(239,68,68,0.3)">Déconnecter</button>
+            </div>
+          </div>
+
+          <!-- Slack -->
+          <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <svg width="36" height="36" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="48" height="48" rx="8" fill="#4A154B"/>
+                <path d="M18 12a3 3 0 0 0-3 3v1h-3a3 3 0 0 0 0 6h3v3h-3a3 3 0 0 0 0 6h3v1a3 3 0 0 0 6 0v-1h3v1a3 3 0 0 0 6 0v-1h1a3 3 0 0 0 0-6h-1v-3h1a3 3 0 0 0 0-6h-1v-1a3 3 0 0 0-6 0v1h-3v-1a3 3 0 0 0-3-3zm0 6h3v3h-3v-3zm9 0h1v3h-3v-3h2zm-9 9h3v3h-3v-3zm9 0h1v3h-3v-3h2z" fill="#fff" opacity=".9"/>
+              </svg>
+              <div>
+                <div style="font-weight:600;font-size:15px">Slack</div>
+                <div id="slack-badge" style="font-size:11px;margin-top:2px"></div>
+              </div>
+            </div>
+            <p style="font-size:13px;color:var(--text-muted);margin:0">
+              Recevez une notification Slack après chaque appel de votre assistant.
+            </p>
+            <div id="slack-disconnected-view" style="display:flex;flex-direction:column;gap:8px">
+              <input id="slack-webhook-input" type="url" class="input" placeholder="https://hooks.slack.com/services/…" style="font-size:13px;padding:8px 12px" />
+              <button class="btn btn-primary btn-sm" onclick="saveSlack()">Connecter Slack</button>
+            </div>
+            <div id="slack-connected-view" style="display:none;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#22c55e"><span style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block"></span>Slack connecté</div>
+              <button class="btn btn-secondary btn-sm" onclick="disconnectSlack()" style="color:#ef4444;border-color:rgba(239,68,68,0.3)">Déconnecter</button>
+            </div>
+          </div>
+
+          <!-- Teams -->
+          <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <svg width="36" height="36" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="48" height="48" rx="8" fill="#5059C9"/>
+                <path d="M30 20a5 5 0 1 0 0-10 5 5 0 0 0 0 10z" fill="#fff" opacity=".9"/>
+                <path d="M34 22h-8a4 4 0 0 0-4 4v8h16v-8a4 4 0 0 0-4-4z" fill="#fff" opacity=".9"/>
+                <path d="M20 22a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" fill="#7B83EB"/>
+                <path d="M24 24H10a2 2 0 0 0-2 2v7a7 7 0 0 0 14 0v-7a2 2 0 0 0-2-2z" fill="#7B83EB"/>
+              </svg>
+              <div>
+                <div style="font-weight:600;font-size:15px">Microsoft Teams</div>
+                <div id="teams-badge" style="font-size:11px;margin-top:2px"></div>
+              </div>
+            </div>
+            <p style="font-size:13px;color:var(--text-muted);margin:0">
+              Recevez une notification Teams après chaque appel de votre assistant.
+            </p>
+            <div id="teams-disconnected-view" style="display:flex;flex-direction:column;gap:8px">
+              <input id="teams-webhook-input" type="url" class="input" placeholder="URL du webhook Teams" style="font-size:13px;padding:8px 12px" />
+              <button class="btn btn-primary btn-sm" onclick="saveTeams()">Connecter Teams</button>
+            </div>
+            <div id="teams-connected-view" style="display:none;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#22c55e"><span style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block"></span>Teams connecté</div>
+              <button class="btn btn-secondary btn-sm" onclick="disconnectTeams()" style="color:#ef4444;border-color:rgba(239,68,68,0.3)">Déconnecter</button>
+            </div>
+          </div>
+
           <!-- Gmail -->
           <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px">
             <div style="display:flex;align-items:center;gap:12px">
@@ -3584,7 +3745,70 @@
             </p>
           </div>
 
-        </div>
+          </div><!-- end Communication grid -->
+        </div><!-- end Communication section -->
+
+        <!-- ── Email Marketing ── -->
+        <div style="margin-bottom:4px">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:12px">Email Marketing</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px">
+
+          <!-- Brevo -->
+          <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <svg width="36" height="36" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="48" height="48" rx="8" fill="#0B996E"/>
+                <path d="M12 16h24v4l-12 8-12-8v-4z" fill="#fff" opacity=".9"/>
+                <path d="M12 20l12 8 12-8v12H12V20z" fill="#fff" opacity=".7"/>
+              </svg>
+              <div>
+                <div style="font-weight:600;font-size:15px">Brevo</div>
+                <div id="brevo-badge" style="font-size:11px;margin-top:2px"></div>
+              </div>
+            </div>
+            <p style="font-size:13px;color:var(--text-muted);margin:0">
+              Ajoutez automatiquement vos prospects à votre liste Brevo après chaque appel.
+            </p>
+            <div id="brevo-disconnected-view" style="display:flex;flex-direction:column;gap:8px">
+              <input id="brevo-api-input" type="text" class="input" placeholder="Clé API Brevo (xkeysib-…)" style="font-size:13px;padding:8px 12px" />
+              <button class="btn btn-primary btn-sm" onclick="saveBrevo()">Connecter Brevo</button>
+            </div>
+            <div id="brevo-connected-view" style="display:none;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#22c55e"><span style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block"></span>Brevo connecté</div>
+              <button class="btn btn-secondary btn-sm" onclick="disconnectBrevo()" style="color:#ef4444;border-color:rgba(239,68,68,0.3)">Déconnecter</button>
+            </div>
+          </div>
+
+          <!-- Resend -->
+          <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <svg width="36" height="36" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="48" height="48" rx="8" fill="#000"/>
+                <path d="M14 16h20l-10 9-10-9z" fill="#fff" opacity=".9"/>
+                <path d="M14 16v16h20V16" stroke="#fff" stroke-width="2" fill="none"/>
+                <path d="M14 32l8-7m12 7l-8-7" stroke="#fff" stroke-width="1.5"/>
+              </svg>
+              <div>
+                <div style="font-weight:600;font-size:15px">Resend</div>
+                <div id="resend-badge" style="font-size:11px;margin-top:2px"></div>
+              </div>
+            </div>
+            <p style="font-size:13px;color:var(--text-muted);margin:0">
+              Envoyez des emails transactionnels via Resend après chaque appel.
+            </p>
+            <div id="resend-disconnected-view" style="display:flex;flex-direction:column;gap:8px">
+              <input id="resend-api-input" type="text" class="input" placeholder="Clé API Resend (re_…)" style="font-size:13px;padding:8px 12px" />
+              <button class="btn btn-primary btn-sm" onclick="saveResend()">Connecter Resend</button>
+            </div>
+            <div id="resend-connected-view" style="display:none;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#22c55e"><span style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block"></span>Resend connecté</div>
+              <button class="btn btn-secondary btn-sm" onclick="disconnectResend()" style="color:#ef4444;border-color:rgba(239,68,68,0.3)">Déconnecter</button>
+            </div>
+          </div>
+
+          </div><!-- end Email Marketing grid -->
+        </div><!-- end Email Marketing section -->
+
       </div>
 
       <!-- ====================================================
@@ -8345,6 +8569,43 @@ function renderIntegrations() {
       ? '<span style="background:rgba(37,211,102,0.15);color:#25D366;padding:2px 8px;border-radius:20px">&#10003; Actif</span>'
       : '<span style="background:rgba(100,100,100,0.15);color:var(--text-muted);padding:2px 8px;border-radius:20px">Non inclus</span>';
   }
+
+  // ── Outlook ──
+  _renderSimpleBadge("outlook-badge", "outlook-disconnected-view", "outlook-connected-view", client.outlookConnected);
+
+  // ── Slack ──
+  _renderSimpleBadge("slack-badge", "slack-disconnected-view", "slack-connected-view", client.slackConnected);
+
+  // ── Teams ──
+  _renderSimpleBadge("teams-badge", "teams-disconnected-view", "teams-connected-view", client.teamsConnected);
+
+  // ── HubSpot ──
+  _renderSimpleBadge("hubspot-badge", "hubspot-disconnected-view", "hubspot-connected-view", client.hubspotConnected);
+
+  // ── Shopify ──
+  _renderSimpleBadge("shopify-badge", "shopify-disconnected-view", "shopify-connected-view", client.shopifyConnected);
+
+  // ── Brevo ──
+  _renderSimpleBadge("brevo-badge", "brevo-disconnected-view", "brevo-connected-view", client.brevoConnected);
+
+  // ── Resend ──
+  _renderSimpleBadge("resend-badge", "resend-disconnected-view", "resend-connected-view", client.resendConnected);
+}
+
+function _renderSimpleBadge(badgeId, disconnId, connId, isConnected) {
+  const badge  = document.getElementById(badgeId);
+  const disconn = document.getElementById(disconnId);
+  const conn   = document.getElementById(connId);
+  if (!badge) return;
+  if (isConnected) {
+    badge.innerHTML = BADGE_ON;
+    if (disconn) disconn.style.display = "none";
+    if (conn)    conn.style.display    = "flex";
+  } else {
+    badge.innerHTML = BADGE_OFF;
+    if (disconn) disconn.style.display = "flex";
+    if (conn)    conn.style.display    = "none";
+  }
 }
 
 function connectGoogle() {
@@ -8486,6 +8747,158 @@ async function disconnectNotion() {
 }
 
 // ── Google Sheets ──
+function connectOutlook() {
+  const client = (typeof clients !== "undefined" && clients[0]) || {};
+  const userId = client.email || "";
+  if (!userId) { showToast("Impossible de récupérer votre identifiant", "error"); return; }
+  window.location.href = "/.netlify/functions/outlook-oauth-start?userId=" + encodeURIComponent(userId);
+}
+
+async function disconnectOutlook() {
+  if (!confirm("Déconnecter Outlook ?")) return;
+  await _simpleDisconnect("disconnect_outlook", "outlookConnected", "Outlook déconnecté");
+}
+
+async function saveSlack() {
+  const val = ((document.getElementById("slack-webhook-input") || {}).value || "").trim();
+  if (!val) { showToast("Veuillez saisir l'URL du webhook Slack", "warning"); return; }
+  await _saveSimpleIntegration("slack", val, null, "slackConnected", "Slack connecté !");
+}
+
+async function disconnectSlack() {
+  if (!confirm("Déconnecter Slack ?")) return;
+  document.getElementById("slack-webhook-input") && (document.getElementById("slack-webhook-input").value = "");
+  await _saveSimpleIntegration("slack", "", null, "slackConnected", null);
+  if (clients[0]) clients[0].slackConnected = false;
+  renderIntegrations();
+}
+
+async function saveTeams() {
+  const val = ((document.getElementById("teams-webhook-input") || {}).value || "").trim();
+  if (!val) { showToast("Veuillez saisir l'URL du webhook Teams", "warning"); return; }
+  await _saveSimpleIntegration("teams", val, null, "teamsConnected", "Teams connecté !");
+}
+
+async function disconnectTeams() {
+  if (!confirm("Déconnecter Microsoft Teams ?")) return;
+  document.getElementById("teams-webhook-input") && (document.getElementById("teams-webhook-input").value = "");
+  await _saveSimpleIntegration("teams", "", null, "teamsConnected", null);
+  if (clients[0]) clients[0].teamsConnected = false;
+  renderIntegrations();
+}
+
+async function saveHubspot() {
+  const val = ((document.getElementById("hubspot-api-input") || {}).value || "").trim();
+  if (!val) { showToast("Veuillez saisir votre clé API HubSpot", "warning"); return; }
+  await _saveSimpleIntegration("hubspot", val, null, "hubspotConnected", "HubSpot connecté !");
+}
+
+async function disconnectHubspot() {
+  if (!confirm("Déconnecter HubSpot ?")) return;
+  document.getElementById("hubspot-api-input") && (document.getElementById("hubspot-api-input").value = "");
+  await _saveSimpleIntegration("hubspot", "", null, "hubspotConnected", null);
+  if (clients[0]) clients[0].hubspotConnected = false;
+  renderIntegrations();
+}
+
+async function saveShopify() {
+  const api   = ((document.getElementById("shopify-api-input")   || {}).value || "").trim();
+  const store = ((document.getElementById("shopify-store-input") || {}).value || "").trim();
+  if (!api)   { showToast("Veuillez saisir votre clé API Shopify", "warning"); return; }
+  if (!store) { showToast("Veuillez saisir l'URL de votre boutique", "warning"); return; }
+  const client = (typeof clients !== "undefined" && clients[0]) || {};
+  const userId = client.email || "";
+  if (!userId) { showToast("Identifiant introuvable", "error"); return; }
+  try {
+    const res  = await fetch("/.netlify/functions/save-integration", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, type: "shopify", value1: api, value2: store }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      if (clients[0]) clients[0].shopifyConnected = true;
+      showToast("Shopify connecté !", "success");
+      renderIntegrations();
+    } else { showToast(data.error || "Erreur", "error"); }
+  } catch(e) { showToast("Erreur réseau", "error"); }
+}
+
+async function disconnectShopify() {
+  if (!confirm("Déconnecter Shopify ?")) return;
+  document.getElementById("shopify-api-input")   && (document.getElementById("shopify-api-input").value   = "");
+  document.getElementById("shopify-store-input") && (document.getElementById("shopify-store-input").value = "");
+  const client = (typeof clients !== "undefined" && clients[0]) || {};
+  const userId = client.email || "";
+  if (!userId) return;
+  await fetch("/.netlify/functions/save-integration", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, type: "shopify", value1: "", value2: "" }),
+  });
+  if (clients[0]) clients[0].shopifyConnected = false;
+  renderIntegrations();
+}
+
+async function saveBrevo() {
+  const val = ((document.getElementById("brevo-api-input") || {}).value || "").trim();
+  if (!val) { showToast("Veuillez saisir votre clé API Brevo", "warning"); return; }
+  await _saveSimpleIntegration("brevo", val, null, "brevoConnected", "Brevo connecté !");
+}
+
+async function disconnectBrevo() {
+  if (!confirm("Déconnecter Brevo ?")) return;
+  document.getElementById("brevo-api-input") && (document.getElementById("brevo-api-input").value = "");
+  await _saveSimpleIntegration("brevo", "", null, "brevoConnected", null);
+  if (clients[0]) clients[0].brevoConnected = false;
+  renderIntegrations();
+}
+
+async function saveResend() {
+  const val = ((document.getElementById("resend-api-input") || {}).value || "").trim();
+  if (!val) { showToast("Veuillez saisir votre clé API Resend", "warning"); return; }
+  await _saveSimpleIntegration("resend_client", val, null, "resendConnected", "Resend connecté !");
+}
+
+async function disconnectResend() {
+  if (!confirm("Déconnecter Resend ?")) return;
+  document.getElementById("resend-api-input") && (document.getElementById("resend-api-input").value = "");
+  await _saveSimpleIntegration("resend_client", "", null, "resendConnected", null);
+  if (clients[0]) clients[0].resendConnected = false;
+  renderIntegrations();
+}
+
+async function _saveSimpleIntegration(type, value1, value2, clientField, successMsg) {
+  const client = (typeof clients !== "undefined" && clients[0]) || {};
+  const userId = client.email || "";
+  if (!userId) { showToast("Identifiant introuvable", "error"); return; }
+  try {
+    const res  = await fetch("/.netlify/functions/save-integration", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, type, value1, value2 }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      if (clients[0] && clientField) clients[0][clientField] = !!(value1);
+      if (successMsg) showToast(successMsg, "success");
+      renderIntegrations();
+    } else { showToast(data.error || "Erreur", "error"); }
+  } catch(e) { showToast("Erreur réseau", "error"); }
+}
+
+async function _simpleDisconnect(type, clientField, msg) {
+  const client = (typeof clients !== "undefined" && clients[0]) || {};
+  const userId = client.email || "";
+  if (!userId) return;
+  try {
+    await fetch("/.netlify/functions/save-integration", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, type }),
+    });
+    if (clients[0] && clientField) clients[0][clientField] = false;
+    if (msg) showToast(msg, "info");
+    renderIntegrations();
+  } catch(e) { showToast("Erreur réseau", "error"); }
+}
+
 function connectGoogleSheets() {
   const client = (typeof clients !== "undefined" && clients[0]) || {};
   const userId = client.email || "";
@@ -8633,6 +9046,31 @@ async function disconnectMicrosoft() {
       window.addEventListener("DOMContentLoaded", function() {
         setTimeout(function() {
           showToast("Erreur lors de la connexion Microsoft", "error");
+          history.replaceState(null, "", window.location.pathname);
+        }, 800);
+      });
+    }
+  } catch(e) {}
+})();
+
+// Toast après retour OAuth Outlook
+(function checkOutlookOAuthReturn() {
+  try {
+    const urlParams     = new URLSearchParams(window.location.search);
+    const outlookStatus = urlParams.get("outlook");
+    if (outlookStatus === "connected") {
+      window.addEventListener("DOMContentLoaded", function() {
+        setTimeout(function() {
+          showToast("Outlook connecté ✅", "success");
+          if (clients[0]) clients[0].outlookConnected = true;
+          navigate("integrations");
+          history.replaceState(null, "", window.location.pathname);
+        }, 800);
+      });
+    } else if (outlookStatus === "error") {
+      window.addEventListener("DOMContentLoaded", function() {
+        setTimeout(function() {
+          showToast("Erreur lors de la connexion Outlook", "error");
           history.replaceState(null, "", window.location.pathname);
         }, 800);
       });

@@ -210,6 +210,100 @@ exports.handler = async function(event) {
       }
     }
 
+    // ── Slack notification ──
+    if (cf["Slack Connected"] && cf["Slack Webhook URL"]) {
+      try {
+        const nom    = contactData?.nom    || "";
+        const numero = contactData?.numero || "";
+        const resume = callData?.resume    || "";
+        const message = `📞 Nouvel appel${nom ? ` — ${nom}` : ""}${numero ? ` (${numero})` : ""}${resume ? `\n${resume}` : ""}`;
+        await fetch(`${BASE_SITE}/.netlify/functions/send-slack-notification`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId, message }),
+        });
+        console.log("[crm-router] Slack: notification envoyée");
+      } catch (e2) {
+        console.error("[crm-router] Slack erreur:", e2.message);
+      }
+    }
+
+    // ── Teams notification ──
+    if (cf["Teams Connected"] && cf["Teams Webhook URL"]) {
+      try {
+        const nom    = contactData?.nom    || "";
+        const numero = contactData?.numero || "";
+        const resume = callData?.resume    || "";
+        const message = `📞 Nouvel appel${nom ? ` — ${nom}` : ""}${numero ? ` (${numero})` : ""}${resume ? `<br>${resume}` : ""}`;
+        await fetch(`${BASE_SITE}/.netlify/functions/send-teams-notification`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId, message, titre: "Appel AkilAI" }),
+        });
+        console.log("[crm-router] Teams: notification envoyée");
+      } catch (e2) {
+        console.error("[crm-router] Teams erreur:", e2.message);
+      }
+    }
+
+    // ── HubSpot contact ──
+    if (cf["HubSpot Connected"] && cf["HubSpot API Key"]) {
+      try {
+        await fetch(`${BASE_SITE}/.netlify/functions/hubspot-create-contact`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId,
+            nom:    contactData?.nom    || "",
+            numero: contactData?.numero || "",
+            email:  contactData?.email  || "",
+            resume: callData?.resume    || "",
+          }),
+        });
+        console.log("[crm-router] HubSpot: contact créé/mis à jour");
+      } catch (e2) {
+        console.error("[crm-router] HubSpot erreur:", e2.message);
+      }
+    }
+
+    // ── Brevo contact ──
+    if (cf["Brevo Connected"] && cf["Brevo API Key"]) {
+      try {
+        await fetch(`${BASE_SITE}/.netlify/functions/brevo-add-contact`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId,
+            nom:    contactData?.nom    || "",
+            numero: contactData?.numero || "",
+            email:  contactData?.email  || "",
+          }),
+        });
+        console.log("[crm-router] Brevo: contact ajouté");
+      } catch (e2) {
+        console.error("[crm-router] Brevo erreur:", e2.message);
+      }
+    }
+
+    // ── Shopify customer note ──
+    if (cf["Shopify Connected"] && cf["Shopify API Key"]) {
+      try {
+        await fetch(`${BASE_SITE}/.netlify/functions/shopify-create-note`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId,
+            nom:    contactData?.nom    || "",
+            numero: contactData?.numero || "",
+            resume: callData?.resume    || "",
+          }),
+        });
+        console.log("[crm-router] Shopify: note client créée/mise à jour");
+      } catch (e2) {
+        console.error("[crm-router] Shopify erreur:", e2.message);
+      }
+    }
+
     return { statusCode: 200, headers: corsHeaders, body: JSON.stringify({ success: true, crm: crmType, skipped: true }) };
   } catch (e) {
     console.error("[crm-router] Exception:", e.message, e.stack);

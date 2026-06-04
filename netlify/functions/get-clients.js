@@ -88,6 +88,13 @@ exports.handler = async function(event, context) {
         googleSheetsConnected: f["Google Sheets Connected"]     || false,
         microsoftConnected:    f["Microsoft Connected"]         || false,
         excelFileId:           f["Excel File ID"]               || "",
+        outlookConnected:      f["Outlook Connected"]           || false,
+        brevoConnected:        f["Brevo Connected"]             || false,
+        resendConnected:       f["Resend Connected"]            || false,
+        shopifyConnected:      f["Shopify Connected"]           || false,
+        slackConnected:        f["Slack Connected"]             || false,
+        hubspotConnected:      f["HubSpot Connected"]           || false,
+        teamsConnected:        f["Teams Connected"]             || false,
       };
     });
 
