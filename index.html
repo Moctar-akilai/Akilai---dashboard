@@ -4966,15 +4966,17 @@ function _gcalPrefetchCurrentWeek() {
   const client = (typeof clients !== "undefined" && clients[0]) || {};
   if (!client.googleConnected || !client.email) return;
   const userId = client.email;
-  const now    = new Date();
-  // Start of current week (Monday)
-  const start  = new Date(now); start.setDate(start.getDate() - ((start.getDay() + 6) % 7)); start.setHours(0,0,0,0);
-  const end    = new Date(start); end.setDate(end.getDate() + 7);
-  const key    = `${start.toISOString()}_${end.toISOString()}`;
-  if (_calendarEventsCache[key]) return;
-  fetch(`/.netlify/functions/get-google-calendar-events?userId=${encodeURIComponent(userId)}&start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}`)
+  // ISO date strings for Monday → Sunday of current week
+  const now   = new Date();
+  const mon   = new Date(now); mon.setDate(mon.getDate() - ((mon.getDay() + 6) % 7)); mon.setHours(0,0,0,0);
+  const sun   = new Date(mon); sun.setDate(sun.getDate() + 7);
+  const start = mon.toISOString();
+  const end   = sun.toISOString();
+  const key   = `${_gcalDateKey(start)}_${_gcalDateKey(end)}`;
+  if (_calendarEventsCache[key]) return; // already cached
+  fetch(`/.netlify/functions/get-google-calendar-events?userId=${encodeURIComponent(userId)}&start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`)
     .then(r => r.json())
-    .then(d => { _calendarEventsCache[key] = d.events || []; console.log("[GCal] prefetch: " + (_calendarEventsCache[key].length) + " événements mis en cache"); })
+    .then(d => { _calendarEventsCache[key] = d.events || []; })
     .catch(() => {});
 }
 
@@ -8682,16 +8684,19 @@ function _gcalHideSkeleton() {
   if (el) el.style.display = "none";
 }
 
-async function _gcalFetchEvents(userId, startStr, endStr) {
-  const cacheKey = `${startStr}_${endStr}`;
-  if (_calendarEventsCache[cacheKey]) return _calendarEventsCache[cacheKey];
+// Normalize any date string to YYYY-MM-DD (strips time/timezone)
+function _gcalDateKey(s) { return (s || "").substring(0, 10); }
+
+async function _gcalFetchRange(userId, startStr, endStr) {
+  const key = `${_gcalDateKey(startStr)}_${_gcalDateKey(endStr)}`;
+  if (_calendarEventsCache[key]) return _calendarEventsCache[key];
   try {
     const res = await fetch(
       `/.netlify/functions/get-google-calendar-events?userId=${encodeURIComponent(userId)}&start=${encodeURIComponent(startStr)}&end=${encodeURIComponent(endStr)}`
     );
     const data = await res.json();
     const events = data.events || [];
-    _calendarEventsCache[cacheKey] = events;
+    _calendarEventsCache[key] = events;
     return events;
   } catch(e) {
     console.error("[GCal] fetch error:", e);
@@ -8707,27 +8712,22 @@ function initGoogleCalendar() {
   const calendarEl = document.getElementById("fullcalendar-container");
   if (!calendarEl) return;
 
-  // Already initialized — just ensure it's rendered and visible
+  // Already initialized — just show and reload current range
   if (_gcalInstance) {
     _gcalHideSkeleton();
     calendarEl.style.visibility = "visible";
     calendarEl.style.opacity    = "1";
-    _gcalInstance.render(); // no-op if already rendered, needed after display:none
+    _gcalInstance.render();
     const view = _gcalInstance.view;
-    _gcalLoadRangeIntoCalendar(userId, view.activeStart.toISOString(), view.activeEnd.toISOString());
+    _gcalPopulateRange(userId, view.activeStart.toISOString(), view.activeEnd.toISOString());
     return;
   }
 
   if (typeof FullCalendar === "undefined") {
-    calendarEl.innerHTML = '<div style="padding:20px;color:var(--text-muted)">FullCalendar non chargé — veuillez réessayer</div>';
+    calendarEl.innerHTML = '<div style="padding:20px;color:var(--text-muted)">FullCalendar non chargé — veuillez recharger la page</div>';
     _gcalHideSkeleton();
     return;
   }
-
-  // First init — show skeleton, hide calendar
-  calendarEl.style.visibility = "hidden";
-  calendarEl.style.opacity    = "0";
-  _gcalShowSkeleton();
 
   _gcalInstance = new FullCalendar.Calendar(calendarEl, {
     initialView: "timeGridWeek",
@@ -8738,22 +8738,9 @@ function initGoogleCalendar() {
       right:  "dayGridMonth,timeGridWeek,timeGridDay",
     },
     buttonText: { today: "Aujourd'hui", month: "Mois", week: "Semaine", day: "Jour" },
-    // Start empty — events loaded in background after render
     events: [],
-    eventsSet: function() {
-      // Reveal calendar and hide skeleton once events are set
-      _gcalHideSkeleton();
-      calendarEl.style.visibility = "visible";
-      calendarEl.style.opacity    = "1";
-      calendarEl.style.transition = "opacity 0.3s ease";
-    },
-    // Spinner for subsequent navigations (prev/next month)
-    loading: function(isLoading) {
-      if (isLoading) { _gcalShowSpinner(); } else { _gcalHideSpinner(); }
-    },
     datesSet: function(info) {
-      // Lazy-load events when user navigates to a new range
-      _gcalLoadRangeIntoCalendar(userId, info.startStr, info.endStr);
+      _gcalPopulateRange(userId, info.startStr, info.endStr);
     },
     eventClick: function(info) { openEventModal(info.event); },
     dateClick:  function(info) { openNewEventModal(info.dateStr); },
@@ -8765,28 +8752,25 @@ function initGoogleCalendar() {
     slotMaxTime: "22:00:00",
   });
 
+  // Render immediately — calendar structure visible at once
   _gcalInstance.render();
-
-  // Load initial week immediately in background
-  const view = _gcalInstance.view;
-  _gcalLoadRangeIntoCalendar(userId, view.activeStart.toISOString(), view.activeEnd.toISOString());
+  _gcalHideSkeleton();
+  calendarEl.style.visibility = "visible";
+  calendarEl.style.opacity    = "1";
+  calendarEl.style.transition = "opacity 0.3s ease";
 }
 
-async function _gcalLoadRangeIntoCalendar(userId, startStr, endStr) {
-  const cacheKey = `${startStr}_${endStr}`;
-  // Already cached and added — skip
-  if (_calendarEventsCache[cacheKey + "_added"]) return;
+// Load events for a given range into the calendar (uses cache)
+async function _gcalPopulateRange(userId, startStr, endStr) {
+  const key = `${_gcalDateKey(startStr)}_${_gcalDateKey(endStr)}`;
+  if (_calendarEventsCache[key + "_done"]) return; // already added
   _gcalShowSpinner();
-  const events = await _gcalFetchEvents(userId, startStr, endStr);
+  const events = await _gcalFetchRange(userId, startStr, endStr);
   _gcalHideSpinner();
   if (!_gcalInstance) return;
-  // Remove old events for this range, then add new ones
-  _gcalInstance.getEvents().forEach(e => {
-    const eStart = e.start ? e.start.toISOString() : "";
-    if (eStart >= startStr && eStart <= endStr) e.remove();
-  });
+  _gcalInstance.getEvents().forEach(e => e.remove()); // clear before adding
   events.forEach(e => _gcalInstance.addEvent(e));
-  _calendarEventsCache[cacheKey + "_added"] = true;
+  _calendarEventsCache[key + "_done"] = true;
 }
 
 function openEventModal(event) {
