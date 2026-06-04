@@ -27,14 +27,16 @@ exports.handler = async function(event, context) {
   let existingAssistantId = null;
   let vapiPhoneNumberId   = null;
   let clientEmail         = "";
+  let clientFields        = {};
   if (clientId) {
     try {
       const clientRes = await fetch(`${BASE_URL}/Clients/${clientId}`, { headers });
       if (clientRes.ok) {
         const clientData    = await clientRes.json();
-        existingAssistantId = clientData.fields?.VapiAssistantId  || null;
-        vapiPhoneNumberId   = clientData.fields?.["Numéro Vapi"]  || null;
-        clientEmail         = clientData.fields?.Email            || clientData.fields?.["User ID"] || "";
+        clientFields        = clientData.fields || {};
+        existingAssistantId = clientFields.VapiAssistantId  || null;
+        vapiPhoneNumberId   = clientFields["Numéro Vapi"]   || null;
+        clientEmail         = clientFields.Email             || clientFields["User ID"] || "";
         console.log("[create-vapi-assistant] VapiAssistantId existant :", existingAssistantId || "aucun");
         console.log("[create-vapi-assistant] Numéro Vapi (phoneNumberId) :", vapiPhoneNumberId || "aucun");
         console.log("[create-vapi-assistant] clientEmail :", clientEmail || "inconnu");
@@ -44,7 +46,128 @@ exports.handler = async function(event, context) {
     }
   }
 
-  const WEBHOOK_URL = `${process.env.URL || "https://portal-akilai.netlify.app"}/.netlify/functions/vapi-webhook`;
+  const SERVER_URL = process.env.URL || "https://portal-akilai.netlify.app";
+  const WEBHOOK_URL = `${SERVER_URL}/.netlify/functions/vapi-webhook`;
+  const TOOLS_BASE  = `${SERVER_URL}/.netlify/functions`;
+
+  /* ── Construire les tools dynamiquement selon les intégrations ── */
+  const tools = [];
+
+  if (clientFields["Google Connected"]) {
+    tools.push({
+      type: "function",
+      function: {
+        name: "check_availability",
+        description: "Vérifie les créneaux disponibles dans l'agenda Google Calendar du client pour une date donnée. Utiliser AVANT de proposer un créneau.",
+        parameters: {
+          type: "object",
+          properties: {
+            date:     { type: "string", description: "La date souhaitée au format YYYY-MM-DD" },
+            duration: { type: "number", description: "Durée du RDV en minutes (défaut : 30)" },
+          },
+          required: ["date"],
+        },
+      },
+      server: { url: `${TOOLS_BASE}/vapi-tool-check-availability`, timeoutSeconds: 10 },
+    });
+
+    tools.push({
+      type: "function",
+      function: {
+        name: "create_appointment",
+        description: "Crée un rendez-vous dans l'agenda Google Calendar du client une fois que le patient a confirmé le créneau.",
+        parameters: {
+          type: "object",
+          properties: {
+            titre:        { type: "string", description: "Titre du rendez-vous" },
+            dateDebut:    { type: "string", description: "Date et heure de début au format ISO 8601" },
+            dateFin:      { type: "string", description: "Date et heure de fin au format ISO 8601" },
+            nomPatient:   { type: "string", description: "Nom complet du patient/client" },
+            emailPatient: { type: "string", description: "Email du patient (optionnel)" },
+            telephone:    { type: "string", description: "Numéro de téléphone du patient" },
+          },
+          required: ["dateDebut", "dateFin", "nomPatient"],
+        },
+      },
+      server: { url: `${TOOLS_BASE}/vapi-tool-create-appointment`, timeoutSeconds: 10 },
+    });
+  }
+
+  if (clientFields["Calendly Connected"] && clientFields["Calendly Link"]) {
+    tools.push({
+      type: "function",
+      function: {
+        name: "get_calendly_slots",
+        description: "Récupère les créneaux disponibles sur Calendly et renvoie le lien de prise de rendez-vous.",
+        parameters: {
+          type: "object",
+          properties: {
+            date: { type: "string", description: "La date souhaitée au format YYYY-MM-DD" },
+          },
+          required: ["date"],
+        },
+      },
+      server: { url: `${TOOLS_BASE}/vapi-tool-get-calendly-slots`, timeoutSeconds: 10 },
+    });
+  }
+
+  // SMS Twilio — toujours disponible
+  tools.push({
+    type: "function",
+    function: {
+      name: "send_sms",
+      description: "Envoie un SMS au patient après l'appel (confirmation RDV, lien Calendly, etc.).",
+      parameters: {
+        type: "object",
+        properties: {
+          to:      { type: "string", description: "Numéro de téléphone destinataire (format international)" },
+          message: { type: "string", description: "Contenu du SMS (max 160 caractères)" },
+        },
+        required: ["to", "message"],
+      },
+    },
+    server: { url: `${TOOLS_BASE}/vapi-tool-send-sms`, timeoutSeconds: 10 },
+  });
+
+  // CRM — toujours disponible
+  tools.push({
+    type: "function",
+    function: {
+      name: "create_contact",
+      description: "Enregistre les informations du patient/prospect dans le CRM après l'appel.",
+      parameters: {
+        type: "object",
+        properties: {
+          nom:       { type: "string", description: "Nom de famille" },
+          prenom:    { type: "string", description: "Prénom" },
+          telephone: { type: "string", description: "Numéro de téléphone" },
+          email:     { type: "string", description: "Adresse email" },
+          resume:    { type: "string", description: "Résumé de l'appel" },
+        },
+        required: ["telephone"],
+      },
+    },
+    server: { url: `${TOOLS_BASE}/vapi-tool-create-contact`, timeoutSeconds: 10 },
+  });
+
+  console.log("[create-vapi-assistant] tools construits :", tools.map(t => t.function.name));
+
+  /* ── Instructions tools injectées dans le prompt système ── */
+  let toolInstructions = "\n\nOUTILS DISPONIBLES :\n";
+
+  if (clientFields["Google Connected"]) {
+    toolInstructions += `- check_availability : TOUJOURS appeler ce tool avant de proposer un créneau pour vérifier la disponibilité réelle de l'agenda.
+- create_appointment : appeler ce tool une fois que le patient a confirmé le créneau choisi. Annoncer ensuite : "Votre RDV est confirmé le [date] à [heure]."\n`;
+  }
+
+  if (clientFields["Calendly Connected"] && clientFields["Calendly Link"]) {
+    toolInstructions += `- get_calendly_slots : appeler ce tool pour proposer des créneaux via Calendly.\n`;
+  }
+
+  toolInstructions += `- send_sms : appeler ce tool en fin d'appel pour envoyer une confirmation par SMS au patient.
+- create_contact : appeler ce tool pour enregistrer le nom, téléphone et résumé du patient dans la base de données.\n`;
+
+  const promptComplet = (promptSysteme || "") + toolInstructions;
 
   /* Payload Vapi — structure officielle */
   const vapiPayload = {
@@ -54,8 +177,9 @@ exports.handler = async function(event, context) {
       provider: "openai",
       model:    "gpt-4o",
       messages: [
-        { role: "system", content: promptSysteme || "" },
+        { role: "system", content: promptComplet },
       ],
+      tools,
     },
     voice: {
       provider: "11labs",
@@ -157,7 +281,7 @@ exports.handler = async function(event, context) {
       console.warn("[create-vapi-assistant] Aucun numéro Vapi configuré pour ce client — assignation ignorée");
     }
 
-    return ok({ ok: true, assistantId, created, phoneAssigned, hasPhone: !!vapiPhoneNumberId });
+    return ok({ ok: true, assistantId, created, phoneAssigned, hasPhone: !!vapiPhoneNumberId, tools: tools.map(t => t.function.name) });
   } catch (e) {
     console.error("[create-vapi-assistant] Exception:", e.message);
     return err(e.message);

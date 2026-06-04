@@ -2852,6 +2852,9 @@
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
               <span id="btnVapiLabel">Créer mon assistant</span>
             </button>
+            <button class="btn btn-secondary btn-sm" id="btnUpdateTools" onclick="updateVapiTools()" style="display:none">
+              🔧 Mettre à jour les outils
+            </button>
           </div>
         </div>
 
@@ -3079,6 +3082,19 @@
               <div id="vapiPhoneBlock">
                 <div style="font-size:12px;color:var(--text-muted);font-style:italic">Chargement…</div>
               </div>
+            </div>
+
+            <hr style="margin:16px 0" />
+
+            <!-- Outils actifs -->
+            <div style="margin-bottom:16px">
+              <div style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px">Outils actifs</div>
+              <div id="vapiToolsBlock" style="display:flex;flex-direction:column;gap:6px;font-size:12px">
+                <div style="color:var(--text-muted);font-style:italic">Chargement…</div>
+              </div>
+              <button class="btn btn-secondary btn-sm" style="margin-top:10px;width:100%;font-size:12px" onclick="updateVapiTools()">
+                🔧 Mettre à jour les outils
+              </button>
             </div>
 
             <hr style="margin:16px 0" />
@@ -4651,7 +4667,7 @@ function navigate(sectionId) {
   if (sectionId === 'automations') { loadAutomationsFromAirtable(); }
   if (sectionId === 'appels')      { loadHistoriqueFromAirtable(); }
   if (sectionId === 'whatsapp')    { loadHistoriqueFromAirtable(); }
-  if (sectionId === 'voix-ia')     { loadVoixConfig(); }
+  if (sectionId === 'voix-ia')     { loadVoixConfig(); renderVapiToolsFromClient(); }
   if (sectionId === 'factures')      { loadFactures(); }
   if (sectionId === 'crm')           { loadCRM(); }
   if (sectionId === 'integrations')  { renderIntegrations(); }
@@ -6355,6 +6371,89 @@ function _updateVapiButton() {
   const label = document.getElementById("btnVapiLabel");
   if (!label) return;
   label.textContent = _vapiAssistantId ? "Mettre à jour mon assistant" : "Créer mon assistant";
+  const btnTools = document.getElementById("btnUpdateTools");
+  if (btnTools) btnTools.style.display = _vapiAssistantId ? "inline-flex" : "none";
+}
+
+const _TOOL_LABELS = {
+  check_availability:  { icon: "✅", label: "Google Calendar — Vérification des disponibilités" },
+  create_appointment:  { icon: "✅", label: "Google Calendar — Prise de RDV automatique" },
+  get_calendly_slots:  { icon: "✅", label: "Calendly — Créneaux disponibles" },
+  send_sms:            { icon: "✅", label: "SMS — Confirmation par message" },
+  create_contact:      { icon: "✅", label: "CRM — Enregistrement des contacts" },
+};
+
+function renderVapiTools(activeToolNames) {
+  const block = document.getElementById("vapiToolsBlock");
+  if (!block) return;
+  const client    = (typeof clients !== "undefined" && clients[0]) || {};
+  const allTools  = ["check_availability", "create_appointment", "get_calendly_slots", "send_sms", "create_contact"];
+  const activeSet = new Set(activeToolNames || []);
+
+  const rows = allTools.map(name => {
+    const meta = _TOOL_LABELS[name] || { icon: "✅", label: name };
+    const isActive  = activeSet.has(name);
+
+    // Déterminer si l'outil est "potentiellement actif" (intégration configurée) mais pas encore déployé
+    let needsIntegration = false;
+    if ((name === "check_availability" || name === "create_appointment") && !client.googleConnected)  needsIntegration = true;
+    if (name === "get_calendly_slots" && (!client.calendlyConnected || !client.calendlyLink))          needsIntegration = true;
+
+    if (isActive) {
+      return `<div style="display:flex;align-items:center;gap:8px"><span style="color:#22c55e">${meta.icon}</span><span>${meta.label}</span></div>`;
+    } else if (needsIntegration) {
+      return `<div style="display:flex;align-items:center;gap:8px"><span style="color:#f59e0b">⚠️</span><span style="color:var(--text-muted)">${meta.label.replace("✅ ", "")} — Non configuré</span></div>`;
+    } else {
+      return `<div style="display:flex;align-items:center;gap:8px"><span style="color:var(--text-faint)">○</span><span style="color:var(--text-muted)">${meta.label}</span></div>`;
+    }
+  });
+
+  block.innerHTML = rows.join("") || '<div style="color:var(--text-muted);font-style:italic">Aucun outil configuré</div>';
+}
+
+function renderVapiToolsFromClient() {
+  const client = (typeof clients !== "undefined" && clients[0]) || {};
+  const active = [];
+  if (client.googleConnected)                         { active.push("check_availability"); active.push("create_appointment"); }
+  if (client.calendlyConnected && client.calendlyLink) active.push("get_calendly_slots");
+  active.push("send_sms");
+  active.push("create_contact");
+  renderVapiTools(active);
+}
+
+async function updateVapiTools() {
+  const client   = (typeof clients !== "undefined" && clients[0]) || null;
+  const clientId = client?.id || null;
+  if (!clientId) { showToast("Données client non chargées", "warning"); return; }
+  if (!_vapiAssistantId) { showToast("Créez d'abord votre assistant", "warning"); return; }
+
+  const btn = document.getElementById("btnUpdateTools");
+  if (btn) btn.disabled = true;
+
+  try {
+    const cfg  = getVoixFormValues();
+    const data = await apiFetchPost("/.netlify/functions/create-vapi-assistant", {
+      clientId,
+      nomAssistant:  cfg.nom,
+      voiceId:       cfg.voiceId,
+      langue:        cfg.langPrimaire,
+      promptSysteme: cfg.prompt,
+      vitesseParole: parseFloat(cfg.vitesse),
+      silenceMax:    parseInt(cfg.silence),
+      interruptions: cfg.interruptions,
+    });
+
+    if (data.ok) {
+      renderVapiTools(data.tools || []);
+      showToast("Outils mis à jour ✓", "success");
+    } else {
+      showToast("Erreur : " + (data.error || "inconnue"), "error");
+    }
+  } catch(e) {
+    showToast("Erreur réseau", "error");
+  } finally {
+    if (btn) btn.disabled = false;
+  }
 }
 
 async function createOrUpdateVapiAssistant() {
@@ -6395,6 +6494,7 @@ async function createOrUpdateVapiAssistant() {
       if (client) client.vapiAssistantId = data.assistantId;
       _updateVapiButton();
       loadVapiPhoneNumber();
+      renderVapiTools(data.tools || []);
       let msg;
       if (data.created && data.phoneAssigned) {
         msg = "Assistant créé et numéro de téléphone assigné avec succès !";
