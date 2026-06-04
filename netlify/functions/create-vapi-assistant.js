@@ -86,7 +86,7 @@ exports.handler = async function(event, context) {
           required: ["date"],
         },
       },
-      server: { url: `${TOOLS_BASE}/vapi-tool-check-availability`, timeoutSeconds: 10, headers: toolHeaders },
+      server: { url: `${TOOLS_BASE}/vapi-tool-check-availability`, timeoutSeconds: 20, headers: toolHeaders },
     });
 
     tools.push({
@@ -107,7 +107,7 @@ exports.handler = async function(event, context) {
           required: ["dateDebut", "dateFin", "nomPatient"],
         },
       },
-      server: { url: `${TOOLS_BASE}/vapi-tool-create-appointment`, timeoutSeconds: 10, headers: toolHeaders },
+      server: { url: `${TOOLS_BASE}/vapi-tool-create-appointment`, timeoutSeconds: 20, headers: toolHeaders },
     });
   }
 
@@ -125,7 +125,7 @@ exports.handler = async function(event, context) {
           required: ["date"],
         },
       },
-      server: { url: `${TOOLS_BASE}/vapi-tool-get-calendly-slots`, timeoutSeconds: 10, headers: toolHeaders },
+      server: { url: `${TOOLS_BASE}/vapi-tool-get-calendly-slots`, timeoutSeconds: 20, headers: toolHeaders },
     });
   }
 
@@ -144,7 +144,7 @@ exports.handler = async function(event, context) {
         required: ["to", "message"],
       },
     },
-    server: { url: `${TOOLS_BASE}/vapi-tool-send-sms`, timeoutSeconds: 10, headers: toolHeaders },
+    server: { url: `${TOOLS_BASE}/vapi-tool-send-sms`, timeoutSeconds: 20, headers: toolHeaders },
   });
 
   // CRM — toujours disponible
@@ -165,7 +165,7 @@ exports.handler = async function(event, context) {
         required: ["telephone"],
       },
     },
-    server: { url: `${TOOLS_BASE}/vapi-tool-create-contact`, timeoutSeconds: 10, headers: toolHeaders },
+    server: { url: `${TOOLS_BASE}/vapi-tool-create-contact`, timeoutSeconds: 20, headers: toolHeaders },
   });
 
   console.log("[create-vapi-assistant] tools construits :", tools.map(t => t.function.name));

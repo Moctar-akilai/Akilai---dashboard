@@ -1,5 +1,8 @@
 const { BASE_URL, headers: airtableHeaders, preflight } = require("./config");
 
+/* Cache token en mémoire (50 min) */
+const tokenCache = {};
+
 async function refreshGoogleToken(recordId, refreshToken) {
   const res = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
@@ -14,11 +17,12 @@ async function refreshGoogleToken(recordId, refreshToken) {
   if (!res.ok) return null;
   const data = await res.json();
   if (!data.access_token) return null;
-  await fetch(`${BASE_URL}/Clients/${recordId}`, {
+  /* Fire-and-forget save */
+  fetch(`${BASE_URL}/Clients/${recordId}`, {
     method: "PATCH",
     headers: airtableHeaders,
     body: JSON.stringify({ fields: { "Google Access Token": data.access_token } }),
-  });
+  }).catch(() => {});
   return data.access_token;
 }
 
@@ -72,21 +76,24 @@ exports.handler = async function(event) {
     const record       = clientData.records[0];
     const recordId     = record.id;
     const fields       = record.fields;
-    let   accessToken  = fields["Google Access Token"]  || "";
+    const storedToken  = fields["Google Access Token"]  || "";
     const refreshToken = fields["Google Refresh Token"] || "";
     const calendarId   = fields["Google Calendar ID"]   || "primary";
 
     /* Paramètres RDV — headers en priorité (plus récents), puis Airtable */
-    const capacite   = parseInt(event.headers?.["x-capacite"])         || Number(fields["Capacite Creneau"]) || 1;
-    const dureeMin   = parseInt(event.headers?.["x-duree-rdv"])        || Number(fields["Duree RDV"])        || duration || 30;
-    const heureOuv   = event.headers?.["x-heure-ouverture"]           || fields["Heure Ouverture"]           || "08:00";
-    const heureFerm  = event.headers?.["x-heure-fermeture"]           || fields["Heure Fermeture"]           || "19:00";
+    const capacite   = parseInt(event.headers?.["x-capacite"])        || Number(fields["Capacite Creneau"]) || 1;
+    const dureeMin   = parseInt(event.headers?.["x-duree-rdv"])       || Number(fields["Duree RDV"])        || duration || 30;
+    const heureOuv   = event.headers?.["x-heure-ouverture"]          || fields["Heure Ouverture"]           || "08:00";
+    const heureFerm  = event.headers?.["x-heure-fermeture"]          || fields["Heure Fermeture"]           || "19:00";
 
-    console.log("[check-availability] étape 2: token:", !!accessToken, "| capacite:", capacite, "| duree:", dureeMin, "| horaires:", heureOuv, "-", heureFerm);
+    /* Token avec cache mémoire */
+    let accessToken = tokenCache[userId]?.token && Date.now() < tokenCache[userId]?.expiry
+      ? tokenCache[userId].token
+      : storedToken;
 
-    if (!accessToken && !refreshToken) {
-      return vapiError("Google Calendar non connecté.");
-    }
+    if (!accessToken && !refreshToken) return vapiError("Google Calendar non connecté.");
+
+    console.log("[check-availability] étape 2: token cached:", !!tokenCache[userId], "| capacite:", capacite, "| duree:", dureeMin, "| horaires:", heureOuv, "-", heureFerm);
 
     const dayStart = new Date(date + "T00:00:00Z").toISOString();
     const dayEnd   = new Date(date + "T23:59:59Z").toISOString();
@@ -108,13 +115,18 @@ exports.handler = async function(event) {
 
     if (gcalRes.status === 401 && refreshToken) {
       console.log("[check-availability] token expiré → refresh");
+      delete tokenCache[userId];
       const newToken = await refreshGoogleToken(recordId, refreshToken);
       if (!newToken) return vapiError("Impossible de rafraîchir le token Google.");
       accessToken = newToken;
+      tokenCache[userId] = { token: newToken, expiry: Date.now() + 50 * 60 * 1000 };
       gcalRes = await fetch(
         `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${params}`,
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
+    } else if (gcalRes.ok && !tokenCache[userId]) {
+      /* Mettre en cache le token après un succès sans cache */
+      tokenCache[userId] = { token: accessToken, expiry: Date.now() + 50 * 60 * 1000 };
     }
 
     if (!gcalRes.ok) {
