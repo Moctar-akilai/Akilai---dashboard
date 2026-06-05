@@ -63,30 +63,26 @@ async function transcrireAudio(mediaUrl, langue) {
     return null;
   }
 
-  const audioBuffer = Buffer.from(await audioRes.arrayBuffer());
-  console.log("[whatsapp] audio téléchargé:", audioBuffer.length, "bytes");
+  const audioBuffer = await audioRes.arrayBuffer();
+  console.log("[whatsapp] audio téléchargé:", audioBuffer.byteLength, "bytes");
 
-  /* Envoyer à Whisper */
-  const FormData = require("form-data");
-  const form = new FormData();
-  form.append("file", audioBuffer, { filename: "audio.ogg", contentType: "audio/ogg" });
-  form.append("model", "whisper-1");
+  /* Envoyer à Whisper — FormData natif Node.js 18+ */
   const langMap = { Français: "fr", English: "en", Español: "es", Portugais: "pt", Arabe: "ar" };
-  form.append("language", langMap[langue] || "fr");
+  const formData = new FormData();
+  formData.append("file", new Blob([audioBuffer], { type: "audio/ogg" }), "audio.ogg");
+  formData.append("model", "whisper-1");
+  formData.append("language", langMap[langue] || "fr");
 
   const whisperRes = await fetch("https://api.openai.com/v1/audio/transcriptions", {
     method:  "POST",
-    headers: {
-      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-      ...form.getHeaders(),
-    },
-    body: form,
+    headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
+    body:    formData,
   });
 
+  console.log("[whatsapp] Whisper status:", whisperRes.status);
   const whisperData = await whisperRes.json();
-  const transcription = whisperData.text || "";
-  console.log("[whatsapp] transcription Whisper:", transcription.substring(0, 200));
-  return transcription || null;
+  console.log("[whatsapp] transcription:", whisperData.text);
+  return whisperData.text || null;
 }
 
 exports.handler = async (event) => {
