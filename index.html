@@ -5878,6 +5878,213 @@ function _updateVapiButton() {
   const label = document.getElementById("btnVapiLabel");
   if (!label) return;
   label.textContent = _vapiAssistantId ? "Mettre à jour mon assistant" : "Créer mon assistant";
+  const btnTools = document.getElementById("btnUpdateTools");
+  if (btnTools) btnTools.style.display = _vapiAssistantId ? "inline-flex" : "none";
+}
+
+const _TOOL_LABELS = {
+  check_availability:  { icon: "✅", label: "Google Calendar — Vérification des disponibilités" },
+  create_appointment:  { icon: "✅", label: "Google Calendar — Prise de RDV automatique" },
+  get_calendly_slots:  { icon: "✅", label: "Calendly — Créneaux disponibles" },
+  send_sms:            { icon: "✅", label: "SMS — Confirmation par message" },
+  create_contact:      { icon: "✅", label: "CRM — Enregistrement des contacts" },
+};
+
+function renderVapiTools(activeToolNames) {
+  const block = document.getElementById("vapiToolsBlock");
+  if (!block) return;
+  const client    = (typeof clients !== "undefined" && clients[0]) || {};
+  const allTools  = ["check_availability", "create_appointment", "get_calendly_slots", "send_sms", "create_contact"];
+  const activeSet = new Set(activeToolNames || []);
+
+  const rows = allTools.map(name => {
+    const meta = _TOOL_LABELS[name] || { icon: "✅", label: name };
+    const isActive  = activeSet.has(name);
+
+    // Déterminer si l'outil est "potentiellement actif" (intégration configurée) mais pas encore déployé
+    let needsIntegration = false;
+    if ((name === "check_availability" || name === "create_appointment") && !client.googleConnected)  needsIntegration = true;
+    if (name === "get_calendly_slots" && (!client.calendlyConnected || !client.calendlyLink))          needsIntegration = true;
+
+    if (isActive) {
+      return `<div style="display:flex;align-items:center;gap:8px"><span style="color:#22c55e">${meta.icon}</span><span>${meta.label}</span></div>`;
+    } else if (needsIntegration) {
+      return `<div style="display:flex;align-items:center;gap:8px"><span style="color:#f59e0b">⚠️</span><span style="color:var(--text-muted)">${meta.label.replace("✅ ", "")} — Non configuré</span></div>`;
+    } else {
+      return `<div style="display:flex;align-items:center;gap:8px"><span style="color:var(--text-faint)">○</span><span style="color:var(--text-muted)">${meta.label}</span></div>`;
+    }
+  });
+
+  block.innerHTML = rows.join("") || '<div style="color:var(--text-muted);font-style:italic">Aucun outil configuré</div>';
+}
+
+function renderVapiToolsFromClient() {
+  const client = (typeof clients !== "undefined" && clients[0]) || {};
+  const active = [];
+  if (client.googleConnected)                         { active.push("check_availability"); active.push("create_appointment"); }
+  if (client.calendlyConnected && client.calendlyLink) active.push("get_calendly_slots");
+  active.push("send_sms");
+  active.push("create_contact");
+  renderVapiTools(active);
+}
+
+/* ============================================================
+   WHATSAPP & IA
+============================================================ */
+function hasWhatsappPlan() {
+  const client = (typeof clients !== "undefined" && clients[0]) || {};
+  const plan   = (client.plan || "").toLowerCase();
+  return plan.includes("whatsapp") || plan.includes("combo");
+}
+
+function renderWaToolsFromClient() {
+  const client  = (typeof clients !== "undefined" && clients[0]) || {};
+  const el      = document.getElementById("waToolsBlock");
+  if (!el) return;
+  const enabled = Array.isArray(client.whatsappTools) ? client.whatsappTools : [];
+
+  const toolDefs = [
+    { key: "google_calendar", label: "Google Calendar — Prise de RDV",   avail: !!client.googleConnected,                           hint: "Connectez Google Calendar dans Intégrations" },
+    { key: "calendly",        label: "Calendly — Lien de réservation",    avail: !!(client.calendlyConnected && client.calendlyLink), hint: "Connectez Calendly dans Intégrations" },
+    { key: "crm",             label: "CRM — Enregistrement des contacts", avail: true,                                               hint: "" },
+  ];
+
+  el.innerHTML = toolDefs.map(t => {
+    const isOn   = enabled.includes(t.key);
+    const locked = !t.avail;
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <span style="font-size:13px;color:${locked ? "var(--text-muted)" : "var(--text)"}">${t.label}</span>
+        ${locked ? `<span style="font-size:11px;color:var(--text-faint)">${t.hint}</span>` : ""}
+      </div>
+      <label class="toggle" style="pointer-events:${locked ? "none" : "auto"};opacity:${locked ? "0.4" : "1"}">
+        <input type="checkbox" id="waTool_${t.key}" ${(isOn && !locked) ? "checked" : ""}>
+        <span class="slider"></span>
+      </label>
+    </div>`;
+  }).join("");
+}
+
+function loadWhatsappConfig() {
+  const client = (typeof clients !== "undefined" && clients[0]) || null;
+  const form   = document.getElementById("whatsappIaForm");
+  const planMsg = document.getElementById("whatsappIaPlanMsg");
+
+  const allowed = hasWhatsappPlan();
+  if (form)    form.style.display    = allowed ? "" : "none";
+  if (planMsg) planMsg.style.display = allowed ? "none" : "";
+
+  if (!allowed || !client) return;
+
+  const nomEl    = document.getElementById("waNom");
+  const langEl   = document.getElementById("waLangue");
+  const tonEl    = document.getElementById("waTonalite");
+  const promptEl = document.getElementById("waPrompt");
+  const countEl  = document.getElementById("waPromptCount");
+  const numEl    = document.getElementById("waNumero");
+
+  if (nomEl)    nomEl.value    = client.whatsappNomAssistant || "";
+  if (langEl)   langEl.value   = client.whatsappLangue       || "Français";
+  if (tonEl)    tonEl.value    = client.whatsappTonalite     || "Professionnel";
+  if (promptEl) { promptEl.value = client.whatsappPrompt || ""; if (countEl) countEl.textContent = promptEl.value.length; }
+
+  if (numEl) {
+    if (client.whatsappNumeroTwilio) {
+      numEl.innerHTML = `<strong style="font-size:15px">${client.whatsappNumeroTwilio}</strong>
+        <span style="background:#16a34a22;color:#16a34a;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;margin-left:4px">Actif</span>`;
+    } else {
+      numEl.innerHTML = `<span style="color:var(--text-muted);font-style:italic">Numéro en cours de configuration par AkilAI</span>
+        <span style="background:#d9770622;color:#d97706;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;margin-left:4px">En attente</span>`;
+    }
+  }
+
+  /* Aperçu live */
+  const prevNom  = document.getElementById("waPreviewNom");
+  const prevMeta = document.getElementById("waPreviewMeta");
+  if (prevNom)  prevNom.textContent  = client.whatsappNomAssistant || "Akil";
+  if (prevMeta) prevMeta.textContent = `${client.whatsappLangue || "Français"} · ${client.whatsappTonalite || "Professionnel"}`;
+
+  renderWaToolsFromClient();
+}
+
+async function saveWhatsappConfig() {
+  const client = (typeof clients !== "undefined" && clients[0]) || null;
+  if (!client) { showToast("Données client non chargées", "warning"); return; }
+
+  const userId       = client.email || "";
+  const nomAssistant = (document.getElementById("waNom")?.value || "").trim() || "Assistant WhatsApp";
+  const langue       = document.getElementById("waLangue")?.value   || "Français";
+  const tonalite     = document.getElementById("waTonalite")?.value || "Professionnel";
+  const prompt       = document.getElementById("waPrompt")?.value   || "";
+
+  /* Collecter les outils activés */
+  const waToolKeys   = ["google_calendar", "calendly", "crm"];
+  const whatsappTools = waToolKeys.filter(k => document.getElementById(`waTool_${k}`)?.checked);
+
+  try {
+    const data = await apiFetchPost("/.netlify/functions/update-whatsapp-config", {
+      userId, nomAssistant, langue, tonalite, prompt, whatsappTools,
+    });
+    if (data.success) {
+      /* Mettre à jour le cache local */
+      if (clients && clients[0]) {
+        clients[0].whatsappNomAssistant = nomAssistant;
+        clients[0].whatsappLangue       = langue;
+        clients[0].whatsappTonalite     = tonalite;
+        clients[0].whatsappPrompt       = prompt;
+        clients[0].whatsappTools        = whatsappTools;
+      }
+      showToast("Configuration WhatsApp sauvegardée ✅", "success");
+      /* Rafraîchir l'aperçu */
+      const prevNom  = document.getElementById("waPreviewNom");
+      const prevMeta = document.getElementById("waPreviewMeta");
+      if (prevNom)  prevNom.textContent  = nomAssistant;
+      if (prevMeta) prevMeta.textContent = `${langue} · ${tonalite}`;
+    } else {
+      showToast("Erreur : " + (data.error || "inconnue"), "error");
+    }
+  } catch(e) {
+    showToast("Erreur réseau : " + e.message, "error");
+  }
+}
+
+async function updateVapiTools() {
+  const client   = (typeof clients !== "undefined" && clients[0]) || null;
+  const clientId = client?.id || null;
+  if (!clientId) { showToast("Données client non chargées", "warning"); return; }
+  if (!_vapiAssistantId) { showToast("Créez d'abord votre assistant", "warning"); return; }
+
+  const btn = document.getElementById("btnUpdateTools");
+  if (btn) btn.disabled = true;
+
+  try {
+    const cfg  = getVoixFormValues();
+    const data = await apiFetchPost("/.netlify/functions/create-vapi-assistant", {
+      clientId,
+      nomAssistant:    cfg.nom,
+      voiceId:         cfg.voiceId,
+      langue:          cfg.langPrimaire,
+      promptSysteme:   cfg.prompt,
+      vitesseParole:   parseFloat(cfg.vitesse),
+      silenceMax:      parseInt(cfg.silence),
+      interruptions:   cfg.interruptions,
+      capaciteCreneau: cfg.capaciteCreneau,
+      dureeRDV:        cfg.dureeRDV,
+      heureOuverture:  cfg.heureOuverture,
+      heureFermeture:  cfg.heureFermeture,
+    });
+
+    if (data.ok) {
+      renderVapiTools(data.tools || []);
+      showToast("Outils mis à jour ✓", "success");
+    } else {
+      showToast("Erreur : " + (data.error || "inconnue"), "error");
+    }
+  } catch(e) {
+    showToast("Erreur réseau", "error");
+  } finally {
+    if (btn) btn.disabled = false;
+  }
 }
 
 async function createOrUpdateVapiAssistant() {

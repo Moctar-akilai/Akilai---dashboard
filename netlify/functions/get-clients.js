@@ -88,6 +88,23 @@ exports.handler = async function(event, context) {
         googleSheetsConnected: f["Google Sheets Connected"]     || false,
         microsoftConnected:    f["Microsoft Connected"]         || false,
         excelFileId:           f["Excel File ID"]               || "",
+        outlookConnected:      f["Outlook Connected"]           || false,
+        brevoConnected:        f["Brevo Connected"]             || false,
+        resendConnected:       f["Resend Connected"]            || false,
+        shopifyConnected:      f["Shopify Connected"]           || false,
+        slackConnected:        f["Slack Connected"]             || false,
+        hubspotConnected:      f["HubSpot Connected"]           || false,
+        teamsConnected:        f["Teams Connected"]             || false,
+        capaciteCreneau:       Number(f["Capacite Creneau"])    || 1,
+        dureeRDV:              Number(f["Duree RDV"])           || 30,
+        heureOuverture:        f["Heure Ouverture"]             || "08:00",
+        heureFermeture:        f["Heure Fermeture"]             || "19:00",
+        whatsappPrompt:        f["WhatsApp Prompt"]             || "",
+        whatsappNomAssistant:  f["WhatsApp Nom Assistant"]      || "",
+        whatsappNumeroTwilio:  f["WhatsApp Numero Twilio"]      || "",
+        whatsappLangue:        f["WhatsApp Langue"]             || "Français",
+        whatsappTonalite:      f["WhatsApp Tonalite"]           || "Professionnel",
+        whatsappTools:         (() => { try { return JSON.parse(f["WhatsApp Tools"] || "[]"); } catch(e) { return []; } })(),
       };
     });
 
