@@ -221,7 +221,6 @@ exports.handler = async function(event, context) {
       model:       "llama-3.3-70b-versatile",
       messages:    [{ role: "system", content: promptComplet }],
       temperature: 0.3,
-      toolChoice:  "auto",
       tools,
     },
     voice: {
