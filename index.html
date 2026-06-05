@@ -4861,8 +4861,10 @@ function navigate(sectionId) {
   if (sectionId === 'automations') { loadAutomationsFromAirtable(); }
   if (sectionId === 'appels')      { loadHistoriqueFromAirtable(); }
   if (sectionId === 'whatsapp')    { loadHistoriqueFromAirtable(); }
-  if (sectionId === 'voix-ia')       { loadVoixConfig(); renderVapiToolsFromClient(); }
-  if (sectionId === 'whatsapp-ia')   { loadWhatsappConfig(); renderWaToolsFromClient(); }
+  /* Ne charger les configs que si clients[0] est déjà disponible.
+     Sinon loadClientsFromAirtable() les appellera après le fetch. */
+  if (sectionId === 'voix-ia')     { if (clients.length) { loadVoixConfig(); renderVapiToolsFromClient(); } }
+  if (sectionId === 'whatsapp-ia') { if (clients.length) { loadWhatsappConfig(); renderWaToolsFromClient(); } }
   if (sectionId === 'factures')      { loadFactures(); }
   if (sectionId === 'crm')           { loadCRM(); }
   if (sectionId === 'integrations')  { renderIntegrations(); }
@@ -5011,7 +5013,7 @@ function _initDashboard() {
   buildCalendar();
   buildAppelsTable(appels.filter(a => _matchesCurrentClient(a.client_id)));
   buildWaTable(conversations_wa.filter(a => _matchesCurrentClient(a.client_id)));
-  loadVoixConfig();
+  /* loadVoixConfig() et loadWhatsappConfig() sont appelés APRÈS loadClientsFromAirtable() */
   buildTicketsSummary();
   buildTicketsList();
   updateTicketsNavDot();
@@ -5375,6 +5377,11 @@ async function loadAllFromAirtable() {
 async function loadClientsFromAirtable() {
   const em = _getActiveEmail();
   if (!em) { console.warn("[AkilAI] loadClients ignoré — email non disponible"); return; }
+
+  /* Vider le tableau avant chaque chargement — évite de lire les données
+     d'un autre compte depuis un état précédent. */
+  clients.splice(0, clients.length);
+
   try {
     const res = await fetch(`/.netlify/functions/get-clients?email=${encodeURIComponent(em)}`);
     if (res.status === 403) {
@@ -5389,10 +5396,20 @@ async function loadClientsFromAirtable() {
   } catch (e) {
     console.warn("[AkilAI] get-clients fallback:", e.message);
   }
+
   applyPlanFilter();
   updateSidebarUser();
   if (clients.length) checkSuspensionState(clients[0]);
   updateAgendaSidebarVisibility();
+
+  /* Initialiser les sections de config MAINTENANT que clients[0] est fiable.
+     loadVoixConfig/loadWhatsappConfig sont appelés dans tous les cas pour
+     pré-remplir les formulaires (coût négligeable — tout vient de clients[0]). */
+  loadVoixConfig();
+  loadWhatsappConfig();
+  if (currentSection === 'voix-ia')     renderVapiToolsFromClient();
+  if (currentSection === 'whatsapp-ia') renderWaToolsFromClient();
+
   // Précharger les événements Google Calendar en arrière-plan si connecté
   _gcalPrefetchCurrentWeek();
 }
@@ -6289,8 +6306,10 @@ async function loadVoixConfig() {
 }
 
 function _checkVoixIaPlan() {
-  const plan    = ((_getSession() && _getSession().plan) || (clients[0] && clients[0].plan) || "").toLowerCase();
-  const hasVoix = plan.includes("vocal") || plan.includes("combo") || plan === "";
+  /* Lire le plan depuis clients[0] (données fraîches Airtable) — jamais depuis
+     la session qui peut contenir le plan d'un autre compte non actualisé. */
+  const plan    = ((clients[0] && clients[0].plan) || "").toLowerCase();
+  const hasVoix = plan === "" || plan.includes("vocal") || plan.includes("combo");
   const formEl  = document.getElementById("voixIaForm");
   const msgEl   = document.getElementById("voixIaPlanMsg");
   const actEl   = document.getElementById("voixIaActions");
