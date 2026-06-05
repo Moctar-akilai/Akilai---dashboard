@@ -136,10 +136,6 @@ exports.handler = async (event) => {
     const calendlyConnected = client.fields["Calendly Connected"] || false;
     const calendlyLink      = client.fields["Calendly Link"]      || "";
 
-    console.log("[whatsapp] googleConnected:", googleConnected);
-    console.log("[whatsapp] whatsappTools raw:", client.fields["WhatsApp Tools"]);
-    console.log("[whatsapp] enabledTools parsed:", JSON.stringify(enabledTools));
-
     /* ── Gestion message vocal ── */
     let messageEntrant = params.get("Body") || "";
     const isVoiceMessage = parseInt(numMedia) > 0 && mediaUrl && mediaType.includes("audio");
@@ -251,8 +247,11 @@ exports.handler = async (event) => {
       });
     }
 
+    console.log("[whatsapp] googleConnected raw:", client.fields["Google Connected"]);
+    console.log("[whatsapp] whatsappTools raw:", client.fields["WhatsApp Tools"]);
+    console.log("[whatsapp] enabledTools parsed:", JSON.stringify(enabledTools));
     console.log("[whatsapp] nb tools envoyés:", gptTools.length);
-    if (gptTools.length > 0) console.log("[whatsapp] noms tools:", gptTools.map(t => t.function.name).join(", "));
+    console.log("[whatsapp] tools noms:", gptTools.map(t => t.function.name).join(", "));
 
     /* ── Prompt système ── */
     const rdvRules = gptTools.some(t => t.function.name === "check_availability") ? `
