@@ -35,6 +35,63 @@
       --font:          'Space Grotesk', system-ui, sans-serif;
     }
 
+    /* ── Thème Light ── */
+    body.theme-light {
+      --bg:            #f0f2f5;
+      --surface:       #ffffff;
+      --surface-2:     #f8f9fa;
+      --accent:        #70B2DE;
+      --accent-dim:    rgba(112, 178, 222, 0.12);
+      --accent-border: rgba(112, 178, 222, 0.4);
+      --text:          #1a1a1a;
+      --text-muted:    #666666;
+      --text-faint:    #999999;
+      --border:        rgba(0, 0, 0, 0.08);
+      --border-hover:  rgba(0, 0, 0, 0.15);
+    }
+    body.theme-light .sidebar { background: #ffffff; border-right: 1px solid rgba(0,0,0,0.08); }
+    body.theme-light .nav-item { color: #444; }
+    body.theme-light .nav-item:hover, body.theme-light .nav-item.active { background: rgba(112,178,222,0.12); color: #1a1a1a; }
+    body.theme-light .card { background: #ffffff; border-color: rgba(0,0,0,0.08); }
+    body.theme-light .input { background: #f8f9fa; border-color: rgba(0,0,0,0.15); color: #1a1a1a; }
+    body.theme-light .input:focus { border-color: var(--accent); background: #ffffff; }
+    body.theme-light #header { background: rgba(255,255,255,0.95); border-bottom: 1px solid rgba(0,0,0,0.08); }
+    body.theme-light .kpi-card { background: #ffffff; border-color: rgba(0,0,0,0.08); }
+    body.theme-light .sidebar-footer { border-top: 1px solid rgba(0,0,0,0.08); }
+    body.theme-light .modal-overlay { background: rgba(0,0,0,0.4); }
+    body.theme-light .modal { background: #ffffff; border-color: rgba(0,0,0,0.1); }
+
+    /* ── Thème Back-office ── */
+    body.theme-backoffice {
+      --bg:            #0a0a0a;
+      --surface:       #141414;
+      --surface-2:     #1a1a1a;
+      --accent:        #70B2DE;
+      --accent-dim:    rgba(112, 178, 222, 0.10);
+      --accent-border: rgba(112, 178, 222, 0.30);
+      --text:          #e0e0e0;
+      --text-muted:    #777;
+      --text-faint:    #444;
+      --border:        rgba(255, 255, 255, 0.05);
+      --border-hover:  rgba(255, 255, 255, 0.09);
+      --sidebar-w:     200px;
+    }
+    body.theme-backoffice .sidebar { background: #111111; font-size: 12.5px; }
+    body.theme-backoffice .nav-item { padding: 6px 12px; font-size: 12.5px; }
+    body.theme-backoffice .kpi-card { background: #141414; }
+    body.theme-backoffice .card { background: #141414; }
+
+    /* ── Sélecteur de thème ── */
+    .theme-switcher { display:flex;align-items:center;gap:4px;padding:4px 6px;margin-bottom:4px; }
+    .theme-btn {
+      flex:1;display:flex;align-items:center;justify-content:center;gap:4px;
+      padding:5px 6px;border-radius:7px;border:1px solid var(--border);
+      background:none;color:var(--text-muted);font-size:11px;cursor:pointer;
+      transition:all 0.15s;font-family:var(--font);
+    }
+    .theme-btn:hover { background:var(--accent-dim);color:var(--text);border-color:var(--accent-border); }
+    .theme-btn.active { background:var(--accent-dim);color:var(--accent);border-color:var(--accent-border);font-weight:600; }
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     html, body {
@@ -268,6 +325,66 @@
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 20px;
+    }
+
+    /* ── Integration cards redesign ── */
+    #page-integrations .card {
+      padding: 24px;
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      position: relative;
+    }
+    #page-integrations .card:hover {
+      border-color: var(--accent-border);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+    #page-integrations .card.integration-connected {
+      border-color: rgba(34,197,94,0.25);
+    }
+    #page-integrations .card.integration-connected:hover {
+      border-color: rgba(34,197,94,0.45);
+    }
+    .integration-status-badge {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 20px;
+    }
+    .integration-status-badge.connected {
+      background: rgba(34,197,94,0.12);
+      color: #22c55e;
+      border: 1px solid rgba(34,197,94,0.25);
+    }
+    .integration-status-badge.disconnected {
+      background: rgba(255,255,255,0.04);
+      color: var(--text-faint);
+      border: 1px solid var(--border);
+    }
+    #page-integrations .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+    #page-integrations .integration-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    @media (max-width: 900px) {
+      #page-integrations .integration-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 560px) {
+      #page-integrations .integration-grid { grid-template-columns: 1fr; }
     }
 
     .btn {
@@ -2452,6 +2569,12 @@
           <div class="role" id="sidebarClientPlan">Premium</div>
         </div>
       </div>
+      <!-- Sélecteur de thème -->
+      <div class="theme-switcher">
+        <button class="theme-btn" id="themeBtnDark"       onclick="setTheme('dark')"       title="Thème sombre">🌙 Dark</button>
+        <button class="theme-btn" id="themeBtnLight"      onclick="setTheme('light')"      title="Thème clair">☀️ Light</button>
+        <button class="theme-btn" id="themeBtnBackoffice" onclick="setTheme('backoffice')" title="Thème pro">💼 Pro</button>
+      </div>
       <div style="padding:4px 4px 0;display:flex;justify-content:flex-end">
         <button class="sidebar-user-actions" style="background:none;border:none;display:flex;align-items:center;gap:6px;color:var(--text-muted);font-size:11px;cursor:pointer;padding:5px 8px;border-radius:8px;transition:color 0.15s,background 0.15s" title="Se déconnecter" onclick="logout()" onmouseover="this.style.color='var(--text)';this.style.background='rgba(239,68,68,0.1)'" onmouseout="this.style.color='var(--text-muted)';this.style.background='none'">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -3557,9 +3680,9 @@
         </div>
 
         <!-- ── Agenda & RDV ── -->
-        <div style="margin-bottom:4px">
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:12px">Agenda &amp; RDV</div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px">
+        <div>
+          <div class="section-label">📅 Agenda &amp; RDV</div>
+          <div class="integration-grid">
 
           <!-- Google Calendar -->
           <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px">
@@ -3612,9 +3735,9 @@
         </div><!-- end Agenda section -->
 
         <!-- ── CRM & Données ── -->
-        <div style="margin-bottom:4px">
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:12px">CRM &amp; Données</div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px">
+        <div>
+          <div class="section-label">📊 CRM &amp; Données</div>
+          <div class="integration-grid">
 
           <!-- CRM -->
           <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px;grid-column:span 2">
@@ -3733,9 +3856,9 @@
         </div><!-- end CRM section -->
 
         <!-- ── Tableurs ── -->
-        <div style="margin-bottom:4px">
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:12px">Tableurs</div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px">
+        <div>
+          <div class="section-label">📋 Tableurs</div>
+          <div class="integration-grid">
 
           <!-- Google Sheets -->
           <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px">
@@ -3832,9 +3955,9 @@
         </div><!-- end Tableurs section -->
 
         <!-- ── Communication ── -->
-        <div style="margin-bottom:4px">
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:12px">Communication</div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px">
+        <div>
+          <div class="section-label">💬 Communication</div>
+          <div class="integration-grid">
 
           <!-- Outlook -->
           <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px">
@@ -3959,9 +4082,9 @@
         </div><!-- end Communication section -->
 
         <!-- ── Email Marketing ── -->
-        <div style="margin-bottom:4px">
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:12px">Email Marketing</div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px">
+        <div>
+          <div class="section-label">✉️ Email Marketing</div>
+          <div class="integration-grid">
 
           <!-- Brevo -->
           <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px">
@@ -4485,6 +4608,8 @@ const appels = [];
 
 const conversations_wa = [];
 
+let historiqueData = [];
+
 const tickets = [];
 
 const kpis = {
@@ -4706,9 +4831,15 @@ function updateRealKPIs() {
   setText("kpiCallsDelta", "total");
   setClass("kpiCallsDelta", "kpi-delta neu");
 
-  /* ── Messages WhatsApp (somme messages_traites des automations WA) ── */
+  /* ── Messages WhatsApp : depuis conversations_wa + historique brut ── */
+  const myWaConvs = conversations_wa.filter(function(c) { return _matchesCurrentClient(c.client_id); });
+  const waFromHist = (typeof historiqueData !== "undefined" ? historiqueData : []).filter(function(h) {
+    return ['WhatsApp','whatsapp','Whatsapp'].includes(h.canal) || ['WhatsApp','whatsapp','Whatsapp'].includes(h.type);
+  });
   const waAutos  = myAutos.filter(function(a) { return (a.type || "").toLowerCase().includes("whatsapp"); });
-  const totalWa  = waAutos.reduce(function(acc, a) { return acc + (a.messages_traites || 0); }, 0);
+  const totalWa  = myWaConvs.length > 0
+    ? myWaConvs.length
+    : (waFromHist.length > 0 ? waFromHist.length : waAutos.reduce(function(acc, a) { return acc + (a.messages_traites || 0); }, 0));
   const _planLow = ((_getSession() && _getSession().plan) || (clients[0] && clients[0].plan) || "").toLowerCase();
   const _isWaPlan = _planLow.includes("whatsapp") || _planLow.includes("combo");
   /* Ligne 1 — gestion par plan */
@@ -5004,6 +5135,7 @@ function updateSidebarUser() {
    INIT
 ============================================================ */
 function _initDashboard() {
+  _initTheme();
   handleResize();
   const savedSection = (function() { try { return localStorage.getItem('akilai_section'); } catch(e) { return null; } })();
   navigate(savedSection && document.getElementById('page-' + savedSection) ? savedSection : 'overview');
@@ -5271,6 +5403,22 @@ async function loginSubmit() {
     btn.disabled    = false;
     btn.textContent = 'Accéder';
   }
+}
+
+/* ── Gestion des thèmes ── */
+function setTheme(theme) {
+  document.body.classList.remove('theme-dark', 'theme-light', 'theme-backoffice');
+  if (theme !== 'dark') document.body.classList.add('theme-' + theme);
+  try { localStorage.setItem('akilai_theme', theme); } catch(e) {}
+  document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+  const activeBtn = document.getElementById('themeBtn' + theme.charAt(0).toUpperCase() + theme.slice(1));
+  if (activeBtn) activeBtn.classList.add('active');
+}
+
+function _initTheme() {
+  let theme = 'dark';
+  try { theme = localStorage.getItem('akilai_theme') || 'dark'; } catch(e) {}
+  setTheme(theme);
 }
 
 /* LOGOUT */
@@ -5622,6 +5770,7 @@ async function loadHistoriqueFromAirtable() {
     const data = await apiFetch(`/.netlify/functions/get-historique?email=${encodeURIComponent(em)}`);
     appels.splice(0, appels.length, ...(data.appels || []));
     conversations_wa.splice(0, conversations_wa.length, ...(data.conversations_wa || []));
+    historiqueData = [...(data.appels || []), ...(data.conversations_wa || [])];
     buildAppelsTable(appels.filter(a => _matchesCurrentClient(a.client_id)));
     buildWaTable(conversations_wa.filter(c => _matchesCurrentClient(c.client_id)));
     updateRealKPIs();
@@ -8936,8 +9085,8 @@ async function saveCRMChoice() {
 /* ============================================================
    INTÉGRATIONS
 ============================================================ */
-const BADGE_ON  = '<span style="background:rgba(34,197,94,0.15);color:#22c55e;padding:2px 8px;border-radius:20px">&#10003; Connecté</span>';
-const BADGE_OFF = '<span style="color:var(--text-muted)">Non connecté</span>';
+const BADGE_ON  = '<span class="integration-status-badge connected">✓ Connecté</span>';
+const BADGE_OFF = '<span class="integration-status-badge disconnected">Non connecté</span>';
 
 function renderIntegrations() {
   const client = (typeof clients !== "undefined" && clients[0]) || {};
@@ -9100,12 +9249,15 @@ function _renderSimpleBadge(badgeId, disconnId, connId, isConnected) {
   const disconn = document.getElementById(disconnId);
   const conn   = document.getElementById(connId);
   if (!badge) return;
+  const card = badge.closest(".card");
   if (isConnected) {
     badge.innerHTML = BADGE_ON;
+    if (card)    card.classList.add("integration-connected");
     if (disconn) disconn.style.display = "none";
     if (conn)    conn.style.display    = "flex";
   } else {
     badge.innerHTML = BADGE_OFF;
+    if (card) card.classList.remove("integration-connected");
     if (disconn) disconn.style.display = "flex";
     if (conn)    conn.style.display    = "none";
   }
