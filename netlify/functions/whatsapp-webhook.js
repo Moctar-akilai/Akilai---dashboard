@@ -132,11 +132,10 @@ exports.handler = async (event) => {
 
     /* ── Gestion message vocal ── */
     let messageEntrant = params.get("Body") || "";
-    let isVocalMessage = false;
+    const isVoiceMessage = parseInt(numMedia) > 0 && mediaUrl && mediaType.includes("audio");
     let transcription  = "";
 
-    if (parseInt(numMedia) > 0 && mediaUrl && mediaType.startsWith("audio/")) {
-      isVocalMessage = true;
+    if (isVoiceMessage) {
       console.log("[whatsapp] message vocal détecté");
 
       try {
@@ -176,10 +175,11 @@ Tu communiques en ${langue}.
 Ton style de communication : ${tonalite}.
 Tu réponds via WhatsApp — sois concis (2-3 phrases max).
 Ne jamais envoyer de longs paragraphes.
-Utilise des émojis avec modération.`;
+Utilise des émojis avec modération.
+Tu peux recevoir des messages vocaux qui sont automatiquement transcrits. Traite-les exactement comme des messages texte normaux.`;
 
-    const userContent = isVocalMessage
-      ? `L'utilisateur a envoyé un message vocal : ${transcription}`
+    const userContent = isVoiceMessage
+      ? `[Message vocal transcrit automatiquement]: ${transcription}`
       : messageEntrant;
 
     const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -221,8 +221,8 @@ Utilise des émojis avec modération.`;
     ).catch(e => console.error("[whatsapp] erreur historique:", e.message));
 
     /* Enregistrer dans Airtable Historique */
-    const messageLog = isVocalMessage ? `[Vocal] ${transcription}` : messageEntrant;
-    const detailsLog = isVocalMessage
+    const messageLog = isVoiceMessage ? `[Vocal] ${transcription}` : messageEntrant;
+    const detailsLog = isVoiceMessage
       ? `Transcription Whisper: ${transcription}\nRéponse: ${reponse}`
       : reponse;
 
