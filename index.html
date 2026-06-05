@@ -6751,6 +6751,7 @@ async function saveWhatsappConfig() {
   /* Collecter les outils activés */
   const waToolKeys   = ["google_calendar", "calendly", "crm"];
   const whatsappTools = waToolKeys.filter(k => document.getElementById(`waTool_${k}`)?.checked);
+  console.log("[whatsapp-save] tools sélectionnés:", whatsappTools);
 
   try {
     const data = await apiFetchPost("/.netlify/functions/update-whatsapp-config", {

@@ -10,6 +10,8 @@ exports.handler = async function(event) {
   const { userId, nomAssistant, langue, tonalite, prompt, whatsappTools } = body;
   if (!userId) return err("userId manquant", 400);
 
+  console.log("[update-whatsapp] body reçu:", JSON.stringify(body).substring(0, 300));
+  console.log("[update-whatsapp] whatsappTools:", body.whatsappTools);
   console.log("[update-whatsapp-config] userId:", userId, "nom:", nomAssistant);
 
   try {
@@ -29,11 +31,15 @@ exports.handler = async function(event) {
     if (prompt       !== undefined) fields["WhatsApp Prompt"]        = prompt;
     if (whatsappTools !== undefined) fields["WhatsApp Tools"]       = JSON.stringify(whatsappTools);
 
+    console.log("[update-whatsapp] PATCH fields:", JSON.stringify(fields));
+
     const patchRes = await fetch(`${BASE_URL}/Clients/${record.id}`, {
       method:  "PATCH",
       headers,
       body:    JSON.stringify({ fields }),
     });
+
+    console.log("[update-whatsapp] Airtable status:", patchRes.status);
 
     if (!patchRes.ok) {
       const text = await patchRes.text();
