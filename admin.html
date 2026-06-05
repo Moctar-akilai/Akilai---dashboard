@@ -1309,6 +1309,7 @@ canvas{max-width:100%!important}
       <div class="field"><label>Pays</label><select id="ecPays"><option value="">— Pays —</option><option>France</option><option>Sénégal</option><option>Côte d'Ivoire</option><option>Maroc</option><option>Belgique</option><option>Suisse</option><option>Canada</option><option>Autre</option></select></div>
       <div class="field"><label>Onboarding</label><select id="ecOnboarding"><option value="">—</option><option>À configurer</option><option>En cours</option><option>Terminé</option></select></div>
       <div class="field"><label>Numéro Vapi</label><input id="ecVapi"></div>
+      <div class="field"><label>Numéro WhatsApp Twilio</label><input id="ecWaTwilio" type="text" placeholder="+14155238886"></div>
       <div class="field"><label>Date prochain paiement</label><input type="date" id="ecProchainPaiement"></div>
     </div>
     <div class="modal-actions">
@@ -2038,7 +2039,8 @@ async function openClientPanel(id){
     statutBadge(c.statut)+
     `<span class="badge badge-accent">${esc(c.plan||'—')}</span>`+
     (c.pays?`<span class="badge badge-muted">${esc(c.pays)}</span>`:'')+
-    (c.secteur?`<span class="badge badge-muted">${esc(c.secteur)}</span>`:'');
+    (c.secteur?`<span class="badge badge-muted">${esc(c.secteur)}</span>`:'')+
+    (c.whatsappNumeroTwilio?`<span class="badge" style="background:rgba(37,211,102,.15);color:#25d366;border:1px solid rgba(37,211,102,.3)">💬 ${esc(c.whatsappNumeroTwilio)}</span>`:'');
   document.getElementById('cpDates').innerHTML=
     `<span>Inscription :<strong>${fmtDate(c.dateInscription)||'—'}</strong></span>`+
     `<span>Prochain paiement :<strong>${fmtDate(c.prochainPaiement)||'—'}</strong></span>`+
@@ -2472,6 +2474,7 @@ function openEditClientModal(id){
   document.getElementById('ecPays').value=c.pays||'';
   document.getElementById('ecOnboarding').value=c.onboarding||'';
   document.getElementById('ecVapi').value=c.numeroVapi||'';
+  document.getElementById('ecWaTwilio').value=c.whatsappNumeroTwilio||'';
   // Format date for input[type=date]
   let paiDate='';
   if(c.prochainPaiement){ try{ paiDate=new Date(c.prochainPaiement).toISOString().slice(0,10); }catch(e){} }
@@ -2492,6 +2495,7 @@ async function saveEditClient(){
     "Pays": document.getElementById('ecPays').value,
     "Onboarding": document.getElementById('ecOnboarding').value,
     "Numéro Vapi": document.getElementById('ecVapi').value,
+    "WhatsApp Numero Twilio": document.getElementById('ecWaTwilio').value,
   };
   const paiDate=document.getElementById('ecProchainPaiement').value;
   if(paiDate) raw["Date prochain paiement"]=paiDate;
@@ -2511,6 +2515,7 @@ async function saveEditClient(){
       c.secteur=fields.Secteur??c.secteur; c.plan=fields.Plan??c.plan;
       c.statut=fields.Statut??c.statut; c.pays=fields.Pays??c.pays;
       c.onboarding=fields.Onboarding??c.onboarding; c.numeroVapi=fields["Numéro Vapi"]??c.numeroVapi;
+      c.whatsappNumeroTwilio=fields["WhatsApp Numero Twilio"]??c.whatsappNumeroTwilio;
       if(paiDate) c.prochainPaiement=paiDate;
     }
     toast('Client mis à jour','success');
