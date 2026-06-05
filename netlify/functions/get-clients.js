@@ -104,6 +104,7 @@ exports.handler = async function(event, context) {
         whatsappNumeroTwilio:  f["WhatsApp Numero Twilio"]      || "",
         whatsappLangue:        f["WhatsApp Langue"]             || "Français",
         whatsappTonalite:      f["WhatsApp Tonalite"]           || "Professionnel",
+        whatsappTools:         (() => { try { return JSON.parse(f["WhatsApp Tools"] || "[]"); } catch(e) { return []; } })(),
       };
     });
 

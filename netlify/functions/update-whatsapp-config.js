@@ -7,7 +7,7 @@ exports.handler = async function(event) {
   let body;
   try { body = JSON.parse(event.body || "{}"); } catch(e) { return err("JSON invalide", 400); }
 
-  const { userId, nomAssistant, langue, tonalite, prompt } = body;
+  const { userId, nomAssistant, langue, tonalite, prompt, whatsappTools } = body;
   if (!userId) return err("userId manquant", 400);
 
   console.log("[update-whatsapp-config] userId:", userId, "nom:", nomAssistant);
@@ -27,6 +27,7 @@ exports.handler = async function(event) {
     if (langue       !== undefined) fields["WhatsApp Langue"]        = langue;
     if (tonalite     !== undefined) fields["WhatsApp Tonalite"]      = tonalite;
     if (prompt       !== undefined) fields["WhatsApp Prompt"]        = prompt;
+    if (whatsappTools !== undefined) fields["WhatsApp Tools"]       = JSON.stringify(whatsappTools);
 
     const patchRes = await fetch(`${BASE_URL}/Clients/${record.id}`, {
       method:  "PATCH",

@@ -6669,19 +6669,31 @@ function hasWhatsappPlan() {
 }
 
 function renderWaToolsFromClient() {
-  const client = (typeof clients !== "undefined" && clients[0]) || {};
-  const el     = document.getElementById("waToolsBlock");
+  const client  = (typeof clients !== "undefined" && clients[0]) || {};
+  const el      = document.getElementById("waToolsBlock");
   if (!el) return;
-  const tools = [
-    { icon: "✅", label: "CRM — Enregistrement des contacts", ok: true },
-    { icon: client.googleConnected ? "✅" : "⬜", label: "Google Calendar — Prise de RDV", ok: client.googleConnected },
-    { icon: (client.calendlyConnected && client.calendlyLink) ? "✅" : "⚠️", label: "Calendly", ok: client.calendlyConnected && client.calendlyLink },
+  const enabled = Array.isArray(client.whatsappTools) ? client.whatsappTools : [];
+
+  const toolDefs = [
+    { key: "google_calendar", label: "Google Calendar — Prise de RDV",   avail: !!client.googleConnected,                           hint: "Connectez Google Calendar dans Intégrations" },
+    { key: "calendly",        label: "Calendly — Lien de réservation",    avail: !!(client.calendlyConnected && client.calendlyLink), hint: "Connectez Calendly dans Intégrations" },
+    { key: "crm",             label: "CRM — Enregistrement des contacts", avail: true,                                               hint: "" },
   ];
-  el.innerHTML = tools.map(t =>
-    `<div style="display:flex;align-items:center;gap:6px;color:${t.ok ? "var(--text)" : "var(--text-muted)"}">
-      <span>${t.icon}</span><span>${t.label}</span>
-    </div>`
-  ).join("");
+
+  el.innerHTML = toolDefs.map(t => {
+    const isOn   = enabled.includes(t.key);
+    const locked = !t.avail;
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <span style="font-size:13px;color:${locked ? "var(--text-muted)" : "var(--text)"}">${t.label}</span>
+        ${locked ? `<span style="font-size:11px;color:var(--text-faint)">${t.hint}</span>` : ""}
+      </div>
+      <label class="toggle" style="pointer-events:${locked ? "none" : "auto"};opacity:${locked ? "0.4" : "1"}">
+        <input type="checkbox" id="waTool_${t.key}" ${(isOn && !locked) ? "checked" : ""}>
+        <span class="slider"></span>
+      </label>
+    </div>`;
+  }).join("");
 }
 
 function loadWhatsappConfig() {
@@ -6736,9 +6748,13 @@ async function saveWhatsappConfig() {
   const tonalite     = document.getElementById("waTonalite")?.value || "Professionnel";
   const prompt       = document.getElementById("waPrompt")?.value   || "";
 
+  /* Collecter les outils activés */
+  const waToolKeys   = ["google_calendar", "calendly", "crm"];
+  const whatsappTools = waToolKeys.filter(k => document.getElementById(`waTool_${k}`)?.checked);
+
   try {
     const data = await apiFetchPost("/.netlify/functions/update-whatsapp-config", {
-      userId, nomAssistant, langue, tonalite, prompt,
+      userId, nomAssistant, langue, tonalite, prompt, whatsappTools,
     });
     if (data.success) {
       /* Mettre à jour le cache local */
@@ -6747,6 +6763,7 @@ async function saveWhatsappConfig() {
         clients[0].whatsappLangue       = langue;
         clients[0].whatsappTonalite     = tonalite;
         clients[0].whatsappPrompt       = prompt;
+        clients[0].whatsappTools        = whatsappTools;
       }
       showToast("Configuration WhatsApp sauvegardée ✅", "success");
       /* Rafraîchir l'aperçu */
