@@ -136,6 +136,10 @@ exports.handler = async (event) => {
     const calendlyConnected = client.fields["Calendly Connected"] || false;
     const calendlyLink      = client.fields["Calendly Link"]      || "";
 
+    console.log("[whatsapp] googleConnected:", googleConnected);
+    console.log("[whatsapp] whatsappTools raw:", client.fields["WhatsApp Tools"]);
+    console.log("[whatsapp] enabledTools parsed:", JSON.stringify(enabledTools));
+
     /* ── Gestion message vocal ── */
     let messageEntrant = params.get("Body") || "";
     const isVoiceMessage = parseInt(numMedia) > 0 && mediaUrl && mediaType.includes("audio");
@@ -247,7 +251,22 @@ exports.handler = async (event) => {
       });
     }
 
-    /* Appeler GPT-4o */
+    console.log("[whatsapp] nb tools envoyés:", gptTools.length);
+    if (gptTools.length > 0) console.log("[whatsapp] noms tools:", gptTools.map(t => t.function.name).join(", "));
+
+    /* ── Prompt système ── */
+    const rdvRules = gptTools.some(t => t.function.name === "check_availability") ? `
+
+RÈGLES ABSOLUES POUR LES RENDEZ-VOUS :
+1. Tu NE DOIS JAMAIS confirmer un RDV sans avoir appelé check_availability d'abord.
+2. Tu NE DOIS JAMAIS inventer des disponibilités.
+3. Quand un client demande un RDV :
+   ÉTAPE 1 : Appelle check_availability avec la date demandée.
+   ÉTAPE 2 : Présente les créneaux disponibles au client.
+   ÉTAPE 3 : Quand le client choisit un créneau, appelle create_appointment.
+   ÉTAPE 4 : Confirme uniquement après succès du tool create_appointment.
+4. Si tu n'as pas appelé create_appointment, tu NE PEUX PAS dire "RDV confirmé".` : "";
+
     const systemPrompt = `${prompt}
 ${memoire}
 Tu t'appelles ${nomAssistant}.
@@ -256,7 +275,7 @@ Ton style de communication : ${tonalite}.
 Tu réponds via WhatsApp — sois concis (2-3 phrases max).
 Ne jamais envoyer de longs paragraphes.
 Utilise des émojis avec modération.
-Tu peux recevoir des messages vocaux qui sont automatiquement transcrits. Traite-les exactement comme des messages texte normaux.`;
+Tu peux recevoir des messages vocaux qui sont automatiquement transcrits. Traite-les exactement comme des messages texte normaux.${rdvRules}`;
 
     const userContent = isVoiceMessage
       ? `[Message vocal transcrit automatiquement]: ${transcription}`
@@ -282,6 +301,8 @@ Tu peux recevoir des messages vocaux qui sont automatiquement transcrits. Traite
 
     const openaiData  = await openaiRes.json();
     const firstChoice = openaiData.choices?.[0];
+    console.log("[whatsapp] finish_reason:", firstChoice?.finish_reason);
+    console.log("[whatsapp] tool_calls:", JSON.stringify(firstChoice?.message?.tool_calls));
     let reponse       = firstChoice?.message?.content || "";
 
     /* ── Traiter les tool_calls si présents ── */
