@@ -99,6 +99,11 @@ exports.handler = async function(event, context) {
         dureeRDV:              Number(f["Duree RDV"])           || 30,
         heureOuverture:        f["Heure Ouverture"]             || "08:00",
         heureFermeture:        f["Heure Fermeture"]             || "19:00",
+        whatsappPrompt:        f["WhatsApp Prompt"]             || "",
+        whatsappNomAssistant:  f["WhatsApp Nom Assistant"]      || "",
+        whatsappNumeroTwilio:  f["WhatsApp Numero Twilio"]      || "",
+        whatsappLangue:        f["WhatsApp Langue"]             || "Français",
+        whatsappTonalite:      f["WhatsApp Tonalite"]           || "Professionnel",
       };
     });
 
