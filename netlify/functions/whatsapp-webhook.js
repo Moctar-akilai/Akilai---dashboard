@@ -167,9 +167,35 @@ exports.handler = async (event) => {
     const messages        = historique[conversationKey] || [];
     if (messages.length > 20) messages.splice(0, messages.length - 20);
 
+    /* Récupérer le contexte mémoire du contact */
+    let memoire = "";
+    try {
+      const serverUrl  = process.env.URL || "https://portal-akilai.netlify.app";
+      const ctxRes     = await fetch(
+        `${serverUrl}/.netlify/functions/get-contact-context?userId=${encodeURIComponent(userId)}&numero=${encodeURIComponent(numeroClient)}`
+      );
+      const ctx = await ctxRes.json();
+      console.log("[whatsapp] contexte contact trouvé:", ctx.found);
+      if (ctx.found) {
+        const prenom  = ctx.prenom || ctx.nom || "";
+        const nb      = ctx.nbInteractions || 0;
+        const dernier = ctx.dernierContact
+          ? new Date(ctx.dernierContact).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })
+          : null;
+        memoire = `\nMÉMOIRE CLIENT :`;
+        if (prenom) memoire += `\n- Nom : ${prenom}${ctx.nom && ctx.prenom ? " " + ctx.nom : ""}`;
+        if (nb > 0) memoire += `\n- ${nb} interaction(s) précédente(s)`;
+        if (dernier) memoire += `\n- Dernier contact : ${dernier}`;
+        if (ctx.contexte) memoire += `\n- Contexte : ${ctx.contexte}`;
+        memoire += "\n";
+      }
+    } catch (e) {
+      console.warn("[whatsapp] erreur récupération contexte:", e.message);
+    }
+
     /* Appeler GPT-4o */
     const systemPrompt = `${prompt}
-
+${memoire}
 Tu t'appelles ${nomAssistant}.
 Tu communiques en ${langue}.
 Ton style de communication : ${tonalite}.
@@ -249,8 +275,20 @@ Tu peux recevoir des messages vocaux qui sont automatiquement transcrits. Traite
       }
     ).catch(e => console.error("[whatsapp] erreur historique airtable:", e.message));
 
-    /* Mettre à jour le CRM */
+    /* Mettre à jour la mémoire contextuelle du contact */
     const serverUrl = process.env.URL || "https://portal-akilai.netlify.app";
+    fetch(`${serverUrl}/.netlify/functions/update-contact-context`, {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({
+        userId,
+        numero:  numeroClient,
+        resume:  reponse.substring(0, 300),
+        canal:   "WhatsApp",
+      }),
+    }).catch(e => console.error("[whatsapp] erreur update contexte:", e.message));
+
+    /* Mettre à jour le CRM */
     fetch(`${serverUrl}/.netlify/functions/crm-router`, {
       method:  "POST",
       headers: { "Content-Type": "application/json" },

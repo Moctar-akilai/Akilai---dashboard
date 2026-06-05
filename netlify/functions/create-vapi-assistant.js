@@ -168,12 +168,33 @@ exports.handler = async function(event, context) {
     server: { url: `${TOOLS_BASE}/vapi-tool-create-contact`, timeoutSeconds: 20, headers: toolHeaders },
   });
 
+  // Mémoire contextuelle — toujours disponible
+  tools.push({
+    type: "function",
+    function: {
+      name: "get_client_context",
+      description: "Récupère les informations et l'historique du client qui appelle pour personnaliser la conversation. TOUJOURS appeler ce tool au tout début de chaque appel.",
+      parameters: {
+        type: "object",
+        properties: {
+          numero: { type: "string", description: "Numéro de téléphone de l'appelant au format international (ex: +33612345678)" },
+        },
+        required: ["numero"],
+      },
+    },
+    server: {
+      url:            `${TOOLS_BASE}/vapi-tool-get-context`,
+      timeoutSeconds: 5,
+      headers:        { "X-User-Id": clientEmail, "X-Client-Id": clientId || "" },
+    },
+  });
+
   console.log("[create-vapi-assistant] tools construits :", tools.map(t => t.function.name));
 
   const currentYear = new Date().getFullYear();
 
   /* ── Instructions tools injectées dans le prompt système ── */
-  let toolInstructions = `\n\nIMPORTANT : Nous sommes en ${currentYear}. Toujours utiliser l'année ${currentYear} (ou ${currentYear + 1} si la date est dépassée). Ne jamais utiliser une année passée.\n\nRÈGLES ABSOLUES POUR LES RENDEZ-VOUS :\n1. Tu NE DOIS JAMAIS inventer ou supposer des disponibilités — TOUJOURS appeler check_availability et attendre le résultat avant de répondre.\n2. Si check_availability retourne une erreur ou timeout → dire "Je vérifie les disponibilités, un instant..." et réessayer UNE fois.\n3. Ne JAMAIS confirmer un RDV sans avoir appelé create_appointment et reçu une confirmation de succès.\n4. Si create_appointment échoue → ne pas confirmer le RDV, proposer de rappeler.\n5. Utiliser EXACTEMENT les créneaux retournés par check_availability, pas d'autres.\n6. ATTENDRE le résultat de chaque tool call AVANT de poursuivre la conversation.\n\nOUTILS DISPONIBLES :\n`;
+  let toolInstructions = `\n\nIMPORTANT : Nous sommes en ${currentYear}. Toujours utiliser l'année ${currentYear} (ou ${currentYear + 1} si la date est dépassée). Ne jamais utiliser une année passée.\n\nMÉMOIRE CLIENT :\n- Au début de CHAQUE appel, appelle get_client_context avec le numéro de l'appelant.\n- Si le client est connu, accueille-le par son prénom dès la première phrase.\n- Utilise le contexte du dernier échange pour personnaliser la conversation.\n- Si nouveau client → accueil standard.\n\nRÈGLES ABSOLUES POUR LES RENDEZ-VOUS :\n1. Tu NE DOIS JAMAIS inventer ou supposer des disponibilités — TOUJOURS appeler check_availability et attendre le résultat avant de répondre.\n2. Si check_availability retourne une erreur ou timeout → dire "Je vérifie les disponibilités, un instant..." et réessayer UNE fois.\n3. Ne JAMAIS confirmer un RDV sans avoir appelé create_appointment et reçu une confirmation de succès.\n4. Si create_appointment échoue → ne pas confirmer le RDV, proposer de rappeler.\n5. Utiliser EXACTEMENT les créneaux retournés par check_availability, pas d'autres.\n6. ATTENDRE le résultat de chaque tool call AVANT de poursuivre la conversation.\n\nOUTILS DISPONIBLES :\n`;
 
   if (clientFields["Google Connected"]) {
     toolInstructions += `- check_availability : OBLIGATOIRE avant de proposer tout créneau. Paramètre date au format YYYY-MM-DD.\n- create_appointment : appeler UNIQUEMENT après confirmation explicite du patient. Annoncer : "Votre RDV est confirmé le [date] à [heure]."\n`;
@@ -183,7 +204,7 @@ exports.handler = async function(event, context) {
     toolInstructions += `- get_calendly_slots : appeler pour proposer des créneaux via Calendly.\n`;
   }
 
-  toolInstructions += `- send_sms : appeler en fin d'appel pour envoyer une confirmation SMS au patient.\n- create_contact : appeler pour enregistrer nom, téléphone et résumé dans la base de données.\n`;
+  toolInstructions += `- get_client_context : appeler EN PREMIER à chaque appel avec le numéro de l'appelant.\n- send_sms : appeler en fin d'appel pour envoyer une confirmation SMS au patient.\n- create_contact : appeler pour enregistrer nom, téléphone et résumé dans la base de données.\n`;
 
   const promptComplet = (promptSysteme || "") + toolInstructions;
 

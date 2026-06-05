@@ -209,6 +209,25 @@ exports.handler = async (event) => {
       }
     }
 
+    // ── Mémoire contextuelle — mettre à jour le contexte contact ──
+    if (numeroClient && userId) {
+      try {
+        await fetch(`${process.env.URL || "https://portal-akilai.netlify.app"}/.netlify/functions/update-contact-context`, {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body:    JSON.stringify({
+            userId,
+            numero: numeroClient,
+            resume: resume || transcription.substring(0, 300),
+            canal:  "Vocal",
+          }),
+        });
+        console.log("[vapi-webhook] contexte contact mis à jour");
+      } catch (ctxErr) {
+        console.error("[vapi-webhook] Erreur update contexte:", ctxErr.message);
+      }
+    }
+
     // ── CRM Router — mettre à jour le contact ──
     if (numeroClient) {
       try {
