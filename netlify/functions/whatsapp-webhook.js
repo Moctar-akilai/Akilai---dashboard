@@ -1,7 +1,6 @@
-const BASE_ID      = process.env.AIRTABLE_BASE_ID;
-const AIRTABLE_KEY = process.env.AIRTABLE_API_KEY || "";
-const BASE         = BASE_ID;
-const CLIENTS_TABLE = "tble0g9eMTjAfw6OO";
+const BASE_ID          = process.env.AIRTABLE_BASE_ID;
+const AIRTABLE_KEY     = process.env.AIRTABLE_API_KEY || "";
+const CLIENTS_TABLE    = "tble0g9eMTjAfw6OO";
 const HISTORIQUE_TABLE = "tblxXBGjv6iZU41XY";
 
 const airtableHeaders = {
@@ -48,6 +47,48 @@ async function repondreWhatsApp(to, from, message) {
   };
 }
 
+async function transcrireAudio(mediaUrl, langue) {
+  const TWILIO_SID   = process.env.TWILIO_ACCOUNT_SID;
+  const TWILIO_TOKEN = process.env.TWILIO_AUTH_TOKEN;
+
+  /* Télécharger le fichier audio depuis Twilio (auth requise) */
+  const audioRes = await fetch(mediaUrl, {
+    headers: {
+      Authorization: "Basic " + Buffer.from(`${TWILIO_SID}:${TWILIO_TOKEN}`).toString("base64"),
+    },
+  });
+
+  if (!audioRes.ok) {
+    console.error("[whatsapp] erreur téléchargement audio:", audioRes.status);
+    return null;
+  }
+
+  const audioBuffer = Buffer.from(await audioRes.arrayBuffer());
+  console.log("[whatsapp] audio téléchargé:", audioBuffer.length, "bytes");
+
+  /* Envoyer à Whisper */
+  const FormData = require("form-data");
+  const form = new FormData();
+  form.append("file", audioBuffer, { filename: "audio.ogg", contentType: "audio/ogg" });
+  form.append("model", "whisper-1");
+  const langMap = { Français: "fr", English: "en", Español: "es", Portugais: "pt", Arabe: "ar" };
+  form.append("language", langMap[langue] || "fr");
+
+  const whisperRes = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+    method:  "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+      ...form.getHeaders(),
+    },
+    body: form,
+  });
+
+  const whisperData = await whisperRes.json();
+  const transcription = whisperData.text || "";
+  console.log("[whatsapp] transcription Whisper:", transcription.substring(0, 200));
+  return transcription || null;
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") {
     return { statusCode: 204, headers: { "Access-Control-Allow-Origin": "*" }, body: "" };
@@ -57,20 +98,23 @@ exports.handler = async (event) => {
   }
 
   try {
-    const params          = new URLSearchParams(event.body || "");
-    const messageEntrant  = params.get("Body")  || "";
-    const from            = params.get("From")  || "";
-    const to              = params.get("To")    || "";
-    const numeroClient    = from.replace("whatsapp:", "");
-    const numeroTwilio    = to.replace("whatsapp:", "");
+    const params       = new URLSearchParams(event.body || "");
+    const from         = params.get("From") || "";
+    const to           = params.get("To")   || "";
+    const numeroClient = from.replace("whatsapp:", "");
+    const numeroTwilio = to.replace("whatsapp:", "");
+    const numMedia     = params.get("NumMedia") || "0";
+    const mediaUrl     = params.get("MediaUrl0") || "";
+    const mediaType    = params.get("MediaContentType0") || "";
 
     console.log("[whatsapp] message de:", numeroClient);
     console.log("[whatsapp] vers:", numeroTwilio);
-    console.log("[whatsapp] contenu:", messageEntrant.substring(0, 200));
+    console.log("[whatsapp] numMedia:", numMedia, "| mediaType:", mediaType);
+    if (mediaUrl) console.log("[whatsapp] mediaUrl:", mediaUrl);
 
     /* Identifier le client AkilAI par numéro Twilio */
     const clientRes  = await fetch(
-      `https://api.airtable.com/v0/${BASE}/${CLIENTS_TABLE}?filterByFormula=${encodeURIComponent(`{WhatsApp Numero Twilio}="${numeroTwilio}"`)}&maxRecords=1`,
+      `https://api.airtable.com/v0/${BASE_ID}/${CLIENTS_TABLE}?filterByFormula=${encodeURIComponent(`{WhatsApp Numero Twilio}="${numeroTwilio}"`)}&maxRecords=1`,
       { headers: airtableHeaders }
     );
     const clientData = await clientRes.json();
@@ -84,11 +128,39 @@ exports.handler = async (event) => {
       );
     }
 
-    const userId       = client.fields["User ID"]                 || "";
-    const prompt       = client.fields["WhatsApp Prompt"]         || "Tu es un assistant WhatsApp professionnel et aidant.";
-    const nomAssistant = client.fields["WhatsApp Nom Assistant"]  || "Akil";
-    const langue       = client.fields["WhatsApp Langue"]         || "Français";
-    const tonalite     = client.fields["WhatsApp Tonalite"]       || "Professionnel";
+    const userId       = client.fields["User ID"]                || "";
+    const prompt       = client.fields["WhatsApp Prompt"]        || "Tu es un assistant WhatsApp professionnel et aidant.";
+    const nomAssistant = client.fields["WhatsApp Nom Assistant"] || "Akil";
+    const langue       = client.fields["WhatsApp Langue"]        || "Français";
+    const tonalite     = client.fields["WhatsApp Tonalite"]      || "Professionnel";
+
+    /* ── Gestion message vocal ── */
+    let messageEntrant = params.get("Body") || "";
+    let isVocalMessage = false;
+    let transcription  = "";
+
+    if (parseInt(numMedia) > 0 && mediaUrl && mediaType.startsWith("audio/")) {
+      isVocalMessage = true;
+      console.log("[whatsapp] message vocal détecté");
+
+      try {
+        transcription = await transcrireAudio(mediaUrl, langue);
+      } catch (e) {
+        console.error("[whatsapp] erreur transcription:", e.message);
+        transcription = null;
+      }
+
+      if (!transcription) {
+        return repondreWhatsApp(
+          numeroClient, numeroTwilio,
+          "J'ai reçu votre message vocal mais je n'ai pas pu le transcrire. Pouvez-vous réécrire votre demande en texte ?"
+        );
+      }
+
+      messageEntrant = transcription;
+    } else {
+      console.log("[whatsapp] contenu:", messageEntrant.substring(0, 200));
+    }
 
     /* Récupérer l'historique de conversation */
     let historique = {};
@@ -98,8 +170,6 @@ exports.handler = async (event) => {
 
     const conversationKey = numeroClient.replace("+", "").replace(/\s/g, "");
     const messages        = historique[conversationKey] || [];
-
-    /* Garder les 20 derniers messages (10 échanges) */
     if (messages.length > 20) messages.splice(0, messages.length - 20);
 
     /* Appeler GPT-4o */
@@ -112,6 +182,10 @@ Tu réponds via WhatsApp — sois concis (2-3 phrases max).
 Ne jamais envoyer de longs paragraphes.
 Utilise des émojis avec modération.`;
 
+    const userContent = isVocalMessage
+      ? `L'utilisateur a envoyé un message vocal : ${transcription}`
+      : messageEntrant;
+
     const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
       method:  "POST",
       headers: {
@@ -119,11 +193,11 @@ Utilise des émojis avec modération.`;
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model:      "gpt-4o",
-        messages:   [
+        model:       "gpt-4o",
+        messages:    [
           { role: "system", content: systemPrompt },
           ...messages,
-          { role: "user", content: messageEntrant },
+          { role: "user", content: userContent },
         ],
         max_tokens:  300,
         temperature: 0.7,
@@ -137,12 +211,12 @@ Utilise des émojis avec modération.`;
     console.log("[whatsapp] réponse GPT:", reponse.substring(0, 100));
 
     /* Mettre à jour l'historique */
-    messages.push({ role: "user",      content: messageEntrant });
+    messages.push({ role: "user",      content: userContent });
     messages.push({ role: "assistant", content: reponse });
     historique[conversationKey] = messages;
 
     fetch(
-      `https://api.airtable.com/v0/${BASE}/${CLIENTS_TABLE}/${client.id}`,
+      `https://api.airtable.com/v0/${BASE_ID}/${CLIENTS_TABLE}/${client.id}`,
       {
         method:  "PATCH",
         headers: airtableHeaders,
@@ -151,22 +225,27 @@ Utilise des émojis avec modération.`;
     ).catch(e => console.error("[whatsapp] erreur historique:", e.message));
 
     /* Enregistrer dans Airtable Historique */
+    const messageLog = isVocalMessage ? `[Vocal] ${transcription}` : messageEntrant;
+    const detailsLog = isVocalMessage
+      ? `Transcription Whisper: ${transcription}\nRéponse: ${reponse}`
+      : reponse;
+
     fetch(
-      `https://api.airtable.com/v0/${BASE}/${HISTORIQUE_TABLE}`,
+      `https://api.airtable.com/v0/${BASE_ID}/${HISTORIQUE_TABLE}`,
       {
         method:  "POST",
         headers: airtableHeaders,
         body:    JSON.stringify({
           records: [{
             fields: {
-              "Titre":          `WhatsApp — ${numeroClient}`,
-              "Type":           "Whatsapp",
-              "Canal":          "WhatsApp",
-              "Statut":         "Succès",
-              "User ID":        userId,
-              "Numéro client":  numeroClient,
-              "Message entrant": messageEntrant,
-              "Détails":        reponse,
+              "Titre":           `WhatsApp — ${numeroClient}`,
+              "Type":            "Whatsapp",
+              "Canal":           "WhatsApp",
+              "Statut":          "Succès",
+              "User ID":         userId,
+              "Numéro client":   numeroClient,
+              "Message entrant": messageLog,
+              "Détails":         detailsLog,
             },
           }],
           typecast: true,
