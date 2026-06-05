@@ -13,8 +13,13 @@ async function repondreWhatsApp(to, from, message) {
   const TWILIO_SID   = process.env.TWILIO_ACCOUNT_SID;
   const TWILIO_TOKEN = process.env.TWILIO_AUTH_TOKEN;
 
+  console.log("[whatsapp] envoi réponse vers:", to);
+  console.log("[whatsapp] depuis:", from);
+  console.log("[whatsapp] TWILIO_SID présent:", !!TWILIO_SID);
+  console.log("[whatsapp] TWILIO_TOKEN présent:", !!TWILIO_TOKEN);
+
   try {
-    await fetch(
+    const twilioRes = await fetch(
       `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_SID}/Messages.json`,
       {
         method:  "POST",
@@ -29,6 +34,9 @@ async function repondreWhatsApp(to, from, message) {
         }),
       }
     );
+    console.log("[whatsapp] Twilio status:", twilioRes.status);
+    const twilioData = await twilioRes.json();
+    console.log("[whatsapp] Twilio response:", JSON.stringify(twilioData).substring(0, 300));
   } catch (e) {
     console.error("[whatsapp] erreur envoi Twilio:", e.message);
   }
