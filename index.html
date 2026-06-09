@@ -35,63 +35,6 @@
       --font:          'Space Grotesk', system-ui, sans-serif;
     }
 
-    /* ── Thème Light ── */
-    body.theme-light {
-      --bg:            #f0f2f5;
-      --surface:       #ffffff;
-      --surface-2:     #f8f9fa;
-      --accent:        #70B2DE;
-      --accent-dim:    rgba(112, 178, 222, 0.12);
-      --accent-border: rgba(112, 178, 222, 0.4);
-      --text:          #1a1a1a;
-      --text-muted:    #666666;
-      --text-faint:    #999999;
-      --border:        rgba(0, 0, 0, 0.08);
-      --border-hover:  rgba(0, 0, 0, 0.15);
-    }
-    body.theme-light .sidebar { background: #ffffff; border-right: 1px solid rgba(0,0,0,0.08); }
-    body.theme-light .nav-item { color: #444; }
-    body.theme-light .nav-item:hover, body.theme-light .nav-item.active { background: rgba(112,178,222,0.12); color: #1a1a1a; }
-    body.theme-light .card { background: #ffffff; border-color: rgba(0,0,0,0.08); }
-    body.theme-light .input { background: #f8f9fa; border-color: rgba(0,0,0,0.15); color: #1a1a1a; }
-    body.theme-light .input:focus { border-color: var(--accent); background: #ffffff; }
-    body.theme-light #header { background: rgba(255,255,255,0.95); border-bottom: 1px solid rgba(0,0,0,0.08); }
-    body.theme-light .kpi-card { background: #ffffff; border-color: rgba(0,0,0,0.08); }
-    body.theme-light .sidebar-footer { border-top: 1px solid rgba(0,0,0,0.08); }
-    body.theme-light .modal-overlay { background: rgba(0,0,0,0.4); }
-    body.theme-light .modal { background: #ffffff; border-color: rgba(0,0,0,0.1); }
-
-    /* ── Thème Back-office ── */
-    body.theme-backoffice {
-      --bg:            #0a0a0a;
-      --surface:       #141414;
-      --surface-2:     #1a1a1a;
-      --accent:        #70B2DE;
-      --accent-dim:    rgba(112, 178, 222, 0.10);
-      --accent-border: rgba(112, 178, 222, 0.30);
-      --text:          #e0e0e0;
-      --text-muted:    #777;
-      --text-faint:    #444;
-      --border:        rgba(255, 255, 255, 0.05);
-      --border-hover:  rgba(255, 255, 255, 0.09);
-      --sidebar-w:     200px;
-    }
-    body.theme-backoffice .sidebar { background: #111111; font-size: 12.5px; }
-    body.theme-backoffice .nav-item { padding: 6px 12px; font-size: 12.5px; }
-    body.theme-backoffice .kpi-card { background: #141414; }
-    body.theme-backoffice .card { background: #141414; }
-
-    /* ── Sélecteur de thème ── */
-    .theme-switcher { display:flex;align-items:center;gap:4px;padding:4px 6px;margin-bottom:4px; }
-    .theme-btn {
-      flex:1;display:flex;align-items:center;justify-content:center;gap:4px;
-      padding:5px 6px;border-radius:7px;border:1px solid var(--border);
-      background:none;color:var(--text-muted);font-size:11px;cursor:pointer;
-      transition:all 0.15s;font-family:var(--font);
-    }
-    .theme-btn:hover { background:var(--accent-dim);color:var(--text);border-color:var(--accent-border); }
-    .theme-btn.active { background:var(--accent-dim);color:var(--accent);border-color:var(--accent-border);font-weight:600; }
-
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     html, body {
@@ -2568,12 +2511,6 @@
           <div class="name" id="sidebarClientNom">Cabinet Dr. Moreau</div>
           <div class="role" id="sidebarClientPlan">Premium</div>
         </div>
-      </div>
-      <!-- Sélecteur de thème -->
-      <div class="theme-switcher">
-        <button class="theme-btn" id="themeBtnDark"       onclick="setTheme('dark')"       title="Thème sombre">🌙 Dark</button>
-        <button class="theme-btn" id="themeBtnLight"      onclick="setTheme('light')"      title="Thème clair">☀️ Light</button>
-        <button class="theme-btn" id="themeBtnBackoffice" onclick="setTheme('backoffice')" title="Thème pro">💼 Pro</button>
       </div>
       <div style="padding:4px 4px 0;display:flex;justify-content:flex-end">
         <button class="sidebar-user-actions" style="background:none;border:none;display:flex;align-items:center;gap:6px;color:var(--text-muted);font-size:11px;cursor:pointer;padding:5px 8px;border-radius:8px;transition:color 0.15s,background 0.15s" title="Se déconnecter" onclick="logout()" onmouseover="this.style.color='var(--text)';this.style.background='rgba(239,68,68,0.1)'" onmouseout="this.style.color='var(--text-muted)';this.style.background='none'">
@@ -5135,7 +5072,6 @@ function updateSidebarUser() {
    INIT
 ============================================================ */
 function _initDashboard() {
-  _initTheme();
   handleResize();
   const savedSection = (function() { try { return localStorage.getItem('akilai_section'); } catch(e) { return null; } })();
   navigate(savedSection && document.getElementById('page-' + savedSection) ? savedSection : 'overview');
@@ -5405,21 +5341,6 @@ async function loginSubmit() {
   }
 }
 
-/* ── Gestion des thèmes ── */
-function setTheme(theme) {
-  document.body.classList.remove('theme-dark', 'theme-light', 'theme-backoffice');
-  if (theme !== 'dark') document.body.classList.add('theme-' + theme);
-  try { localStorage.setItem('akilai_theme', theme); } catch(e) {}
-  document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
-  const activeBtn = document.getElementById('themeBtn' + theme.charAt(0).toUpperCase() + theme.slice(1));
-  if (activeBtn) activeBtn.classList.add('active');
-}
-
-function _initTheme() {
-  let theme = 'dark';
-  try { theme = localStorage.getItem('akilai_theme') || 'dark'; } catch(e) {}
-  setTheme(theme);
-}
 
 /* LOGOUT */
 function logout() {
