@@ -356,7 +356,7 @@ Tu peux recevoir des messages vocaux qui sont automatiquement transcrits. Traite
                     type: "tool-calls",
                     toolCallList: [{
                       id:       tc.id,
-                      function: { name: "check_availability", arguments: JSON.stringify({ date, duration: 30 }) },
+                      function: { name: "check_availability", arguments: { date, duration: 30 } },
                     }],
                   },
                 }),
