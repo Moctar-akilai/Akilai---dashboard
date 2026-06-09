@@ -254,13 +254,19 @@ exports.handler = async (event) => {
     console.log("[whatsapp] tools noms:", gptTools.map(t => t.function.name).join(", "));
 
     /* ── Prompt système ── */
+    const currentYear = new Date().getFullYear();
+    const currentMonth = new Date().toLocaleString("fr-FR", { month: "long" });
     const rdvRules = gptTools.some(t => t.function.name === "check_availability") ? `
+
+IMPORTANT : Nous sommes en ${currentMonth} ${currentYear}.
+Toutes les dates de RDV doivent être en ${currentYear} ou ${currentYear + 1}.
+Ne jamais utiliser une date antérieure à aujourd'hui.
 
 RÈGLES ABSOLUES POUR LES RENDEZ-VOUS :
 1. Tu NE DOIS JAMAIS confirmer un RDV sans avoir appelé check_availability d'abord.
 2. Tu NE DOIS JAMAIS inventer des disponibilités.
 3. Quand un client demande un RDV :
-   ÉTAPE 1 : Appelle check_availability avec la date demandée.
+   ÉTAPE 1 : Appelle check_availability avec la date demandée (format YYYY-MM-DD, année ${currentYear} ou ${currentYear + 1}).
    ÉTAPE 2 : Présente les créneaux disponibles au client.
    ÉTAPE 3 : Quand le client choisit un créneau, appelle create_appointment.
    ÉTAPE 4 : Confirme uniquement après succès du tool create_appointment.
@@ -320,11 +326,46 @@ Tu peux recevoir des messages vocaux qui sont automatiquement transcrits. Traite
 
         if (fnName === "check_availability") {
           try {
-            const avRes  = await fetch(`${serverUrl}/.netlify/functions/google-calendar-get-slots?userId=${encodeURIComponent(userId)}&date=${encodeURIComponent(args.date || "")}`);
+            /* Corriger la date si dans le passé */
+            let date = args.date || "";
+            if (date) {
+              const dateObj = new Date(date);
+              const now     = new Date();
+              if (dateObj < now) {
+                dateObj.setFullYear(now.getFullYear());
+                if (dateObj < now) dateObj.setFullYear(now.getFullYear() + 1);
+                date = dateObj.toISOString().split("T")[0];
+                console.log("[whatsapp] date corrigée:", date);
+              }
+            }
+
+            const avRes  = await fetch(
+              `${serverUrl}/.netlify/functions/vapi-tool-check-availability`,
+              {
+                method:  "POST",
+                headers: {
+                  "Content-Type":      "application/json",
+                  "x-user-id":         userId,
+                  "x-capacite":        String(client.fields["Capacite Creneau"] || 1),
+                  "x-duree-rdv":       String(client.fields["Duree RDV"] || 30),
+                  "x-heure-ouverture": client.fields["Heure Ouverture"] || "08:00",
+                  "x-heure-fermeture": client.fields["Heure Fermeture"] || "19:00",
+                },
+                body: JSON.stringify({
+                  message: {
+                    type: "tool-calls",
+                    toolCallList: [{
+                      id:       tc.id,
+                      function: { name: "check_availability", arguments: JSON.stringify({ date, duration: 30 }) },
+                    }],
+                  },
+                }),
+              }
+            );
+            console.log("[whatsapp] check_availability status:", avRes.status);
             const avData = await avRes.json();
-            toolResult = avData.slots?.length
-              ? `Créneaux disponibles le ${args.date}: ${avData.slots.join(", ")}`
-              : `Aucun créneau disponible le ${args.date}`;
+            console.log("[whatsapp] check_availability result:", JSON.stringify(avData).substring(0, 200));
+            toolResult = avData.results?.[0]?.result || avData.result || "Créneaux non disponibles";
           } catch(e) {
             toolResult = "Impossible de vérifier les disponibilités pour le moment.";
           }
