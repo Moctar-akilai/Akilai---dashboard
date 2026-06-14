@@ -5824,6 +5824,7 @@ async function loadKPIsFromAirtable(days) {
       /* Reconstruire les graphiques Vue d'ensemble et Analytics */
       buildCharts(days);
       updateKPIs(days);
+      setTimeout(updateOverviewKPIs, 0);
       if (document.getElementById("aChartLine")) initAnalytics();
     }
   } catch (e) {
