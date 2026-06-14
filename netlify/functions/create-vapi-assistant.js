@@ -245,17 +245,13 @@ exports.handler = async function(event, context) {
     },
 
     startSpeakingPlan: {
-      waitSeconds:           0.4,
-      onPunctuationSeconds:  0.1,
-      onNoPunctuationSeconds: 0.8,
-      onNumberSeconds:       0.3,
-      smartEndpointingPlan:  { provider: "vapi" },
+      waitSeconds:          0.4,
+      smartEndpointingPlan: { provider: "vapi" },
     },
 
     stopSpeakingPlan: {
       numWords:               3,
       voiceSeconds:           0.1,
-      backOffSeconds:         0.5,
       acknowledgementPhrases: [
         "hmm", "oui", "d'accord", "je vois",
         "bien sûr", "exactement", "ok", "très bien",
