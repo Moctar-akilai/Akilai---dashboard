@@ -4920,7 +4920,7 @@ function initOverview() {
 
 /* Recalcule graphiques + résumé depuis historiqueData réel */
 function updateOverviewKPIs() {
-  if (typeof historiqueData === "undefined" || !historiqueData.length) return;
+  if (!Array.isArray(historiqueData) || !historiqueData.length) return;
 
   const days = currentPeriod || 30;
   const now  = new Date();
@@ -4954,13 +4954,13 @@ function updateOverviewKPIs() {
   }
 
   /* Mettre à jour le graphique appels */
-  if (chartCalls) {
+  if (chartCalls && typeof chartCalls.update === "function" && chartCalls.data?.datasets?.[0]) {
     chartCalls.data.labels = labels;
     chartCalls.data.datasets[0].data = callData;
     chartCalls.update("none");
   }
   /* Mettre à jour le graphique WhatsApp */
-  if (chartWa) {
+  if (chartWa && typeof chartWa.update === "function" && chartWa.data?.datasets?.[0]) {
     chartWa.data.labels = labels;
     chartWa.data.datasets[0].data = waData;
     chartWa.update("none");
@@ -8351,7 +8351,8 @@ function checkAlerts(data) {
   /* R2 — Ticket ouvert sans réponse depuis > 24h */
   _tickets.forEach(t => {
     if (t.statut !== "Ouvert" && t.statut !== "En cours") return;
-    const lastMsg = t.messages[t.messages.length - 1];
+    const _msgs  = Array.isArray(t.messages) ? t.messages : [];
+    const lastMsg = _msgs[_msgs.length - 1];
     if (lastMsg && lastMsg.role === "client") {
       const msgDate = lastMsg.heure ? new Date() : new Date(t.date);
       const heures  = (now - msgDate) / 3600000;
