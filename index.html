@@ -2499,21 +2499,21 @@
 
     </nav>
 
-    <div class="sidebar-footer">
-      <!-- Badge connexion Airtable -->
-      <div id="connectionBadge" style="display:flex;align-items:center;gap:6px;padding:6px 10px;margin-bottom:4px;border-radius:8px;font-size:11px;color:var(--text-muted)">
-        <div id="connectionDot" style="width:6px;height:6px;border-radius:50%;background:#444;flex-shrink:0"></div>
-        <span id="connectionLabel">Vérification…</span>
+    <div class="sidebar-footer" style="padding:8px">
+      <!-- connectionBadge kept hidden for JS references -->
+      <div id="connectionBadge" style="display:none">
+        <div id="connectionDot"></div>
+        <span id="connectionLabel"></span>
       </div>
-      <div class="sidebar-user" onclick="openProfileModal()" style="cursor:pointer" title="Mon profil">
-        <div class="avatar-sm" id="sidebarAvatar">—</div>
-        <div class="sidebar-user-info">
-          <div class="name" id="sidebarClientNom">Cabinet Dr. Moreau</div>
-          <div class="role" id="sidebarClientPlan">Premium</div>
+      <div style="display:flex;align-items:center;gap:8px;padding:8px;border-radius:var(--radius-sm);cursor:pointer;transition:background 0.15s" onclick="openProfileModal()" title="Mon profil" onmouseover="this.style.background='rgba(255,255,255,0.04)'" onmouseout="this.style.background='none'">
+        <div class="avatar-sm" id="sidebarAvatar" style="width:32px;height:32px;font-size:11px;flex-shrink:0">—</div>
+        <div class="sidebar-user-info" style="min-width:0;flex:1;overflow:hidden">
+          <div class="name" id="sidebarClientNom" style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Cabinet Dr. Moreau</div>
+          <div class="role" id="sidebarClientPlan" style="font-size:11px;color:var(--text-muted)">Premium</div>
         </div>
       </div>
-      <div style="padding:4px 4px 0;display:flex;justify-content:flex-end">
-        <button class="sidebar-user-actions" style="background:none;border:none;display:flex;align-items:center;gap:6px;color:var(--text-muted);font-size:11px;cursor:pointer;padding:5px 8px;border-radius:8px;transition:color 0.15s,background 0.15s" title="Se déconnecter" onclick="logout()" onmouseover="this.style.color='var(--text)';this.style.background='rgba(239,68,68,0.1)'" onmouseout="this.style.color='var(--text-muted)';this.style.background='none'">
+      <div style="padding:2px 4px 0;display:flex;justify-content:flex-end">
+        <button style="background:none;border:none;display:flex;align-items:center;gap:6px;color:var(--text-muted);font-size:11px;cursor:pointer;padding:4px 8px;border-radius:8px;transition:color 0.15s,background 0.15s" title="Se déconnecter" onclick="logout()" onmouseover="this.style.color='var(--text)';this.style.background='rgba(239,68,68,0.1)'" onmouseout="this.style.color='var(--text-muted)';this.style.background='none'">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
           Déconnexion
         </button>
