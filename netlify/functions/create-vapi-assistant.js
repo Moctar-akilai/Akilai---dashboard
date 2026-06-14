@@ -277,6 +277,17 @@ exports.handler = async function(event, context) {
     "Content-Type": "application/json",
   };
 
+  console.log("[create-vapi-assistant] vapiPayload complet:", JSON.stringify({
+    name:        vapiPayload.name,
+    transcriber: vapiPayload.transcriber,
+    model:       { provider: vapiPayload.model.provider, model: vapiPayload.model.model, temperature: vapiPayload.model.temperature, tools: vapiPayload.model.tools?.length },
+    voice:       vapiPayload.voice,
+    startSpeakingPlan:     vapiPayload.startSpeakingPlan,
+    stopSpeakingPlan:      { numWords: vapiPayload.stopSpeakingPlan?.numWords },
+    silenceTimeoutSeconds: vapiPayload.silenceTimeoutSeconds,
+    endCallPhrases:        vapiPayload.endCallPhrases,
+  }));
+
   try {
     let assistantId;
     let created = false;
