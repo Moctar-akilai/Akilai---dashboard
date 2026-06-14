@@ -97,16 +97,11 @@ exports.handler = async function(event) {
 
     console.log("[check-availability] étape 2: token cached:", !!tokenCache[userId], "| capacite:", capacite, "| duree:", dureeMin, "| horaires:", heureOuv, "-", heureFerm);
 
-    /* Détecter l'offset Europe/Paris (CET +01:00 ou CEST +02:00) */
-    const parisFormatter = new Intl.DateTimeFormat("fr-FR", {
-      timeZone: "Europe/Paris",
-      timeZoneName: "shortOffset",
-      year: "numeric",
-    });
-    const parisOffsetRaw = parisFormatter.formatToParts(new Date(`${date}T12:00:00Z`))
-      .find(p => p.type === "timeZoneName")?.value || "UTC+2";
-    /* "UTC+2" → "+02:00", "UTC+1" → "+01:00" */
-    const parisOffset = parisOffsetRaw.replace("UTC", "").replace(/^([+-])(\d)$/, "$1$20:00").replace(/^([+-]\d{2})$/, "$1:00");
+    /* Détecter l'offset Europe/Paris en comparant l'heure Paris vs UTC */
+    const testDate    = new Date(`${date}T12:00:00Z`);
+    const parisHour   = parseInt(new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Paris", hour: "numeric", hour12: false }).format(testDate), 10);
+    const offsetH     = parisHour - 12; // 12 = heure UTC fixée ci-dessus
+    const parisOffset = (offsetH >= 0 ? "+" : "-") + String(Math.abs(offsetH)).padStart(2, "0") + ":00";
 
     const dayStart = `${date}T00:00:00${parisOffset}`;
     const dayEnd   = `${date}T23:59:59${parisOffset}`;
