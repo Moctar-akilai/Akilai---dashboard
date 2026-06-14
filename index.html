@@ -4909,6 +4909,8 @@ function setPeriod(days, btn) {
   btn.classList.add("active");
   updateKPIs(days);
   buildCharts(days);
+  /* Réécraser avec les vraies données après que buildCharts a recréé les instances */
+  setTimeout(updateOverviewKPIs, 0);
   /* Si Airtable connecté, recharger les KPIs pour la nouvelle période */
   if (window._airtableConnected) loadKPIsFromAirtable(days);
 }
@@ -4916,6 +4918,7 @@ function setPeriod(days, btn) {
 function initOverview() {
   updateKPIs(currentPeriod);
   buildCharts(currentPeriod);
+  setTimeout(updateOverviewKPIs, 0);
 }
 
 /* Recalcule graphiques + résumé depuis les arrays appels/conversations_wa */
