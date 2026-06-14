@@ -97,8 +97,21 @@ exports.handler = async function(event) {
 
     console.log("[check-availability] étape 2: token cached:", !!tokenCache[userId], "| capacite:", capacite, "| duree:", dureeMin, "| horaires:", heureOuv, "-", heureFerm);
 
-    const dayStart = new Date(date + "T00:00:00Z").toISOString();
-    const dayEnd   = new Date(date + "T23:59:59Z").toISOString();
+    /* Détecter l'offset Europe/Paris (CET +01:00 ou CEST +02:00) */
+    const parisFormatter = new Intl.DateTimeFormat("fr-FR", {
+      timeZone: "Europe/Paris",
+      timeZoneName: "shortOffset",
+      year: "numeric",
+    });
+    const parisOffsetRaw = parisFormatter.formatToParts(new Date(`${date}T12:00:00Z`))
+      .find(p => p.type === "timeZoneName")?.value || "UTC+2";
+    /* "UTC+2" → "+02:00", "UTC+1" → "+01:00" */
+    const parisOffset = parisOffsetRaw.replace("UTC", "").replace(/^([+-])(\d)$/, "$1$20:00").replace(/^([+-]\d{2})$/, "$1:00");
+
+    const dayStart = `${date}T00:00:00${parisOffset}`;
+    const dayEnd   = `${date}T23:59:59${parisOffset}`;
+
+    console.log("[check-availability] Paris offset:", parisOffset, "| timeMin:", dayStart);
 
     const params = new URLSearchParams({
       timeMin:      dayStart,
@@ -106,6 +119,7 @@ exports.handler = async function(event) {
       singleEvents: "true",
       orderBy:      "startTime",
       maxResults:   "250",
+      timeZone:     "Europe/Paris",
     });
 
     console.log("[check-availability] étape 3: appel Google Calendar API");
@@ -140,8 +154,11 @@ exports.handler = async function(event) {
     const gcalData = await gcalRes.json();
     const events   = gcalData.items || [];
     console.log("[check-availability] étape 5: nb events:", events.length);
+    console.log("[check-availability] events reçus:", JSON.stringify(
+      events.map(e => ({ titre: e.summary, debut: e.start?.dateTime || e.start?.date, fin: e.end?.dateTime || e.end?.date }))
+    ));
 
-    /* ── Générer les créneaux selon horaires d'ouverture ── */
+    /* ── Générer les créneaux en heure Europe/Paris ── */
     const [startH, startM] = heureOuv.split(":").map(Number);
     const [endH,   endM]   = heureFerm.split(":").map(Number);
     const startMinutes     = startH * 60 + startM;
@@ -151,7 +168,8 @@ exports.handler = async function(event) {
     for (let m = startMinutes; m + dureeMin <= endMinutes; m += dureeMin) {
       const hh  = Math.floor(m / 60).toString().padStart(2, "0");
       const mm  = (m % 60).toString().padStart(2, "0");
-      const slotStart = new Date(`${date}T${hh}:${mm}:00`);
+      /* Créneau exprimé en heure Paris (avec offset détecté) */
+      const slotStart = new Date(`${date}T${hh}:${mm}:00${parisOffset}`);
       const slotEnd   = new Date(slotStart.getTime() + dureeMin * 60000);
 
       /* Compter les RDV existants qui chevauchent ce créneau */
