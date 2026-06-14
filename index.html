@@ -4091,7 +4091,11 @@
             <h1 class="page-title">Mon agenda</h1>
           </div>
           <div style="display:flex;gap:10px;align-items:center">
-            <!-- Spinner discret affiché pendant les fetches -->
+            <!-- Toggle Calendrier / Liste -->
+            <div style="display:flex;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;padding:3px;gap:3px">
+              <button id="btn-view-calendar" onclick="switchAgendaView('calendar')" style="background:#70B2DE;color:#000;border:none;border-radius:7px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s;font-family:'Space Grotesk',sans-serif">📅 Calendrier</button>
+              <button id="btn-view-list"     onclick="switchAgendaView('list')"     style="background:none;color:var(--text-muted);border:none;border-radius:7px;padding:6px 14px;font-size:12px;font-weight:500;cursor:pointer;transition:all 0.15s;font-family:'Space Grotesk',sans-serif">📋 Liste</button>
+            </div>
             <div id="gcal-loading-spinner" style="display:none;width:18px;height:18px">
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;animation:spin 0.8s linear infinite">
                 <circle cx="12" cy="12" r="10" stroke="#70B2DE" stroke-width="3" stroke-dasharray="31.4" stroke-dashoffset="10" stroke-linecap="round"/>
@@ -4104,31 +4108,46 @@
           <style>
             @keyframes spin { to { transform: rotate(360deg); } }
             #fullcalendar-container { background: transparent; }
-            .fc .fc-toolbar { background: transparent; padding: 8px 0; margin-bottom: 16px; }
-            .fc .fc-toolbar-title { color: var(--text, #fff); font-size: 18px; font-weight: 600; }
-            .fc .fc-button { background: var(--surface-2, #252525) !important; border: 1px solid var(--border, #333) !important; color: var(--text, #fff) !important; border-radius: 8px !important; padding: 6px 12px !important; font-size: 13px !important; box-shadow: none !important; }
-            .fc .fc-button:hover { background: #333 !important; border-color: #70B2DE !important; }
-            .fc .fc-button-active, .fc .fc-button-primary:not(:disabled).fc-button-active { background: #70B2DE !important; border-color: #70B2DE !important; color: #000 !important; }
-            .fc .fc-scrollgrid { border-color: var(--border, #2a2a2a) !important; border-radius: 8px; overflow: hidden; }
-            .fc .fc-scrollgrid-section > td { border-color: var(--border, #2a2a2a) !important; }
-            .fc .fc-col-header-cell { background: var(--surface, #141414) !important; border-color: var(--border, #2a2a2a) !important; padding: 10px 0 !important; }
-            .fc .fc-col-header-cell-cushion { color: var(--text-muted, #a0a0a0) !important; font-size: 12px !important; font-weight: 600 !important; text-transform: uppercase !important; letter-spacing: 0.5px !important; text-decoration: none !important; }
-            .fc .fc-daygrid-day, .fc .fc-timegrid-col { background: transparent !important; border-color: var(--border, #2a2a2a) !important; }
-            .fc .fc-day-today { background: rgba(112, 178, 222, 0.08) !important; }
-            .fc .fc-day-today .fc-col-header-cell-cushion { color: #70B2DE !important; }
-            .fc .fc-timegrid-slot-label-cushion { color: var(--text-muted, #666) !important; font-size: 11px !important; }
-            .fc .fc-timegrid-slot { border-color: var(--border, #222) !important; height: 40px !important; }
+            .fc .fc-toolbar { background: transparent; padding: 8px 0; margin-bottom: 20px; }
+            .fc .fc-toolbar-title { font-size: 20px; font-weight: 700; color: #ffffff; font-family: 'Space Grotesk',sans-serif; letter-spacing: -0.3px; }
+            .fc .fc-button { background: #1e1e1e !important; border: 1px solid #2a2a2a !important; color: #ffffff !important; border-radius: 10px !important; font-family: 'Space Grotesk',sans-serif !important; font-size: 13px !important; font-weight: 500 !important; padding: 8px 16px !important; transition: all 0.2s ease !important; box-shadow: none !important; }
+            .fc .fc-button:hover { background: #252525 !important; border-color: #70B2DE !important; color: #70B2DE !important; }
+            .fc .fc-button-active, .fc .fc-button-primary:not(:disabled).fc-button-active { background: #70B2DE !important; border-color: #70B2DE !important; color: #000000 !important; font-weight: 600 !important; }
+            .fc .fc-col-header { background: #0f0f0f !important; }
+            .fc .fc-col-header-cell { border-color: #1e1e1e !important; padding: 12px 0 !important; }
+            .fc .fc-col-header-cell-cushion { color: #888888 !important; font-size: 11px !important; font-weight: 600 !important; text-transform: uppercase !important; letter-spacing: 1px !important; text-decoration: none !important; }
+            .fc .fc-scrollgrid { border: 1px solid #1e1e1e !important; border-radius: 12px !important; overflow: hidden !important; }
+            .fc .fc-scrollgrid td, .fc .fc-scrollgrid th { border-color: #1a1a1a !important; }
+            .fc .fc-daygrid-day, .fc .fc-timegrid-col { background: #111111 !important; }
+            .fc .fc-timegrid-col.fc-day-today, .fc .fc-daygrid-day.fc-day-today { background: rgba(112,178,222,0.05) !important; }
+            .fc .fc-daygrid-day-number { color: #666666 !important; font-size: 12px !important; font-weight: 500 !important; padding: 8px !important; text-decoration: none !important; }
+            .fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number { color: #70B2DE !important; font-weight: 700 !important; }
+            .fc .fc-col-header-cell.fc-day-today .fc-col-header-cell-cushion { color: #70B2DE !important; }
+            .fc .fc-timegrid-slot-label-cushion { color: #444444 !important; font-size: 11px !important; font-weight: 500 !important; }
+            .fc .fc-timegrid-slot { border-color: #161616 !important; height: 44px !important; }
+            .fc .fc-timegrid-slot-minor { border-color: #131313 !important; border-style: dashed !important; }
             .fc .fc-timegrid-now-indicator-line { border-color: #70B2DE !important; border-width: 2px !important; }
             .fc .fc-timegrid-now-indicator-arrow { border-top-color: #70B2DE !important; border-bottom-color: #70B2DE !important; }
-            .fc .fc-event { background: #70B2DE !important; border: none !important; border-radius: 6px !important; padding: 2px 6px !important; font-size: 12px !important; font-weight: 500 !important; color: #000 !important; cursor: pointer !important; transition: transform .1s, background .1s; }
-            .fc .fc-event:hover { background: #5a9bc9 !important; transform: scale(1.02); }
-            .fc .fc-event-title, .fc .fc-event-time { color: #000 !important; }
-            .fc .fc-daygrid-day-number { color: var(--text-muted, #a0a0a0) !important; font-size: 13px !important; text-decoration: none !important; }
-            .fc .fc-day-today .fc-daygrid-day-number { color: #70B2DE !important; font-weight: 700 !important; }
-            .fc .fc-timegrid-divider { background: var(--border, #2a2a2a) !important; }
-            .fc .fc-scroller::-webkit-scrollbar { width: 4px; }
+            .fc .fc-event { border: none !important; border-radius: 8px !important; padding: 4px 8px !important; cursor: pointer !important; transition: transform 0.15s ease, opacity 0.15s ease !important; background: linear-gradient(135deg,#70B2DE,#5a9bc9) !important; }
+            .fc .fc-event:hover { transform: scale(1.02) !important; opacity: 0.9 !important; }
+            .fc .fc-event-title { font-size: 12px !important; font-weight: 600 !important; font-family: 'Space Grotesk',sans-serif !important; color: #000 !important; }
+            .fc .fc-event-time { font-size: 11px !important; opacity: 0.8 !important; color: #000 !important; }
+            .fc .fc-timegrid-divider { background: #1a1a1a !important; }
+            .fc .fc-scroller::-webkit-scrollbar { width: 4px; height: 4px; }
             .fc .fc-scroller::-webkit-scrollbar-track { background: transparent; }
-            .fc .fc-scroller::-webkit-scrollbar-thumb { background: var(--border, #333); border-radius: 2px; }
+            .fc .fc-scroller::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 4px; }
+            /* Vue liste */
+            .agenda-date-group { margin-bottom: 24px; }
+            .agenda-date-header { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #1e1e1e; margin-bottom:12px; }
+            .agenda-date-label { font-size:14px; font-weight:700; color:#70B2DE; text-transform:capitalize; }
+            .agenda-date-count { font-size:11px; color:#666; background:#1a1a1a; padding:2px 8px; border-radius:10px; }
+            .agenda-event-item { display:flex; align-items:center; gap:16px; padding:14px 16px; background:#111111; border:1px solid #1a1a1a; border-radius:12px; margin-bottom:8px; cursor:pointer; transition:all 0.2s ease; }
+            .agenda-event-item:hover { border-color:#70B2DE; background:#141414; transform:translateX(4px); }
+            .agenda-event-time { font-size:12px; color:#888; font-weight:500; min-width:110px; font-variant-numeric:tabular-nums; }
+            .agenda-event-title { font-size:14px; font-weight:600; color:#ffffff; }
+            .agenda-event-location { font-size:12px; color:#666; margin-top:2px; }
+            .agenda-event-dot { width:8px; height:8px; border-radius:50%; margin-left:auto; flex-shrink:0; }
+            .agenda-empty { text-align:center; padding:60px 20px; color:#444; }
           </style>
           <!-- Skeleton loader -->
           <div id="gcal-skeleton" style="position:relative;border-radius:8px;overflow:hidden">
@@ -4181,6 +4200,8 @@
           </div>
           <!-- Calendrier — invisible jusqu'à ce qu'il soit prêt -->
           <div id="fullcalendar-container" style="visibility:hidden;opacity:0;transition:opacity 0.3s ease"></div>
+          <!-- Vue liste -->
+          <div id="agenda-list-view" style="display:none"></div>
         </div>
       </div>
 
@@ -9860,26 +9881,32 @@ function initGoogleCalendar() {
   }
 
   _gcalInstance = new FullCalendar.Calendar(calendarEl, {
-    initialView: "timeGridWeek",
-    locale: "fr",
+    initialView:   "timeGridWeek",
+    locale:        "fr",
+    firstDay:      1,
+    nowIndicator:  true,
+    allDaySlot:    true,
+    weekends:      true,
+    dayMaxEvents:  3,
+    moreLinkText:  function(n) { return "+" + n + " autres"; },
     headerToolbar: {
       left:   "prev,next today",
       center: "title",
       right:  "dayGridMonth,timeGridWeek,timeGridDay",
     },
-    buttonText: { today: "Aujourd'hui", month: "Mois", week: "Semaine", day: "Jour" },
-    events: [],
-    datesSet: function(info) {
-      _gcalPopulateRange(userId, info.startStr, info.endStr);
-    },
-    eventClick: function(info) { openEventModal(info.event); },
-    dateClick:  function(info) { openNewEventModal(info.dateStr); },
-    eventColor: "#70B2DE",
-    height: "auto",
-    themeSystem: "standard",
-    scrollTime: "08:00:00",
-    slotMinTime: "07:00:00",
-    slotMaxTime: "22:00:00",
+    buttonText:    { today: "Aujourd'hui", month: "Mois", week: "Semaine", day: "Jour" },
+    events:        [],
+    datesSet:      function(info) { _gcalPopulateRange(userId, info.startStr, info.endStr); },
+    eventClick:    function(info) { openEventModal(info.event); },
+    dateClick:     function(info) { openNewEventModal(info.dateStr); },
+    eventColor:    "#70B2DE",
+    height:        "auto",
+    themeSystem:   "standard",
+    scrollTime:    "08:00:00",
+    slotMinTime:   "07:00:00",
+    slotMaxTime:   "21:00:00",
+    slotDuration:  "00:30:00",
+    snapDuration:  "00:15:00",
   });
 
   // Render immediately — calendar structure visible at once
@@ -9888,6 +9915,97 @@ function initGoogleCalendar() {
   calendarEl.style.visibility = "visible";
   calendarEl.style.opacity    = "1";
   calendarEl.style.transition = "opacity 0.3s ease";
+}
+
+/* ---- Toggle Calendrier / Liste ---- */
+function switchAgendaView(view) {
+  var calEl    = document.getElementById("fullcalendar-container");
+  var listEl   = document.getElementById("agenda-list-view");
+  var btnCal   = document.getElementById("btn-view-calendar");
+  var btnList  = document.getElementById("btn-view-list");
+  if (!calEl || !listEl) return;
+
+  if (view === "calendar") {
+    calEl.style.display  = "";
+    listEl.style.display = "none";
+    if (btnCal)  { btnCal.style.background = "#70B2DE"; btnCal.style.color = "#000"; btnCal.style.fontWeight = "600"; }
+    if (btnList) { btnList.style.background = "none"; btnList.style.color = "var(--text-muted)"; btnList.style.fontWeight = "500"; }
+    if (_gcalInstance) _gcalInstance.render();
+  } else {
+    calEl.style.display  = "none";
+    listEl.style.display = "block";
+    if (btnCal)  { btnCal.style.background = "none"; btnCal.style.color = "var(--text-muted)"; btnCal.style.fontWeight = "500"; }
+    if (btnList) { btnList.style.background = "#70B2DE"; btnList.style.color = "#000"; btnList.style.fontWeight = "600"; }
+    loadAgendaList();
+  }
+}
+
+function renderAgendaList(events) {
+  var el = document.getElementById("agenda-list-view");
+  if (!el) return;
+  if (!events || !events.length) {
+    el.innerHTML = '<div class="agenda-empty"><div style="font-size:48px;margin-bottom:16px">📅</div><p>Aucun RDV à venir</p></div>';
+    return;
+  }
+
+  events.sort(function(a,b) { return new Date(a.start) - new Date(b.start); });
+  var grouped = {};
+  events.forEach(function(evt) {
+    var d    = new Date(evt.start || evt.startStr);
+    var date = d.toLocaleDateString("fr-FR", { weekday:"long", day:"numeric", month:"long", year:"numeric" });
+    if (!grouped[date]) grouped[date] = [];
+    grouped[date].push(evt);
+  });
+
+  var html = "";
+  Object.entries(grouped).forEach(function(pair) {
+    var date = pair[0];
+    var evts = pair[1];
+    html += '<div class="agenda-date-group">'
+      + '<div class="agenda-date-header">'
+      + '<span class="agenda-date-label">' + date + '</span>'
+      + '<span class="agenda-date-count">' + evts.length + ' RDV</span>'
+      + '</div><div class="agenda-events-list">';
+    evts.forEach(function(evt) {
+      var start    = new Date(evt.start || evt.startStr);
+      var end      = new Date(evt.end   || evt.endStr || start.getTime() + 3600000);
+      var timeStr  = start.toLocaleTimeString("fr-FR", {hour:"2-digit",minute:"2-digit"})
+        + " → " + end.toLocaleTimeString("fr-FR", {hour:"2-digit",minute:"2-digit"});
+      var title    = evt.title || evt.summary || "Sans titre";
+      var location = evt.extendedProps?.location || evt.location || "";
+      var color    = evt.backgroundColor || evt.color || "#70B2DE";
+      html += '<div class="agenda-event-item" onclick="if(_gcalInstance){var e=_gcalInstance.getEventById(\'' + (evt.id||"") + '\');if(e)openEventModal(e);}">'
+        + '<div class="agenda-event-time">' + timeStr + '</div>'
+        + '<div class="agenda-event-info">'
+        + '<div class="agenda-event-title">' + title + '</div>'
+        + (location ? '<div class="agenda-event-location">📍 ' + location + '</div>' : '')
+        + '</div>'
+        + '<div class="agenda-event-dot" style="background:' + color + '"></div>'
+        + '</div>';
+    });
+    html += '</div></div>';
+  });
+  el.innerHTML = html;
+}
+
+async function loadAgendaList() {
+  var el = document.getElementById("agenda-list-view");
+  if (el) el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-muted)">Chargement…</div>';
+  var client = (typeof clients !== "undefined" && clients[0]) || {};
+  var userId = client.email || "";
+  if (!userId) { if (el) el.innerHTML = '<div class="agenda-empty"><p>Connectez Google Calendar pour voir vos RDV.</p></div>'; return; }
+
+  var now      = new Date();
+  var in60days = new Date(now.getTime() + 60 * 86400000);
+  try {
+    var res    = await fetch("/.netlify/functions/get-google-calendar-events?userId="
+      + encodeURIComponent(userId) + "&start=" + encodeURIComponent(now.toISOString())
+      + "&end=" + encodeURIComponent(in60days.toISOString()));
+    var events = await res.json();
+    renderAgendaList(Array.isArray(events) ? events : (events.events || []));
+  } catch(e) {
+    if (el) el.innerHTML = '<div class="agenda-empty"><p>Erreur lors du chargement.</p></div>';
+  }
 }
 
 // Load events for a given range into the calendar (uses cache)
