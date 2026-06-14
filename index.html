@@ -4923,10 +4923,10 @@ function initOverview() {
 
 /* Recalcule graphiques + résumé depuis les arrays appels/conversations_wa */
 function updateOverviewKPIs() {
-  /* Utilise appels et conversations_wa directement — historiqueData n'a pas de champ canal */
-  const myAppels = appels.filter(function(a) { return _matchesCurrentClient(a.client_id); });
-  const myWa     = conversations_wa.filter(function(c) { return _matchesCurrentClient(c.client_id); });
-  if (!myAppels.length && !myWa.length) return;
+  /* Dashboard mono-client — pas besoin de filtrer par client_id */
+  const myAppels = appels;
+  const myWa     = conversations_wa;
+  console.log("[updateOverviewKPIs] appels:", myAppels.length, "| wa:", myWa.length, "| period:", currentPeriod);
 
   const days = currentPeriod || 30;
   const now  = new Date();
