@@ -48,16 +48,6 @@ exports.handler = async function(event, context) {
     langue        = "fr-FR",
   } = body;
 
-  /* Mapping voix → provider Vapi */
-  const VOICE_PROVIDER_MAP = {
-    chloe:  { provider: "azure",  voiceId: "fr-FR-DeniseNeural"  },
-    thomas: { provider: "azure",  voiceId: "fr-FR-HenriNeural"   },
-    sofia:  { provider: "azure",  voiceId: "es-ES-ElviraNeural"  },
-    james:  { provider: "azure",  voiceId: "en-US-GuyNeural"     },
-    amina:  { provider: "azure",  voiceId: "ar-SA-ZariyahNeural" },
-  };
-  const voiceConfig = VOICE_PROVIDER_MAP[voix] || { provider: "azure", voiceId: "fr-FR-DeniseNeural" };
-
   /* Mapping langue → code transcriber */
   const LANG_MAP = {
     "fr": "fr", "fr-FR": "fr",
@@ -66,25 +56,62 @@ exports.handler = async function(event, context) {
   };
   const transcriberLang = LANG_MAP[langue] || "fr";
 
+  /* voix peut être un ElevenLabs voice_id direct ou une clé legacy (ignorée) */
+  const resolvedVoiceId = voix && voix.length > 10 ? voix : "21m00Tcm4TlvDq8ikWAM";
+
   const vapiPayload = {
-    name:  nomAssistant,
-    voice: {
-      provider: voiceConfig.provider,
-      voiceId:  voiceConfig.voiceId,
-      speed:    parseFloat(vitesseParole) || 1.0,
-    },
-    model: {
-      provider:     "openai",
-      model:        "gpt-4o-mini",
-      systemPrompt: promptSysteme || "",
-    },
+    name: nomAssistant,
+
     transcriber: {
       provider: "deepgram",
+      model:    "nova-3",
       language: transcriberLang,
     },
-    silenceTimeoutSeconds:      parseInt(silenceMax) || 3,
-    backgroundDenoisingEnabled: true,
-    endCallOnSilence:           !interruptions,
+
+    model: {
+      provider:    "groq",
+      model:       "llama-3.3-70b-versatile",
+      messages:    [{ role: "system", content: promptSysteme || "" }],
+      temperature: 0.7,
+    },
+
+    voice: {
+      provider:                 "11labs",
+      model:                    "eleven_flash_v2_5",
+      voiceId:                  resolvedVoiceId,
+      stability:                0.4,
+      similarityBoost:          0.75,
+      speed:                    0.95,
+      style:                    0.3,
+      optimizeStreamingLatency: 4,
+      useSpeakerBoost:          false,
+      autoMode:                 true,
+    },
+
+    startSpeakingPlan: {
+      waitSeconds:            0.4,
+      onPunctuationSeconds:   0.1,
+      onNoPunctuationSeconds: 0.8,
+      onNumberSeconds:        0.3,
+      smartEndpointingPlan:   { provider: "vapi" },
+    },
+
+    stopSpeakingPlan: {
+      numWords:               3,
+      voiceSeconds:           0.1,
+      backOffSeconds:         0.5,
+      acknowledgementPhrases: [
+        "hmm", "oui", "d'accord", "je vois",
+        "bien sûr", "exactement", "ok", "très bien",
+      ],
+    },
+
+    silenceTimeoutSeconds: 20,
+    maxDurationSeconds:    600,
+    backgroundSound:       "off",
+    endCallMessage:        "Au revoir, bonne journée !",
+    endCallPhrases:        ["au revoir", "bonne journée", "merci de votre appel", "à bientôt"],
+    voicemailMessage:      "Bonjour, merci de nous rappeler. À bientôt !",
   };
 
   try {

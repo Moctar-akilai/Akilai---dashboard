@@ -33,7 +33,7 @@ exports.handler = async function(event, context) {
     if (tonalite      !== undefined) fields["Tonalite"]      = tonalite;
     if (promptSysteme !== undefined) fields["PromptSysteme"] = promptSysteme;
     if (vitesseParole   !== undefined) fields["VitesseParole"]   = Number(vitesseParole);
-    if (voiceId         !== undefined) fields["VoiceId"]         = voiceId;
+    if (voiceId) fields["VoiceId"] = voiceId;
     if (capaciteCreneau !== undefined) fields["Capacite Creneau"] = Number(capaciteCreneau);
     if (dureeRDV        !== undefined) fields["Duree RDV"]       = Number(dureeRDV);
     if (heureOuverture  !== undefined) fields["Heure Ouverture"] = heureOuverture;
