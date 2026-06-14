@@ -4713,11 +4713,11 @@ function updateSummary(days, callData, waData) {
   const totalWa    = waData.reduce((a,b) => a+b, 0);
   const avgCalls   = days > 0 ? (totalCalls / days).toFixed(1) : 0;
 
-  /* Taux d'escalade depuis historiqueData (30j) */
+  /* Taux d'escalade depuis appels (30j) */
   const cutoff    = new Date(Date.now() - days * 86400000);
-  const recentH   = historiqueData.filter(function(h) { return new Date(h.dateCreation || h.date || 0) > cutoff; });
-  const escalades = recentH.filter(function(h) { return h.escalade === true; }).length;
-  const tauxEsc   = recentH.length > 0 ? ((escalades / recentH.length) * 100).toFixed(1) + "%" : (kpis.taux_escalade + "%");
+  const recentA   = appels.filter(function(h) { return new Date((h.date || "1970") + "T12:00:00") > cutoff; });
+  const escalades = recentA.filter(function(h) { return h.escalade === true; }).length;
+  const tauxEsc   = recentA.length > 0 ? ((escalades / recentA.length) * 100).toFixed(1) + "%" : (kpis.taux_escalade + "%");
 
   const el = document.getElementById("summaryPeriodLabel");
   if (el) el.textContent = days + " derniers jours";
@@ -4918,26 +4918,38 @@ function initOverview() {
   buildCharts(currentPeriod);
 }
 
-/* Recalcule graphiques + résumé depuis historiqueData réel */
+/* Recalcule graphiques + résumé depuis les arrays appels/conversations_wa */
 function updateOverviewKPIs() {
-  if (!Array.isArray(historiqueData) || !historiqueData.length) return;
+  /* Utilise appels et conversations_wa directement — historiqueData n'a pas de champ canal */
+  const myAppels = appels.filter(function(a) { return _matchesCurrentClient(a.client_id); });
+  const myWa     = conversations_wa.filter(function(c) { return _matchesCurrentClient(c.client_id); });
+  if (!myAppels.length && !myWa.length) return;
 
   const days = currentPeriod || 30;
   const now  = new Date();
+  const cutoff = new Date(now.getTime() - days * 86400000);
 
-  /* Grouper par date (dd/mm) */
+  /* Grouper par label dd/mm */
+  function dateToLabel(dateStr) {
+    /* dateStr est "YYYY-MM-DD" */
+    if (!dateStr) return null;
+    var parts = dateStr.split("-");
+    return parts.length === 3 ? parts[2] + "/" + parts[1] : null;
+  }
+
   const appelsByDate = {};
-  const msgsByDate   = {};
-  historiqueData.forEach(function(h) {
-    const d = new Date(h.dateCreation || h.date || 0);
-    if (isNaN(d.getTime())) return;
-    const label = d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" });
-    const canal = (h.canal || h.type || "").toLowerCase();
-    if (canal === "vocal" || canal === "appel" || canal === "voice") {
-      appelsByDate[label] = (appelsByDate[label] || 0) + 1;
+  myAppels.forEach(function(h) {
+    if (h.date && new Date(h.date + "T12:00:00") >= cutoff) {
+      var label = dateToLabel(h.date);
+      if (label) appelsByDate[label] = (appelsByDate[label] || 0) + 1;
     }
-    if (canal === "whatsapp") {
-      msgsByDate[label] = (msgsByDate[label] || 0) + 1;
+  });
+
+  const msgsByDate = {};
+  myWa.forEach(function(h) {
+    if (h.date && new Date(h.date + "T12:00:00") >= cutoff) {
+      var label = dateToLabel(h.date);
+      if (label) msgsByDate[label] = (msgsByDate[label] || 0) + 1;
     }
   });
 
@@ -4970,23 +4982,22 @@ function updateOverviewKPIs() {
   var totalCalls = callData.reduce(function(a,b){ return a+b; }, 0);
   var totalWa    = waData.reduce(function(a,b){ return a+b; }, 0);
   var setText = function(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; };
-  setText("chartCallsTotal", totalCalls + " appels");
-  setText("chartWaTotal",    totalWa.toLocaleString("fr-FR") + " messages");
+  setText("chartCallsTotal",    totalCalls + " appel" + (totalCalls !== 1 ? "s" : ""));
+  setText("chartWaTotal",       totalWa.toLocaleString("fr-FR") + " message" + (totalWa !== 1 ? "s" : ""));
   setText("chartCallsSubtitle", days + " derniers jours");
   setText("chartWaSubtitle",    days + " derniers jours");
 
-  /* RDV pris depuis historiqueData (complète la valeur automations) */
-  var rdvFromHist = historiqueData.filter(function(h) {
-    var d = (h.details || "").toLowerCase();
-    var r = (h.resume  || "").toLowerCase();
-    return h.intention === "RDV" || d.includes("rdv confirmé") || r.includes("rendez-vous");
+  /* RDV pris — depuis historiqueData (resume contient "rendez-vous") */
+  var rdvFromHist = myAppels.filter(function(h) {
+    var r = (h.resume || "").toLowerCase();
+    return r.includes("rdv confirmé") || r.includes("rendez-vous");
   }).length;
   if (rdvFromHist > 0) {
     setText("kpiRdvVal",   rdvFromHist);
     setText("kpiRdvDelta", "total");
   }
 
-  /* Résumé période */
+  /* Résumé période — passe aussi les appels récents pour escalade */
   updateSummary(days, callData, waData);
 }
 
