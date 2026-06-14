@@ -1,4 +1,5 @@
 const { BASE_URL, headers: airtableHeaders, preflight } = require("./config");
+const { getTermeContact } = require("./notify-rdv");
 
 /* Cache token en mémoire (50 min) */
 const tokenCache = {};
@@ -90,7 +91,7 @@ exports.handler = async function(event) {
     if (!dateDebut) return vapiError("Erreur: dateDebut manquante.");
     if (!dateFin)   return vapiError("Erreur: dateFin manquante.");
 
-    const tokenFields = ["Google Access Token", "Google Refresh Token", "Google Calendar ID"]
+    const tokenFields = ["Google Access Token", "Google Refresh Token", "Google Calendar ID", "Secteur", "Email"]
       .map(f => `fields[]=${encodeURIComponent(f)}`).join("&");
     const searchUrl  = `${BASE_URL}/Clients?filterByFormula=${encodeURIComponent(`{User ID}="${userId}"`)}&maxRecords=1&${tokenFields}`;
     const clientRes  = await fetch(searchUrl, { headers: airtableHeaders });
@@ -103,6 +104,9 @@ exports.handler = async function(event) {
     const storedToken  = fields["Google Access Token"]  || "";
     const refreshToken = fields["Google Refresh Token"] || "";
     const calendarId   = fields["Google Calendar ID"]   || "primary";
+    const secteur      = fields["Secteur"]              || "";
+    const clientEmail  = fields["Email"]                || "";
+    const terme        = getTermeContact(secteur);
 
     if (!storedToken && !refreshToken) return vapiError("Google Calendar non connecté.");
 
@@ -111,7 +115,7 @@ exports.handler = async function(event) {
 
     const eventBody = {
       summary:     titre || `RDV — ${nomPatient}`,
-      description: `Patient : ${nomPatient}${telephone ? `\nTél : ${telephone}` : ""}`,
+      description: `${terme} : ${nomPatient}${telephone ? `\nTél : ${telephone}` : ""}`,
       start:       { dateTime: dateDebut, timeZone: "Europe/Paris" },
       end:         { dateTime: dateFin,   timeZone: "Europe/Paris" },
     };
@@ -144,7 +148,7 @@ exports.handler = async function(event) {
       return vapiError(`Erreur Google Calendar ${calRes.status}.`);
     }
 
-    await calRes.json();
+    const calEvent = await calRes.json();
 
     /* Affichage en heure de Paris */
     const dateObj  = new Date(dateDebut + (dateDebut.includes("+") ? "" : "+02:00"));
@@ -155,6 +159,24 @@ exports.handler = async function(event) {
       hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris",
     });
     const resultText = `RDV confirmé le ${dateFmt} à ${heureFmt} pour ${nomPatient}.`;
+
+    /* Notification email — fire-and-forget */
+    const serverUrl = process.env.URL || "https://portal-akilai.netlify.app";
+    fetch(`${serverUrl}/.netlify/functions/notify-rdv`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId,
+        nomPatient,
+        date:        dateFmt,
+        heure:       heureFmt,
+        titre,
+        telephone,
+        secteur,
+        clientEmail,
+        eventLink:   calEvent.htmlLink || "",
+      }),
+    }).catch(e => console.warn("[vapi-tool-create-appointment] notify-rdv error:", e.message));
 
     console.log("[vapi-tool-create-appointment] résultat:", resultText);
 
