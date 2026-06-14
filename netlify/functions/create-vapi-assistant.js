@@ -210,24 +210,65 @@ exports.handler = async function(event, context) {
 
   /* Payload Vapi — structure officielle */
   const vapiPayload = {
-    name: nomAssistant,
+    name:      nomAssistant,
     serverUrl: WEBHOOK_URL,
     metadata: {
       userId:   clientEmail,
       clientId: clientId || "",
     },
+
+    transcriber: {
+      provider: "deepgram",
+      model:    "nova-3",
+      language: langue || "fr",
+    },
+
     model: {
-      provider:    "anthropic",
-      model:       "claude-sonnet-4-6",
+      provider:    "groq",
+      model:       "llama-3.3-70b-versatile",
       messages:    [{ role: "system", content: promptComplet }],
-      temperature: 0.3,
-      maxTokens:   500,
+      temperature: 0.7,
       tools,
     },
+
     voice: {
-      provider: "11labs",
-      voiceId:  voiceId || "21m00Tcm4TlvDq8ikWAM",
+      provider:                 "11labs",
+      model:                    "eleven_flash_v2_5",
+      voiceId:                  voiceId || "21m00Tcm4TlvDq8ikWAM",
+      stability:                0.4,
+      similarityBoost:          0.75,
+      speed:                    0.95,
+      style:                    0.3,
+      optimizeStreamingLatency: 4,
+      useSpeakerBoost:          false,
+      autoMode:                 true,
     },
+
+    startSpeakingPlan: {
+      waitSeconds:           0.4,
+      onPunctuationSeconds:  0.1,
+      onNoPunctuationSeconds: 0.8,
+      onNumberSeconds:       0.3,
+      smartEndpointingPlan:  { provider: "vapi" },
+    },
+
+    stopSpeakingPlan: {
+      numWords:               3,
+      voiceSeconds:           0.1,
+      backOffSeconds:         0.5,
+      acknowledgementPhrases: [
+        "hmm", "oui", "d'accord", "je vois",
+        "bien sûr", "exactement", "ok", "très bien",
+      ],
+    },
+
+    silenceTimeoutSeconds: 20,
+    maxDurationSeconds:    600,
+    backgroundSound:       "off",
+    endCallMessage:        "Au revoir, bonne journée !",
+    endCallPhrases:        ["au revoir", "bonne journée", "merci de votre appel", "à bientôt"],
+    voicemailMessage:      "Bonjour, merci de nous rappeler. À bientôt !",
+
     language: langue,
   };
 
