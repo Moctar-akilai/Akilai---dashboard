@@ -8321,13 +8321,14 @@ function markAlertRead(id) {
 
 /* ---- 4A — Moteur de règles ---- */
 function checkAlerts(data) {
+  try {
   const now          = new Date();
   const alerts       = [];
-  const _autos       = data.automations || automations;
-  const _tickets     = data.tickets     || tickets;
-  const _appels      = data.appels      || appels;
-  const _kpis        = data.kpis        || kpis;
-  const _autoState   = data.autoState   || autoState;
+  const _autos       = Array.isArray(data.automations) ? data.automations : (Array.isArray(automations) ? automations : []);
+  const _tickets     = Array.isArray(data.tickets)     ? data.tickets     : (Array.isArray(tickets)     ? tickets     : []);
+  const _appels      = Array.isArray(data.appels)      ? data.appels      : (Array.isArray(appels)      ? appels      : []);
+  const _kpis        = data.kpis || kpis || {};
+  const _autoState   = data.autoState || autoState || {};
 
   /* R1 — Automatisation en erreur depuis > 1 jour */
   _autos.forEach(a => {
@@ -8424,6 +8425,10 @@ function checkAlerts(data) {
   });
 
   return alerts;
+  } catch(e) {
+    console.warn("[checkAlerts] erreur:", e.message, e.stack);
+    return [];
+  }
 }
 
 /* ---- 4A+ — Notifications persistantes client ---- */
@@ -8463,6 +8468,7 @@ function updateClientNotifBadge() {
 }
 
 function checkClientNotifications() {
+  try {
   // Purger les notifs mal formées (sans titre/id) issues d'éventuelles sessions précédentes
   const _stored = getClientNotifs();
   const _valid = _stored.filter(n => n.id && (n.titre || n.title));
@@ -8556,6 +8562,9 @@ function checkClientNotifications() {
   // Mettre à jour lastVisit APRÈS génération
   localStorage.setItem(CLIENT_LAST_VISIT_KEY, String(Date.now()));
   updateClientNotifBadge();
+  } catch(e) {
+    console.warn("[checkClientNotifications] erreur:", e.message, e.stack);
+  }
 }
 
 /* ---- 4B — Centre de notifications ---- */
@@ -8563,7 +8572,8 @@ let _currentAlerts = [];
 let _bannerCtaSection = null;
 
 function updateNotifications() {
-  _currentAlerts = checkAlerts({});
+  try { _currentAlerts = checkAlerts({}); } catch(e) { _currentAlerts = []; }
+  _currentAlerts = Array.isArray(_currentAlerts) ? _currentAlerts : [];
   const readIds  = getReadAlerts();
 
   // Fusionner alertes temps-réel + notifications persistantes
