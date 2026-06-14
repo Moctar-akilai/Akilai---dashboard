@@ -4711,10 +4711,19 @@ function buildCharts(days) {
 function updateSummary(days, callData, waData) {
   const totalCalls = callData.reduce((a,b) => a+b, 0);
   const totalWa    = waData.reduce((a,b) => a+b, 0);
-  const avgCalls   = Math.round(totalCalls / callData.length);
+  const avgCalls   = days > 0 ? (totalCalls / days).toFixed(1) : 0;
 
-  document.getElementById("summaryPeriodLabel").textContent = days + " derniers jours";
-  document.getElementById("summaryStats").innerHTML = `
+  /* Taux d'escalade depuis historiqueData (30j) */
+  const cutoff    = new Date(Date.now() - days * 86400000);
+  const recentH   = historiqueData.filter(function(h) { return new Date(h.dateCreation || h.date || 0) > cutoff; });
+  const escalades = recentH.filter(function(h) { return h.escalade === true; }).length;
+  const tauxEsc   = recentH.length > 0 ? ((escalades / recentH.length) * 100).toFixed(1) + "%" : (kpis.taux_escalade + "%");
+
+  const el = document.getElementById("summaryPeriodLabel");
+  if (el) el.textContent = days + " derniers jours";
+  const statsEl = document.getElementById("summaryStats");
+  if (!statsEl) return;
+  statsEl.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
       <span style="font-size:12px;color:var(--text-muted)">Total appels</span>
       <span style="font-size:14px;font-weight:700;color:var(--text)">${totalCalls}</span>
@@ -4729,7 +4738,7 @@ function updateSummary(days, callData, waData) {
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0">
       <span style="font-size:12px;color:var(--text-muted)">Taux d'escalade</span>
-      <span style="font-size:14px;font-weight:700;color:var(--danger)">${kpis.taux_escalade}%</span>
+      <span style="font-size:14px;font-weight:700;color:var(--danger)">${tauxEsc}</span>
     </div>
   `;
 }
@@ -4909,6 +4918,78 @@ function initOverview() {
   buildCharts(currentPeriod);
 }
 
+/* Recalcule graphiques + résumé depuis historiqueData réel */
+function updateOverviewKPIs() {
+  if (typeof historiqueData === "undefined" || !historiqueData.length) return;
+
+  const days = currentPeriod || 30;
+  const now  = new Date();
+
+  /* Grouper par date (dd/mm) */
+  const appelsByDate = {};
+  const msgsByDate   = {};
+  historiqueData.forEach(function(h) {
+    const d = new Date(h.dateCreation || h.date || 0);
+    if (isNaN(d.getTime())) return;
+    const label = d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" });
+    const canal = (h.canal || h.type || "").toLowerCase();
+    if (canal === "vocal" || canal === "appel" || canal === "voice") {
+      appelsByDate[label] = (appelsByDate[label] || 0) + 1;
+    }
+    if (canal === "whatsapp") {
+      msgsByDate[label] = (msgsByDate[label] || 0) + 1;
+    }
+  });
+
+  /* Générer les N derniers jours */
+  const labels   = [];
+  const callData = [];
+  const waData   = [];
+  for (var i = days - 1; i >= 0; i--) {
+    var d     = new Date(now.getTime() - i * 86400000);
+    var label = d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" });
+    labels.push(label);
+    callData.push(appelsByDate[label] || 0);
+    waData.push(msgsByDate[label] || 0);
+  }
+
+  /* Mettre à jour le graphique appels */
+  if (chartCalls) {
+    chartCalls.data.labels = labels;
+    chartCalls.data.datasets[0].data = callData;
+    chartCalls.update("none");
+  }
+  /* Mettre à jour le graphique WhatsApp */
+  if (chartWa) {
+    chartWa.data.labels = labels;
+    chartWa.data.datasets[0].data = waData;
+    chartWa.update("none");
+  }
+
+  /* Totaux sous-titre */
+  var totalCalls = callData.reduce(function(a,b){ return a+b; }, 0);
+  var totalWa    = waData.reduce(function(a,b){ return a+b; }, 0);
+  var setText = function(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; };
+  setText("chartCallsTotal", totalCalls + " appels");
+  setText("chartWaTotal",    totalWa.toLocaleString("fr-FR") + " messages");
+  setText("chartCallsSubtitle", days + " derniers jours");
+  setText("chartWaSubtitle",    days + " derniers jours");
+
+  /* RDV pris depuis historiqueData (complète la valeur automations) */
+  var rdvFromHist = historiqueData.filter(function(h) {
+    var d = (h.details || "").toLowerCase();
+    var r = (h.resume  || "").toLowerCase();
+    return h.intention === "RDV" || d.includes("rdv confirmé") || r.includes("rendez-vous");
+  }).length;
+  if (rdvFromHist > 0) {
+    setText("kpiRdvVal",   rdvFromHist);
+    setText("kpiRdvDelta", "total");
+  }
+
+  /* Résumé période */
+  updateSummary(days, callData, waData);
+}
+
 /* ============================================================
    NAVIGATION SPA
 ============================================================ */
@@ -4933,6 +5014,7 @@ function navigate(sectionId) {
      Sinon loadClientsFromAirtable() les appellera après le fetch. */
   if (sectionId === 'voix-ia')     { if (clients.length) { loadVoixConfig(); renderVapiToolsFromClient(); } }
   if (sectionId === 'whatsapp-ia') { if (clients.length) { loadWhatsappConfig(); renderWaToolsFromClient(); } }
+  if (sectionId === 'overview')        { setTimeout(updateOverviewKPIs, 50); }
   if (sectionId === 'factures')      { loadFactures(); }
   if (sectionId === 'crm')           { loadCRM(); }
   if (sectionId === 'integrations')  { renderIntegrations(); }
@@ -5676,6 +5758,7 @@ async function loadAutomationsFromAirtable() {
       buildCalendar();
       populateScheduleSelect();
       updateRealKPIs();
+      updateOverviewKPIs();
     } else {
       console.warn("[AkilAI] Aucune automation retournée par Airtable pour ce client.");
     }
@@ -5695,6 +5778,7 @@ async function loadHistoriqueFromAirtable() {
     buildAppelsTable(appels.filter(a => _matchesCurrentClient(a.client_id)));
     buildWaTable(conversations_wa.filter(c => _matchesCurrentClient(c.client_id)));
     updateRealKPIs();
+    updateOverviewKPIs();
   } catch (e) {
     console.warn("[AkilAI] get-historique fallback:", e.message);
   }
