@@ -3779,9 +3779,9 @@
             <p style="font-size:13px;color:var(--text-muted);margin:0">
               Créez et mettez à jour vos contacts HubSpot automatiquement après chaque appel.
             </p>
-            <div id="hubspot-disconnected-view">
-              <input id="hubspot-api-input" type="text" class="input" placeholder="Clé API HubSpot (pat-…)" style="font-size:13px;padding:8px 12px;margin-bottom:8px" />
-              <button class="btn btn-primary btn-sm" onclick="saveHubspot()">Connecter HubSpot</button>
+            <div id="hubspot-disconnected-view" style="display:flex;flex-direction:column;gap:8px">
+              <input id="hubspot-api-input" type="text" class="input" placeholder="Clé API HubSpot (pat-…)" style="font-size:13px;padding:8px 12px" />
+              <button class="btn btn-primary btn-sm" style="width:100%" onclick="saveHubspot()">Connecter HubSpot</button>
             </div>
             <div id="hubspot-connected-view" style="display:none;flex-direction:column;gap:8px">
               <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#22c55e"><span style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block"></span>HubSpot connecté</div>
