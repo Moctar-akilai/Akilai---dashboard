@@ -798,7 +798,9 @@ canvas{max-width:100%!important}
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button class="btn sm ghost crm-filter-btn active" data-filter="all">Tous</button>
           <button class="btn sm ghost crm-filter-btn" data-filter="Prospect">Prospect</button>
+          <button class="btn sm ghost crm-filter-btn" data-filter="À contacter">À contacter</button>
           <button class="btn sm ghost crm-filter-btn" data-filter="Contacté">Contacté</button>
+          <button class="btn sm ghost crm-filter-btn" data-filter="Prospect chaud">Prospect chaud</button>
           <button class="btn sm ghost crm-filter-btn" data-filter="Démo planifiée">Démo</button>
           <button class="btn sm ghost crm-filter-btn" data-filter="Proposition envoyée">Proposition</button>
           <button class="btn sm ghost crm-filter-btn" data-filter="Gagné">Gagné</button>
@@ -876,7 +878,7 @@ canvas{max-width:100%!important}
           </div>
           <div class="field"><label>Statut</label>
             <select id="lfStatut">
-              <option>Prospect</option><option>Contacté</option><option>Démo planifiée</option>
+              <option>Prospect</option><option>À contacter</option><option>Contacté</option><option>Prospect chaud</option><option>Démo planifiée</option>
               <option>Proposition envoyée</option><option>Gagné</option><option>Perdu</option>
             </select>
           </div>
@@ -4468,13 +4470,15 @@ let editingLeadId = null;
 
 const CRM_STATUT_COLORS = {
   'Prospect':              '#94a3b8',
+  'À contacter':           '#94a3b8',
   'Contacté':              '#60a5fa',
+  'Prospect chaud':        '#fb923c',
   'Démo planifiée':        '#a78bfa',
   'Proposition envoyée':   '#f59e0b',
   'Gagné':                 '#22c55e',
   'Perdu':                 '#ef4444',
 };
-const CRM_KANBAN_COLS = ['Prospect','Contacté','Démo planifiée','Proposition envoyée','Gagné','Perdu'];
+const CRM_KANBAN_COLS = ['Prospect','À contacter','Contacté','Prospect chaud','Démo planifiée','Proposition envoyée','Gagné','Perdu'];
 
 async function loadLeads() {
   const data = await adminFetch('/.netlify/functions/admin-get-leads');
