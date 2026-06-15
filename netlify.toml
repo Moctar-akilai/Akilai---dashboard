@@ -21,6 +21,9 @@
 [functions."agent-prospection-apify"]
   schedule = "0 7 * * 1"
 
+[functions."agent-prospection-apify-collect"]
+  schedule = "15 7 * * 1"
+
 [functions."generate-invoice"]
   node_bundler = "esbuild"
 
