@@ -18,6 +18,9 @@
 [functions."agent-prospection-cron"]
   schedule = "0 7 * * *"
 
+[functions."agent-prospection-apify"]
+  schedule = "0 7 * * 1"
+
 [functions."generate-invoice"]
   node_bundler = "esbuild"
 
