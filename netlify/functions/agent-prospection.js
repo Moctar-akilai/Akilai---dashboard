@@ -24,11 +24,15 @@ Mohamed Diop (fondateur) reçoit une copie BCC de chaque action à mohamed.diop@
 - Ne jamais relancer un lead marqué "Fermé" ou "Désabonné"`;
 
 /* ─── Templates email ─────────────────────────────────────────── */
+function salutation(prenom) {
+  return prenom ? `Bonjour ${prenom},` : "Bonjour,";
+}
+
 const TEMPLATES = {
   J0: {
     médical: (e) => ({
       objet: `Une question pour ${e.entreprise}`,
-      corps: `Bonjour,
+      corps: `${salutation(e.prenom)}
 
 Vos patients peinent parfois à joindre le cabinet parce que la ligne est occupée ? Nous travaillons avec des cabinets médicaux à Toulouse pour déployer des assistants virtuels capables de répondre aux appels 24h/24, confirmer les rendez-vous automatiquement et donner les informations de base à vos patients.
 
@@ -38,7 +42,7 @@ ${SIGNATURE}`,
     }),
     restaurant: (e) => ({
       objet: `Une question pour ${e.entreprise}`,
-      corps: `Bonjour,
+      corps: `${salutation(e.prenom)}
 
 Des réservations perdues parce que le téléphone sonne dans le vide pendant que vos serveurs sont occupés à servir les clients ? Nous travaillons avec des restaurants à Toulouse pour déployer des assistants virtuels capables de répondre aux appels 24h/24 et confirmer les réservations automatiquement.
 
@@ -48,7 +52,7 @@ ${SIGNATURE}`,
     }),
     immobilier: (e) => ({
       objet: `Une question pour ${e.entreprise}`,
-      corps: `Bonjour,
+      corps: `${salutation(e.prenom)}
 
 Vos prospects appellent et tombent sur la messagerie au mauvais moment ? Nous travaillons avec des agences immobilières à Toulouse pour déployer des assistants virtuels capables de répondre aux appels 24h/24 et qualifier vos contacts automatiquement.
 
@@ -58,7 +62,7 @@ ${SIGNATURE}`,
     }),
     hôtel: (e) => ({
       objet: `Une question pour ${e.entreprise}`,
-      corps: `Bonjour,
+      corps: `${salutation(e.prenom)}
 
 Des demandes clients sans réponse parce que la ligne est occupée en dehors des heures d'ouverture ? Nous travaillons avec des hôtels à Toulouse pour déployer des assistants virtuels capables de répondre aux appels 24h/24 et traiter les demandes de vos clients en temps réel.
 
@@ -70,7 +74,7 @@ ${SIGNATURE}`,
   J3: {
     default: (e) => ({
       objet: `Re : ${e.entreprise}`,
-      corps: `Bonjour,
+      corps: `${salutation(e.prenom)}
 
 Je me permets de relancer rapidement.
 
@@ -82,7 +86,7 @@ ${SIGNATURE}`,
   J7: {
     default: (e) => ({
       objet: `Dernier message — ${e.entreprise}`,
-      corps: `Bonjour,
+      corps: `${salutation(e.prenom)}
 
 C'est mon dernier message.
 
@@ -451,25 +455,25 @@ Retourne ce JSON exact :
 
   if (intention === "intéressé") {
     sujetReponse  = `Re : ${lead.entreprise} — Démo disponible`;
-    corpsReponse  = `Bonjour ${lead.prenom || ""},\n\nMerci pour votre retour !\n\nJe serais ravi de vous montrer concrètement ce que ça donne en 10 minutes. Vous pouvez réserver directement ici :\n${CALENDLY_LINK}\n\n${SIGNATURE}`;
-    newStatut     = "Prospect chaud";
+    corpsReponse  = `${salutation(lead.prenom)}\n\nMerci pour votre retour !\n\nJe serais ravi de vous montrer concrètement ce que ça donne en 10 minutes. Vous pouvez réserver directement ici :\n${CALENDLY_LINK}\n\n${SIGNATURE}`;
+    newStatut     = "Intéressé";
     estPrioritaire = true;
   } else if (intention === "objection_prix") {
     sujetReponse = `Re : ${lead.entreprise}`;
-    corpsReponse = `Bonjour ${lead.prenom || ""},\n\n${REPONSES_OBJECTION.prix}`;
+    corpsReponse = `${salutation(lead.prenom)}\n\n${REPONSES_OBJECTION.prix}`;
     newStatut    = "À relancer";
   } else if (intention === "objection_confiance") {
     sujetReponse = `Re : ${lead.entreprise}`;
-    corpsReponse = `Bonjour ${lead.prenom || ""},\n\n${REPONSES_OBJECTION.confiance}`;
+    corpsReponse = `${salutation(lead.prenom)}\n\n${REPONSES_OBJECTION.confiance}`;
     newStatut    = "À relancer";
   } else if (intention === "objection_timing") {
     sujetReponse = `Re : ${lead.entreprise}`;
-    corpsReponse = `Bonjour ${lead.prenom || ""},\n\n${REPONSES_OBJECTION.timing}`;
+    corpsReponse = `${salutation(lead.prenom)}\n\n${REPONSES_OBJECTION.timing}`;
     newStatut    = "À relancer";
   } else {
     /* pas_intéressé */
     sujetReponse = `Re : ${lead.entreprise}`;
-    corpsReponse = `Bonjour ${lead.prenom || ""},\n\n${REPONSES_OBJECTION.non}`;
+    corpsReponse = `${salutation(lead.prenom)}\n\n${REPONSES_OBJECTION.non}`;
     newStatut    = "Fermé";
   }
 
