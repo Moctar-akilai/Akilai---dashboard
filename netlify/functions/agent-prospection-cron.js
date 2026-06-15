@@ -1,4 +1,4 @@
-const BASE_ID   = "appQapY4J7WC1iW4F";
+const BASE_ID   = process.env.AIRTABLE_BASE_ID;
 const TABLE_ID  = "tblXJoVNtimnvGRBl";
 const BASE_URL  = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}`;
 const RECAP_TO  = "mohamed.diop@akilai.fr";

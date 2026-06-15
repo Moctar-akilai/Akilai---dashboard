@@ -4,7 +4,7 @@
  * Termine en < 5 secondes.
  */
 
-const AIRTABLE_BASE      = "appQapY4J7WC1iW4F";
+const AIRTABLE_BASE      = process.env.AIRTABLE_BASE_ID;
 const AIRTABLE_RUNS_TABLE = "tbl8kdggBd4wJsO3Z"; // ApifyRuns
 const AIRTABLE_RUNS_URL  = `https://api.airtable.com/v0/${AIRTABLE_BASE}/${AIRTABLE_RUNS_TABLE}`;
 const APIFY_BASE         = "https://api.apify.com/v2";
