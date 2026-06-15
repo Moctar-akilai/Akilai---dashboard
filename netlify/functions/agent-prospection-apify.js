@@ -10,13 +10,14 @@ const AIRTABLE_RUNS_URL  = `https://api.airtable.com/v0/${AIRTABLE_BASE}/${AIRTA
 const APIFY_BASE         = "https://api.apify.com/v2";
 const APIFY_ACTOR        = "nwua9Gu5YrADL7ZDj";
 const RECAP_TO           = "mohamed.diop@akilai.fr";
-const FROM_EMAIL         = "AkilAI <bonjour@akilai.fr>";
+const FROM_EMAIL         = "Mohamed Diop <mohamed.diop@akilai.fr>";
 
 const SECTEURS = [
   { query: "cabinet médical Toulouse",    secteur: "médical" },
   { query: "restaurant Toulouse",         secteur: "restaurant" },
   { query: "agence immobilière Toulouse", secteur: "immobilier" },
   { query: "hôtel Toulouse",              secteur: "hôtel" },
+  { query: "salon de coiffure Toulouse",  secteur: "coiffure" },
 ];
 
 function airtableHeaders() {

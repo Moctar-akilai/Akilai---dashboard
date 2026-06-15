@@ -19,10 +19,10 @@
   schedule = "0 7 * * *"
 
 [functions."agent-prospection-apify"]
-  schedule = "0 7 * * 1"
+  schedule = "0 7 * * 1,3,5"
 
 [functions."agent-prospection-apify-collect"]
-  schedule = "15 7 * * 1"
+  schedule = "15 7 * * 1,3,5"
 
 [functions."generate-invoice"]
   node_bundler = "esbuild"

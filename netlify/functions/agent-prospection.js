@@ -3,10 +3,10 @@ const { BASE_URL, headers: airtableHeaders, ok, err, preflight } = require("./co
 /* ─── Constantes ─────────────────────────────────────────────── */
 const LEADS_TABLE    = "tblXJoVNtimnvGRBl";
 const BCC_MOHAMED    = "mohamed.diop@akilai.fr";
-const FROM_EMAIL     = "AkilAI <bonjour@akilai.fr>";
+const FROM_EMAIL     = "Mohamed Diop <mohamed.diop@akilai.fr>";
 const CALENDLY_LINK  = "https://calendly.com/mohamed-diop-akilai";
 const AKILAI_URL     = "https://akilai.fr";
-const SIGNATURE      = `Mohamed Diop — AkilAI\n${AKILAI_URL}`;
+const SIGNATURE      = `Mohamed Diop\nFondateur – AkilAI\n${AKILAI_URL}`;
 
 /* ─── Prompt système agent ────────────────────────────────────── */
 const SYSTEM_PROMPT = `Tu es l'agent Prospection d'AkilAI, une agence d'automatisation basée à Toulouse.
@@ -30,70 +30,177 @@ function salutation(prenom) {
 
 const TEMPLATES = {
   J0: {
-    médical: (e) => ({
-      objet: `Une question pour ${e.entreprise}`,
+    restaurant: (e) => ({
+      objet: `Une question concernant vos réservations`,
       corps: `${salutation(e.prenom)}
 
-Vos patients peinent parfois à joindre le cabinet parce que la ligne est occupée ? Nous travaillons avec des cabinets médicaux à Toulouse pour déployer des assistants virtuels capables de répondre aux appels 24h/24, confirmer les rendez-vous automatiquement et donner les informations de base à vos patients.
 
-Sauriez-vous vers qui m'orienter au sein de votre cabinet pour échanger à ce sujet ?
+Quand le service est lancé, répondre au téléphone devient souvent la dernière priorité.
+
+Résultat : des réservations manquées, des clients qui raccrochent et parfois des tables qui restent vides.
+
+
+Chez AkilAI, nous déployons des assistants vocaux capables de :
+
+- répondre aux appels 24h/24
+
+- prendre et confirmer les réservations automatiquement
+
+- répondre aux questions fréquentes (horaires, adresse, menu, etc.)
+
+
+Est-ce un sujet qui mérite une discussion de 10 minutes avec la personne qui gère votre activité ou votre relation client ?
+
+
+Bien à vous,
 
 ${SIGNATURE}`,
     }),
-    restaurant: (e) => ({
-      objet: `Une question pour ${e.entreprise}`,
+    médical: (e) => ({
+      objet: `Une question concernant votre accueil téléphonique`,
       corps: `${salutation(e.prenom)}
 
-Des réservations perdues parce que le téléphone sonne dans le vide pendant que vos serveurs sont occupés à servir les clients ? Nous travaillons avec des restaurants à Toulouse pour déployer des assistants virtuels capables de répondre aux appels 24h/24 et confirmer les réservations automatiquement.
 
-Sauriez-vous vers qui m'orienter au sein de votre établissement pour échanger à ce sujet ?
+Entre les consultations et les urgences, il est difficile de répondre à tous les appels.
+
+Pourtant, chaque appel manqué représente souvent un patient qui n'a pas obtenu l'information ou le rendez-vous qu'il cherchait.
+
+
+Chez AkilAI, nous accompagnons des cabinets médicaux avec un assistant vocal capable de :
+
+- répondre aux appels 24h/24
+
+- donner les informations pratiques du cabinet
+
+- prendre ou confirmer des rendez-vous
+
+- soulager le secrétariat des demandes répétitives
+
+
+Seriez-vous la bonne personne pour en discuter ?
+
+
+Bien cordialement,
 
 ${SIGNATURE}`,
     }),
     immobilier: (e) => ({
-      objet: `Une question pour ${e.entreprise}`,
+      objet: `Une question concernant vos appels entrants`,
       corps: `${salutation(e.prenom)}
 
-Vos prospects appellent et tombent sur la messagerie au mauvais moment ? Nous travaillons avec des agences immobilières à Toulouse pour déployer des assistants virtuels capables de répondre aux appels 24h/24 et qualifier vos contacts automatiquement.
 
-Sauriez-vous vers qui m'orienter au sein de votre agence pour échanger à ce sujet ?
+Un prospect qui tombe sur une messagerie appelle souvent l'agence suivante.
+
+
+Chez AkilAI, nous aidons les agences immobilières à ne plus laisser passer ces opportunités grâce à un assistant vocal qui :
+
+- répond aux appels 24h/24
+
+- qualifie les prospects
+
+- collecte leurs besoins
+
+- transmet les demandes aux bons collaborateurs
+
+
+Pensez-vous que cela puisse intéresser la personne qui gère le développement commercial de votre agence ?
+
+
+Bien cordialement,
 
 ${SIGNATURE}`,
     }),
     hôtel: (e) => ({
-      objet: `Une question pour ${e.entreprise}`,
+      objet: `Une question concernant votre accueil téléphonique`,
       corps: `${salutation(e.prenom)}
 
-Des demandes clients sans réponse parce que la ligne est occupée en dehors des heures d'ouverture ? Nous travaillons avec des hôtels à Toulouse pour déployer des assistants virtuels capables de répondre aux appels 24h/24 et traiter les demandes de vos clients en temps réel.
 
-Sauriez-vous vers qui m'orienter au sein de votre établissement pour échanger à ce sujet ?
+Combien de demandes de réservation ou d'informations arrivent lorsque la réception est déjà occupée ou fermée ?
+
+
+Chez AkilAI, nous déployons des assistants vocaux capables de :
+
+- répondre aux appels 24h/24
+
+- renseigner les clients
+
+- prendre les demandes de réservation
+
+- traiter automatiquement les questions récurrentes
+
+
+Je serais ravi d'échanger avec la personne en charge de l'établissement ou de l'expérience client.
+
+
+Bien cordialement,
+
+${SIGNATURE}`,
+    }),
+    coiffure: (e) => ({
+      objet: `Une question concernant vos rendez-vous`,
+      corps: `${salutation(e.prenom)}
+
+
+Entre les clients en rendez-vous, les shampoings et les coupes, répondre au téléphone n'est pas toujours possible.
+
+Résultat : des rendez-vous manqués, des clients qui rappellent plus tard… ou qui prennent rendez-vous ailleurs.
+
+
+Chez AkilAI, nous aidons les salons de coiffure à ne plus perdre ces opportunités grâce à un assistant vocal capable de :
+
+- répondre aux appels 24h/24
+
+- prendre et confirmer les rendez-vous
+
+- répondre aux questions fréquentes (horaires, tarifs, prestations, adresse)
+
+- transmettre les demandes spécifiques à votre équipe
+
+
+Pensez-vous que ce sujet pourrait intéresser la personne qui gère le salon ?
+
+
+Bien à vous,
 
 ${SIGNATURE}`,
     }),
   },
   J3: {
     default: (e) => ({
-      objet: `Re : ${e.entreprise}`,
+      objet: `Re: Une question concernant ${e.entreprise}`,
       corps: `${salutation(e.prenom)}
 
-Je me permets de relancer rapidement.
 
-Avez-vous pu transmettre mon message à la bonne personne ?
+Je me permets un petit suivi de mon précédent message.
+
+La gestion des appels entrants est-elle un sujet d'actualité chez ${e.entreprise} ?
+
+
+Si ce n'est pas le bon moment, aucun problème.
+
+Sinon, je serais heureux de vous montrer en 10 minutes comment un assistant vocal peut prendre en charge une partie de vos appels.
+
+
+Bien à vous,
 
 ${SIGNATURE}`,
     }),
   },
   J7: {
     default: (e) => ({
-      objet: `Dernier message — ${e.entreprise}`,
+      objet: `Je clôture mon dossier – ${e.entreprise}`,
       corps: `${salutation(e.prenom)}
 
-C'est mon dernier message.
 
-Si le sujet des appels manqués ou des messages sans réponse devient un jour une priorité, je suis disponible ici :
+Je n'ai probablement pas réussi à capter votre attention au bon moment, et je vais donc clôturer mon dossier.
+
+Si un jour vous cherchez à réduire les appels manqués ou à automatiser une partie de votre accueil téléphonique, vous pouvez réserver un créneau ici :
+
 ${CALENDLY_LINK}
 
-Bonne continuation,
+
+Je vous souhaite une excellente continuation.
+
 ${SIGNATURE}`,
     }),
   },
@@ -259,7 +366,7 @@ Lead :
 - Chatbot visible sur le site : ${chatbot_visible ? "oui" : "non"}
 
 Critères de scoring :
-+3 points : secteur prioritaire (médical, restaurant, immobilier, hôtel)
++3 points : secteur prioritaire (médical, restaurant, immobilier, hôtel, coiffure)
 +2 points : email direct (pas contact@, pas info@, pas webmaster@)
 +2 points : téléphone direct disponible
 +1 point  : note Google ≥ 4.0

@@ -11,13 +11,14 @@ const AIRTABLE_LEADS_URL  = `https://api.airtable.com/v0/${AIRTABLE_BASE}/${AIRT
 const APIFY_BASE          = "https://api.apify.com/v2";
 const AGENT_URL           = "https://portal-akilai.netlify.app/.netlify/functions/agent-prospection";
 const RECAP_TO            = "mohamed.diop@akilai.fr";
-const FROM_EMAIL          = "AkilAI <bonjour@akilai.fr>";
+const FROM_EMAIL          = "Mohamed Diop <mohamed.diop@akilai.fr>";
 
 const QUERY_TO_SECTEUR = {
   "cabinet médical toulouse":    "médical",
   "restaurant toulouse":         "restaurant",
   "agence immobilière toulouse": "immobilier",
   "hôtel toulouse":              "hôtel",
+  "salon de coiffure toulouse":  "coiffure",
 };
 
 function airtableHeaders() {
