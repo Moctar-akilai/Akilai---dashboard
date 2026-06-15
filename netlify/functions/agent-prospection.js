@@ -225,8 +225,8 @@ function getTemplate(type, secteur, lead) {
 
 function statutParType(type) {
   if (type === "J0") return "Contacté";
-  if (type === "J3") return "Relance J+3";
-  if (type === "J7") return "Relance J+7";
+  if (type === "J3") return "Contacté";
+  if (type === "J7") return "Contacté";
   return "Contacté";
 }
 
@@ -290,7 +290,7 @@ Retourne ce JSON exact :
   }
 
   const { score, decision, raison } = scoring;
-  const statut = decision === "archiver" ? "Archivé" : "À contacter";
+  const statut = decision === "archiver" ? "Perdu" : "À contacter";
 
   /* Créer le record dans Airtable */
   const fields = {
@@ -335,7 +335,7 @@ async function handleEnvoyer(body) {
   const f = record.fields || {};
 
   /* Vérifications anti-spam */
-  if (["Fermé", "Archivé"].includes(f["Statut"])) {
+  if (["Perdu"].includes(f["Statut"])) {
     return err(`Lead ${f["Statut"]} — envoi bloqué`, 400);
   }
   if (!f["Email"]) {
@@ -456,25 +456,25 @@ Retourne ce JSON exact :
   if (intention === "intéressé") {
     sujetReponse  = `Re : ${lead.entreprise} — Démo disponible`;
     corpsReponse  = `${salutation(lead.prenom)}\n\nMerci pour votre retour !\n\nJe serais ravi de vous montrer concrètement ce que ça donne en 10 minutes. Vous pouvez réserver directement ici :\n${CALENDLY_LINK}\n\n${SIGNATURE}`;
-    newStatut     = "Intéressé";
+    newStatut     = "Prospect chaud";
     estPrioritaire = true;
   } else if (intention === "objection_prix") {
     sujetReponse = `Re : ${lead.entreprise}`;
     corpsReponse = `${salutation(lead.prenom)}\n\n${REPONSES_OBJECTION.prix}`;
-    newStatut    = "À relancer";
+    newStatut    = "Contacté";
   } else if (intention === "objection_confiance") {
     sujetReponse = `Re : ${lead.entreprise}`;
     corpsReponse = `${salutation(lead.prenom)}\n\n${REPONSES_OBJECTION.confiance}`;
-    newStatut    = "À relancer";
+    newStatut    = "Contacté";
   } else if (intention === "objection_timing") {
     sujetReponse = `Re : ${lead.entreprise}`;
     corpsReponse = `${salutation(lead.prenom)}\n\n${REPONSES_OBJECTION.timing}`;
-    newStatut    = "À relancer";
+    newStatut    = "Contacté";
   } else {
     /* pas_intéressé */
     sujetReponse = `Re : ${lead.entreprise}`;
     corpsReponse = `${salutation(lead.prenom)}\n\n${REPONSES_OBJECTION.non}`;
-    newStatut    = "Fermé";
+    newStatut    = "Perdu";
   }
 
   /* Envoi réponse (sauf "pas intéressé" qui reçoit quand même un accusé poli) */
