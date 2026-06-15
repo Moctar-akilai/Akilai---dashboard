@@ -294,11 +294,9 @@ Retourne ce JSON exact :
     "Nom":       nom       || "",
     "Entreprise": entreprise,
     "Secteur":   secteur,
-    "Score":     Number(score),
     "Statut":    statut,
-    "Canal":     "email",
-    "Ville":     ville     || "Toulouse",
-    "Notes":     `Score : ${score}/10 — ${decision}\nRaison : ${raison}`,
+    "Notes":     `Score : ${score}/10 — ${decision}\nRaison : ${raison}\nVille : ${ville || "Toulouse"}\nCanal : email`,
+    "Date entrée": new Date().toISOString().split("T")[0],
   };
   if (email)     fields["Email"]     = email;
   if (telephone) fields["Téléphone"] = telephone;
@@ -381,12 +379,9 @@ ${template.corps}`;
   const newStatut   = statutParType(type);
   const today       = new Date().toISOString().split("T")[0];
   const patchFields = {
-    "Statut":         newStatut,
-    "Dernière action": today,
+    "Statut":               newStatut,
+    "Date dernière action": today,
   };
-  if (type === "J0" && !f["Date premier contact"]) {
-    patchFields["Date premier contact"] = today;
-  }
   await airtablePatch(airtable_id, patchFields);
   console.log("[agent-prospection/envoyer] Airtable mis à jour → statut:", newStatut);
 
@@ -490,9 +485,9 @@ Retourne ce JSON exact :
 
   /* Mise à jour Airtable */
   const patchFields = {
-    "Statut":         newStatut,
-    "Dernière action": today,
-    "Notes":          `${f["Notes"] || ""}\n[${today}] Réponse reçue — Intention : ${intention} — ${resume}`.trim(),
+    "Statut":               newStatut,
+    "Date dernière action": today,
+    "Notes":                `${f["Notes"] || ""}\n[${today}] Réponse reçue — Intention : ${intention} — ${resume}`.trim(),
   };
   await airtablePatch(airtable_id, patchFields);
   console.log("[agent-prospection/reponse] Airtable mis à jour → statut:", newStatut);
