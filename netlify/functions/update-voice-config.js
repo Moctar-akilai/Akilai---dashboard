@@ -40,11 +40,28 @@ exports.handler = async function(event, context) {
     if (heureOuverture  !== undefined) fields["Heure Ouverture"] = heureOuverture;
     if (heureFermeture  !== undefined) fields["Heure Fermeture"] = heureFermeture;
 
-    const res = await fetch(`${BASE_URL}/Clients/${id}`, {
+    let res = await fetch(`${BASE_URL}/Clients/${id}`, {
       method: "PATCH",
       headers,
       body: JSON.stringify({ fields }),
     });
+
+    /* Si Airtable rejette à cause du champ FirstMessage non créé, retry sans */
+    if (!res.ok && firstMessage !== undefined) {
+      const text = await res.text();
+      if (text.includes("FirstMessage") || text.includes("UNKNOWN_FIELD_NAME")) {
+        console.warn("[update-voice-config] FirstMessage non trouvé dans Airtable — retry sans ce champ");
+        delete fields["FirstMessage"];
+        res = await fetch(`${BASE_URL}/Clients/${id}`, {
+          method: "PATCH",
+          headers,
+          body: JSON.stringify({ fields }),
+        });
+      } else {
+        console.error("[update-voice-config] Airtable error:", res.status, text);
+        return err(`Airtable ${res.status}`, 502);
+      }
+    }
 
     console.log("[update-voice-config] Airtable status:", res.status);
 
