@@ -6967,6 +6967,369 @@ function renderRecommandations(alerts) {
 }
 
 </script>
+
+<!-- ═══════════════════════════════════════════════════════════
+     GUIDED TOUR — premier chargement uniquement
+     ═══════════════════════════════════════════════════════════ -->
+<script>
+(function () {
+  /* ── Définition des étapes ── */
+  const TOUR_STEPS = [
+    {
+      selector: '#kpiGrid1',
+      navigateTo: 'overview',
+      title: 'Vue d\'ensemble',
+      text: 'Suivez ici vos indicateurs clés : appels traités, rendez-vous, tickets ouverts et usage WhatsApp en temps réel.'
+    },
+    {
+      selector: '[data-section="automations"]',
+      navigateTo: 'automations',
+      title: 'Automatisations',
+      text: 'Activez ou désactivez vos automatisations IA en un clic. Chaque carte indique le statut et les déclencheurs configurés.'
+    },
+    {
+      selector: '[data-section="programmation"]',
+      navigateTo: 'programmation',
+      title: 'Programmation',
+      text: 'Gérez votre agenda, définissez vos disponibilités et visualisez les rendez-vous planifiés par votre assistant vocal.'
+    },
+    {
+      selector: '[data-section="voix-ia"]',
+      navigateTo: 'voix-ia',
+      title: 'Voix & IA',
+      text: 'Configurez et testez votre assistant vocal IA : voix, script, numéro de téléphone et comportement en appel.'
+    },
+    {
+      selector: '[data-section="whatsapp"]',
+      navigateTo: 'whatsapp',
+      title: 'WhatsApp & IA',
+      text: 'Paramétrez votre assistant WhatsApp et consultez l\'historique complet des conversations avec vos clients.'
+    },
+    {
+      selector: '#page-integrations, [data-section="integrations"]',
+      navigateTo: null,
+      title: 'Intégrations',
+      text: 'Connectez vos outils favoris : Notion, Google Calendar, CRM et bien d\'autres pour automatiser vos workflows.'
+    },
+    {
+      selector: '[data-section="tickets"]',
+      navigateTo: 'tickets',
+      title: 'Support & Tickets',
+      text: 'Ouvrez des demandes d\'assistance, suivez leur avancement et communiquez directement avec l\'équipe AkilAI.'
+    },
+    {
+      selector: '[data-section="factures"]',
+      navigateTo: 'factures',
+      title: 'Mes Factures',
+      text: 'Consultez et téléchargez vos factures mensuelles. L\'historique complet de votre abonnement est disponible ici.'
+    },
+    {
+      selector: '[data-section="appels"]',
+      navigateTo: 'appels',
+      title: 'Historique Appels Vocaux',
+      text: 'Retrouvez la transcription et le résumé de chaque appel traité par votre assistant IA pour un suivi optimal.'
+    },
+    {
+      selector: '#page-whatsapp-history, [data-section="whatsapp-history"]',
+      navigateTo: null,
+      title: 'Historique Conversations WhatsApp',
+      text: 'Revoyez l\'intégralité des échanges WhatsApp entre votre assistant et vos clients, filtrés par date ou contact.'
+    },
+    {
+      selector: '#page-crm, [data-section="crm"]',
+      navigateTo: null,
+      title: 'CRM',
+      text: 'Gérez vos contacts, suivez votre pipeline commercial et centralisez toutes les informations de vos prospects.'
+    },
+    {
+      selector: 'button.sidebar-user-actions[title="Se déconnecter"]',
+      navigateTo: null,
+      title: 'Déconnexion',
+      text: 'Ce bouton vous permet de vous déconnecter en toute sécurité de votre espace AkilAI.'
+    }
+  ];
+
+  /* ── État du tour ── */
+  let tourSteps = [];   // étapes valides après filtrage DOM
+  let currentStep = 0;
+  let tourActive = false;
+  let overlay, spotlight, bubble, stepLabel;
+
+  /* ── Entrée principale ── */
+  function initTour() {
+    if (localStorage.getItem('akilai_tour_done') === 'true') return;
+    // Attendre que le DOM soit pleinement prêt
+    setTimeout(startTour, 800);
+  }
+
+  function startTour() {
+    // Filtrer les étapes dont l'élément existe dans le DOM
+    tourSteps = TOUR_STEPS.filter(s => !!resolveEl(s.selector));
+    if (tourSteps.length === 0) { markDone(); return; }
+    tourActive = true;
+    currentStep = 0;
+    buildDOM();
+    showStep(0);
+  }
+
+  /* ── Résolution de sélecteur multi ── */
+  function resolveEl(selector) {
+    if (!selector) return null;
+    const parts = selector.split(',').map(s => s.trim());
+    for (const p of parts) {
+      const el = document.querySelector(p);
+      if (el) return el;
+    }
+    return null;
+  }
+
+  /* ── Construction du DOM du tour ── */
+  function buildDOM() {
+    // Overlay + découpe spotlight via clip-path
+    overlay = document.createElement('div');
+    overlay.id = 'tour-overlay';
+    overlay.style.cssText = `
+      position:fixed;inset:0;z-index:99998;pointer-events:none;
+      transition:all 0.35s ease;
+    `;
+
+    spotlight = document.createElement('div');
+    spotlight.id = 'tour-spotlight';
+    spotlight.style.cssText = `
+      position:fixed;z-index:99999;pointer-events:none;
+      border-radius:10px;
+      box-shadow:0 0 0 9999px rgba(0,0,0,0.62);
+      transition:all 0.35s cubic-bezier(.4,0,.2,1);
+    `;
+
+    bubble = document.createElement('div');
+    bubble.id = 'tour-bubble';
+    bubble.style.cssText = `
+      position:fixed;z-index:100000;
+      background:#13111c;
+      border:1px solid rgba(124,58,237,0.45);
+      border-radius:14px;
+      padding:20px 22px 18px;
+      width:clamp(260px,88vw,340px);
+      box-shadow:0 8px 40px rgba(0,0,0,0.6),0 0 0 1px rgba(124,58,237,0.15);
+      transition:opacity 0.25s ease,transform 0.25s ease;
+      opacity:0;
+      font-family:inherit;
+    `;
+    bubble.innerHTML = `
+      <div id="tour-arrow" style="
+        position:absolute;width:12px;height:12px;
+        background:#13111c;border:1px solid rgba(124,58,237,0.45);
+        transform:rotate(45deg);
+      "></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <span id="tour-step-label" style="font-size:11px;font-weight:600;color:#7c3aed;letter-spacing:0.08em;text-transform:uppercase;"></span>
+        <button id="tour-skip" style="
+          background:none;border:none;color:rgba(255,255,255,0.35);
+          font-size:11px;cursor:pointer;padding:2px 6px;border-radius:6px;
+          transition:color 0.15s;
+        " onmouseover="this.style.color='rgba(255,255,255,0.7)'"
+           onmouseout="this.style.color='rgba(255,255,255,0.35)'">
+          Passer le tour ✕
+        </button>
+      </div>
+      <div id="tour-title" style="font-size:15px;font-weight:700;color:#fff;margin-bottom:8px;"></div>
+      <div id="tour-text" style="font-size:13px;color:rgba(255,255,255,0.65);line-height:1.55;margin-bottom:16px;"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <div id="tour-dots" style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;max-width:140px;"></div>
+        <button id="tour-next" style="
+          background:#7c3aed;color:#fff;border:none;
+          padding:8px 18px;border-radius:8px;font-size:13px;
+          font-weight:600;cursor:pointer;
+          transition:background 0.15s,transform 0.1s;
+        " onmouseover="this.style.background='#6d28d9'"
+           onmouseout="this.style.background='#7c3aed'"
+           onmousedown="this.style.transform='scale(0.96)'"
+           onmouseup="this.style.transform='scale(1)'">
+          Suivant →
+        </button>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+    document.body.appendChild(spotlight);
+    document.body.appendChild(bubble);
+
+    stepLabel  = bubble.querySelector('#tour-step-label');
+    document.getElementById('tour-next').addEventListener('click', nextStep);
+    document.getElementById('tour-skip').addEventListener('click', endTour);
+  }
+
+  /* ── Affichage d'une étape ── */
+  function showStep(idx) {
+    const step = tourSteps[idx];
+    const el   = resolveEl(step.selector);
+
+    // Naviguer vers la section si besoin
+    if (step.navigateTo && typeof navigate === 'function') {
+      navigate(step.navigateTo);
+    }
+
+    // Laisser le temps à la page de se mettre à jour
+    setTimeout(() => {
+      const target = resolveEl(step.selector);
+      if (!target) { nextStep(); return; }
+
+      // Scroll vers l'élément
+      target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+
+      setTimeout(() => positionBubble(target, step, idx), 180);
+    }, step.navigateTo ? 200 : 0);
+  }
+
+  function positionBubble(target, step, idx) {
+    const r  = target.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    // Spotlight
+    const pad = 8;
+    spotlight.style.left   = (r.left   - pad) + 'px';
+    spotlight.style.top    = (r.top    - pad) + 'px';
+    spotlight.style.width  = (r.width  + pad * 2) + 'px';
+    spotlight.style.height = (r.height + pad * 2) + 'px';
+
+    // Contenu bulle
+    bubble.querySelector('#tour-title').textContent = step.title;
+    bubble.querySelector('#tour-text').textContent  = step.text;
+    stepLabel.textContent = `Étape ${idx + 1} / ${tourSteps.length}`;
+
+    // Points de progression
+    const dots = bubble.querySelector('#tour-dots');
+    dots.innerHTML = '';
+    tourSteps.forEach((_, i) => {
+      const d = document.createElement('div');
+      d.style.cssText = `
+        width:${i === idx ? 16 : 6}px;height:6px;border-radius:3px;
+        background:${i === idx ? '#7c3aed' : 'rgba(255,255,255,0.2)'};
+        transition:all 0.3s;
+      `;
+      dots.appendChild(d);
+    });
+
+    // Bouton "Suivant" → "Terminer" à la dernière étape
+    const btn = document.getElementById('tour-next');
+    btn.textContent = (idx === tourSteps.length - 1) ? 'Terminer ✓' : 'Suivant →';
+
+    // Position de la bulle (préférence : dessous, sinon dessus, sinon à droite)
+    bubble.style.opacity = '0';
+    bubble.style.transform = 'translateY(6px)';
+    bubble.style.display = 'block';
+
+    const bw = 340, bh = 180;
+    const arrow = bubble.querySelector('#tour-arrow');
+    let bLeft, bTop, arrowStyle = '';
+
+    const spaceBelow = vh - r.bottom;
+    const spaceAbove = r.top;
+    const spaceRight = vw - r.right;
+
+    if (spaceBelow >= bh + 20 || spaceBelow >= spaceAbove) {
+      // Bulle dessous
+      bTop  = r.bottom + pad + 10;
+      bLeft = Math.min(Math.max(r.left + r.width / 2 - bw / 2, 8), vw - bw - 8);
+      const ax = (r.left + r.width / 2) - bLeft - 6;
+      arrowStyle = `left:${Math.max(12, Math.min(ax, bw - 24))}px;top:-6px;border-right:none;border-bottom:none;`;
+    } else if (spaceAbove >= bh + 20) {
+      // Bulle dessus
+      bTop  = r.top - bh - pad - 10;
+      bLeft = Math.min(Math.max(r.left + r.width / 2 - bw / 2, 8), vw - bw - 8);
+      const ax = (r.left + r.width / 2) - bLeft - 6;
+      arrowStyle = `left:${Math.max(12, Math.min(ax, bw - 24))}px;bottom:-6px;border-left:none;border-top:none;`;
+    } else {
+      // Bulle à droite
+      bLeft = r.right + pad + 10;
+      bTop  = Math.min(Math.max(r.top + r.height / 2 - bh / 2, 8), vh - bh - 8);
+      const ay = (r.top + r.height / 2) - bTop - 6;
+      arrowStyle = `top:${Math.max(12, Math.min(ay, bh - 24))}px;left:-6px;border-right:none;border-top:none;`;
+    }
+
+    // Fallback mobile : centrer en bas
+    if (bLeft < 0 || bLeft + bw > vw) {
+      bLeft = Math.max(8, (vw - Math.min(bw, vw - 16)) / 2);
+      arrowStyle = 'display:none;';
+    }
+
+    bubble.style.left = bLeft + 'px';
+    bubble.style.top  = Math.max(8, bTop) + 'px';
+    arrow.style.cssText += arrowStyle;
+
+    // Fade-in
+    requestAnimationFrame(() => {
+      bubble.style.opacity   = '1';
+      bubble.style.transform = 'translateY(0)';
+    });
+  }
+
+  /* ── Navigation ── */
+  function nextStep() {
+    // Fade-out
+    bubble.style.opacity   = '0';
+    bubble.style.transform = 'translateY(-6px)';
+
+    if (currentStep < tourSteps.length - 1) {
+      currentStep++;
+      setTimeout(() => showStep(currentStep), 260);
+    } else {
+      setTimeout(endTour, 260);
+    }
+  }
+
+  function endTour() {
+    tourActive = false;
+    markDone();
+    cleanupDOM();
+  }
+
+  function markDone() {
+    localStorage.setItem('akilai_tour_done', 'true');
+  }
+
+  function cleanupDOM() {
+    [overlay, spotlight, bubble].forEach(el => {
+      if (el && el.parentNode) el.parentNode.removeChild(el);
+    });
+    overlay = spotlight = bubble = null;
+  }
+
+  /* ── Recalcul position sur resize ── */
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    if (!tourActive || !bubble) return;
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      const step = tourSteps[currentStep];
+      const el   = resolveEl(step.selector);
+      if (el) positionBubble(el, step, currentStep);
+    }, 120);
+  });
+
+  /* ── Exposer initTour globalement ── */
+  window.initTour = initTour;
+
+  /* ── Auto-démarrage : attendre que l'app soit connectée ── */
+  // On observe l'apparition de #main (affiché après login)
+  const observer = new MutationObserver(() => {
+    const main = document.getElementById('main');
+    if (main && !main.classList.contains('hidden') && getComputedStyle(main).display !== 'none') {
+      observer.disconnect();
+      initTour();
+    }
+  });
+  observer.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class', 'style'] });
+
+  // Sécurité : si déjà visible au chargement
+  document.addEventListener('DOMContentLoaded', () => {
+    const main = document.getElementById('main');
+    if (main && !main.classList.contains('hidden')) initTour();
+  });
+})();
+</script>
 </body>
 </html>
 
