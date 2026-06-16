@@ -10324,7 +10324,7 @@ function renderRecommandations(alerts) {
 
 <script>
 (function() {
-  const VAPI_PUBLIC_KEY = "200705be-723f-4317-9833-3c87b22a624b";
+  let _vapiPublicKey = null;
   let _vapi = null;
   let _vapiCallActive = false;
 
@@ -10342,7 +10342,7 @@ function renderRecommandations(alerts) {
     if (modal) modal.style.display = "none";
   };
 
-  window.startVapiCall = function() {
+  window.startVapiCall = async function() {
     if (!window._vapiAssistantId) {
       alert("Aucun assistant créé. Sauvegardez d'abord votre configuration.");
       return;
@@ -10351,8 +10351,19 @@ function renderRecommandations(alerts) {
       alert("SDK Vapi non chargé. Rechargez la page.");
       return;
     }
+    if (!_vapiPublicKey) {
+      try {
+        const r = await fetch("/.netlify/functions/get-vapi-public-key");
+        const d = await r.json();
+        if (!d.ok) throw new Error(d.error);
+        _vapiPublicKey = d.publicKey;
+      } catch(e) {
+        alert("Impossible de charger la clé Vapi : " + e.message);
+        return;
+      }
+    }
     try {
-      _vapi = new window.Vapi(VAPI_PUBLIC_KEY);
+      _vapi = new window.Vapi(_vapiPublicKey);
 
       _vapi.on("call-start", () => {
         _vapiCallActive = true;
