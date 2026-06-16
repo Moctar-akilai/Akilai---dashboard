@@ -2916,7 +2916,7 @@
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
               <span id="btnVapiLabel">Sauvegarder &amp; créer l'assistant</span>
             </button>
-            <button class="btn btn-ghost btn-sm" id="btnTestAssistant" onclick="openTestAssistant()" style="display:none">
+            <button class="btn btn-secondary" id="btnTestAssistant" onclick="openTestAssistant()" style="display:none">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
               Tester l'assistant
             </button>
@@ -2945,25 +2945,29 @@
 
             <!-- Voix ElevenLabs -->
             <div class="card">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+              <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="_toggleVoixPanel()">
                 <div class="form-label" style="margin-bottom:0">Voix ElevenLabs</div>
-                <button class="btn btn-ghost btn-sm" onclick="loadElevenLabsVoices()" id="btnRefreshVoices" style="font-size:11px">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-                  Actualiser
-                </button>
-              </div>
-              <!-- Recherche voix -->
-              <input type="search" id="voixSearch" class="form-input" placeholder="Rechercher une voix…"
-                style="margin-bottom:10px;font-size:12px;padding:7px 10px"
-                autocomplete="off" name="voice-search-x7k2"
-                oninput="_filterVoiceCards(this.value)" />
-              <!-- Grille de cartes voix (chargée dynamiquement) -->
-              <div id="voixCardsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;min-height:80px">
-                <div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--text-faint);font-size:12px" id="voixCardsLoader">
-                  Chargement des voix…
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span id="voixSelectedName" style="font-size:12px;color:var(--accent)"></span>
+                  <svg id="voixChevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="transition:transform .2s;flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
                 </div>
               </div>
-              <!-- Champ caché pour stocker voice_id sélectionné -->
+              <div id="voixPanel" style="display:none;margin-top:12px">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+                  <input type="search" id="voixSearch" class="form-input" placeholder="Rechercher une voix…"
+                    style="font-size:12px;padding:7px 10px;flex:1;margin-right:8px"
+                    autocomplete="off" name="voice-search-x7k2"
+                    oninput="_filterVoiceCards(this.value)" />
+                  <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();loadElevenLabsVoices()" id="btnRefreshVoices" style="font-size:11px;flex-shrink:0">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                  </button>
+                </div>
+                <div id="voixCardsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;min-height:80px">
+                  <div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--text-faint);font-size:12px" id="voixCardsLoader">
+                    Chargement des voix…
+                  </div>
+                </div>
+              </div>
               <input type="hidden" id="cfgVoix" value="" />
             </div>
 
@@ -3245,12 +3249,6 @@
               </button>
             </div>
 
-            <hr style="margin:16px 0" />
-
-            <div style="font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px">Simulation</div>
-            <div style="background:rgba(112,178,222,0.07);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text-muted);line-height:1.6;font-style:italic" id="previewSimulation">
-              "Cabinet Dr. Moreau, bonjour ! Sophie à votre service, comment puis-je vous aider ?"
-            </div>
           </div><!-- /preview -->
 
         </div><!-- /config-layout -->
@@ -6473,8 +6471,13 @@ function _checkVoixIaPlan() {
 function _applyVoixConfig(cfg) {
   document.getElementById("cfgNom").value          = cfg.nom          || "";
   document.getElementById("cfgVoix").value         = cfg.voiceId || cfg.voix || "";
-  /* Mettre à jour la sélection dans les cartes voix */
   _highlightVoiceCard(cfg.voiceId || cfg.voix || "");
+  /* Afficher le nom de la voix dans le header du panneau replié */
+  const voixNameEl = document.getElementById("voixSelectedName");
+  if (voixNameEl) {
+    const found = _elevenLabsVoices.find(v => v.voice_id === (cfg.voiceId || cfg.voix));
+    voixNameEl.textContent = found ? found.name : (cfg.voiceName || "");
+  }
   document.getElementById("cfgLangPrimaire").value = cfg.langPrimaire || "fr";
   document.getElementById("cfgLangSecours").value  = cfg.langSecours  || "none";
   document.getElementById("cfgVitesse").value      = cfg.vitesse      || "1.0";
@@ -6676,9 +6679,25 @@ function _renderVoiceFallback(grid) {
   _renderVoiceCards(grid, fallback);
 }
 
+function _toggleVoixPanel() {
+  const panel   = document.getElementById("voixPanel");
+  const chevron = document.getElementById("voixChevron");
+  if (!panel) return;
+  const open = panel.style.display === "none" || panel.style.display === "";
+  panel.style.display = open ? "block" : "none";
+  if (chevron) chevron.style.transform = open ? "rotate(180deg)" : "";
+}
+
 function selectVoice(voiceId, voiceName) {
   document.getElementById("cfgVoix").value = voiceId;
   _highlightVoiceCard(voiceId);
+  const nameEl = document.getElementById("voixSelectedName");
+  if (nameEl) nameEl.textContent = voiceName || "";
+  /* Referme le panel après sélection */
+  const panel = document.getElementById("voixPanel");
+  const chevron = document.getElementById("voixChevron");
+  if (panel) panel.style.display = "none";
+  if (chevron) chevron.style.transform = "";
   updatePreview();
 }
 
