@@ -2912,16 +2912,9 @@
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap" id="voixIaActions">
             <button class="btn btn-ghost btn-sm" onclick="resetVoixConfig()">Réinitialiser</button>
-            <button class="btn btn-primary" onclick="saveVoixConfig()">
+            <button class="btn btn-primary" id="btnVapiAssistant" onclick="saveAndDeployAssistant()" style="background:linear-gradient(135deg,#5b21b6,#7c3aed)">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              Sauvegarder
-            </button>
-            <button class="btn btn-primary" id="btnVapiAssistant" onclick="createOrUpdateVapiAssistant()" style="background:linear-gradient(135deg,#5b21b6,#7c3aed)">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              <span id="btnVapiLabel">Créer mon assistant</span>
-            </button>
-            <button class="btn btn-secondary btn-sm" id="btnUpdateTools" onclick="updateVapiTools()" style="display:none">
-              🔧 Mettre à jour les outils
+              <span id="btnVapiLabel">Sauvegarder &amp; créer l'assistant</span>
             </button>
             <button class="btn btn-ghost btn-sm" id="btnTestAssistant" onclick="openTestAssistant()" style="display:none">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
@@ -6771,11 +6764,14 @@ async function loadVapiPhoneNumber() {
 function _updateVapiButton() {
   const label = document.getElementById("btnVapiLabel");
   if (!label) return;
-  label.textContent = _vapiAssistantId ? "Mettre à jour mon assistant" : "Créer mon assistant";
-  const btnTools = document.getElementById("btnUpdateTools");
-  if (btnTools) btnTools.style.display = _vapiAssistantId ? "inline-flex" : "none";
+  label.textContent = _vapiAssistantId ? "Sauvegarder & mettre à jour l'assistant" : "Sauvegarder & créer l'assistant";
   const btnTest = document.getElementById("btnTestAssistant");
   if (btnTest) btnTest.style.display = _vapiAssistantId ? "" : "none";
+}
+
+async function saveAndDeployAssistant() {
+  await saveVoixConfig();
+  await createOrUpdateVapiAssistant();
 }
 
 const _TOOL_LABELS = {
