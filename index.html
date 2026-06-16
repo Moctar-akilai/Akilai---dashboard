@@ -3247,8 +3247,8 @@
               <div id="vapiToolsBlock" style="display:flex;flex-direction:column;gap:6px;font-size:12px">
                 <div style="color:var(--text-muted);font-style:italic">Chargement…</div>
               </div>
-              <button class="btn btn-secondary btn-sm" style="margin-top:10px;width:100%;font-size:12px" onclick="updateVapiTools()">
-                🔧 Mettre à jour les outils
+              <button class="btn btn-secondary btn-sm" style="margin-top:10px;width:100%;font-size:12px" onclick="navigate('integrations')">
+                🔗 Gérer les intégrations
               </button>
             </div>
 
@@ -6789,29 +6789,16 @@ const _TOOL_LABELS = {
 function renderVapiTools(activeToolNames) {
   const block = document.getElementById("vapiToolsBlock");
   if (!block) return;
-  const client    = (typeof clients !== "undefined" && clients[0]) || {};
-  const allTools  = ["check_availability", "create_appointment", "get_calendly_slots", "send_sms", "create_contact"];
   const activeSet = new Set(activeToolNames || []);
 
-  const rows = allTools.map(name => {
+  const rows = [...activeSet].map(name => {
     const meta = _TOOL_LABELS[name] || { icon: "✅", label: name };
-    const isActive  = activeSet.has(name);
-
-    // Déterminer si l'outil est "potentiellement actif" (intégration configurée) mais pas encore déployé
-    let needsIntegration = false;
-    if ((name === "check_availability" || name === "create_appointment") && !client.googleConnected)  needsIntegration = true;
-    if (name === "get_calendly_slots" && (!client.calendlyConnected || !client.calendlyLink))          needsIntegration = true;
-
-    if (isActive) {
-      return `<div style="display:flex;align-items:center;gap:8px"><span style="color:#22c55e">${meta.icon}</span><span>${meta.label}</span></div>`;
-    } else if (needsIntegration) {
-      return `<div style="display:flex;align-items:center;gap:8px"><span style="color:#f59e0b">⚠️</span><span style="color:var(--text-muted)">${meta.label.replace("✅ ", "")} — Non configuré</span></div>`;
-    } else {
-      return `<div style="display:flex;align-items:center;gap:8px"><span style="color:var(--text-faint)">○</span><span style="color:var(--text-muted)">${meta.label}</span></div>`;
-    }
+    return `<div style="display:flex;align-items:center;gap:8px"><span style="color:#22c55e">✅</span><span>${meta.label}</span></div>`;
   });
 
-  block.innerHTML = rows.join("") || '<div style="color:var(--text-muted);font-style:italic">Aucun outil configuré</div>';
+  block.innerHTML = rows.length
+    ? rows.join("")
+    : '<div style="color:var(--text-muted);font-style:italic">Aucune intégration active</div>';
 }
 
 function renderVapiToolsFromClient() {
