@@ -2301,6 +2301,7 @@
   </style>
 <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css' rel='stylesheet' />
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js' defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@vapi-ai/web@latest/dist/vapi.umd.js"></script>
 </head>
 <body>
 
@@ -2923,6 +2924,10 @@
             <button class="btn btn-secondary btn-sm" id="btnUpdateTools" onclick="updateVapiTools()" style="display:none">
               🔧 Mettre à jour les outils
             </button>
+            <button class="btn btn-ghost btn-sm" id="btnTestAssistant" onclick="openTestAssistant()" style="display:none">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Tester l'assistant
+            </button>
           </div>
         </div>
 
@@ -3186,6 +3191,20 @@
                 oninput="document.getElementById('cfgPromptCount').textContent=this.value.length;updatePreview()"></textarea>
               <div style="font-size:11px;color:var(--text-faint);margin-top:6px">
                 Le prompt système définit le comportement et le contexte de votre assistant.
+              </div>
+            </div>
+
+            <!-- First Message -->
+            <div class="card">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+                <div class="form-label" style="margin-bottom:0">Premier message de l'assistant</div>
+                <span style="font-size:11px;color:var(--text-faint)">Optionnel</span>
+              </div>
+              <input class="form-input" id="cfgFirstMessage" type="text"
+                placeholder="Ex : Bonjour ! Cabinet Dr. Martin, Sophie à votre service, comment puis-je vous aider ?"
+                oninput="updatePreview()" />
+              <div style="font-size:11px;color:var(--text-faint);margin-top:6px">
+                Phrase prononcée automatiquement dès que l'appel est décroché. Si vide, l'assistant attend que le client parle en premier.
               </div>
             </div>
 
@@ -6355,6 +6374,7 @@ function getVoixFormValues() {
     silence:         document.getElementById("cfgSilence").value,
     interruptions:   document.getElementById("cfgInterruptions").checked,
     prompt:          document.getElementById("cfgPrompt").value,
+    firstMessage:    document.getElementById("cfgFirstMessage")?.value?.trim() || "",
     capaciteCreneau: parseInt(document.getElementById("cfgCapacite")?.value || "1"),
     dureeRDV:        parseInt(document.getElementById("cfgDureeRDV")?.value || "30"),
     heureOuverture:  document.getElementById("cfgHeureOuv")?.value  || "08:00",
@@ -6749,6 +6769,8 @@ function _updateVapiButton() {
   label.textContent = _vapiAssistantId ? "Mettre à jour mon assistant" : "Créer mon assistant";
   const btnTools = document.getElementById("btnUpdateTools");
   if (btnTools) btnTools.style.display = _vapiAssistantId ? "inline-flex" : "none";
+  const btnTest = document.getElementById("btnTestAssistant");
+  if (btnTest) btnTest.style.display = _vapiAssistantId ? "" : "none";
 }
 
 const _TOOL_LABELS = {
@@ -6987,6 +7009,7 @@ async function createOrUpdateVapiAssistant() {
       vitesseParole:   parseFloat(cfg.vitesse),
       silenceMax:      parseInt(cfg.silence),
       interruptions:   cfg.interruptions,
+      firstMessage:    cfg.firstMessage || "",
       capaciteCreneau: cfg.capaciteCreneau,
       dureeRDV:        cfg.dureeRDV,
       heureOuverture:  cfg.heureOuverture,
@@ -10266,6 +10289,109 @@ function renderRecommandations(alerts) {
   }).join("");
 }
 
+</script>
+
+<!-- ── Modal Test Assistant Vapi ────────────────────────────── -->
+<div id="modalTestAssistant" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);align-items:center;justify-content:center">
+  <div style="background:var(--bg-card,#1e293b);border-radius:16px;padding:32px;width:min(440px,92vw);box-shadow:0 24px 64px rgba(0,0,0,.5);position:relative">
+    <button onclick="closeTestAssistant()" style="position:absolute;top:14px;right:16px;background:none;border:none;cursor:pointer;color:var(--text-muted,#94a3b8);font-size:20px">✕</button>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+      <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#5b21b6,#7c3aed);display:flex;align-items:center;justify-content:center">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      </div>
+      <div>
+        <div style="font-weight:700;font-size:16px">Tester l'assistant vocal</div>
+        <div style="font-size:12px;color:var(--text-muted,#94a3b8)">Appel direct depuis le navigateur</div>
+      </div>
+    </div>
+
+    <div id="testAssistantStatus" style="text-align:center;padding:20px 0;color:var(--text-muted,#94a3b8);font-size:14px">
+      Cliquez sur Démarrer pour lancer l'appel
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button id="btnTestStart" onclick="startVapiCall()" class="btn btn-primary" style="flex:1;background:linear-gradient(135deg,#5b21b6,#7c3aed)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Démarrer
+      </button>
+      <button id="btnTestStop" onclick="stopVapiCall()" class="btn btn-secondary" style="flex:1;display:none">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+        Arrêter
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const VAPI_PUBLIC_KEY = "200705be-723f-4317-9833-3c87b22a624b";
+  let _vapi = null;
+  let _vapiCallActive = false;
+
+  window.openTestAssistant = function() {
+    const modal = document.getElementById("modalTestAssistant");
+    if (modal) { modal.style.display = "flex"; }
+    document.getElementById("testAssistantStatus").textContent = "Cliquez sur Démarrer pour lancer l'appel";
+    document.getElementById("btnTestStart").style.display = "";
+    document.getElementById("btnTestStop").style.display = "none";
+  };
+
+  window.closeTestAssistant = function() {
+    if (_vapiCallActive) stopVapiCall();
+    const modal = document.getElementById("modalTestAssistant");
+    if (modal) modal.style.display = "none";
+  };
+
+  window.startVapiCall = function() {
+    if (!window._vapiAssistantId) {
+      alert("Aucun assistant créé. Sauvegardez d'abord votre configuration.");
+      return;
+    }
+    if (!window.Vapi) {
+      alert("SDK Vapi non chargé. Rechargez la page.");
+      return;
+    }
+    try {
+      _vapi = new window.Vapi(VAPI_PUBLIC_KEY);
+
+      _vapi.on("call-start", () => {
+        _vapiCallActive = true;
+        document.getElementById("testAssistantStatus").textContent = "🟢 Appel en cours…";
+        document.getElementById("btnTestStart").style.display = "none";
+        document.getElementById("btnTestStop").style.display = "";
+      });
+
+      _vapi.on("call-end", () => {
+        _vapiCallActive = false;
+        document.getElementById("testAssistantStatus").textContent = "Appel terminé.";
+        document.getElementById("btnTestStart").style.display = "";
+        document.getElementById("btnTestStop").style.display = "none";
+      });
+
+      _vapi.on("error", (e) => {
+        console.error("[Vapi]", e);
+        document.getElementById("testAssistantStatus").textContent = "Erreur : " + (e?.message || "inconnue");
+        _vapiCallActive = false;
+        document.getElementById("btnTestStart").style.display = "";
+        document.getElementById("btnTestStop").style.display = "none";
+      });
+
+      document.getElementById("testAssistantStatus").textContent = "Connexion…";
+      _vapi.start(window._vapiAssistantId);
+    } catch(err) {
+      console.error("[Vapi start]", err);
+      document.getElementById("testAssistantStatus").textContent = "Erreur démarrage : " + err.message;
+    }
+  };
+
+  window.stopVapiCall = function() {
+    if (_vapi) { try { _vapi.stop(); } catch(e) {} }
+    _vapiCallActive = false;
+    document.getElementById("testAssistantStatus").textContent = "Appel arrêté.";
+    document.getElementById("btnTestStart").style.display = "";
+    document.getElementById("btnTestStop").style.display = "none";
+  };
+})();
 </script>
 </body>
 </html>
