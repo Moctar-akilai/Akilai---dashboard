@@ -10334,12 +10334,17 @@ function renderRecommandations(alerts) {
   let _vapiCallActive = false;
 
   function _loadVapiSdk(cb) {
-    if (window.Vapi) { cb(); return; }
+    if (window._VapiClass) { cb(); return; }
     const s = document.createElement("script");
-    s.src = "https://unpkg.com/@vapi-ai/web@2/dist/vapi.umd.js";
-    s.onload = cb;
+    s.type = "module";
+    s.textContent = `
+      import Vapi from "https://esm.sh/@vapi-ai/web@2";
+      window._VapiClass = Vapi;
+      window.dispatchEvent(new Event("vapi-sdk-ready"));
+    `;
     s.onerror = () => { document.getElementById("testAssistantStatus").textContent = "Impossible de charger le SDK Vapi (vérifiez votre connexion)."; };
     document.head.appendChild(s);
+    window.addEventListener("vapi-sdk-ready", cb, { once: true });
   }
 
   window.openTestAssistant = function() {
@@ -10364,7 +10369,7 @@ function renderRecommandations(alerts) {
       alert("Aucun assistant créé. Sauvegardez d'abord votre configuration.");
       return;
     }
-    if (!window.Vapi) {
+    if (!window._VapiClass) {
       alert("SDK Vapi non chargé. Rechargez la page.");
       return;
     }
@@ -10380,7 +10385,7 @@ function renderRecommandations(alerts) {
       }
     }
     try {
-      _vapi = new window.Vapi(_vapiPublicKey);
+      _vapi = new window._VapiClass(_vapiPublicKey);
 
       _vapi.on("call-start", () => {
         _vapiCallActive = true;
