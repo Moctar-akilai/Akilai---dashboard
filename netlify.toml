@@ -1,5 +1,5 @@
 [build]
-  command   = "npm run build && npm install --prefix netlify/functions/generate-invoice"
+  command   = "mkdir -p dist && cp index.html dist/index.html && cp admin.html dist/admin.html && npm install --prefix netlify/functions/generate-invoice"
   functions = "netlify/functions"
   publish   = "dist"
 

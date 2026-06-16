@@ -5340,6 +5340,7 @@ function _startDashboard(session) {
   _showDashboard();
   checkConnection();
   _checkAdminRoute();
+  if (window.initTour) window.initTour(session);
 }
 
 function _applySessionToUI(session) {
@@ -10424,6 +10425,256 @@ function renderRecommandations(alerts) {
     document.getElementById("btnTestStart").style.display = "";
     document.getElementById("btnTestStop").style.display = "none";
   };
+})();
+
+/* ══════════════════════════════════════════════════════════════
+   GUIDED TOUR — premier chargement uniquement
+   ══════════════════════════════════════════════════════════════ */
+(function () {
+  const TOUR_STEPS = [
+    {
+      selector: '#kpiGrid1',
+      navigateTo: 'overview',
+      title: 'Vue d\'ensemble',
+      text: 'Suivez ici vos indicateurs clés : appels traités, rendez-vous, tickets ouverts et usage WhatsApp en temps réel.'
+    },
+    {
+      selector: '[data-section="automations"]',
+      navigateTo: 'automations',
+      title: 'Automatisations',
+      text: 'Activez ou désactivez vos automatisations IA en un clic. Chaque carte indique le statut et les déclencheurs configurés.'
+    },
+    {
+      selector: '[data-section="programmation"]',
+      navigateTo: 'programmation',
+      title: 'Programmation',
+      text: 'Gérez votre agenda, définissez vos disponibilités et visualisez les rendez-vous planifiés par votre assistant vocal.'
+    },
+    {
+      selector: '[data-section="voix-ia"]',
+      navigateTo: 'voix-ia',
+      title: 'Voix & IA',
+      text: 'Configurez et testez votre assistant vocal IA : voix, script, numéro de téléphone et comportement en appel.'
+    },
+    {
+      selector: '[data-section="whatsapp"]',
+      navigateTo: 'whatsapp',
+      title: 'WhatsApp & IA',
+      text: 'Paramétrez votre assistant WhatsApp et consultez l\'historique complet des conversations avec vos clients.'
+    },
+    {
+      selector: '#page-integrations, [data-section="integrations"]',
+      navigateTo: null,
+      title: 'Intégrations',
+      text: 'Connectez vos outils favoris : Notion, Google Calendar, CRM et bien d\'autres pour automatiser vos workflows.'
+    },
+    {
+      selector: '[data-section="tickets"]',
+      navigateTo: 'tickets',
+      title: 'Support & Tickets',
+      text: 'Ouvrez des demandes d\'assistance, suivez leur avancement et communiquez directement avec l\'équipe AkilAI.'
+    },
+    {
+      selector: '[data-section="factures"]',
+      navigateTo: 'factures',
+      title: 'Mes Factures',
+      text: 'Consultez et téléchargez vos factures mensuelles. L\'historique complet de votre abonnement est disponible ici.'
+    },
+    {
+      selector: '[data-section="appels"]',
+      navigateTo: 'appels',
+      title: 'Historique Appels Vocaux',
+      text: 'Retrouvez la transcription et le résumé de chaque appel traité par votre assistant IA pour un suivi optimal.'
+    },
+    {
+      selector: '#page-whatsapp-history, [data-section="whatsapp-history"]',
+      navigateTo: null,
+      title: 'Historique Conversations WhatsApp',
+      text: 'Revoyez l\'intégralité des échanges WhatsApp entre votre assistant et vos clients, filtrés par date ou contact.'
+    },
+    {
+      selector: '#page-crm, [data-section="crm"]',
+      navigateTo: null,
+      title: 'CRM',
+      text: 'Gérez vos contacts, suivez votre pipeline commercial et centralisez toutes les informations de vos prospects.'
+    },
+    {
+      selector: 'button[title="Se déconnecter"]',
+      navigateTo: null,
+      title: 'Déconnexion',
+      text: 'Ce bouton vous permet de vous déconnecter en toute sécurité de votre espace AkilAI.'
+    }
+  ];
+
+  let tourSteps = [], currentStep = 0, tourActive = false;
+  let overlay, spotlight, bubble, stepLabel;
+  let tourKey = 'akilai_tour_done';
+
+  function initTour(session) {
+    const uid = (session && (session.clientId || session.email)) || 'global';
+    tourKey = 'akilai_tour_done_' + uid;
+    console.log('[AkilAI Tour] initTour uid=' + uid + ' done=' + localStorage.getItem(tourKey));
+    if (localStorage.getItem(tourKey) === 'true') return;
+    setTimeout(startTour, 900);
+  }
+
+  function startTour() {
+    tourSteps = TOUR_STEPS.filter(s => !!resolveEl(s.selector));
+    console.log('[AkilAI Tour] startTour steps=' + tourSteps.length);
+    if (tourSteps.length === 0) return;
+    tourActive = true;
+    currentStep = 0;
+    buildDOM();
+    showStep(0);
+  }
+
+  function resolveEl(selector) {
+    if (!selector) return null;
+    for (const p of selector.split(',').map(s => s.trim())) {
+      const el = document.querySelector(p);
+      if (el) return el;
+    }
+    return null;
+  }
+
+  function buildDOM() {
+    overlay = document.createElement('div');
+    overlay.id = 'tour-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:99998;pointer-events:none;';
+
+    spotlight = document.createElement('div');
+    spotlight.id = 'tour-spotlight';
+    spotlight.style.cssText = 'position:fixed;z-index:99999;pointer-events:none;border-radius:10px;box-shadow:0 0 0 9999px rgba(0,0,0,0.62);transition:all 0.3s cubic-bezier(.4,0,.2,1);';
+
+    bubble = document.createElement('div');
+    bubble.id = 'tour-bubble';
+    bubble.style.cssText = 'position:fixed;z-index:100000;background:#13111c;border:1px solid rgba(124,58,237,0.45);border-radius:14px;padding:20px 22px 18px;width:clamp(260px,88vw,340px);box-shadow:0 8px 40px rgba(0,0,0,0.6);transition:opacity 0.25s ease,transform 0.25s ease;opacity:0;font-family:inherit;';
+    bubble.innerHTML = '<div id="tour-arrow" style="position:absolute;width:12px;height:12px;background:#13111c;border:1px solid rgba(124,58,237,0.45);transform:rotate(45deg);"></div>'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">'
+      + '<span id="tour-step-label" style="font-size:11px;font-weight:600;color:#7c3aed;letter-spacing:0.08em;text-transform:uppercase;"></span>'
+      + '<button id="tour-skip" style="background:none;border:none;color:rgba(255,255,255,0.35);font-size:11px;cursor:pointer;padding:2px 6px;border-radius:6px;">Passer le tour ✕</button>'
+      + '</div>'
+      + '<div id="tour-title" style="font-size:15px;font-weight:700;color:#fff;margin-bottom:8px;"></div>'
+      + '<div id="tour-text" style="font-size:13px;color:rgba(255,255,255,0.65);line-height:1.55;margin-bottom:16px;"></div>'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">'
+      + '<div id="tour-dots" style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;max-width:140px;"></div>'
+      + '<button id="tour-next" style="background:#7c3aed;color:#fff;border:none;padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">Suivant →</button>'
+      + '</div>';
+
+    document.body.appendChild(overlay);
+    document.body.appendChild(spotlight);
+    document.body.appendChild(bubble);
+
+    stepLabel = bubble.querySelector('#tour-step-label');
+    document.getElementById('tour-next').addEventListener('click', nextStep);
+    document.getElementById('tour-skip').addEventListener('click', endTour);
+  }
+
+  function showStep(idx) {
+    const step = tourSteps[idx];
+    if (step.navigateTo && typeof navigate === 'function') navigate(step.navigateTo);
+    setTimeout(function() {
+      const target = resolveEl(step.selector);
+      if (!target) { nextStep(); return; }
+      target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      setTimeout(function() { positionBubble(target, step, idx); }, 180);
+    }, step.navigateTo ? 250 : 0);
+  }
+
+  function positionBubble(target, step, idx) {
+    const r = target.getBoundingClientRect();
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const pad = 8;
+
+    spotlight.style.left   = (r.left   - pad) + 'px';
+    spotlight.style.top    = (r.top    - pad) + 'px';
+    spotlight.style.width  = (r.width  + pad * 2) + 'px';
+    spotlight.style.height = (r.height + pad * 2) + 'px';
+
+    bubble.querySelector('#tour-title').textContent = step.title;
+    bubble.querySelector('#tour-text').textContent  = step.text;
+    stepLabel.textContent = 'Étape ' + (idx + 1) + ' / ' + tourSteps.length;
+
+    const dots = bubble.querySelector('#tour-dots');
+    dots.innerHTML = '';
+    tourSteps.forEach(function(_, i) {
+      const d = document.createElement('div');
+      d.style.cssText = 'width:' + (i === idx ? 16 : 6) + 'px;height:6px;border-radius:3px;background:' + (i === idx ? '#7c3aed' : 'rgba(255,255,255,0.2)') + ';transition:all 0.3s;';
+      dots.appendChild(d);
+    });
+
+    const btn = document.getElementById('tour-next');
+    btn.textContent = (idx === tourSteps.length - 1) ? 'Terminer ✓' : 'Suivant →';
+
+    bubble.style.opacity = '0';
+    bubble.style.transform = 'translateY(6px)';
+    bubble.style.display = 'block';
+
+    const bw = 340, bh = 190;
+    const arrow = bubble.querySelector('#tour-arrow');
+    let bLeft, bTop, arrowStyle = '';
+
+    if (vh - r.bottom >= bh + 20 || vh - r.bottom >= r.top) {
+      bTop  = r.bottom + pad + 10;
+      bLeft = Math.min(Math.max(r.left + r.width / 2 - bw / 2, 8), vw - bw - 8);
+      arrowStyle = 'left:' + Math.max(12, Math.min((r.left + r.width / 2) - bLeft - 6, bw - 24)) + 'px;top:-6px;border-right:none;border-bottom:none;';
+    } else if (r.top >= bh + 20) {
+      bTop  = r.top - bh - pad - 10;
+      bLeft = Math.min(Math.max(r.left + r.width / 2 - bw / 2, 8), vw - bw - 8);
+      arrowStyle = 'left:' + Math.max(12, Math.min((r.left + r.width / 2) - bLeft - 6, bw - 24)) + 'px;bottom:-6px;border-left:none;border-top:none;';
+    } else {
+      bLeft = r.right + pad + 10;
+      bTop  = Math.min(Math.max(r.top + r.height / 2 - bh / 2, 8), vh - bh - 8);
+      arrowStyle = 'top:' + Math.max(12, Math.min((r.top + r.height / 2) - bTop - 6, bh - 24)) + 'px;left:-6px;border-right:none;border-top:none;';
+    }
+
+    if (bLeft < 0 || bLeft + bw > vw) {
+      bLeft = Math.max(8, (vw - Math.min(bw, vw - 16)) / 2);
+      arrowStyle = 'display:none;';
+    }
+
+    bubble.style.left = bLeft + 'px';
+    bubble.style.top  = Math.max(8, bTop) + 'px';
+    arrow.style.cssText += arrowStyle;
+
+    requestAnimationFrame(function() {
+      bubble.style.opacity = '1';
+      bubble.style.transform = 'translateY(0)';
+    });
+  }
+
+  function nextStep() {
+    bubble.style.opacity = '0';
+    bubble.style.transform = 'translateY(-6px)';
+    if (currentStep < tourSteps.length - 1) {
+      currentStep++;
+      setTimeout(function() { showStep(currentStep); }, 260);
+    } else {
+      setTimeout(endTour, 260);
+    }
+  }
+
+  function endTour() {
+    tourActive = false;
+    localStorage.setItem(tourKey, 'true');
+    console.log('[AkilAI Tour] markDone key=' + tourKey);
+    [overlay, spotlight, bubble].forEach(function(el) { if (el && el.parentNode) el.parentNode.removeChild(el); });
+    overlay = spotlight = bubble = null;
+  }
+
+  var _resizeTimer;
+  window.addEventListener('resize', function() {
+    if (!tourActive || !bubble) return;
+    clearTimeout(_resizeTimer);
+    _resizeTimer = setTimeout(function() {
+      var step = tourSteps[currentStep];
+      var el = resolveEl(step.selector);
+      if (el) positionBubble(el, step, currentStep);
+    }, 120);
+  });
+
+  window.initTour = initTour;
+  console.log('[AkilAI Tour] script loaded, window.initTour ready');
 })();
 </script>
 </body>
