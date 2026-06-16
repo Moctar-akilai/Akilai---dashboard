@@ -4115,7 +4115,7 @@ function _startDashboard(session) {
   _showDashboard();
   checkConnection();
   _checkAdminRoute();
-  if (window.initTour) window.initTour();
+  if (window.initTour) window.initTour(session);
 }
 
 function _applySessionToUI(session) {
@@ -7055,18 +7055,24 @@ function renderRecommandations(alerts) {
   let currentStep = 0;
   let tourActive = false;
   let overlay, spotlight, bubble, stepLabel;
+  let tourKey = 'akilai_tour_done'; // sera affiné par clientId
 
-  /* ── Entrée principale ── */
-  function initTour() {
-    if (localStorage.getItem('akilai_tour_done') === 'true') return;
-    // Attendre que le DOM soit pleinement prêt
-    setTimeout(startTour, 800);
+  /* ── Entrée principale — appelée par _startDashboard(session) ── */
+  function initTour(session) {
+    // Clé unique par compte pour que chaque nouvel utilisateur voie le tour
+    const uid = (session && (session.clientId || session.email)) || 'global';
+    tourKey = 'akilai_tour_done_' + uid;
+    console.log('[AkilAI Tour] initTour uid=' + uid + ' done=' + localStorage.getItem(tourKey));
+    if (localStorage.getItem(tourKey) === 'true') return;
+    // Délai pour que le dashboard soit rendu
+    setTimeout(startTour, 900);
   }
 
   function startTour() {
     // Filtrer les étapes dont l'élément existe dans le DOM
     tourSteps = TOUR_STEPS.filter(s => !!resolveEl(s.selector));
-    if (tourSteps.length === 0) { markDone(); return; }
+    console.log('[AkilAI Tour] startTour steps=' + tourSteps.length);
+    if (tourSteps.length === 0) return; // pas de markDone ici
     tourActive = true;
     currentStep = 0;
     buildDOM();
@@ -7288,7 +7294,8 @@ function renderRecommandations(alerts) {
   }
 
   function markDone() {
-    localStorage.setItem('akilai_tour_done', 'true');
+    localStorage.setItem(tourKey, 'true');
+    console.log('[AkilAI Tour] markDone key=' + tourKey);
   }
 
   function cleanupDOM() {
@@ -7311,8 +7318,9 @@ function renderRecommandations(alerts) {
   });
 
   /* ── Exposer initTour globalement ── */
-  /* Appelé par _startDashboard() après login réussi */
+  /* Appelé par _startDashboard(session) après login réussi */
   window.initTour = initTour;
+  console.log('[AkilAI Tour] script loaded, window.initTour ready');
 })();
 </script>
 </body>
