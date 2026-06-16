@@ -6343,6 +6343,7 @@ const VOIX_LABELS = {
 /* Cache des voix ElevenLabs chargées */
 let _elevenLabsVoices = [];
 /* VapiAssistantId du client courant (chargé depuis Airtable) */
+window._vapiAssistantId = null;
 let _vapiAssistantId  = null;
 
 const SIMULATION_BY_TON = {
@@ -6429,7 +6430,7 @@ async function loadVoixConfig() {
   /* 1. Utiliser clients[0] déjà en mémoire (chargé via get-clients) */
   const client = clients[0] || null;
   if (client) {
-    _vapiAssistantId = client.vapiAssistantId || null;
+    _vapiAssistantId = window._vapiAssistantId = client.vapiAssistantId || null;
     const isNewClient = !client.nomAssistant && !client.vapiAssistantId;
     cfg = {
       nom:          isNewClient ? "" : (client.nomAssistant || VOIX_CONFIG_DEFAULT.nom),
@@ -6444,6 +6445,7 @@ async function loadVoixConfig() {
       silence:      VOIX_CONFIG_DEFAULT.silence,
       interruptions:VOIX_CONFIG_DEFAULT.interruptions,
       prompt:           isNewClient ? "" : (client.promptSysteme || VOIX_CONFIG_DEFAULT.prompt),
+      firstMessage:     client.firstMessage || "",
       capaciteCreneau:  client.capaciteCreneau  || 1,
       dureeRDV:         client.dureeRDV          || 30,
       heureOuverture:   client.heureOuverture    || "08:00",
@@ -6493,6 +6495,8 @@ function _applyVoixConfig(cfg) {
   const fermEl= document.getElementById("cfgHeureFerm"); if (fermEl) fermEl.value= cfg.heureFermeture || "19:00";
   const promptVal = cfg.prompt || "";
   document.getElementById("cfgPrompt").value = promptVal;
+  const firstMsgEl = document.getElementById("cfgFirstMessage");
+  if (firstMsgEl) firstMsgEl.value = cfg.firstMessage || "";
   const countEl = document.getElementById("cfgPromptCount");
   if (countEl) countEl.textContent = promptVal.length;
   document.getElementById("vitesseVal").textContent = (cfg.vitesse || "1.0") + "×";
@@ -6526,6 +6530,7 @@ async function saveVoixConfig() {
       langue:          cfg.langPrimaire,
       tonalite:        cfg.tonalite,
       promptSysteme:   cfg.prompt,
+      firstMessage:    cfg.firstMessage || "",
       vitesseParole:   parseFloat(cfg.vitesse),
       voiceId:         cfg.voiceId || cfg.voix || "",
       capaciteCreneau: cfg.capaciteCreneau,
@@ -6542,6 +6547,7 @@ async function saveVoixConfig() {
         clients[0].langue          = cfg.langPrimaire;
         clients[0].tonalite        = cfg.tonalite;
         clients[0].promptSysteme   = cfg.prompt;
+        clients[0].firstMessage    = cfg.firstMessage || "";
         clients[0].vitesseParole   = parseFloat(cfg.vitesse);
         clients[0].voiceId         = cfg.voiceId || cfg.voix || "";
         clients[0].capaciteCreneau = cfg.capaciteCreneau;
@@ -7017,7 +7023,7 @@ async function createOrUpdateVapiAssistant() {
     });
 
     if (data.ok) {
-      _vapiAssistantId = data.assistantId;
+      _vapiAssistantId = window._vapiAssistantId = data.assistantId;
       /* Mettre à jour le cache local — tous les champs pour survivre au refresh */
       if (client) {
         client.vapiAssistantId   = data.assistantId;

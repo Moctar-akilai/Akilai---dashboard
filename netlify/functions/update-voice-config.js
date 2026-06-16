@@ -19,7 +19,7 @@ exports.handler = async function(event, context) {
   let body;
   try { body = JSON.parse(event.body || "{}"); } catch(e) { return err("JSON invalide", 400); }
 
-  const { id, nomAssistant, langue, tonalite, promptSysteme, vitesseParole, voiceId,
+  const { id, nomAssistant, langue, tonalite, promptSysteme, firstMessage, vitesseParole, voiceId,
           capaciteCreneau, dureeRDV, heureOuverture, heureFermeture } = body;
 
   if (!id) return err("Champ id obligatoire", 400);
@@ -32,6 +32,7 @@ exports.handler = async function(event, context) {
     if (langue        !== undefined) fields["Langue"]        = langue;
     if (tonalite      !== undefined) fields["Tonalite"]      = tonalite;
     if (promptSysteme !== undefined) fields["PromptSysteme"] = promptSysteme;
+    if (firstMessage  !== undefined) fields["FirstMessage"]  = firstMessage;
     if (vitesseParole   !== undefined) fields["VitesseParole"]   = Number(vitesseParole);
     if (voiceId) fields["VoiceId"] = voiceId;
     if (capaciteCreneau !== undefined) fields["Capacite Creneau"] = Number(capaciteCreneau);

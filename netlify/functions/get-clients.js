@@ -71,6 +71,7 @@ exports.handler = async function(event, context) {
         langue:           f.Langue                     || "fr",
         tonalite:         f.Tonalite                   || "neutre",
         promptSysteme:    f.PromptSysteme              || "",
+        firstMessage:     f.FirstMessage               || "",
         vitesseParole:    Number(f.VitesseParole)      || 1.0,
         notes,
         googleConnected:  f["Google Connected"]        || false,
