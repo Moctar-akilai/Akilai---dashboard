@@ -4115,6 +4115,7 @@ function _startDashboard(session) {
   _showDashboard();
   checkConnection();
   _checkAdminRoute();
+  if (window.initTour) window.initTour();
 }
 
 function _applySessionToUI(session) {
@@ -7310,24 +7311,8 @@ function renderRecommandations(alerts) {
   });
 
   /* ── Exposer initTour globalement ── */
+  /* Appelé par _startDashboard() après login réussi */
   window.initTour = initTour;
-
-  /* ── Auto-démarrage : attendre que l'app soit connectée ── */
-  // On observe l'apparition de #main (affiché après login)
-  const observer = new MutationObserver(() => {
-    const main = document.getElementById('main');
-    if (main && !main.classList.contains('hidden') && getComputedStyle(main).display !== 'none') {
-      observer.disconnect();
-      initTour();
-    }
-  });
-  observer.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class', 'style'] });
-
-  // Sécurité : si déjà visible au chargement
-  document.addEventListener('DOMContentLoaded', () => {
-    const main = document.getElementById('main');
-    if (main && !main.classList.contains('hidden')) initTour();
-  });
 })();
 </script>
 </body>
