@@ -16,6 +16,7 @@ exports.handler = async function(event, context) {
     voiceId,
     langue          = "fr",
     promptSysteme   = "",
+    firstMessage    = "",
     vitesseParole   = 1.0,
     silenceMax      = 8,
     interruptions   = true,
@@ -257,6 +258,8 @@ exports.handler = async function(event, context) {
         "bien sûr", "exactement", "ok", "très bien",
       ],
     },
+
+    firstMessage: firstMessage || undefined,
 
     silenceTimeoutSeconds: 20,
     maxDurationSeconds:    600,
