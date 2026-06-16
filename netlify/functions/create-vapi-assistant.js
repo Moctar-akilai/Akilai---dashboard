@@ -261,6 +261,12 @@ exports.handler = async function(event, context) {
 
     firstMessage: firstMessage || undefined,
 
+    analysisPlan: {
+      summaryPrompt: "Rédige un résumé concis de cet appel en français. Mentionne l'objet de l'appel, les informations clés échangées et l'issue (RDV pris, question résolue, rappel demandé, etc.). Maximum 3 phrases.",
+      structuredDataPrompt: "Extrais les données structurées de cet appel en français.",
+      successEvaluationPrompt: "L'appel est un succès si l'appelant a obtenu une réponse à sa demande ou a pris un RDV. Réponds uniquement par 'true' ou 'false'.",
+    },
+
     silenceTimeoutSeconds: 20,
     maxDurationSeconds:    600,
     backgroundSound:       "off",
