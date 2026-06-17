@@ -17,7 +17,7 @@ function buildHtml({ clientName, assistantType, vapiPhoneNumber, whatsappNumber 
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px">
         <tr>
           <td width="44" valign="middle">
-            <div style="width:36px;height:36px;border-radius:8px;background:rgba(112,178,222,0.12);text-align:center;line-height:36px;font-size:18px">📞</div>
+            <div style="width:36px;height:36px;border-radius:8px;background:rgba(112,178,222,0.12);text-align:center;line-height:36px;font-size:18px">📲</div>
           </td>
           <td style="padding-left:14px">
             <p style="margin:0 0 2px;font-size:13px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.8px">Test vocal</p>
@@ -74,8 +74,8 @@ function buildHtml({ clientName, assistantType, vapiPhoneNumber, whatsappNumber 
     <!-- LOGO -->
     <tr><td align="center" style="padding-bottom:32px">
       <a href="https://akilai.fr" style="text-decoration:none">
-        <img src="${LOGO_URL}" alt="AkilAI" width="120" height="auto"
-             style="display:block;height:auto;border:0;max-width:120px" />
+        <img src="${LOGO_URL}" alt="AkilAI" width="180" height="auto"
+             style="display:block;height:auto;border:0;max-width:180px" />
       </a>
     </td></tr>
 
@@ -99,7 +99,7 @@ function buildHtml({ clientName, assistantType, vapiPhoneNumber, whatsappNumber 
           </table>
 
           <h1 style="margin:0 0 16px;font-size:26px;font-weight:700;color:#ffffff;line-height:1.3">
-            Votre assistant est prêt
+            Votre assistant est prêt ⚡
           </h1>
           <p style="margin:0 0 36px;font-size:15px;color:#94a3b8;line-height:1.7">
             Bonjour ${prenom},<br><br>

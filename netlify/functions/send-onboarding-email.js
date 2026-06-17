@@ -25,8 +25,8 @@ function buildHtml({ clientName, dashboardUrl }) {
     <!-- LOGO -->
     <tr><td align="center" style="padding-bottom:32px">
       <a href="https://akilai.fr" style="text-decoration:none">
-        <img src="${LOGO_URL}" alt="AkilAI" width="120" height="auto"
-             style="display:block;height:auto;border:0;max-width:120px" />
+        <img src="${LOGO_URL}" alt="AkilAI" width="180" height="auto"
+             style="display:block;height:auto;border:0;max-width:180px" />
       </a>
     </td></tr>
 
@@ -42,7 +42,7 @@ function buildHtml({ clientName, dashboardUrl }) {
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
         <tr><td style="padding:48px 48px 16px">
           <h1 style="margin:0 0 8px;font-size:26px;font-weight:700;color:#ffffff;line-height:1.3">
-            Votre espace est prêt&nbsp;🎉
+            Votre espace est prêt&nbsp;🚀
           </h1>
           <p style="margin:0 0 32px;font-size:16px;color:#94a3b8;line-height:1.7">
             Bonjour ${prenom},<br><br>
@@ -71,7 +71,7 @@ function buildHtml({ clientName, dashboardUrl }) {
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px">
             <tr>
               <td width="40" valign="top" style="padding-top:2px">
-                <div style="width:32px;height:32px;border-radius:8px;background:rgba(112,178,222,0.12);text-align:center;line-height:32px;font-size:16px">⚙️</div>
+                <div style="width:32px;height:32px;border-radius:8px;background:rgba(112,178,222,0.12);text-align:center;line-height:32px;font-size:16px">🛠️</div>
               </td>
               <td style="padding-left:14px">
                 <p style="margin:0 0 2px;font-size:14px;font-weight:600;color:#e2e8f0">Configurez votre assistant</p>
@@ -84,7 +84,7 @@ function buildHtml({ clientName, dashboardUrl }) {
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px">
             <tr>
               <td width="40" valign="top" style="padding-top:2px">
-                <div style="width:32px;height:32px;border-radius:8px;background:rgba(112,178,222,0.12);text-align:center;line-height:32px;font-size:16px">🎙️</div>
+                <div style="width:32px;height:32px;border-radius:8px;background:rgba(112,178,222,0.12);text-align:center;line-height:32px;font-size:16px">⚡</div>
               </td>
               <td style="padding-left:14px">
                 <p style="margin:0 0 2px;font-size:14px;font-weight:600;color:#e2e8f0">Testez-le en temps réel</p>
@@ -97,7 +97,7 @@ function buildHtml({ clientName, dashboardUrl }) {
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:40px">
             <tr>
               <td width="40" valign="top" style="padding-top:2px">
-                <div style="width:32px;height:32px;border-radius:8px;background:rgba(112,178,222,0.12);text-align:center;line-height:32px;font-size:16px">📊</div>
+                <div style="width:32px;height:32px;border-radius:8px;background:rgba(112,178,222,0.12);text-align:center;line-height:32px;font-size:16px">📈</div>
               </td>
               <td style="padding-left:14px">
                 <p style="margin:0 0 2px;font-size:14px;font-weight:600;color:#e2e8f0">Suivez vos performances</p>
