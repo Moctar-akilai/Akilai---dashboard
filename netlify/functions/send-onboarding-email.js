@@ -5,6 +5,21 @@ const BCC           = "mohamed.diop@akilai.fr";
 const DASHBOARD_URL = "https://portal-akilai.netlify.app";
 const LOGO_URL      = "https://portal-akilai.netlify.app/logo.png";
 
+/* ── SVG icons ─────────────────────────────────────────────────── */
+const ICON_SETTINGS = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#70B2DE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`;
+
+const ICON_BOLT = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#70B2DE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`;
+
+const ICON_CHART = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#70B2DE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>`;
+
+const ICON_ROCKET = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>`;
+
+function iconBox(svgContent, bg = "rgba(112,178,222,0.12)") {
+  return `<div style="width:36px;height:36px;border-radius:10px;background:${bg};display:inline-flex;align-items:center;justify-content:center;vertical-align:middle">
+    <table role="presentation" cellpadding="0" cellspacing="0" style="width:36px;height:36px"><tr><td align="center" valign="middle">${svgContent}</td></tr></table>
+  </div>`;
+}
+
 function buildHtml({ clientName, dashboardUrl }) {
   const prenom = (clientName || "").split(" ")[0] || "là";
   const cta    = dashboardUrl || DASHBOARD_URL;
@@ -33,7 +48,7 @@ function buildHtml({ clientName, dashboardUrl }) {
     <!-- CARD -->
     <tr><td style="background:#0e0e1a;border-radius:16px;border:1px solid rgba(112,178,222,0.18);overflow:hidden">
 
-      <!-- HEADER ACCENT -->
+      <!-- ACCENT BAR -->
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
         <tr><td style="height:4px;background:linear-gradient(90deg,#3b82f6,#70B2DE,#a855f7)"></td></tr>
       </table>
@@ -41,10 +56,18 @@ function buildHtml({ clientName, dashboardUrl }) {
       <!-- BODY -->
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
         <tr><td style="padding:48px 48px 16px">
-          <h1 style="margin:0 0 8px;font-size:26px;font-weight:700;color:#ffffff;line-height:1.3">
-            Votre espace est prêt&nbsp;🚀
-          </h1>
-          <p style="margin:0 0 32px;font-size:16px;color:#94a3b8;line-height:1.7">
+
+          <!-- Title with SVG rocket -->
+          <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:8px">
+            <tr>
+              <td valign="middle" style="padding-right:10px">${iconBox(ICON_ROCKET, "rgba(255,255,255,0.06)")}</td>
+              <td valign="middle">
+                <h1 style="margin:0;font-size:26px;font-weight:700;color:#ffffff;line-height:1.2">Votre espace est prêt</h1>
+              </td>
+            </tr>
+          </table>
+
+          <p style="margin:0 0 32px;font-size:15px;color:#94a3b8;line-height:1.7">
             Bonjour ${prenom},<br><br>
             Bienvenue chez AkilAI. Votre espace est configuré et prêt à être utilisé.
           </p>
@@ -59,35 +82,31 @@ function buildHtml({ clientName, dashboardUrl }) {
           </table>
 
           <!-- DIVIDER -->
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 32px">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px">
             <tr><td style="height:1px;background:rgba(112,178,222,0.1)"></td></tr>
           </table>
 
-          <p style="margin:0 0 20px;font-size:13px;font-weight:600;color:#64748b;letter-spacing:1px;text-transform:uppercase">
+          <p style="margin:0 0 20px;font-size:12px;font-weight:600;color:#475569;letter-spacing:1.2px;text-transform:uppercase">
             Ce que vous pouvez faire maintenant
           </p>
 
           <!-- STEP 1 -->
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px">
             <tr>
-              <td width="40" valign="top" style="padding-top:2px">
-                <div style="width:32px;height:32px;border-radius:8px;background:rgba(112,178,222,0.12);text-align:center;line-height:32px;font-size:16px">🛠️</div>
-              </td>
+              <td width="44" valign="top" style="padding-top:2px">${iconBox(ICON_SETTINGS)}</td>
               <td style="padding-left:14px">
-                <p style="margin:0 0 2px;font-size:14px;font-weight:600;color:#e2e8f0">Configurez votre assistant</p>
+                <p style="margin:0 0 3px;font-size:14px;font-weight:600;color:#e2e8f0">Configurez votre assistant</p>
                 <p style="margin:0;font-size:13px;color:#64748b;line-height:1.5">Personnalisez la voix, le ton et le script selon votre activité.</p>
               </td>
             </tr>
           </table>
 
           <!-- STEP 2 -->
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px">
             <tr>
-              <td width="40" valign="top" style="padding-top:2px">
-                <div style="width:32px;height:32px;border-radius:8px;background:rgba(112,178,222,0.12);text-align:center;line-height:32px;font-size:16px">⚡</div>
-              </td>
+              <td width="44" valign="top" style="padding-top:2px">${iconBox(ICON_BOLT)}</td>
               <td style="padding-left:14px">
-                <p style="margin:0 0 2px;font-size:14px;font-weight:600;color:#e2e8f0">Testez-le en temps réel</p>
+                <p style="margin:0 0 3px;font-size:14px;font-weight:600;color:#e2e8f0">Testez-le en temps réel</p>
                 <p style="margin:0;font-size:13px;color:#64748b;line-height:1.5">Appelez ou envoyez un message pour entendre votre assistant en action.</p>
               </td>
             </tr>
@@ -96,11 +115,9 @@ function buildHtml({ clientName, dashboardUrl }) {
           <!-- STEP 3 -->
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:40px">
             <tr>
-              <td width="40" valign="top" style="padding-top:2px">
-                <div style="width:32px;height:32px;border-radius:8px;background:rgba(112,178,222,0.12);text-align:center;line-height:32px;font-size:16px">📈</div>
-              </td>
+              <td width="44" valign="top" style="padding-top:2px">${iconBox(ICON_CHART)}</td>
               <td style="padding-left:14px">
-                <p style="margin:0 0 2px;font-size:14px;font-weight:600;color:#e2e8f0">Suivez vos performances</p>
+                <p style="margin:0 0 3px;font-size:14px;font-weight:600;color:#e2e8f0">Suivez vos performances</p>
                 <p style="margin:0;font-size:13px;color:#64748b;line-height:1.5">Consultez l'historique des appels, les transcriptions et les KPIs.</p>
               </td>
             </tr>
