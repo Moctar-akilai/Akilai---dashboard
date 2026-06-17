@@ -245,31 +245,6 @@ exports.handler = async function(event, context) {
       autoMode:                 true,
     },
 
-    chunkPlan: {
-      enabled: true,
-      formatPlan: {
-        enabled: true,
-        numberToDigitsCutoff: 1000,
-        replacements: [
-          { type: "regex", regex: "(\\d+)\\s*€", value: "$1 euros" },
-          { type: "exact", key: "€/mois",        value: "euros par mois" },
-          { type: "exact", key: "€",             value: "euros" },
-          { type: "exact", key: "min",            value: "minutes" },
-          { type: "exact", key: "msg",            value: "messages" },
-        ],
-      },
-    },
-
-    backgroundSpeechDenoisingPlan: {
-      smartDenoisingPlan: {
-        enabled: true,
-      },
-    },
-
-    fillerInjectionPlan: {
-      enabled: true,
-    },
-
     startSpeakingPlan: {
       waitSeconds:          0.4,
       smartEndpointingPlan: { provider: "vapi" },
