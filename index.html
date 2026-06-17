@@ -10445,10 +10445,16 @@ function renderRecommandations(alerts) {
       text: 'Activez ou désactivez vos automatisations IA en un clic. Chaque carte indique le statut et les déclencheurs configurés.'
     },
     {
-      selector: '[data-section="programmation"]',
-      navigateTo: 'programmation',
-      title: 'Programmation',
-      text: 'Gérez votre agenda, définissez vos disponibilités et visualisez les rendez-vous planifiés par votre assistant vocal.'
+      selector: '[data-section="appels"]',
+      navigateTo: 'appels',
+      title: 'Historique Appels Vocaux',
+      text: 'Retrouvez la transcription et le résumé de chaque appel traité par votre assistant IA pour un suivi optimal.'
+    },
+    {
+      selector: '[data-section="whatsapp"]',
+      navigateTo: 'whatsapp',
+      title: 'Conversations WhatsApp',
+      text: 'Revoyez l\'intégralité des échanges WhatsApp entre votre assistant et vos clients.'
     },
     {
       selector: '[data-section="voix-ia"]',
@@ -10457,16 +10463,10 @@ function renderRecommandations(alerts) {
       text: 'Configurez et testez votre assistant vocal IA : voix, script, numéro de téléphone et comportement en appel.'
     },
     {
-      selector: '[data-section="whatsapp"]',
-      navigateTo: 'whatsapp',
-      title: 'WhatsApp & IA',
-      text: 'Paramétrez votre assistant WhatsApp et consultez l\'historique complet des conversations avec vos clients.'
-    },
-    {
-      selector: '#page-integrations, [data-section="integrations"]',
-      navigateTo: null,
-      title: 'Intégrations',
-      text: 'Connectez vos outils favoris : Notion, Google Calendar, CRM et bien d\'autres pour automatiser vos workflows.'
+      selector: '[data-section="programmation"]',
+      navigateTo: 'programmation',
+      title: 'Programmation',
+      text: 'Configurez la disponibilité de votre assistant : définissez les horaires et les jours de prise en charge.'
     },
     {
       selector: '[data-section="tickets"]',
@@ -10481,22 +10481,16 @@ function renderRecommandations(alerts) {
       text: 'Consultez et téléchargez vos factures mensuelles. L\'historique complet de votre abonnement est disponible ici.'
     },
     {
-      selector: '[data-section="appels"]',
-      navigateTo: 'appels',
-      title: 'Historique Appels Vocaux',
-      text: 'Retrouvez la transcription et le résumé de chaque appel traité par votre assistant IA pour un suivi optimal.'
-    },
-    {
-      selector: '#page-whatsapp-history, [data-section="whatsapp-history"]',
-      navigateTo: null,
-      title: 'Historique Conversations WhatsApp',
-      text: 'Revoyez l\'intégralité des échanges WhatsApp entre votre assistant et vos clients, filtrés par date ou contact.'
-    },
-    {
-      selector: '#page-crm, [data-section="crm"]',
-      navigateTo: null,
+      selector: '[data-section="crm"]',
+      navigateTo: 'crm',
       title: 'CRM',
-      text: 'Gérez vos contacts, suivez votre pipeline commercial et centralisez toutes les informations de vos prospects.'
+      text: 'Gérez vos contacts, suivez votre pipeline commercial et centralisez toutes les informations de vos prospects et/ou clients.'
+    },
+    {
+      selector: '[data-section="integrations"]',
+      navigateTo: 'integrations',
+      title: 'Intégrations',
+      text: 'Connectez vos outils favoris : Notion, Google Calendar, CRM et bien d\'autres pour automatiser vos workflows.'
     },
     {
       selector: 'button[title="Se déconnecter"]',
