@@ -87,7 +87,7 @@ exports.handler = async function(event, context) {
           required: ["date"],
         },
       },
-      messages: [{ type: "request-start", content: "Un instant je vérifie...", role: "assistant" }],
+      messages: [{ type: "request-start", content: "Un instant je vérifie..." }],
       server: { url: `${TOOLS_BASE}/vapi-tool-check-availability`, timeoutSeconds: 20, headers: toolHeaders },
     });
 
@@ -109,7 +109,7 @@ exports.handler = async function(event, context) {
           required: ["dateDebut", "dateFin", "nomPatient"],
         },
       },
-      messages: [{ type: "request-start", content: "Un instant je vérifie...", role: "assistant" }],
+      messages: [{ type: "request-start", content: "Un instant je vérifie..." }],
       server: { url: `${TOOLS_BASE}/vapi-tool-create-appointment`, timeoutSeconds: 20, headers: toolHeaders },
     });
   }
@@ -128,7 +128,7 @@ exports.handler = async function(event, context) {
           required: ["date"],
         },
       },
-      messages: [{ type: "request-start", content: "Un instant je vérifie...", role: "assistant" }],
+      messages: [{ type: "request-start", content: "Un instant je vérifie..." }],
       server: { url: `${TOOLS_BASE}/vapi-tool-get-calendly-slots`, timeoutSeconds: 20, headers: toolHeaders },
     });
   }
@@ -186,7 +186,7 @@ exports.handler = async function(event, context) {
         required: ["numero"],
       },
     },
-    messages: [{ type: "request-start", content: "Un instant je vérifie...", role: "assistant" }],
+    messages: [{ type: "request-start", content: "Un instant je vérifie..." }],
     server: {
       url:            `${TOOLS_BASE}/vapi-tool-get-context`,
       timeoutSeconds: 5,
@@ -259,7 +259,6 @@ exports.handler = async function(event, context) {
     stopSpeakingPlan: {
       numWords:               1,
       voiceSeconds:           0.1,
-      backOffSeconds:         0.5,
       acknowledgementPhrases: [
         "hmm", "oui", "d'accord", "je vois",
         "bien sûr", "exactement", "ok", "très bien",
