@@ -8776,6 +8776,7 @@ async function loadCRM() {
     _crmContacts = data.contacts || [];
     renderCRMTable(_crmContacts);
     updateCRMKPIs(_crmContacts);
+    updateCRMSelectLabels();
   } catch(e) {
     console.error("[CRM] Erreur chargement:", e.message);
     document.getElementById("crm-loading").textContent = "Erreur de chargement.";
@@ -8812,9 +8813,30 @@ const CRM_STATUT_STYLE = {
   "Inactif":   "background:rgba(239,68,68,0.15);color:#ef4444",
 };
 
+/* Retourne le label affiché pour "Prospect" selon le secteur du client */
+function getCRMProspectLabel() {
+  const secteur = ((typeof clients !== "undefined" && clients[0]) || {}).secteur || "";
+  if (secteur === "Santé") return "Patient";
+  if (["Restauration","Coiffure & beauté","Hôtellerie et tourisme","Automobile","Sport et loisir"].includes(secteur)) return "Client";
+  return "Prospect"; // Immobilier, Services aux entreprises, autres
+}
+
+/* Met à jour tous les <select> du CRM avec le bon libellé pour "Prospect" */
+function updateCRMSelectLabels() {
+  const label = getCRMProspectLabel();
+  ["crm-filter-statut","crm-modal-statut","nc-statut"].forEach(function(id) {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    Array.from(sel.options).forEach(function(opt) {
+      if (opt.value === "Prospect") opt.text = label;
+    });
+  });
+}
+
 function crmBadge(statut) {
   const style = CRM_STATUT_STYLE[statut] || CRM_STATUT_STYLE["Prospect"];
-  return `<span style="${style};padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500">${statut}</span>`;
+  const label = (statut === "Prospect") ? getCRMProspectLabel() : statut;
+  return `<span style="${style};padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500">${label}</span>`;
 }
 
 function renderCRMTable(contacts) {
@@ -8850,7 +8872,7 @@ function renderCRMTable(contacts) {
           <button class="btn btn-secondary btn-sm" style="padding:4px 10px;font-size:11px" onclick="openCRMModal('${c.id}')">👁 Voir</button>
           <select class="input" style="font-size:11px;padding:4px 6px" onchange="quickUpdateStatut('${c.id}',this.value)">
             <option value="">Statut…</option>
-            <option value="Prospect">Prospect</option>
+            <option value="Prospect">${getCRMProspectLabel()}</option>
             <option value="Contacté">Contacté</option>
             <option value="Client">Client</option>
             <option value="Inactif">Inactif</option>
@@ -8886,6 +8908,7 @@ function openCRMModal(id) {
   document.getElementById("crm-modal-email").textContent    = c.email  || "";
   document.getElementById("crm-modal-statut").value         = c.statut || "Prospect";
   document.getElementById("crm-modal-notes").value          = c.notes  || "";
+  updateCRMSelectLabels();
 
   // Charger historique
   const hist = document.getElementById("crm-modal-historique");
@@ -8973,6 +8996,7 @@ function openNewContactModal() {
   });
   const s = document.getElementById("nc-statut");
   if (s) s.value = "Prospect";
+  updateCRMSelectLabels();
   document.getElementById("crmNewContactModal").style.display = "flex";
 }
 
