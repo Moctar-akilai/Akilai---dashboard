@@ -260,6 +260,16 @@ exports.handler = async function(event, context) {
       },
     },
 
+    backgroundSpeechDenoisingPlan: {
+      smartDenoisingPlan: {
+        enabled: true,
+      },
+    },
+
+    fillerInjectionPlan: {
+      enabled: true,
+    },
+
     startSpeakingPlan: {
       waitSeconds:          0.4,
       smartEndpointingPlan: { provider: "vapi" },
