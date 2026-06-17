@@ -416,8 +416,8 @@ exports.handler = async function(event, context) {
             method:  "PATCH",
             headers: vapiHeaders,
             body:    JSON.stringify({
-              assistantId,
-              serverUrl: webhookUrl,
+              assistantId: null,
+              serverUrl:   webhookUrl,
               metadata: {
                 userId:   clientEmail,
                 clientId: clientId || "",

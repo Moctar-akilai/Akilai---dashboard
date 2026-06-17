@@ -38,6 +38,116 @@ exports.handler = async (event) => {
   }
   console.log("[vapi-webhook] type:", msgType);
 
+  // ── assistant-request : lookup pré-appel pour accueil personnalisé immédiat ──
+  if (msgType === "assistant-request") {
+    const phoneNumberId = message.call?.phoneNumberId || message.phoneNumberId || "";
+    const callerNumber  = message.call?.customer?.number || message.customer?.number || "";
+    console.log("[vapi-webhook] assistant-request | phoneNumberId:", phoneNumberId, "| callerNumber:", callerNumber);
+
+    // Fallback sans personnalisation si données insuffisantes
+    const fallbackResponse = (assistantId) => ({
+      statusCode: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      body: JSON.stringify(assistantId ? { assistantId } : {}),
+    });
+
+    if (!phoneNumberId) {
+      console.warn("[vapi-webhook] assistant-request sans phoneNumberId — fallback");
+      return fallbackResponse(null);
+    }
+
+    try {
+      // STEP 1 — Trouver le client propriétaire du numéro Vapi (lookup par phoneNumberId)
+      const ownerFormula = encodeURIComponent(`{Numéro Vapi}="${phoneNumberId}"`);
+      const ownerUrl     = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${CLIENTS_TABLE}?filterByFormula=${ownerFormula}&maxRecords=1`;
+
+      // STEP 2 — Lookup appelant en parallèle (optimisation : on ne peut chercher qu'avec userId connu après step 1)
+      const ownerRes  = await fetch(ownerUrl, { headers: { Authorization: `Bearer ${AIRTABLE_API_KEY}` } });
+      const ownerData = await ownerRes.json();
+      const ownerRecord = ownerData.records?.[0];
+
+      if (!ownerRecord) {
+        console.warn("[vapi-webhook] aucun client trouvé pour phoneNumberId:", phoneNumberId);
+        return fallbackResponse(null);
+      }
+
+      const ownerFields  = ownerRecord.fields;
+      const assistantId  = ownerFields.VapiAssistantId || "";
+      const userId       = ownerFields["User ID"] || ownerFields.Email || "";
+      const nomAssistant = ownerFields.NomAssistant || "votre assistant";
+
+      console.log("[vapi-webhook] client owner:", userId, "| assistantId:", assistantId);
+
+      if (!assistantId) {
+        console.warn("[vapi-webhook] VapiAssistantId vide pour ce numéro");
+        return fallbackResponse(null);
+      }
+
+      // STEP 2 — Chercher l'appelant dans les contacts du client
+      let firstMessage;
+      let callerPrefix = "";
+
+      if (callerNumber && userId) {
+        const callerFormula = encodeURIComponent(`AND({User ID}="${userId}",{Numéro}="${callerNumber}")`);
+        const callerUrl     = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/tblmBABwZaL2HTSx6?filterByFormula=${callerFormula}&maxRecords=1`;
+        const callerRes     = await fetch(callerUrl, { headers: { Authorization: `Bearer ${AIRTABLE_API_KEY}` } });
+        const callerData    = await callerRes.json();
+        const callerRecord  = callerData.records?.[0];
+
+        if (callerRecord) {
+          const cf      = callerRecord.fields;
+          const prenom  = cf["Prénom"] || cf["Nom"] || "";
+          const nom     = cf["Nom"]    || "";
+          const contexte = cf["Contexte"] || "";
+          const nb      = Number(cf["Nb appels"] || 0);
+          const dernier = cf["Derniere Interaction"] || cf["Dernier appel"] || null;
+          const dernierFr = dernier
+            ? new Date(dernier).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })
+            : null;
+
+          console.log("[vapi-webhook] appelant connu:", prenom, nom, "| nb appels:", nb);
+
+          firstMessage = prenom
+            ? `Bonjour ${prenom}, je suis ravi de vous retrouver. Comment puis-je vous aider ?`
+            : `Bonjour, je suis ravi de vous retrouver. Comment puis-je vous aider ?`;
+
+          callerPrefix  = `APPELANT IDENTIFIÉ : ${[prenom, nom].filter(Boolean).join(" ")} (numéro : ${callerNumber}).`;
+          if (nb > 0)      callerPrefix += ` ${nb} interaction(s) précédente(s).`;
+          if (dernierFr)   callerPrefix += ` Dernier contact : ${dernierFr}.`;
+          if (contexte)    callerPrefix += ` Contexte : ${contexte}`;
+          callerPrefix += `\nNe pas redemander le nom de cet appelant. Enchaîner directement avec sa demande.\n\n`;
+        } else {
+          console.log("[vapi-webhook] appelant inconnu:", callerNumber);
+          firstMessage  = `Bonjour, ${nomAssistant} à votre service. Comment puis-je vous aider ?`;
+          callerPrefix  = `APPELANT INCONNU (numéro : ${callerNumber || "masqué"}). Demander le nom poliment en début d'appel.\n\n`;
+        }
+      } else {
+        firstMessage = `Bonjour, ${nomAssistant} à votre service. Comment puis-je vous aider ?`;
+      }
+
+      // STEP 3 — Retourner assistantId + overrides
+      const assistantOverrides = {
+        firstMessage,
+        ...(callerPrefix && {
+          model: {
+            messages: [{ role: "system", content: callerPrefix }],
+          },
+        }),
+      };
+
+      console.log("[vapi-webhook] assistant-request → assistantId:", assistantId, "| firstMessage:", firstMessage);
+
+      return {
+        statusCode: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        body: JSON.stringify({ assistantId, assistantOverrides }),
+      };
+    } catch (e) {
+      console.error("[vapi-webhook] assistant-request erreur:", e.message);
+      return fallbackResponse(null);
+    }
+  }
+
   if (msgType !== "end-of-call-report") {
     console.log("[vapi-webhook] événement ignoré:", msgType);
     return { statusCode: 200, headers: corsHeaders, body: JSON.stringify({ ok: true, ignored: true }) };
