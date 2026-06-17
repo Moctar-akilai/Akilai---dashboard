@@ -1,4 +1,5 @@
 const { BASE_URL, headers, ok, err, preflight } = require("./config");
+const { sendAssistantReadyEmail } = require("./send-assistant-ready-email");
 
 exports.handler = async function(event) {
   if (event.httpMethod === "OPTIONS") return preflight();
@@ -48,6 +49,18 @@ exports.handler = async function(event) {
     }
 
     console.log("[update-whatsapp-config] PATCH OK — champs:", Object.keys(fields).join(", "));
+
+    /* Fire-and-forget : email "assistant configuré" */
+    const rf = record.fields || {};
+    if (rf["Email"]) {
+      sendAssistantReadyEmail({
+        clientName:      rf["Nom"]             || "",
+        clientEmail:     rf["Email"],
+        assistantType:   rf["AssistantType"]   || "WhatsApp",
+        vapiPhoneNumber: rf["VapiPhoneNumber"] || "",
+        whatsappNumber:  rf["WhatsAppNumber"]  || "",
+      }).catch(e => console.error("[update-whatsapp-config] sendAssistantReadyEmail erreur:", e.message));
+    }
 
     /* Upsert Automatisations */
     try {

@@ -1,4 +1,5 @@
 const { BASE_URL, headers, ok, err, preflight } = require("./config");
+const { sendAssistantReadyEmail } = require("./send-assistant-ready-email");
 
 /**
  * POST — PATCH /Clients/{recordId}
@@ -73,6 +74,19 @@ exports.handler = async function(event, context) {
 
     const data = await res.json();
     console.log("[update-voice-config] Champs mis à jour:", JSON.stringify(Object.keys(data.fields || {})));
+
+    /* Fire-and-forget : email "assistant configuré" */
+    const f = data.fields || {};
+    if (f["Email"]) {
+      sendAssistantReadyEmail({
+        clientName:      f["Nom"]             || "",
+        clientEmail:     f["Email"],
+        assistantType:   f["AssistantType"]   || "Vocal",
+        vapiPhoneNumber: f["VapiPhoneNumber"] || "",
+        whatsappNumber:  f["WhatsAppNumber"]  || "",
+      }).catch(e => console.error("[update-voice-config] sendAssistantReadyEmail erreur:", e.message));
+    }
+
     return ok({ ok: true, id: data.id });
   } catch (e) {
     console.error("[update-voice-config] Exception:", e.message);

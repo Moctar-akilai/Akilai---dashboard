@@ -1,5 +1,6 @@
 const { BASE_URL, headers, ok, err, preflight, corsHeaders } = require("./config");
 const { verifyAdminToken, unauthorized } = require("./admin-utils");
+const { sendOnboardingEmail } = require("./send-onboarding-email");
 
 exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") return preflight();
@@ -40,22 +41,13 @@ exports.handler = async (event) => {
 
     if (data.error) return err(data.error.message || "Airtable error");
 
-    // 2. Send welcome email via Resend
-    const RESEND_API_KEY = process.env.RESEND_API_KEY || "";
-    if (RESEND_API_KEY) {
-      await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${RESEND_API_KEY}`,
-        },
-        body: JSON.stringify({
-          from: "AkilAI <noreply@akilai.fr>",
-          to: email,
-          subject: "Bienvenue chez AkilAI — Votre accès est prêt",
-          html: `<h2>Bienvenue ${nom} !</h2><p>Votre compte AkilAI a été créé avec le plan <strong>${plan}</strong>.</p><p>Email de connexion : ${email}</p><p>L'équipe AkilAI</p>`,
-        }),
-      });
+    // 2. Fire-and-forget : email de bienvenue
+    if (email) {
+      sendOnboardingEmail({
+        clientName:   nom || "",
+        clientEmail:  email,
+        dashboardUrl: "https://portal-akilai.netlify.app",
+      }).catch(e => console.error("[admin-create-client] sendOnboardingEmail erreur:", e.message));
     }
 
     return ok({ ok: true, id: data.id });
