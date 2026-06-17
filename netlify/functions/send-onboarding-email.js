@@ -37,8 +37,8 @@ function buildHtml({ clientName, dashboardUrl }) {
     <!-- LOGO -->
     <tr><td align="center" style="padding-bottom:32px">
       <a href="https://akilai.fr" style="text-decoration:none;display:block">
-        <img src="${LOGO_URL}" alt="AkilAI" width="180" height="auto"
-             style="display:block;border:0;max-width:180px;height:auto" />
+        <img src="${LOGO_URL}" alt="AkilAI" width="260" height="auto"
+             style="display:block;border:0;max-width:260px;height:auto" />
       </a>
     </td></tr>
 
