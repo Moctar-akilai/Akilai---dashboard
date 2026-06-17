@@ -238,11 +238,26 @@ exports.handler = async function(event, context) {
       voiceId:                  voiceId || "21m00Tcm4TlvDq8ikWAM",
       stability:                0.4,
       similarityBoost:          0.75,
-      speed:                    0.95,
+      speed:                    1.15,
       style:                    0.3,
       optimizeStreamingLatency: 4,
       useSpeakerBoost:          false,
       autoMode:                 true,
+    },
+
+    chunkPlan: {
+      enabled: true,
+      formatPlan: {
+        enabled: true,
+        numberToDigitsCutoff: 1000,
+        replacements: [
+          { type: "regex", regex: "(\\d+)\\s*€", value: "$1 euros" },
+          { type: "exact", key: "€/mois",        value: "euros par mois" },
+          { type: "exact", key: "€",             value: "euros" },
+          { type: "exact", key: "min",            value: "minutes" },
+          { type: "exact", key: "msg",            value: "messages" },
+        ],
+      },
     },
 
     startSpeakingPlan: {
