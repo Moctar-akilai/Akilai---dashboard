@@ -3,6 +3,7 @@ const { ok, err, preflight } = require("./config");
 const FROM          = "Mohamed d'AkilAI <mohamed.diop@akilai.fr>";
 const BCC           = "mohamed.diop@akilai.fr";
 const DASHBOARD_URL = "https://portal-akilai.netlify.app";
+const LOGO_URL      = "https://portal-akilai.netlify.app/logo.png";
 
 function buildHtml({ clientName, assistantType, vapiPhoneNumber, whatsappNumber }) {
   const prenom  = (clientName || "").split(" ")[0] || "là";
@@ -10,30 +11,52 @@ function buildHtml({ clientName, assistantType, vapiPhoneNumber, whatsappNumber 
   const isWA    = assistantType === "WhatsApp" || assistantType === "Combo";
 
   const testBlocks = [];
+
   if (isVocal && vapiPhoneNumber) {
     testBlocks.push(`
-      <tr>
-        <td style="padding:16px 20px;background:rgba(112,178,222,0.06);border:1px solid rgba(112,178,222,0.15);border-radius:8px">
-          <p style="margin:0 0 6px;font-size:13px;color:#9ca3af;font-weight:500">📞 &nbsp;TEST VOCAL</p>
-          <p style="margin:0;font-size:15px;color:#e5e7eb">Appelez ce numéro pour tester : <strong style="color:#70B2DE">${vapiPhoneNumber}</strong></p>
-        </td>
-      </tr>`);
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px">
+        <tr>
+          <td width="44" valign="middle">
+            <div style="width:36px;height:36px;border-radius:8px;background:rgba(112,178,222,0.12);text-align:center;line-height:36px;font-size:18px">📞</div>
+          </td>
+          <td style="padding-left:14px">
+            <p style="margin:0 0 2px;font-size:13px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.8px">Test vocal</p>
+            <p style="margin:0;font-size:16px;font-weight:700;color:#70B2DE">${vapiPhoneNumber}</p>
+            <p style="margin:2px 0 0;font-size:12px;color:#475569">Appelez ce numéro pour tester votre assistant</p>
+          </td>
+        </tr>
+      </table>`);
   }
+
   if (isWA && whatsappNumber) {
     testBlocks.push(`
-      <tr>
-        <td style="padding:16px 20px;background:rgba(112,178,222,0.06);border:1px solid rgba(112,178,222,0.15);border-radius:8px">
-          <p style="margin:0 0 6px;font-size:13px;color:#9ca3af;font-weight:500">💬 &nbsp;TEST WHATSAPP</p>
-          <p style="margin:0;font-size:15px;color:#e5e7eb">Envoyez un message WhatsApp à : <strong style="color:#70B2DE">${whatsappNumber}</strong></p>
-        </td>
-      </tr>`);
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px">
+        <tr>
+          <td width="44" valign="middle">
+            <div style="width:36px;height:36px;border-radius:8px;background:rgba(37,211,102,0.12);text-align:center;line-height:36px;font-size:18px">💬</div>
+          </td>
+          <td style="padding-left:14px">
+            <p style="margin:0 0 2px;font-size:13px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.8px">Test WhatsApp</p>
+            <p style="margin:0;font-size:16px;font-weight:700;color:#25d366">${whatsappNumber}</p>
+            <p style="margin:2px 0 0;font-size:12px;color:#475569">Envoyez un message WhatsApp à ce numéro</p>
+          </td>
+        </tr>
+      </table>`);
   }
 
   const testSection = testBlocks.length
-    ? `<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 40px;border-spacing:0 10px">
-        ${testBlocks.join('<tr><td style="height:10px"></td></tr>')}
+    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+          style="background:rgba(255,255,255,0.03);border:1px solid rgba(112,178,222,0.15);border-radius:12px;margin:0 0 36px">
+         <tr><td style="padding:24px 24px 12px">
+           <p style="margin:0 0 20px;font-size:13px;font-weight:600;color:#64748b;letter-spacing:1px;text-transform:uppercase">
+             Vos accès de test
+           </p>
+           ${testBlocks.join("")}
+         </td></tr>
        </table>`
-    : `<p style="margin:0 0 40px;font-size:14px;color:#9ca3af">Connectez-vous à votre espace pour retrouver vos informations de test.</p>`;
+    : `<p style="margin:0 0 36px;font-size:14px;color:#64748b">
+         Connectez-vous à votre espace pour retrouver vos informations de test.
+       </p>`;
 
   return `<!DOCTYPE html>
 <html lang="fr">
@@ -42,49 +65,87 @@ function buildHtml({ clientName, assistantType, vapiPhoneNumber, whatsappNumber 
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Votre assistant est configuré</title>
 </head>
-<body style="margin:0;padding:0;background:#030305;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#ffffff">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#030305;padding:40px 0">
-    <tr><td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" style="background:#0d0d14;border-radius:12px;overflow:hidden;border:1px solid rgba(112,178,222,0.2)">
+<body style="margin:0;padding:0;background:#07070f;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#07070f;min-height:100vh">
+<tr><td align="center" style="padding:48px 16px">
 
-        <!-- Header -->
-        <tr><td style="background:linear-gradient(135deg,#0d0d14 0%,#111827 100%);padding:40px 48px 32px;text-align:center;border-bottom:1px solid rgba(112,178,222,0.15)">
-          <div style="display:inline-block;background:rgba(112,178,222,0.1);border:1px solid rgba(112,178,222,0.3);border-radius:8px;padding:8px 20px;margin-bottom:24px">
-            <span style="color:#70B2DE;font-size:14px;font-weight:600;letter-spacing:2px">AKILAI</span>
-          </div>
-          <h1 style="margin:0;font-size:28px;font-weight:700;color:#ffffff;line-height:1.3">Votre assistant est configuré ✅</h1>
-        </td></tr>
+  <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="width:100%;max-width:560px">
 
-        <!-- Body -->
-        <tr><td style="padding:40px 48px">
-          <p style="margin:0 0 24px;font-size:16px;color:#e5e7eb;line-height:1.6">Bonjour ${prenom},</p>
-          <p style="margin:0 0 32px;font-size:16px;color:#9ca3af;line-height:1.7">
-            Votre assistant virtuel est prêt. Testez-le maintenant&nbsp;:
+    <!-- LOGO -->
+    <tr><td align="center" style="padding-bottom:32px">
+      <a href="https://akilai.fr" style="text-decoration:none">
+        <img src="${LOGO_URL}" alt="AkilAI" width="120" height="auto"
+             style="display:block;height:auto;border:0;max-width:120px" />
+      </a>
+    </td></tr>
+
+    <!-- CARD -->
+    <tr><td style="background:#0e0e1a;border-radius:16px;border:1px solid rgba(112,178,222,0.18);overflow:hidden">
+
+      <!-- ACCENT BAR -->
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        <tr><td style="height:4px;background:linear-gradient(90deg,#3b82f6,#70B2DE,#a855f7)"></td></tr>
+      </table>
+
+      <!-- BODY -->
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        <tr><td style="padding:48px 48px 16px">
+
+          <!-- Checkmark badge -->
+          <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:24px">
+            <tr><td style="background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.25);border-radius:100px;padding:6px 14px">
+              <span style="font-size:12px;font-weight:600;color:#22c55e;letter-spacing:0.5px">✓ &nbsp;CONFIGURÉ</span>
+            </td></tr>
+          </table>
+
+          <h1 style="margin:0 0 16px;font-size:26px;font-weight:700;color:#ffffff;line-height:1.3">
+            Votre assistant est prêt
+          </h1>
+          <p style="margin:0 0 36px;font-size:15px;color:#94a3b8;line-height:1.7">
+            Bonjour ${prenom},<br><br>
+            Votre assistant virtuel est configuré et opérationnel. Vous pouvez dès maintenant le tester.
           </p>
 
           ${testSection}
 
           <!-- CTA -->
-          <div style="text-align:center;margin:0 0 40px">
-            <a href="${DASHBOARD_URL}" style="display:inline-block;background:#70B2DE;color:#030305;font-size:15px;font-weight:700;text-decoration:none;padding:14px 36px;border-radius:8px;letter-spacing:0.3px">
-              Accéder à mon dashboard
-            </a>
-          </div>
+          <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 40px">
+            <tr><td style="border-radius:10px;background:#70B2DE">
+              <a href="${DASHBOARD_URL}" style="display:inline-block;padding:14px 32px;font-size:15px;font-weight:700;color:#070714;text-decoration:none;letter-spacing:0.2px;border-radius:10px">
+                Accéder à mon dashboard →
+              </a>
+            </td></tr>
+          </table>
 
-          <p style="margin:0;font-size:14px;color:#6b7280;line-height:1.6">
+          <p style="margin:0;font-size:13px;color:#475569;line-height:1.6">
             Vous constatez quelque chose à ajuster ? Répondez à cet email, je m'en occupe rapidement.
           </p>
         </td></tr>
-
-        <!-- Footer -->
-        <tr><td style="padding:24px 48px;border-top:1px solid rgba(112,178,222,0.1);text-align:center">
-          <p style="margin:0 0 4px;font-size:14px;font-weight:600;color:#e5e7eb">Mohamed</p>
-          <p style="margin:0;font-size:12px;color:#6b7280">Fondateur &middot; <a href="https://akilai.fr" style="color:#70B2DE;text-decoration:none">AkilAI</a></p>
-        </td></tr>
-
       </table>
+
+      <!-- FOOTER CARD -->
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        <tr><td style="padding:24px 48px;border-top:1px solid rgba(112,178,222,0.1)">
+          <p style="margin:0 0 2px;font-size:14px;font-weight:600;color:#cbd5e1">Mohamed Diop</p>
+          <p style="margin:0;font-size:12px;color:#475569">
+            Fondateur &middot; <a href="https://akilai.fr" style="color:#70B2DE;text-decoration:none">AkilAI</a>
+          </p>
+        </td></tr>
+      </table>
+
+    </td></tr><!-- /CARD -->
+
+    <!-- FOOTER EMAIL -->
+    <tr><td align="center" style="padding-top:32px">
+      <p style="margin:0;font-size:11px;color:#334155;line-height:1.6">
+        AkilAI · Toulouse, France<br>
+        <a href="https://akilai.fr" style="color:#475569;text-decoration:none">akilai.fr</a>
+      </p>
     </td></tr>
+
   </table>
+</td></tr>
+</table>
 </body>
 </html>`;
 }
