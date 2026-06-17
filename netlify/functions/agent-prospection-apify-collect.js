@@ -14,11 +14,15 @@ const RECAP_TO            = "mohamed.diop@akilai.fr";
 const FROM_EMAIL          = "Mohamed Diop <mohamed.diop@akilai.fr>";
 
 const QUERY_TO_SECTEUR = {
-  "cabinet médical toulouse":    "médical",
-  "restaurant toulouse":         "restaurant",
-  "agence immobilière toulouse": "immobilier",
-  "hôtel toulouse":              "hôtel",
-  "salon de coiffure toulouse":  "coiffure",
+  "cabinet médical toulouse":              "santé",
+  "restaurant toulouse":                   "restauration",
+  "salon de coiffure toulouse":            "coiffure & beauté",
+  "hôtel toulouse":                        "hôtellerie",
+  "agence immobilière toulouse":           "immobilier",
+  "garage automobile toulouse":            "automobile",
+  "services aux entreprises toulouse":     "services aux entreprises",
+  "organisme de formation toulouse":       "formation",
+  "salle de sport toulouse":               "sport & loisirs",
 };
 
 function airtableHeaders() {

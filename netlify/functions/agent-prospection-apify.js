@@ -13,11 +13,15 @@ const RECAP_TO           = "mohamed.diop@akilai.fr";
 const FROM_EMAIL         = "Mohamed Diop <mohamed.diop@akilai.fr>";
 
 const SECTEURS = [
-  { query: "cabinet médical Toulouse",    secteur: "médical" },
-  { query: "restaurant Toulouse",         secteur: "restaurant" },
-  { query: "agence immobilière Toulouse", secteur: "immobilier" },
-  { query: "hôtel Toulouse",              secteur: "hôtel" },
-  { query: "salon de coiffure Toulouse",  secteur: "coiffure" },
+  { query: "cabinet médical Toulouse",              secteur: "santé" },
+  { query: "restaurant Toulouse",                   secteur: "restauration" },
+  { query: "salon de coiffure Toulouse",            secteur: "coiffure & beauté" },
+  { query: "hôtel Toulouse",                        secteur: "hôtellerie" },
+  { query: "agence immobilière Toulouse",           secteur: "immobilier" },
+  { query: "garage automobile Toulouse",            secteur: "automobile" },
+  { query: "services aux entreprises Toulouse",     secteur: "services aux entreprises" },
+  { query: "organisme de formation Toulouse",       secteur: "formation" },
+  { query: "salle de sport Toulouse",               secteur: "sport & loisirs" },
 ];
 
 function airtableHeaders() {
@@ -70,7 +74,7 @@ exports.handler = async function() {
     return { statusCode: 500, body: "APIFY_API_KEY manquante" };
   }
 
-  console.log("[APIFY P1] Lancement des 4 runs Apify en parallèle…");
+  console.log("[APIFY P1] Lancement des 9 runs Apify en parallèle…");
 
   /* Lance les 4 runs en parallèle */
   const results = await Promise.allSettled(
@@ -86,7 +90,7 @@ exports.handler = async function() {
   const launched = results.filter(r => r.status === "fulfilled").map(r => r.value);
   const failed   = results.filter(r => r.status === "rejected").map(r => r.reason?.message);
 
-  console.log(`[APIFY P1] ${launched.length}/4 runs lancés. Erreurs : ${failed.length ? failed.join(", ") : "aucune"}`);
+  console.log(`[APIFY P1] ${launched.length}/9 runs lancés. Erreurs : ${failed.length ? failed.join(", ") : "aucune"}`);
 
   /* Email de confirmation */
   const resendKey = process.env.RESEND_API_KEY;

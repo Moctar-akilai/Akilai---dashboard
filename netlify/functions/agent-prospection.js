@@ -28,42 +28,18 @@ function salutation(prenom) {
   return prenom ? `Bonjour ${prenom},` : "Bonjour,";
 }
 
+const DEMO_LINE = `Si vous souhaitez vous faire une idée avant, vous pouvez échanger \ndirectement avec Akil — notre assistant vocal — depuis notre site :\nhttps://akilai.fr`;
+
 const TEMPLATES = {
   J0: {
-    restaurant: (e) => ({
-      objet: `Une question concernant vos réservations`,
-      corps: `${salutation(e.prenom)}
-
-
-Quand le service est lancé, répondre au téléphone devient souvent la dernière priorité.
-
-Résultat : des réservations manquées, des clients qui raccrochent et parfois des tables qui restent vides.
-
-
-Chez AkilAI, nous déployons des assistants vocaux capables de :
-
-- répondre aux appels 24h/24
-
-- prendre et confirmer les réservations automatiquement
-
-- répondre aux questions fréquentes (horaires, adresse, menu, etc.)
-
-
-Est-ce un sujet qui mérite une discussion de 10 minutes avec la personne qui gère votre activité ou votre relation client ?
-
-
-Bien à vous,
-
-${SIGNATURE}`,
-    }),
-    médical: (e) => ({
+    "santé": (e) => ({
       objet: `Une question concernant votre accueil téléphonique`,
       corps: `${salutation(e.prenom)}
 
 
 Entre les consultations et les urgences, il est difficile de répondre à tous les appels.
 
-Pourtant, chaque appel manqué représente souvent un patient qui n'a pas obtenu l'information ou le rendez-vous qu'il cherchait.
+Pourtant, chaque appel manqué représente souvent un patient qui n'a pas obtenu \nl'information ou le rendez-vous qu'il cherchait.
 
 
 Chez AkilAI, nous accompagnons des cabinets médicaux avec un assistant vocal capable de :
@@ -79,43 +55,79 @@ Chez AkilAI, nous accompagnons des cabinets médicaux avec un assistant vocal ca
 
 Seriez-vous la bonne personne pour en discuter ?
 
+${DEMO_LINE}
+
 
 Bien cordialement,
 
 ${SIGNATURE}`,
     }),
-    immobilier: (e) => ({
-      objet: `Une question concernant vos appels entrants`,
+    "restauration": (e) => ({
+      objet: `Une question concernant vos réservations`,
       corps: `${salutation(e.prenom)}
 
 
-Un prospect qui tombe sur une messagerie appelle souvent l'agence suivante.
+Quand le service est lancé, répondre au téléphone devient souvent la dernière priorité.
+
+Résultat : des réservations manquées, des clients qui raccrochent et parfois \ndes tables qui restent vides.
 
 
-Chez AkilAI, nous aidons les agences immobilières à ne plus laisser passer ces opportunités grâce à un assistant vocal qui :
+Chez AkilAI, nous déployons des assistants vocaux capables de :
 
-- répond aux appels 24h/24
+- répondre aux appels 24h/24
 
-- qualifie les prospects
+- prendre et confirmer les réservations automatiquement
 
-- collecte leurs besoins
-
-- transmet les demandes aux bons collaborateurs
+- répondre aux questions fréquentes (horaires, adresse, menu, etc.)
 
 
-Pensez-vous que cela puisse intéresser la personne qui gère le développement commercial de votre agence ?
+Est-ce un sujet qui mérite une discussion de 10 minutes avec la personne \nqui gère votre activité ou votre relation client ?
+
+${DEMO_LINE}
 
 
-Bien cordialement,
+Bien à vous,
 
 ${SIGNATURE}`,
     }),
-    hôtel: (e) => ({
+    "coiffure & beauté": (e) => ({
       objet: `Une question concernant votre accueil téléphonique`,
       corps: `${salutation(e.prenom)}
 
 
-Combien de demandes de réservation ou d'informations arrivent lorsque la réception est déjà occupée ou fermée ?
+Entre deux rendez-vous, il n'est pas toujours possible de décrocher le téléphone.
+
+Résultat : des appels manqués, des prises de rendez-vous perdues et parfois \ndes clients qui réservent ailleurs.
+
+
+Chez AkilAI, nous aidons les salons de coiffure et les instituts de beauté \nà automatiser leur accueil téléphonique grâce à un assistant vocal capable de :
+
+- répondre aux appels 24h/24 et 7j/7
+
+- prendre et confirmer les rendez-vous
+
+- répondre aux questions fréquentes (tarifs, prestations, horaires, adresse, etc.)
+
+- orienter les clients vers le bon service ou le bon professionnel
+
+
+L'objectif est simple : permettre à votre équipe de se concentrer sur les clients \nprésents, sans perdre ceux qui essaient de vous joindre.
+
+Seriez-vous la bonne personne pour en discuter ?
+
+${DEMO_LINE}
+
+
+Bien à vous,
+
+${SIGNATURE}`,
+    }),
+    "hôtellerie": (e) => ({
+      objet: `Une question concernant votre accueil téléphonique`,
+      corps: `${salutation(e.prenom)}
+
+
+Combien de demandes de réservation ou d'informations arrivent lorsque \nla réception est déjà occupée ou fermée ?
 
 
 Chez AkilAI, nous déployons des assistants vocaux capables de :
@@ -129,38 +141,156 @@ Chez AkilAI, nous déployons des assistants vocaux capables de :
 - traiter automatiquement les questions récurrentes
 
 
-Je serais ravi d'échanger avec la personne en charge de l'établissement ou de l'expérience client.
+Je serais ravi d'échanger avec la personne en charge de l'établissement \nou de l'expérience client.
+
+${DEMO_LINE}
 
 
 Bien cordialement,
 
 ${SIGNATURE}`,
     }),
-    coiffure: (e) => ({
-      objet: `Une question concernant vos rendez-vous`,
+    "immobilier": (e) => ({
+      objet: `Une question concernant vos appels entrants`,
       corps: `${salutation(e.prenom)}
 
 
-Entre les clients en rendez-vous, les shampoings et les coupes, répondre au téléphone n'est pas toujours possible.
-
-Résultat : des rendez-vous manqués, des clients qui rappellent plus tard… ou qui prennent rendez-vous ailleurs.
+Un prospect qui tombe sur une messagerie appelle souvent l'agence suivante.
 
 
-Chez AkilAI, nous aidons les salons de coiffure à ne plus perdre ces opportunités grâce à un assistant vocal capable de :
+Chez AkilAI, nous aidons les agences immobilières à ne plus laisser passer \nces opportunités grâce à un assistant vocal qui :
+
+- répond aux appels 24h/24
+
+- qualifie les prospects
+
+- collecte leurs besoins
+
+- transmet les demandes aux bons collaborateurs
+
+
+Pensez-vous que cela puisse intéresser la personne qui gère le développement \ncommercial de votre agence ?
+
+${DEMO_LINE}
+
+
+Bien cordialement,
+
+${SIGNATURE}`,
+    }),
+    "automobile": (e) => ({
+      objet: `Une question concernant votre atelier`,
+      corps: `${salutation(e.prenom)}
+
+
+Entre les réparations, les diagnostics et l'accueil des clients, il n'est \npas toujours possible de répondre à tous les appels.
+
+Résultat : des rendez-vous manqués, des demandes de devis sans réponse \net des clients qui rappellent chez un concurrent.
+
+
+Chez AkilAI, nous aidons les garages et concessions à automatiser leurs \nappels grâce à un assistant vocal capable de :
 
 - répondre aux appels 24h/24
 
-- prendre et confirmer les rendez-vous
+- prendre des rendez-vous atelier
 
-- répondre aux questions fréquentes (horaires, tarifs, prestations, adresse)
+- répondre aux questions fréquentes
 
-- transmettre les demandes spécifiques à votre équipe
+- qualifier les demandes avant de les transmettre à votre équipe
 
 
-Pensez-vous que ce sujet pourrait intéresser la personne qui gère le salon ?
+Seriez-vous la bonne personne pour échanger à ce sujet ?
+
+${DEMO_LINE}
 
 
 Bien à vous,
+
+${SIGNATURE}`,
+    }),
+    "services aux entreprises": (e) => ({
+      objet: `Une question concernant votre accueil téléphonique`,
+      corps: `${salutation(e.prenom)}
+
+
+Chaque appel manqué peut représenter un prospect, un client \nou une opportunité commerciale.
+
+
+Chez AkilAI, nous aidons les entreprises de services à automatiser \nleur accueil téléphonique grâce à un assistant vocal capable de :
+
+- répondre aux appels 24h/24
+
+- qualifier les prospects
+
+- prendre des rendez-vous
+
+- répondre aux questions fréquentes
+
+
+Auriez-vous quelques minutes pour découvrir comment cela pourrait \ns'appliquer à votre activité ?
+
+${DEMO_LINE}
+
+
+Bien à vous,
+
+${SIGNATURE}`,
+    }),
+    "formation": (e) => ({
+      objet: `Une question concernant vos demandes d'information`,
+      corps: `${salutation(e.prenom)}
+
+
+Les futurs apprenants appellent souvent pour obtenir des renseignements \nsur vos formations, les financements ou les modalités d'inscription.
+
+Lorsqu'ils tombent sur une messagerie ou n'obtiennent pas de réponse \nrapidement, certains abandonnent tout simplement leur démarche.
+
+
+Chez AkilAI, nous aidons les organismes de formation à automatiser \nleur accueil téléphonique grâce à un assistant capable de :
+
+- répondre aux appels 24h/24
+
+- renseigner les candidats
+
+- qualifier les demandes
+
+- prendre des rendez-vous avec un conseiller
+
+
+Pensez-vous que ce sujet puisse intéresser la personne en charge \ndu développement de votre organisme ?
+
+${DEMO_LINE}
+
+
+Bien à vous,
+
+${SIGNATURE}`,
+    }),
+    "sport & loisirs": (e) => ({
+      objet: `Une question concernant votre établissement`,
+      corps: `${salutation(e.prenom)}
+
+
+Entre les cours, les adhérents et les inscriptions, il n'est pas \ntoujours possible de répondre immédiatement au téléphone.
+
+
+Chez AkilAI, nous aidons les salles de sport et les centres de loisirs \nà automatiser une partie de leurs appels grâce à un assistant capable de :
+
+- répondre aux appels 24h/24
+
+- renseigner les prospects
+
+- gérer les demandes d'inscription
+
+- répondre aux questions fréquentes
+
+
+Seriez-vous la bonne personne pour échanger à ce sujet ?
+
+${DEMO_LINE}
+
+
+Bien cordialement,
 
 ${SIGNATURE}`,
     }),
@@ -322,7 +452,7 @@ async function sendEmail({ to, subject, text, bcc = BCC_MOHAMED, replyTo }) {
 function getTemplate(type, secteur, lead) {
   const secteurKey = (secteur || "").toLowerCase();
   if (type === "J0") {
-    const fn = TEMPLATES.J0[secteurKey] || TEMPLATES.J0.restaurant;
+    const fn = TEMPLATES.J0[secteurKey] || TEMPLATES.J0["restauration"];
     return fn(lead);
   }
   if (type === "J3") return TEMPLATES.J3.default(lead);
@@ -366,7 +496,7 @@ Lead :
 - Chatbot visible sur le site : ${chatbot_visible ? "oui" : "non"}
 
 Critères de scoring :
-+3 points : secteur prioritaire (médical, restaurant, immobilier, hôtel, coiffure)
++3 points : secteur prioritaire (santé, restauration, coiffure & beauté, hôtellerie, immobilier, automobile, services aux entreprises, formation, sport & loisirs)
 +2 points : email direct (pas contact@, pas info@, pas webmaster@)
 +2 points : téléphone direct disponible
 +1 point  : note Google ≥ 4.0
