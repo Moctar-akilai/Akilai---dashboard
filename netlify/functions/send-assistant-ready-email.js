@@ -21,7 +21,7 @@ function buildHtml({ clientName, assistantType, vapiPhoneNumber, whatsappNumber 
             <p style="margin:0 0 4px;font-size:11px;font-weight:600;color:#70B2DE;
                       text-transform:uppercase;letter-spacing:1.2px">TEST VOCAL</p>
             <p style="margin:0;font-size:18px;font-weight:700;color:#ffffff;letter-spacing:0.5px">${vapiPhoneNumber}</p>
-            <p style="margin:4px 0 0;font-size:12px;color:#64748b">Appelez ce numero pour tester votre assistant</p>
+            <p style="margin:4px 0 0;font-size:12px;color:#64748b">Appelez ce numéro pour tester votre assistant</p>
           </td>
         </tr>
       </table>`);
@@ -36,7 +36,7 @@ function buildHtml({ clientName, assistantType, vapiPhoneNumber, whatsappNumber 
             <p style="margin:0 0 4px;font-size:11px;font-weight:600;color:#25d366;
                       text-transform:uppercase;letter-spacing:1.2px">TEST WHATSAPP</p>
             <p style="margin:0;font-size:18px;font-weight:700;color:#ffffff;letter-spacing:0.5px">${whatsappNumber}</p>
-            <p style="margin:4px 0 0;font-size:12px;color:#64748b">Envoyez un message a ce numero</p>
+            <p style="margin:4px 0 0;font-size:12px;color:#64748b">Envoyez un message à ce numéro</p>
           </td>
         </tr>
       </table>`);
@@ -47,12 +47,12 @@ function buildHtml({ clientName, assistantType, vapiPhoneNumber, whatsappNumber 
             style="margin:0 0 36px;border:1px solid rgba(112,178,222,0.15);border-radius:10px;overflow:hidden">
          <tr><td style="padding:20px 20px 4px">
            <p style="margin:0 0 16px;font-size:11px;font-weight:600;color:#475569;
-                     letter-spacing:1.5px;text-transform:uppercase">Vos acces de test</p>
+                     letter-spacing:1.5px;text-transform:uppercase">Vos accès de test</p>
            ${testRows.join("")}
          </td></tr>
        </table>`
     : `<p style="margin:0 0 36px;font-size:14px;color:#64748b">
-         Connectez-vous a votre espace pour retrouver vos informations de test.
+         Connectez-vous à votre espace pour retrouver vos informations de test.
        </p>`;
 
   return `<!DOCTYPE html>
@@ -60,7 +60,7 @@ function buildHtml({ clientName, assistantType, vapiPhoneNumber, whatsappNumber 
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Votre assistant est configure</title>
+<title>Votre assistant est configuré</title>
 </head>
 <body style="margin:0;padding:0;background:#07070f;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#07070f" style="background:#07070f">
@@ -97,18 +97,18 @@ function buildHtml({ clientName, assistantType, vapiPhoneNumber, whatsappNumber 
                     style="background:#0d2818;border:1px solid rgba(34,197,94,0.3);
                            border-radius:100px;padding:6px 16px">
               <p style="margin:0;font-size:12px;font-weight:700;color:#22c55e;letter-spacing:1px">
-                &#10003;&nbsp; CONFIGURE
+                &#10003;&nbsp; CONFIGURÉ
               </p>
             </td></tr>
           </table>
 
           <h1 style="margin:0 0 16px;font-size:26px;font-weight:700;color:#ffffff;line-height:1.3">
-            Votre assistant est pret
+            Votre assistant est prêt
           </h1>
 
           <p style="margin:0 0 32px;font-size:15px;color:#94a3b8;line-height:1.7">
             Bonjour ${prenom},<br><br>
-            Votre assistant virtuel est operationnel. Vous pouvez des maintenant le tester.
+            Votre assistant virtuel est opérationnel. Vous pouvez dès maintenant le tester.
           </p>
 
           ${testSection}
@@ -119,13 +119,13 @@ function buildHtml({ clientName, assistantType, vapiPhoneNumber, whatsappNumber 
               <a href="${DASHBOARD_URL}"
                  style="display:inline-block;padding:14px 32px;font-size:15px;font-weight:700;
                         color:#070714;text-decoration:none;letter-spacing:0.2px">
-                Acceder a mon dashboard &rarr;
+                Accédez à mon dashboard &rarr;
               </a>
             </td></tr>
           </table>
 
           <p style="margin:0;font-size:13px;color:#475569;line-height:1.6">
-            Vous constatez quelque chose a ajuster ? Repondez a cet email, je m'en occupe rapidement.
+            Vous constatez quelque chose à ajuster ? Répondez à cet email, je m'en occupe rapidement.
           </p>
         </td></tr>
       </table>
@@ -169,7 +169,7 @@ async function sendAssistantReadyEmail({ clientName, clientEmail, assistantType,
       from:    FROM,
       to:      [clientEmail],
       bcc:     [BCC],
-      subject: "Votre assistant est configure — testez-le maintenant",
+      subject: "Votre assistant est configuré — testez-le maintenant",
       html:    buildHtml({ clientName, assistantType, vapiPhoneNumber, whatsappNumber }),
     }),
   });

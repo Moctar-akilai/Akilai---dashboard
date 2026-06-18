@@ -59,12 +59,12 @@ function buildHtml({ clientName, dashboardUrl }) {
         <tr><td style="padding:48px 48px 16px">
 
           <h1 style="margin:0 0 8px;font-size:26px;font-weight:700;color:#ffffff;line-height:1.3">
-            Votre espace est pret
+            Votre espace est prêt
           </h1>
 
           <p style="margin:0 0 32px;font-size:15px;color:#94a3b8;line-height:1.7">
             Bonjour ${prenom},<br><br>
-            Bienvenue chez AkilAI. Votre espace est configure et pret a etre utilise.
+            Bienvenue chez AkilAI. Votre espace est configuré et prêt à être utilisé.
           </p>
 
           <!-- CTA -->
@@ -73,7 +73,7 @@ function buildHtml({ clientName, dashboardUrl }) {
               <a href="${cta}"
                  style="display:inline-block;padding:14px 32px;font-size:15px;font-weight:700;
                         color:#070714;text-decoration:none;letter-spacing:0.2px">
-                Acceder a mon espace &rarr;
+                Accédez à mon espace &rarr;
               </a>
             </td></tr>
           </table>
@@ -95,7 +95,7 @@ function buildHtml({ clientName, dashboardUrl }) {
               </td>
               <td style="padding-left:16px;border-left:2px solid #70B2DE">
                 <p style="margin:0 0 3px;font-size:14px;font-weight:600;color:#e2e8f0;padding-left:12px">Configurez votre assistant</p>
-                <p style="margin:0;font-size:13px;color:#64748b;line-height:1.5;padding-left:12px">Personnalisez la voix, le ton et le script selon votre activite.</p>
+                <p style="margin:0;font-size:13px;color:#64748b;line-height:1.5;padding-left:12px">Personnalisez la voix, le ton et le script selon votre activité.</p>
               </td>
             </tr>
           </table>
@@ -107,7 +107,7 @@ function buildHtml({ clientName, dashboardUrl }) {
                 ${numBadge(2)}
               </td>
               <td style="padding-left:16px;border-left:2px solid #70B2DE">
-                <p style="margin:0 0 3px;font-size:14px;font-weight:600;color:#e2e8f0;padding-left:12px">Testez-le en temps reel</p>
+                <p style="margin:0 0 3px;font-size:14px;font-weight:600;color:#e2e8f0;padding-left:12px">Testez-le en temps réel</p>
                 <p style="margin:0;font-size:13px;color:#64748b;line-height:1.5;padding-left:12px">Appelez ou envoyez un message pour entendre votre assistant en action.</p>
               </td>
             </tr>
@@ -127,7 +127,7 @@ function buildHtml({ clientName, dashboardUrl }) {
           </table>
 
           <p style="margin:0;font-size:13px;color:#475569;line-height:1.6">
-            Une question ? Repondez directement a cet email, je lis tout personnellement.
+            Une question ? Répondez directement à cet email, je lis tout personnellement.
           </p>
         </td></tr>
       </table>
@@ -171,7 +171,7 @@ async function sendOnboardingEmail({ clientName, clientEmail, dashboardUrl }) {
       from:    FROM,
       to:      [clientEmail],
       bcc:     [BCC],
-      subject: "Bienvenue chez AkilAI — votre espace est pret",
+      subject: "Bienvenue chez AkilAI — votre espace est prêt",
       html:    buildHtml({ clientName, dashboardUrl }),
     }),
   });
