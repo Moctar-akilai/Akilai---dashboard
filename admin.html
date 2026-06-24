@@ -902,6 +902,10 @@ canvas{max-width:100%!important}
           </div>
           <div class="field" style="grid-column:span 2"><label>Notes</label><textarea id="lfNotes" rows="3" style="width:100%;resize:vertical"></textarea></div>
         </div>
+        <div id="lfEmailBlock" style="display:none;border-top:1px solid var(--border);padding-top:14px;margin-top:4px">
+          <button id="lfEmailBtn" class="btn sm" style="background:#7c3aed;border-radius:8px;width:100%" onclick="sendFirstEmail()">Envoyer le premier email</button>
+          <div id="lfEmailMsg" style="margin-top:8px;font-size:12px;display:none"></div>
+        </div>
         <div class="modal-actions">
           <button class="btn ghost" onclick="closeLeadModal()">Annuler</button>
           <button class="btn danger sm" id="lfDeleteBtn" style="display:none;margin-right:auto" onclick="deleteLead()">Supprimer</button>
@@ -4587,12 +4591,24 @@ function openLeadModal(id, defaultStatut) {
     if (!l.converti && !['Gagné','Perdu'].includes(l.statut)) {
       document.getElementById('lfConvertBlock').style.display = 'block';
     }
+    // Show "Envoyer le premier email" button for Nouveau / À contacter
+    const emailBlock = document.getElementById('lfEmailBlock');
+    const emailMsg   = document.getElementById('lfEmailMsg');
+    if (['Nouveau','À contacter'].includes(l.statut)) {
+      emailBlock.style.display = 'block';
+      document.getElementById('lfEmailBtn').disabled = false;
+      document.getElementById('lfEmailBtn').textContent = 'Envoyer le premier email';
+      emailMsg.style.display = 'none';
+    } else {
+      emailBlock.style.display = 'none';
+    }
   } else {
     ['lfPrenom','lfNom','lfEmail','lfTel','lfEntreprise','lfMontant','lfPays','lfLienRdv','lfNotes'].forEach(id => { document.getElementById(id).value = ''; });
     document.getElementById('lfSource').value      = '';
     document.getElementById('lfStatut').value      = defaultStatut || 'Prospect';
     document.getElementById('lfSecteur').value     = '';
     document.getElementById('lfRaisonPerte').value = '';
+    document.getElementById('lfEmailBlock').style.display = 'none';
   }
 }
 
@@ -4646,6 +4662,35 @@ async function deleteLead() {
   toast('Lead supprimé');
   closeLeadModal();
   loadLeads();
+}
+
+async function sendFirstEmail() {
+  if (!editingLeadId) return;
+  const btn = document.getElementById('lfEmailBtn');
+  const msg = document.getElementById('lfEmailMsg');
+  btn.disabled = true;
+  btn.textContent = 'Envoi en cours…';
+  msg.style.display = 'none';
+
+  const data = await adminFetch('/.netlify/functions/agent-prospection?action=envoyer', {
+    method: 'POST',
+    body: JSON.stringify({ airtable_id: editingLeadId, type: 'J0' }),
+  });
+
+  if (data && !data.error) {
+    btn.textContent = 'Email envoyé ✓';
+    msg.style.cssText = 'margin-top:8px;font-size:12px;display:block;color:#22c55e';
+    msg.textContent = 'Email envoyé avec succès.';
+    // Update statut in allLeads and in the select
+    const lead = allLeads.find(x => x.id === editingLeadId);
+    if (lead) lead.statut = 'Contacté';
+    document.getElementById('lfStatut').value = 'Contacté';
+  } else {
+    btn.disabled = false;
+    btn.textContent = 'Envoyer le premier email';
+    msg.style.cssText = 'margin-top:8px;font-size:12px;display:block;color:#ef4444';
+    msg.textContent = 'Erreur : ' + (data?.error || 'Impossible d\'envoyer l\'email.');
+  }
 }
 
 async function convertLead() {
