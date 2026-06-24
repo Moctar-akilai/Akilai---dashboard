@@ -32,20 +32,17 @@ function airtableHeaders() {
 }
 
 async function startApifyRun(query) {
-  const res = await fetch(`${APIFY_BASE}/acts/${APIFY_ACTOR}/runs`, {
+  const res = await fetch(`${APIFY_BASE}/acts/${APIFY_ACTOR}/runs?token=${process.env.APIFY_API_KEY}`, {
     method:  "POST",
-    headers: {
-      Authorization:  `Bearer ${process.env.APIFY_API_KEY}`,
-      "Content-Type": "application/json",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
+      memory: 512,
       input: {
         searchStringsArray:        [query],
         maxCrawledPlacesPerSearch: 50,
         language:                  "fr",
         countryCode:               "fr",
       },
-      memory: 512,
     }),
   });
   if (!res.ok) {
