@@ -39,10 +39,13 @@ async function startApifyRun(query) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      searchStringsArray:        [query],
-      maxCrawledPlacesPerSearch: 50,
-      language:                  "fr",
-      countryCode:               "fr",
+      input: {
+        searchStringsArray:        [query],
+        maxCrawledPlacesPerSearch: 50,
+        language:                  "fr",
+        countryCode:               "fr",
+      },
+      memory: 512,
     }),
   });
   if (!res.ok) {
