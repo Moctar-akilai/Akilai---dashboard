@@ -41,13 +41,18 @@ exports.handler = async (event) => {
 
     if (data.error) return err(data.error.message || "Airtable error");
 
-    // 2. Fire-and-forget : email de bienvenue
+    // 2. Envoi email de bienvenue (awaité pour ne pas être coupé par Netlify)
     if (email) {
-      sendOnboardingEmail({
-        clientName:   nom || "",
-        clientEmail:  email,
-        dashboardUrl: "https://portal-akilai.netlify.app",
-      }).catch(e => console.error("[admin-create-client] sendOnboardingEmail erreur:", e.message));
+      try {
+        await sendOnboardingEmail({
+          clientName:   nom || "",
+          clientEmail:  email,
+          dashboardUrl: "https://portal-akilai.netlify.app",
+        });
+        console.log("[admin-create-client] Email de bienvenue envoyé à", email);
+      } catch(e) {
+        console.error("[admin-create-client] sendOnboardingEmail erreur:", e.message);
+      }
     }
 
     return ok({ ok: true, id: data.id });
