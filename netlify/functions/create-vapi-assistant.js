@@ -192,20 +192,8 @@ exports.handler = async function(event, context) {
 
   console.log("[create-vapi-assistant] tools construits :", tools.map(t => t.function.name));
 
-  const currentYear = new Date().getFullYear();
-
-  /* ── Instructions tools injectées dans le prompt système ── */
-  let toolInstructions = `\n\nIMPORTANT : Nous sommes en ${currentYear}. Toujours utiliser l'année ${currentYear} (ou ${currentYear + 1} si la date est dépassée). Ne jamais utiliser une année passée.\n\nFUSEAU HORAIRE : Tous les horaires sont en heure de Paris (Europe/Paris, UTC+2 en été). Si le patient dit "12h30", tu dois passer "2026-XX-XXT12:30:00" (SANS conversion UTC, SANS ajouter 2h). Ne jamais convertir en UTC. Exemple : patient dit 14h → dateDebut = "...T14:00:00", dateFin = "...T14:30:00".\n\nMÉMOIRE CLIENT :\n- Au début de CHAQUE appel, appelle get_client_context avec le numéro de l'appelant.\n- Si le client est connu, accueille-le par son prénom dès la première phrase.\n- Utilise le contexte du dernier échange pour personnaliser la conversation.\n- Si nouveau client → accueil standard.\n\nRÈGLES ABSOLUES — NE JAMAIS ENFREINDRE :\n1. INTERDICTION ABSOLUE de confirmer ou refuser un RDV sans avoir appelé check_availability.\n2. INTERDICTION ABSOLUE d'inventer des créneaux disponibles.\n3. SÉQUENCE OBLIGATOIRE pour tout RDV :\n   → Appeler check_availability (obtenir date du patient)\n   → Annoncer UNIQUEMENT les créneaux retournés par le tool\n   → Appeler create_appointment UNIQUEMENT après confirmation explicite du patient\n   → Confirmer UNIQUEMENT après succès de create_appointment\n4. Si un tool échoue → dire "Je vérifie, un instant..." et réessayer UNE fois.\n5. Ne JAMAIS dire "votre RDV est confirmé" sans avoir reçu une confirmation de create_appointment.\n6. ATTENDRE le résultat de chaque tool call AVANT de poursuivre la conversation.\n\nOUTILS DISPONIBLES :\n`;
-
-  if (clientFields["Google Connected"]) {
-    toolInstructions += `- check_availability : OBLIGATOIRE avant de proposer tout créneau. Paramètre date au format YYYY-MM-DD.\n- create_appointment : appeler UNIQUEMENT après confirmation explicite du patient. Annoncer : "Votre RDV est confirmé le [date] à [heure]."\n`;
-  }
-
-  if (clientFields["Calendly Connected"] && clientFields["Calendly Link"]) {
-    toolInstructions += `- get_calendly_slots : appeler pour proposer des créneaux via Calendly.\n`;
-  }
-
-  toolInstructions += `- get_client_context : appeler EN PREMIER à chaque appel avec le numéro de l'appelant.\n- send_sms : appeler en fin d'appel pour envoyer une confirmation SMS au patient.\n- create_contact : appeler pour enregistrer nom, téléphone et résumé dans la base de données.\n`;
+  /* ── Règle tools minimale injectée dans le prompt système ── */
+  const toolInstructions = `\n\n# Règle tools\nAppelle get_client_context UNE SEULE FOIS au début de l'appel, en silence, sans l'annoncer à l'appelant.\nNe rappelle aucun tool déjà utilisé dans le même appel.`;
 
   const VOCAL_FORMAT = `# Format de réponse vocale
 Tu t'exprimes toujours à l'oral, en français, avec des phrases courtes et naturelles comme dans une vraie conversation téléphonique.
