@@ -193,7 +193,7 @@ exports.handler = async function(event, context) {
   console.log("[create-vapi-assistant] tools construits :", tools.map(t => t.function.name));
 
   /* ── Règle tools minimale injectée dans le prompt système ── */
-  const toolInstructions = `\n\n# Règle tools\nAppelle get_client_context UNE SEULE FOIS au début de l'appel, en silence, sans l'annoncer à l'appelant.\nNe rappelle aucun tool déjà utilisé dans le même appel.`;
+  const toolInstructions = `\n\n# Règle tools\n- Appelle get_client_context UNE SEULE FOIS au tout début de l'appel, sans l'annoncer à l'appelant.\n- Ne rappelle aucun tool déjà utilisé dans le même appel.\n- Exécute tous les tools en silence, sans dire "un instant" ou "je vérifie".`;
 
   const VOCAL_FORMAT = `# Format de réponse vocale
 Tu t'exprimes toujours à l'oral, en français, avec des phrases courtes et naturelles comme dans une vraie conversation téléphonique.
