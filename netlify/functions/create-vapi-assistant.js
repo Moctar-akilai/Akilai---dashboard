@@ -169,31 +169,10 @@ exports.handler = async function(event, context) {
     server: { url: `${TOOLS_BASE}/vapi-tool-create-contact`, timeoutSeconds: 20, headers: toolHeaders },
   });
 
-  // Mémoire contextuelle — toujours disponible
-  tools.push({
-    type: "function",
-    function: {
-      name: "get_client_context",
-      description: "Récupère les informations et l'historique du client qui appelle pour personnaliser la conversation. TOUJOURS appeler ce tool au tout début de chaque appel.",
-      parameters: {
-        type: "object",
-        properties: {
-          numero: { type: "string", description: "Numéro de téléphone de l'appelant au format international (ex: +33612345678)" },
-        },
-        required: ["numero"],
-      },
-    },
-    server: {
-      url:            `${TOOLS_BASE}/vapi-tool-get-context`,
-      timeoutSeconds: 5,
-      headers:        { "X-User-Id": clientEmail, "X-Client-Id": clientId || "" },
-    },
-  });
-
   console.log("[create-vapi-assistant] tools construits :", tools.map(t => t.function.name));
 
-  /* ── Règle tools minimale injectée dans le prompt système ── */
-  const toolInstructions = `\n\n# Règle tools\n- Appelle get_client_context UNE SEULE FOIS au tout début de l'appel, sans l'annoncer à l'appelant.\n- Ne rappelle aucun tool déjà utilisé dans le même appel.\n- Exécute tous les tools en silence, sans dire "un instant" ou "je vérifie".`;
+  /* ── Règle tools injectée dans le prompt système ── */
+  const toolInstructions = `\n\n# Règle tools\n- Ne rappelle aucun tool déjà utilisé dans le même appel.\n- Exécute tous les tools en silence.`;
 
   const VOCAL_FORMAT = `# Format de réponse vocale
 Tu t'exprimes toujours à l'oral, en français, avec des phrases courtes et naturelles comme dans une vraie conversation téléphonique.
@@ -210,9 +189,9 @@ Tu t'exprimes toujours à l'oral, en français, avec des phrases courtes et natu
 - Termine toujours l'appel poliment
 
 # Tools
-- Appelle chaque tool UNE SEULE FOIS par action, directement et en silence.
-- INTERDIT de dire 'un instant', 'juste une seconde', 'je vérifie', 'laissez-moi chercher' ou toute phrase d'attente avant un tool call.
-- Le tool s'exécute sans aucune annonce verbale.
+- Exécute chaque tool directement et en silence.
+- ABSOLUMENT INTERDIT de prononcer 'un instant', 'une seconde', 'je vérifie', 'attends', 'laissez-moi chercher' ou toute phrase d'attente avant, pendant ou après un tool call.
+- Zéro annonce verbale. Le tool s'exécute, tu continues la conversation.
 
 `;
   const promptComplet = VOCAL_FORMAT + (promptSysteme || "") + toolInstructions;
