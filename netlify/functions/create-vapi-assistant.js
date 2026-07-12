@@ -207,7 +207,27 @@ exports.handler = async function(event, context) {
 
   toolInstructions += `- get_client_context : appeler EN PREMIER à chaque appel avec le numéro de l'appelant.\n- send_sms : appeler en fin d'appel pour envoyer une confirmation SMS au patient.\n- create_contact : appeler pour enregistrer nom, téléphone et résumé dans la base de données.\n`;
 
-  const promptComplet = (promptSysteme || "") + toolInstructions;
+  const VOCAL_FORMAT = `# Format de réponse vocale
+Tu t'exprimes toujours à l'oral, en français, avec des phrases courtes et naturelles comme dans une vraie conversation téléphonique.
+- Maximum 2-3 phrases par réponse
+- Jamais de listes, jamais de tirets dans tes réponses
+- Jamais de symboles comme €, %, / — toujours en toutes lettres
+- Jamais de bonjour deux fois dans le même appel
+- Ne jamais mentionner les technologies utilisées (Vapi, ElevenLabs, OpenAI...)
+
+# Comportement général
+- Écoute avant de répondre
+- Pose une question à la fois
+- Si tu ne sais pas répondre, propose de transférer ou de rappeler
+- Termine toujours l'appel poliment
+
+# Tools
+- Appelle chaque tool UNE SEULE FOIS par action
+- Ne rappelle jamais un tool déjà utilisé dans le même appel
+- N'annonce pas que tu vérifies — exécute silencieusement
+
+`;
+  const promptComplet = VOCAL_FORMAT + (promptSysteme || "") + toolInstructions;
 
   /* Payload Vapi — structure officielle */
   const vapiPayload = {
