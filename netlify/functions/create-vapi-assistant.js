@@ -210,9 +210,9 @@ Tu t'exprimes toujours à l'oral, en français, avec des phrases courtes et natu
 - Termine toujours l'appel poliment
 
 # Tools
-- Appelle chaque tool UNE SEULE FOIS par action
-- Ne rappelle jamais un tool déjà utilisé dans le même appel
-- N'annonce pas que tu vérifies — exécute silencieusement
+- Appelle chaque tool UNE SEULE FOIS par action, directement et en silence.
+- INTERDIT de dire 'un instant', 'juste une seconde', 'je vérifie', 'laissez-moi chercher' ou toute phrase d'attente avant un tool call.
+- Le tool s'exécute sans aucune annonce verbale.
 
 `;
   const promptComplet = VOCAL_FORMAT + (promptSysteme || "") + toolInstructions;
