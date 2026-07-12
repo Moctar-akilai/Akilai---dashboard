@@ -211,9 +211,7 @@ exports.handler = async function(event, context) {
 
   toolInstructions += `- get_client_context : appeler EN PREMIER à chaque appel avec le numéro de l'appelant.\n- send_sms : appeler en fin d'appel pour envoyer une confirmation SMS au patient.\n- create_contact : appeler pour enregistrer nom, téléphone et résumé dans la base de données.\n`;
 
-  const VOCAL_FORMAT = `# Format de réponse vocale\nTu t'exprimes toujours à l'oral. Quand tu mentionnes des chiffres ou des prix, écris-les toujours en toutes lettres :\n- Les prix en euros s'écrivent en toutes lettres (ex: quatre-vingt-dix-neuf euros par mois)\n- Les minutes s'écrivent en toutes lettres (ex: cinq cents minutes)\n- Les messages s'écrivent en toutes lettres (ex: mille messages)\n- Ne jamais utiliser les symboles €, %, / dans tes réponses vocales.\n- Ne jamais utiliser de listes à puces ou de tirets dans tes réponses.\n- Toujours répondre en phrases courtes et naturelles, comme dans une vraie conversation.\n- Ne jamais dire bonjour deux fois dans le même appel. Si tu as déjà salué l'appelant au début, ne répète pas la salutation même après avoir trouvé les informations du client. Enchaîne directement avec l'information : "Je vois votre dossier [nom], comment puis-je vous aider ?"\n- RÈGLE CRITIQUE : Le tool get_client_context ne doit être appelé QU'UNE SEULE FOIS, au tout début de l'appel, avant de parler. Ne jamais rappeler ce tool pendant la conversation, quelle que soit la question posée.\n\n`;
-
-  const promptComplet = VOCAL_FORMAT + (promptSysteme || "") + toolInstructions;
+  const promptComplet = (promptSysteme || "") + toolInstructions;
 
   /* Payload Vapi — structure officielle */
   const vapiPayload = {
