@@ -234,8 +234,11 @@ Tu t'exprimes toujours à l'oral, en français, avec des phrases courtes et natu
     },
 
     startSpeakingPlan: {
-      waitSeconds:          0.4,
-      smartEndpointingPlan: { provider: "vapi" },
+      waitSeconds:            0.2,
+      onPunctuationSeconds:   0.1,
+      onNoPunctuationSeconds: 0.3,
+      onNumberSeconds:        0.2,
+      smartEndpointingPlan:   { provider: "vapi" },
     },
 
     stopSpeakingPlan: {
