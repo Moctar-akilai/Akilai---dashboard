@@ -20,7 +20,7 @@ exports.handler = async function(event, context) {
   let body;
   try { body = JSON.parse(event.body || "{}"); } catch(e) { return err("JSON invalide", 400); }
 
-  const { id, nomAssistant, langue, tonalite, promptSysteme, firstMessage, vitesseParole, voiceId,
+  const { id, vapiAssistantId: bodyVapiId, nomAssistant, langue, tonalite, promptSysteme, firstMessage, vitesseParole, voiceId,
           capaciteCreneau, dureeRDV, heureOuverture, heureFermeture } = body;
 
   if (!id) return err("Champ id obligatoire", 400);
@@ -76,16 +76,21 @@ exports.handler = async function(event, context) {
     console.log("[update-voice-config] Champs mis à jour:", JSON.stringify(Object.keys(data.fields || {})));
 
     /* PATCH Vapi si un assistantId existe */
-    const vapiAssistantId = data.fields?.["VapiAssistantId"] || null;
+    const vapiAssistantId = bodyVapiId || data.fields?.["VapiAssistantId"] || null;
     const vapiKey = process.env.VAPI_API_KEY;
     if (vapiAssistantId && vapiKey && promptSysteme !== undefined) {
-      const vapiPatchBody = { model: { messages: [{ role: "system", content: promptSysteme || "" }] } };
-      if (nomAssistant !== undefined) vapiPatchBody.name = nomAssistant;
-      if (voiceId)                    vapiPatchBody.voice = { provider: "11labs", model: "eleven_flash_v2_5", voiceId, stability: 0.4, similarityBoost: 0.75, speed: 1.15, style: 0.3, optimizeStreamingLatency: 4, useSpeakerBoost: false, autoMode: true };
-      if (firstMessage !== undefined) vapiPatchBody.firstMessage = firstMessage || "";
-      if (vitesseParole !== undefined) vapiPatchBody.voice = { ...(vapiPatchBody.voice || {}), speed: Number(vitesseParole) };
+      const VOCAL_FORMAT = `# Format de réponse vocale\nTu t'exprimes toujours à l'oral, en français, avec des phrases courtes et naturelles comme dans une vraie conversation téléphonique.\n- Maximum 2-3 phrases par réponse\n- Jamais de listes, jamais de tirets dans tes réponses\n- Jamais de symboles comme €, %, / — toujours en toutes lettres\n- Jamais de bonjour deux fois dans le même appel\n- Ne jamais mentionner les technologies utilisées (Vapi, ElevenLabs, OpenAI...)\n\n# Comportement général\n- Écoute avant de répondre\n- Pose une question à la fois\n- Si tu ne sais pas répondre, propose de transférer ou de rappeler\n- Termine toujours l'appel poliment\n\n# Tools\n- Appelle chaque tool UNE SEULE FOIS par action\n- Ne rappelle jamais un tool déjà utilisé dans le même appel\n- N'annonce pas que tu vérifies — exécute silencieusement\n\n`;
+      const toolInstructions = `\n\n# Règle tools\n- Appelle get_client_context UNE SEULE FOIS au tout début de l'appel, sans l'annoncer à l'appelant.\n- Ne rappelle aucun tool déjà utilisé dans le même appel.\n- Exécute tous les tools en silence, sans dire "un instant" ou "je vérifie".`;
+      const promptComplet = VOCAL_FORMAT + (promptSysteme || "") + toolInstructions;
 
-      console.log("[update-voice-config] PATCH Vapi assistant:", vapiAssistantId, "| prompt length:", (promptSysteme || "").length);
+      const vapiPatchBody = { model: { messages: [{ role: "system", content: promptComplet }] } };
+      if (nomAssistant !== undefined) vapiPatchBody.name = nomAssistant;
+      if (firstMessage !== undefined) vapiPatchBody.firstMessage = firstMessage || "";
+      if (voiceId || vitesseParole !== undefined) {
+        vapiPatchBody.voice = { provider: "11labs", model: "eleven_flash_v2_5", voiceId: voiceId || "21m00Tcm4TlvDq8ikWAM", stability: 0.4, similarityBoost: 0.75, speed: vitesseParole !== undefined ? Number(vitesseParole) : 1.15, style: 0.3, optimizeStreamingLatency: 4, useSpeakerBoost: false, autoMode: true };
+      }
+
+      console.log("[update-voice-config] PATCH Vapi assistant:", vapiAssistantId, "| promptComplet length:", promptComplet.length);
       try {
         const vapiRes = await fetch(`https://api.vapi.ai/assistant/${vapiAssistantId}`, {
           method:  "PATCH",

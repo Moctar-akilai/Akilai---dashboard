@@ -6522,6 +6522,7 @@ async function saveVoixConfig() {
   try {
     const data = await apiFetchPost("/.netlify/functions/update-voice-config", {
       id:              clientId,
+      vapiAssistantId: _vapiAssistantId || null,
       nomAssistant:    cfg.nom,
       langue:          cfg.langPrimaire,
       tonalite:        cfg.tonalite,
