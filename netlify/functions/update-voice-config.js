@@ -75,6 +75,36 @@ exports.handler = async function(event, context) {
     const data = await res.json();
     console.log("[update-voice-config] Champs mis à jour:", JSON.stringify(Object.keys(data.fields || {})));
 
+    /* PATCH Vapi si un assistantId existe */
+    const vapiAssistantId = data.fields?.["VapiAssistantId"] || null;
+    const vapiKey = process.env.VAPI_API_KEY;
+    if (vapiAssistantId && vapiKey && promptSysteme !== undefined) {
+      const vapiPatchBody = { model: { messages: [{ role: "system", content: promptSysteme || "" }] } };
+      if (nomAssistant !== undefined) vapiPatchBody.name = nomAssistant;
+      if (voiceId)                    vapiPatchBody.voice = { provider: "11labs", model: "eleven_flash_v2_5", voiceId, stability: 0.4, similarityBoost: 0.75, speed: 1.15, style: 0.3, optimizeStreamingLatency: 4, useSpeakerBoost: false, autoMode: true };
+      if (firstMessage !== undefined) vapiPatchBody.firstMessage = firstMessage || "";
+      if (vitesseParole !== undefined) vapiPatchBody.voice = { ...(vapiPatchBody.voice || {}), speed: Number(vitesseParole) };
+
+      console.log("[update-voice-config] PATCH Vapi assistant:", vapiAssistantId, "| prompt length:", (promptSysteme || "").length);
+      try {
+        const vapiRes = await fetch(`https://api.vapi.ai/assistant/${vapiAssistantId}`, {
+          method:  "PATCH",
+          headers: { "Authorization": `Bearer ${vapiKey}`, "Content-Type": "application/json" },
+          body:    JSON.stringify(vapiPatchBody),
+        });
+        const vapiText = await vapiRes.text();
+        if (vapiRes.ok) {
+          console.log("[update-voice-config] Vapi PATCH succès — status:", vapiRes.status);
+        } else {
+          console.error("[update-voice-config] Vapi PATCH erreur:", vapiRes.status, vapiText.substring(0, 300));
+        }
+      } catch(vapiErr) {
+        console.error("[update-voice-config] Vapi PATCH exception:", vapiErr.message);
+      }
+    } else {
+      console.log("[update-voice-config] Vapi PATCH ignoré — vapiAssistantId:", vapiAssistantId || "absent", "| vapiKey:", vapiKey ? "ok" : "manquante");
+    }
+
     /* Fire-and-forget : email "assistant configuré" */
     const f = data.fields || {};
     if (f["Email"]) {
