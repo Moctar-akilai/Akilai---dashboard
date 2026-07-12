@@ -206,9 +206,11 @@ Tu t'exprimes toujours à l'oral, en français, avec des phrases courtes et natu
     },
 
     transcriber: {
-      provider: "deepgram",
-      model:    "nova-3",
-      language: langue || "fr",
+      provider:    "deepgram",
+      model:       "nova-3",
+      language:    langue || "fr",
+      endpointing: 300,
+      smartFormat: false,
     },
 
     model: {
