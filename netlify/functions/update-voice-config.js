@@ -90,22 +90,17 @@ exports.handler = async function(event, context) {
         vapiPatchBody.voice = { provider: "11labs", model: "eleven_flash_v2_5", voiceId: voiceId || "21m00Tcm4TlvDq8ikWAM", stability: 0.4, similarityBoost: 0.75, speed: vitesseParole !== undefined ? Number(vitesseParole) : 1.15, style: 0.3, optimizeStreamingLatency: 4, useSpeakerBoost: false, autoMode: true };
       }
 
-      console.log("[update-voice-config] PATCH Vapi assistant:", vapiAssistantId, "| promptComplet length:", promptComplet.length);
-      try {
-        const vapiRes = await fetch(`https://api.vapi.ai/assistant/${vapiAssistantId}`, {
-          method:  "PATCH",
-          headers: { "Authorization": `Bearer ${vapiKey}`, "Content-Type": "application/json" },
-          body:    JSON.stringify(vapiPatchBody),
-        });
-        const vapiText = await vapiRes.text();
-        if (vapiRes.ok) {
-          console.log("[update-voice-config] Vapi PATCH succès — status:", vapiRes.status);
-        } else {
-          console.error("[update-voice-config] Vapi PATCH erreur:", vapiRes.status, vapiText.substring(0, 300));
-        }
-      } catch(vapiErr) {
-        console.error("[update-voice-config] Vapi PATCH exception:", vapiErr.message);
-      }
+      console.log("[update-voice-config] PATCH Vapi assistant (fire-and-forget):", vapiAssistantId, "| promptComplet length:", promptComplet.length);
+      fetch(`https://api.vapi.ai/assistant/${vapiAssistantId}`, {
+        method:  "PATCH",
+        headers: { "Authorization": `Bearer ${vapiKey}`, "Content-Type": "application/json" },
+        body:    JSON.stringify(vapiPatchBody),
+      })
+        .then(r => r.text().then(t => {
+          if (r.ok) console.log("[update-voice-config] Vapi PATCH succès — status:", r.status);
+          else      console.error("[update-voice-config] Vapi PATCH erreur:", r.status, t.substring(0, 300));
+        }))
+        .catch(e => console.error("[update-voice-config] Vapi PATCH exception:", e.message));
     } else {
       console.log("[update-voice-config] Vapi PATCH ignoré — vapiAssistantId:", vapiAssistantId || "absent", "| vapiKey:", vapiKey ? "ok" : "manquante");
     }
