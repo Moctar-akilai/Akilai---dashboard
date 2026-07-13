@@ -221,16 +221,10 @@ Tu t'exprimes toujours à l'oral, en français, avec des phrases courtes et natu
     },
 
     voice: {
-      provider:                 "11labs",
-      model:                    "eleven_flash_v2_5",
-      voiceId:                  voiceId || "21m00Tcm4TlvDq8ikWAM",
-      stability:                0.4,
-      similarityBoost:          0.75,
-      speed:                    1.15,
-      style:                    0.3,
-      optimizeStreamingLatency: 4,
-      useSpeakerBoost:          false,
-      autoMode:                 true,
+      provider: "cartesia",
+      model:    "sonic-2",
+      voiceId:  voiceId || "a167e0f3-df7e-4d52-a786-6f54de4e8a3c",
+      speed:    1.15,
     },
 
     startSpeakingPlan: {
