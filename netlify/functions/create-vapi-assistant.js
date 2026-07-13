@@ -223,7 +223,7 @@ Tu t'exprimes toujours à l'oral, en français, avec des phrases courtes et natu
     voice: {
       provider: "cartesia",
       model:    "sonic-2",
-      voiceId:  voiceId || "a167e0f3-df7e-4d52-a786-6f54de4e8a3c",
+      voiceId:  "a167e0f3-df7e-4d52-a786-6f54de4e8a3c",
     },
 
     startSpeakingPlan: {
