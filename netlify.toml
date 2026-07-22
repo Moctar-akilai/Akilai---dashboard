@@ -1,5 +1,5 @@
 [build]
-  command   = "mkdir -p dist && cp index.html dist/index.html && cp admin.html dist/admin.html && npm install --prefix netlify/functions/generate-invoice"
+  command   = "mkdir -p dist && cp index.html dist/index.html && cp admin.html dist/admin.html && cp booking.html dist/booking.html && npm install --prefix netlify/functions/generate-invoice"
   functions = "netlify/functions"
   publish   = "dist"
 
