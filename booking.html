@@ -140,6 +140,7 @@ const state = {
   selectedSlot: null,        // { start, label }
   nomClient:    "",
   telClient:    "",
+  emailClient:  "",
   rdvId:        null,
 };
 
@@ -261,6 +262,11 @@ function render() {
         <input id="inp-tel" type="tel" placeholder="+33 6 12 34 56 78" autocomplete="tel"
                value="${esc(state.telClient)}" oninput="state.telClient=this.value" />
       </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input id="inp-email" type="email" placeholder="jean@email.com" autocomplete="email"
+               value="${esc(state.emailClient)}" oninput="state.emailClient=this.value" />
+      </div>
       <button class="btn btn-primary" id="confirm-btn" onclick="onConfirm()" ${state.loading ? "disabled" : ""}>
         ${state.loading ? '<span class="spinner"></span>Confirmation…' : 'Confirmer le rendez-vous →'}
       </button>
@@ -277,7 +283,7 @@ function render() {
         Votre RDV <strong>${esc(state.selectedPrest?.nom)}</strong><br>
         est enregistré pour le<br>
         <strong>${esc(dateLbl)} à ${esc(timeLbl)}</strong><br><br>
-        Un SMS de confirmation a été envoyé au<br>${esc(state.telClient)}.
+        Un email et un SMS de confirmation ont été envoyés.
       </div>
     </div>`;
     return;
@@ -319,13 +325,16 @@ function goBack() {
 }
 
 async function onConfirm() {
-  const nom = (document.getElementById("inp-nom")?.value ?? state.nomClient).trim();
-  const tel = (document.getElementById("inp-tel")?.value ?? state.telClient).trim();
-  state.nomClient = nom;
-  state.telClient = tel;
+  const nom   = (document.getElementById("inp-nom")?.value   ?? state.nomClient).trim();
+  const tel   = (document.getElementById("inp-tel")?.value   ?? state.telClient).trim();
+  const email = (document.getElementById("inp-email")?.value ?? state.emailClient).trim();
+  state.nomClient   = nom;
+  state.telClient   = tel;
+  state.emailClient = email;
 
-  if (!nom || !tel) { state.stepError = "Veuillez renseigner votre nom et votre numéro de téléphone."; render(); return; }
+  if (!nom || !tel || !email) { state.stepError = "Veuillez renseigner votre nom, téléphone et email."; render(); return; }
   if (!/^[+0-9\s\-().]{7,}$/.test(tel)) { state.stepError = "Numéro de téléphone invalide."; render(); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { state.stepError = "Adresse email invalide."; render(); return; }
 
   state.loading   = true;
   state.stepError = null;
@@ -341,6 +350,7 @@ async function onConfirm() {
         dateHeure:       state.selectedSlot.start,
         nomClient:       nom,
         telephoneClient: tel,
+        emailClient:     email,
       }),
     });
     const d = await res.json();

@@ -1,4 +1,5 @@
 const { BASE_URL, headers, ok, err, preflight } = require("./config");
+const { sendEmail, buildConfirmationEmail }    = require("./resend-email");
 
 /**
  * POST /.netlify/functions/create-booking
@@ -17,9 +18,12 @@ exports.handler = async (event) => {
   let body;
   try { body = JSON.parse(event.body || "{}"); } catch(e) { return err("JSON invalide", 400); }
 
-  const { salonId, prestationId, dateHeure, nomClient, telephoneClient } = body;
-  if (!salonId || !prestationId || !dateHeure || !nomClient || !telephoneClient) {
-    return err("Champs requis : salonId, prestationId, dateHeure, nomClient, telephoneClient", 400);
+  const { salonId, prestationId, dateHeure, nomClient, telephoneClient, emailClient } = body;
+  if (!salonId || !prestationId || !dateHeure || !nomClient || !telephoneClient || !emailClient) {
+    return err("Champs requis : salonId, prestationId, dateHeure, nomClient, telephoneClient, emailClient", 400);
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailClient)) {
+    return err("Format email invalide", 400);
   }
 
   const slotStart = new Date(dateHeure);
@@ -73,6 +77,7 @@ exports.handler = async (event) => {
         fields: {
           "Client final - Nom":       nomClient,
           "Client final - Téléphone": telephoneClient,
+          "Email client":             emailClient,
           "Salon":          [salonId],
           "Prestation":     [prestationId],
           "Date/Heure":     slotStart.toISOString(),
@@ -100,8 +105,20 @@ exports.handler = async (event) => {
         .catch(e => console.error("[create-booking] Google Calendar:", e.message));
     }
 
-    // 7. SMS de confirmation avec lien de gestion (fire-and-forget)
-    sendConfirmationSMS(nomClient, pf.Nom || "votre RDV", slotStart, sf["Nom salon"] || "le salon", telephoneClient, gestionUrl)
+    const nomSalon    = sf["Nom salon"]  || "le salon";
+    const adresseSalon = sf["Adresse"]  || "";
+    const prestNom    = pf.Nom           || "votre RDV";
+
+    const dateStr = slotStart.toLocaleDateString("fr-FR", { weekday:"long", day:"numeric", month:"long", timeZone:"Europe/Paris" });
+    const timeStr = slotStart.toLocaleTimeString("fr-FR", { hour:"2-digit", minute:"2-digit", hour12:false, timeZone:"Europe/Paris" });
+
+    // 7. Email de confirmation (fire-and-forget)
+    const { html, text } = buildConfirmationEmail({ nomClient, prestationNom: prestNom, dateStr, timeStr, nomSalon, adresseSalon, gestionUrl });
+    sendEmail({ to: emailClient, subject: `Confirmation de votre RDV chez ${nomSalon}`, html, text })
+      .catch(e => console.error("[create-booking] Email:", e.message));
+
+    // 8. SMS de confirmation avec lien de gestion (fire-and-forget)
+    sendConfirmationSMS(nomClient, prestNom, slotStart, nomSalon, telephoneClient, gestionUrl)
       .catch(e => console.error("[create-booking] SMS:", e.message));
 
     return ok({ ok: true, rdvId: rdv.id, token });

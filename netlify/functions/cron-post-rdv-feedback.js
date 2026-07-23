@@ -12,8 +12,9 @@
  * on saute le feedback — cela indique qu'une relance a été envoyée
  * très récemment au même client.
  */
-const { BASE_URL, headers } = require("./config");
-const { sendRdvMessage }    = require("./twilio-rdv");
+const { BASE_URL, headers }              = require("./config");
+const { sendRdvMessage }                 = require("./twilio-rdv");
+const { sendEmail, buildFeedbackEmail }  = require("./resend-email");
 
 const SIX_WEEKS_MS = 42 * 86400000;
 
@@ -58,9 +59,10 @@ exports.handler = async () => {
       if (!tel || !salonId) { skipped++; continue; }
 
       const sf       = await getSalon(salonId);
-      const nomSalon = sf["Nom salon"] || "votre salon";
-      const canal    = sf["Canal feedback"] || "SMS";
+      const nomSalon = sf["Nom salon"]        || "votre salon";
+      const canal    = sf["Canal feedback"]   || "SMS";
       const lienAvis = sf["Lien avis Google"] || "";
+      const email    = f["Email client"]      || "";
 
       // ── Anti-sursollicitation ─────────────────────────────────────
       // Si ce client a été relancé très récemment (statut "Relancé" +
@@ -102,6 +104,13 @@ exports.handler = async () => {
 
       try {
         await sendRdvMessage(tel, message, canal);
+
+        if (email) {
+          const { html, text } = buildFeedbackEmail({ nomClient: nom, nomSalon, lienAvis });
+          sendEmail({ to: email, subject: `Comment s'est passé votre visite chez ${nomSalon} ?`, html, text })
+            .catch(e => console.warn(`[cron-post-rdv-feedback] Email ${email}:`, e.message));
+        }
+
         await fetch(`${BASE_URL}/Rendez-vous/${rdv.id}`, {
           method: "PATCH", headers,
           body: JSON.stringify({ fields: { "Feedback envoyé": true } }),

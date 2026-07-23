@@ -7,8 +7,9 @@
  * Action : SMS et/ou WhatsApp selon "Canal feedback" du salon,
  *          puis coche Rappel envoyé=true.
  */
-const { BASE_URL, headers } = require("./config");
-const { sendRdvMessage }    = require("./twilio-rdv");
+const { BASE_URL, headers }              = require("./config");
+const { sendRdvMessage }                 = require("./twilio-rdv");
+const { sendEmail, buildRappelEmail }    = require("./resend-email");
 
 const PARIS_TZ = "Europe/Paris";
 
@@ -76,15 +77,28 @@ exports.handler = async () => {
       const sf = salonRes.ok ? (await salonRes.json()).fields || {} : {};
       const pf = (prestRes?.ok) ? (await prestRes.json()).fields || {} : {};
 
-      const heure      = f["Date/Heure"] ? formatHeure(new Date(f["Date/Heure"])) : "?";
-      const prestation = pf.Nom ? ` "${pf.Nom}"` : "";
-      const nomSalon   = sf["Nom salon"] || "votre salon";
-      const canal      = sf["Canal feedback"] || "SMS";
+      const heure        = f["Date/Heure"] ? formatHeure(new Date(f["Date/Heure"])) : "?";
+      const prestationNom = pf.Nom || "";
+      const prestation    = prestationNom ? ` "${prestationNom}"` : "";
+      const nomSalon      = sf["Nom salon"]  || "votre salon";
+      const adresseSalon  = sf["Adresse"]    || "";
+      const canal         = sf["Canal feedback"] || "SMS";
+      const email         = f["Email client"] || "";
+      const token         = f["Token gestion"] || "";
+      const baseUrl       = process.env.URL || "https://portal-akilai.netlify.app";
+      const gestionUrl    = token ? `${baseUrl}/gerer-rdv.html?token=${token}` : "";
 
-      const message = `Bonjour ${prenom}, rappel de votre RDV${prestation} demain à ${heure} chez ${nomSalon}. À bientôt !`;
+      const smsMessage = `Bonjour ${prenom}, rappel de votre RDV${prestation} demain à ${heure} chez ${nomSalon}. À bientôt !${gestionUrl ? "\nModifier/annuler : " + gestionUrl : ""}`;
 
       try {
-        await sendRdvMessage(tel, message, canal);
+        await sendRdvMessage(tel, smsMessage, canal);
+
+        if (email) {
+          const { html, text } = buildRappelEmail({ nomClient: nom, prestationNom, timeStr: heure, nomSalon, adresseSalon, gestionUrl });
+          sendEmail({ to: email, subject: `Rappel — votre RDV demain à ${heure} chez ${nomSalon}`, html, text })
+            .catch(e => console.warn(`[cron-reminder-rdv] Email ${email}:`, e.message));
+        }
+
         await fetch(`${BASE_URL}/Rendez-vous/${rdv.id}`, {
           method: "PATCH", headers,
           body: JSON.stringify({ fields: { "Rappel envoyé": true } }),
