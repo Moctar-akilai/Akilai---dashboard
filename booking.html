@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Réservation en ligne</title>
+<style>
+:root {
+  --accent:       #7c3aed;
+  --accent-light: #ede9fe;
+  --text:         #1f2937;
+  --muted:        #6b7280;
+  --border:       #e5e7eb;
+  --bg:           #f3f4f6;
+  --white:        #ffffff;
+  --success:      #059669;
+  --error-bg:     #fef2f2;
+  --error-border: #fecaca;
+  --error-text:   #dc2626;
+  --radius:       12px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 48px; }
+
+.container { max-width: 480px; margin: 0 auto; padding: 24px 16px; }
+
+/* Logo */
+.logo { text-align: center; padding: 20px 0 8px; }
+.logo-text { font-size: 22px; font-weight: 800; color: var(--accent); letter-spacing: -0.5px; }
+.logo-sub  { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+/* Card */
+.card { background: var(--white); border-radius: var(--radius); box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06); padding: 24px; margin-bottom: 16px; }
+
+/* Steps bar */
+.steps { display: flex; gap: 6px; margin-bottom: 20px; }
+.step-bar { flex: 1; height: 4px; border-radius: 2px; background: var(--border); transition: background .3s; }
+.step-bar.active { background: var(--accent); }
+.step-bar.done   { background: var(--accent); opacity: 0.5; }
+
+/* Titles */
+.card-title  { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+.card-sub    { font-size: 13px; color: var(--muted); margin-bottom: 18px; }
+
+/* Error */
+.error-box { background: var(--error-bg); border: 1px solid var(--error-border); color: var(--error-text); padding: 12px 14px; border-radius: 8px; font-size: 14px; margin-bottom: 14px; line-height: 1.5; }
+
+/* Prestation list */
+.prest-list { display: flex; flex-direction: column; gap: 10px; }
+.prest-card { border: 2px solid var(--border); border-radius: 10px; padding: 14px 16px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: border-color .2s, background .2s; user-select: none; }
+.prest-card:hover    { border-color: var(--accent); background: var(--accent-light); }
+.prest-card.selected { border-color: var(--accent); background: var(--accent-light); }
+.prest-name  { font-weight: 600; font-size: 15px; }
+.prest-badge { font-size: 12px; color: var(--muted); background: var(--bg); padding: 3px 8px; border-radius: 20px; border: 1px solid var(--border); white-space: nowrap; }
+
+/* Day + slot picker */
+.day-list { display: flex; flex-direction: column; gap: 8px; }
+.day-item  { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.day-header { padding: 13px 16px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: var(--white); font-size: 14px; font-weight: 500; transition: background .2s; }
+.day-header:hover { background: var(--bg); }
+.day-header.open  { background: var(--accent-light); color: var(--accent); }
+.day-count { font-size: 12px; opacity: 0.75; }
+.day-slots { display: none; flex-wrap: wrap; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--border); background: var(--white); }
+.day-slots.open { display: flex; }
+.slot-btn { padding: 8px 14px; border: 2px solid var(--border); border-radius: 8px; background: var(--white); font-size: 14px; font-weight: 500; cursor: pointer; transition: all .15s; }
+.slot-btn:hover    { border-color: var(--accent); color: var(--accent); }
+.slot-btn.selected { background: var(--accent); border-color: var(--accent); color: var(--white); }
+
+/* Summary */
+.summary { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 20px; }
+.summary-row { display: flex; justify-content: space-between; font-size: 14px; padding: 4px 0; }
+.summary-row:not(:last-child) { border-bottom: 1px solid var(--border); margin-bottom: 4px; padding-bottom: 8px; }
+.summary-label { color: var(--muted); }
+.summary-value { font-weight: 600; text-align: right; }
+
+/* Form */
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+.form-group input { width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 15px; outline: none; transition: border-color .2s; }
+.form-group input:focus { border-color: var(--accent); }
+.form-group input::placeholder { color: #9ca3af; }
+
+/* Buttons */
+.btn { width: 100%; padding: 14px; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: opacity .2s, transform .1s; }
+.btn:active { transform: scale(0.99); }
+.btn-primary { background: var(--accent); color: var(--white); }
+.btn-primary:hover { opacity: 0.9; }
+.btn-primary:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+.btn-ghost { background: transparent; color: var(--muted); font-size: 13px; padding: 10px; margin-top: 6px; }
+.btn-ghost:hover { color: var(--text); }
+
+/* Spinner */
+.spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.4); border-top-color: var(--white); border-radius: 50%; animation: spin .65s linear infinite; vertical-align: middle; margin-right: 8px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Loading */
+.loading { text-align: center; color: var(--muted); font-size: 14px; padding: 32px 0; }
+
+/* Empty state */
+.empty { text-align: center; color: var(--muted); font-size: 14px; padding: 20px 0; }
+
+/* Success */
+.success-icon  { text-align: center; font-size: 52px; margin-bottom: 14px; }
+.success-title { text-align: center; font-size: 21px; font-weight: 700; color: var(--success); margin-bottom: 10px; }
+.success-body  { text-align: center; font-size: 14px; color: var(--muted); line-height: 1.7; }
+.success-body strong { color: var(--text); }
+
+/* Fatal error (no RDV offer, salon not found, etc.) */
+.fatal-card { text-align: center; padding: 32px 24px; }
+.fatal-icon  { font-size: 40px; margin-bottom: 14px; }
+.fatal-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+.fatal-msg   { font-size: 14px; color: var(--muted); line-height: 1.6; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="logo">
+    <div class="logo-text">AkilAI</div>
+    <div class="logo-sub">Réservation en ligne</div>
+  </div>
+  <div id="app"><div class="loading">Chargement…</div></div>
+</div>
+
+<script>
+const API     = "/.netlify/functions";
+const params  = new URLSearchParams(location.search);
+const salonId = params.get("salon");
+
+/* ── State ───────────────────────────────────────────────────────────────── */
+const state = {
+  step:         1,           // 1=prestation, 2=créneau, 3=formulaire, 4=succès
+  fatal:        null,        // { message } — erreur bloquante (403, 404…)
+  stepError:    null,        // string — erreur temporaire sur un step
+  loading:      false,
+  salon:        null,        // { id, nom }
+  prestations:  [],
+  selectedPrest:null,        // { id, nom, duree }
+  slotsByDate:  null,        // { "YYYY-MM-DD": { label, slots:[{start,label}] }, … }
+  openDate:     null,        // date expandée dans le picker
+  selectedSlot: null,        // { start, label }
+  nomClient:    "",
+  telClient:    "",
+  emailClient:  "",
+  rdvId:        null,
+};
+
+/* ── Helpers ─────────────────────────────────────────────────────────────── */
+const esc = s => String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+const app = () => document.getElementById("app");
+
+/* ── Render ──────────────────────────────────────────────────────────────── */
+function render() {
+  if (!salonId) {
+    app().innerHTML = `<div class="card fatal-card">
+      <div class="fatal-icon">🔗</div>
+      <div class="fatal-title">Lien invalide</div>
+      <div class="fatal-msg">Aucun salon spécifié dans l'URL.<br>Ajoutez <code>?salon=IDENTIFIANT</code></div>
+    </div>`;
+    return;
+  }
+  if (state.fatal) {
+    const is403 = state.fatal.code === 403;
+    app().innerHTML = `<div class="card fatal-card">
+      <div class="fatal-icon">${is403 ? "🔒" : "⚠️"}</div>
+      <div class="fatal-title">${is403 ? "Réservation non disponible" : "Erreur"}</div>
+      <div class="fatal-msg">${esc(state.fatal.message)}</div>
+    </div>`;
+    return;
+  }
+
+  const salonNom = state.salon?.nom ?? "…";
+  const stepsHtml = `<div class="steps">
+    ${[1,2,3].map(i => `<div class="step-bar ${state.step > i ? "done" : state.step === i ? "active" : ""}"></div>`).join("")}
+  </div>`;
+  const header = `<div class="card">
+    ${stepsHtml}
+    <div class="card-title">Prendre un rendez-vous</div>
+    <div class="card-sub">${esc(salonNom)}</div>
+    ${state.stepError ? `<div class="error-box">${esc(state.stepError)}</div>` : ""}
+  </div>`;
+
+  let body = "";
+
+  if (state.step === 1) {
+    if (state.loading) {
+      body = `<div class="loading">Chargement des prestations…</div>`;
+    } else {
+      // Group by category
+      const grouped = {};
+      state.prestations.forEach(p => {
+        const cat = p.categorie || "";
+        if (!grouped[cat]) grouped[cat] = [];
+        grouped[cat].push(p);
+      });
+      const cats = Object.keys(grouped).sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
+      const sections = cats.map(cat => {
+        const header = cat ? `<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted,#888);margin:16px 0 8px">${esc(cat)}</div>` : "";
+        const cards = grouped[cat].map(p => {
+          const badge = p.duree + " min" + (p.prix != null ? " · " + p.prix + " €" : "");
+          const desc  = p.description ? `<div style="font-size:12px;color:var(--muted,#888);margin-top:4px">${esc(p.description)}</div>` : "";
+          return `<div class="prest-card${state.selectedPrest?.id === p.id ? " selected" : ""}"
+               onclick="onSelectPrest('${esc(p.id)}','${esc(p.nom)}',${+p.duree})">
+            <div class="prest-name">${esc(p.nom)}</div>
+            ${desc}
+            <div class="prest-badge">${badge}</div>
+          </div>`;
+        }).join("");
+        return header + `<div class="prest-list">${cards}</div>`;
+      }).join("");
+      body = `<div class="card">
+        <div class="card-title" style="font-size:15px;margin-bottom:14px">Quelle prestation ?</div>
+        ${sections || '<div class="empty">Aucune prestation configurée pour ce salon.</div>'}
+      </div>`;
+    }
+  } else if (state.step === 2) {
+    if (state.loading) {
+      body = `<div class="loading">Chargement des créneaux…</div>`;
+    } else {
+      const dates = Object.entries(state.slotsByDate ?? {});
+      const dayItems = dates.map(([ds, dd]) => {
+        const isOpen = state.openDate === ds;
+        const btns = dd.slots.map(s =>
+          `<button class="slot-btn${state.selectedSlot?.start === s.start ? " selected" : ""}"
+                   onclick="onSelectSlot('${ds}','${esc(s.start)}','${esc(s.label)}')">${esc(s.label)}</button>`
+        ).join("");
+        return `<div class="day-item">
+          <div class="day-header${isOpen ? " open" : ""}" onclick="toggleDay('${ds}')">
+            <span>${esc(dd.label)}</span>
+            <span class="day-count">${dd.slots.length} créneau${dd.slots.length > 1 ? "x" : ""}</span>
+          </div>
+          <div class="day-slots${isOpen ? " open" : ""}">${btns}</div>
+        </div>`;
+      }).join("");
+      body = `<div class="card">
+        <div style="font-size:13px;color:var(--muted);margin-bottom:14px">
+          Prestation : <strong style="color:var(--text)">${esc(state.selectedPrest?.nom)}</strong>
+          &nbsp;·&nbsp;${state.selectedPrest?.duree} min
+        </div>
+        ${dates.length ? `<div class="day-list">${dayItems}</div>` : '<div class="empty">Aucun créneau disponible sur les 15 prochains jours.</div>'}
+        <button class="btn btn-ghost" onclick="goBack()">← Changer de prestation</button>
+      </div>`;
+    }
+  } else if (state.step === 3) {
+    const d       = new Date(state.selectedSlot.start);
+    const dateLbl = d.toLocaleDateString("fr-FR", { weekday:"long", day:"numeric", month:"long", timeZone:"Europe/Paris" });
+    const timeLbl = d.toLocaleTimeString("fr-FR", { hour:"2-digit", minute:"2-digit", hour12:false, timeZone:"Europe/Paris" });
+    body = `<div class="card">
+      <div class="card-title" style="font-size:15px;margin-bottom:14px">Vos coordonnées</div>
+      <div class="summary">
+        <div class="summary-row"><span class="summary-label">Prestation</span><span class="summary-value">${esc(state.selectedPrest?.nom)}</span></div>
+        <div class="summary-row"><span class="summary-label">Date</span><span class="summary-value">${esc(dateLbl)}</span></div>
+        <div class="summary-row"><span class="summary-label">Heure</span><span class="summary-value">${esc(timeLbl)}</span></div>
+        <div class="summary-row"><span class="summary-label">Durée</span><span class="summary-value">${state.selectedPrest?.duree} min</span></div>
+      </div>
+      <div class="form-group">
+        <label>Nom complet</label>
+        <input id="inp-nom" type="text" placeholder="Jean Dupont" autocomplete="name"
+               value="${esc(state.nomClient)}" oninput="state.nomClient=this.value" />
+      </div>
+      <div class="form-group">
+        <label>Téléphone</label>
+        <input id="inp-tel" type="tel" placeholder="+33 6 12 34 56 78" autocomplete="tel"
+               value="${esc(state.telClient)}" oninput="state.telClient=this.value" />
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input id="inp-email" type="email" placeholder="jean@email.com" autocomplete="email"
+               value="${esc(state.emailClient)}" oninput="state.emailClient=this.value" />
+      </div>
+      <button class="btn btn-primary" id="confirm-btn" onclick="onConfirm()" ${state.loading ? "disabled" : ""}>
+        ${state.loading ? '<span class="spinner"></span>Confirmation…' : 'Confirmer le rendez-vous →'}
+      </button>
+      <button class="btn btn-ghost" onclick="goBack()">← Changer de créneau</button>
+    </div>`;
+  } else if (state.step === 4) {
+    const d       = new Date(state.selectedSlot.start);
+    const dateLbl = d.toLocaleDateString("fr-FR", { weekday:"long", day:"numeric", month:"long", timeZone:"Europe/Paris" });
+    const timeLbl = d.toLocaleTimeString("fr-FR", { hour:"2-digit", minute:"2-digit", hour12:false, timeZone:"Europe/Paris" });
+    app().innerHTML = `<div class="card" style="margin-top:16px">
+      <div class="success-icon">✅</div>
+      <div class="success-title">Rendez-vous confirmé !</div>
+      <div class="success-body">
+        Votre RDV <strong>${esc(state.selectedPrest?.nom)}</strong><br>
+        est enregistré pour le<br>
+        <strong>${esc(dateLbl)} à ${esc(timeLbl)}</strong><br><br>
+        Un email et un SMS de confirmation ont été envoyés.
+      </div>
+    </div>`;
+    return;
+  }
+
+  app().innerHTML = header + body;
+}
+
+/* ── Actions ─────────────────────────────────────────────────────────────── */
+function toggleDay(dateStr) {
+  state.openDate = state.openDate === dateStr ? null : dateStr;
+  render();
+}
+
+function onSelectPrest(id, nom, duree) {
+  state.selectedPrest = { id, nom, duree };
+  state.selectedSlot  = null;
+  state.slotsByDate   = null;
+  state.openDate      = null;
+  state.stepError     = null;
+  state.step          = 2;
+  render();
+  fetchSlots();
+}
+
+function onSelectSlot(dateStr, start, label) {
+  state.selectedSlot = { start, label };
+  state.openDate     = dateStr;
+  state.stepError    = null;
+  state.step         = 3;
+  render();
+}
+
+function goBack() {
+  state.stepError = null;
+  if (state.step === 3) { state.step = 2; state.selectedSlot = null; }
+  else if (state.step === 2) { state.step = 1; state.selectedPrest = null; state.slotsByDate = null; }
+  render();
+}
+
+async function onConfirm() {
+  const nom   = (document.getElementById("inp-nom")?.value   ?? state.nomClient).trim();
+  const tel   = (document.getElementById("inp-tel")?.value   ?? state.telClient).trim();
+  const email = (document.getElementById("inp-email")?.value ?? state.emailClient).trim();
+  state.nomClient   = nom;
+  state.telClient   = tel;
+  state.emailClient = email;
+
+  if (!nom || !tel || !email) { state.stepError = "Veuillez renseigner votre nom, téléphone et email."; render(); return; }
+  if (!/^[+0-9\s\-().]{7,}$/.test(tel)) { state.stepError = "Numéro de téléphone invalide."; render(); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { state.stepError = "Adresse email invalide."; render(); return; }
+
+  state.loading   = true;
+  state.stepError = null;
+  render();
+
+  try {
+    const res = await fetch(`${API}/create-booking`, {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        salonId,
+        prestationId:    state.selectedPrest.id,
+        dateHeure:       state.selectedSlot.start,
+        nomClient:       nom,
+        telephoneClient: tel,
+        emailClient:     email,
+      }),
+    });
+    const d = await res.json();
+
+    if (!res.ok) {
+      if (res.status === 409) {
+        // Créneau pris → retour à l'étape 2 avec rechargement
+        state.stepError   = d.error ?? "Ce créneau vient d'être réservé. Choisissez-en un autre.";
+        state.step        = 2;
+        state.selectedSlot = null;
+        state.slotsByDate  = null;
+        state.loading      = false;
+        render();
+        fetchSlots();
+        return;
+      }
+      state.stepError = d.error ?? "Erreur lors de la réservation.";
+    } else {
+      state.rdvId = d.rdvId;
+      state.step  = 4;
+    }
+  } catch(e) {
+    state.stepError = "Erreur réseau. Veuillez réessayer.";
+  }
+  state.loading = false;
+  render();
+}
+
+/* ── API calls ───────────────────────────────────────────────────────────── */
+async function fetchSalonInfo() {
+  state.loading = true;
+  render();
+  try {
+    const res = await fetch(`${API}/get-salon-info?salonId=${encodeURIComponent(salonId)}`);
+    const d   = await res.json();
+    if (!res.ok) {
+      state.fatal = { code: res.status, message: d.error ?? "Impossible de charger ce salon." };
+    } else {
+      state.salon       = d.salon;
+      state.prestations = d.prestations;
+    }
+  } catch(e) {
+    state.fatal = { message: "Erreur réseau. Veuillez réessayer plus tard." };
+  }
+  state.loading = false;
+  render();
+}
+
+async function fetchSlots() {
+  state.loading = true;
+  render();
+  try {
+    const res = await fetch(`${API}/get-available-slots`, {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ salonId, prestationId: state.selectedPrest.id }),
+    });
+    const d = await res.json();
+    if (!res.ok) {
+      state.stepError = d.error ?? "Impossible de charger les créneaux.";
+    } else {
+      state.slotsByDate = d.slotsByDate;
+    }
+  } catch(e) {
+    state.stepError = "Erreur réseau. Veuillez réessayer.";
+  }
+  state.loading = false;
+  render();
+}
+
+/* ── Init ────────────────────────────────────────────────────────────────── */
+fetchSalonInfo();
+</script>
+</body>
+</html>

@@ -169,32 +169,45 @@ exports.handler = async function(event, context) {
     server: { url: `${TOOLS_BASE}/vapi-tool-create-contact`, timeoutSeconds: 20, headers: toolHeaders },
   });
 
+  // Mémoire contextuelle — toujours disponible
+  tools.push({
+    type: "function",
+    function: {
+      name: "get_client_context",
+      description: "Récupère les informations et l'historique du client qui appelle pour personnaliser la conversation. TOUJOURS appeler ce tool au tout début de chaque appel.",
+      parameters: {
+        type: "object",
+        properties: {
+          numero: { type: "string", description: "Numéro de téléphone de l'appelant au format international (ex: +33612345678)" },
+        },
+        required: ["numero"],
+      },
+    },
+    server: {
+      url:            `${TOOLS_BASE}/vapi-tool-get-context`,
+      timeoutSeconds: 5,
+      headers:        { "X-User-Id": clientEmail, "X-Client-Id": clientId || "" },
+    },
+  });
+
   console.log("[create-vapi-assistant] tools construits :", tools.map(t => t.function.name));
 
-  /* ── Règle tools injectée dans le prompt système ── */
-  const toolInstructions = `\n\n# Règle tools\n- Ne rappelle aucun tool déjà utilisé dans le même appel.\n- Exécute tous les tools en silence.`;
+  const currentYear = new Date().getFullYear();
 
-  const VOCAL_FORMAT = `# Format de réponse vocale
-Tu t'exprimes toujours à l'oral, en français, avec des phrases courtes et naturelles comme dans une vraie conversation téléphonique.
-- Maximum 2-3 phrases par réponse
-- Jamais de listes, jamais de tirets dans tes réponses
-- Jamais de symboles comme €, %, / — toujours en toutes lettres
-- Jamais de bonjour deux fois dans le même appel
-- Ne jamais mentionner les technologies utilisées (Vapi, ElevenLabs, OpenAI...)
+  /* ── Instructions tools injectées dans le prompt système ── */
+  let toolInstructions = `\n\nIMPORTANT : Nous sommes en ${currentYear}. Toujours utiliser l'année ${currentYear} (ou ${currentYear + 1} si la date est dépassée). Ne jamais utiliser une année passée.\n\nFUSEAU HORAIRE : Tous les horaires sont en heure de Paris (Europe/Paris, UTC+2 en été). Si le patient dit "12h30", tu dois passer "2026-XX-XXT12:30:00" (SANS conversion UTC, SANS ajouter 2h). Ne jamais convertir en UTC. Exemple : patient dit 14h → dateDebut = "...T14:00:00", dateFin = "...T14:30:00".\n\nMÉMOIRE CLIENT :\n- Au début de CHAQUE appel, appelle get_client_context avec le numéro de l'appelant.\n- Si le client est connu, accueille-le par son prénom dès la première phrase.\n- Utilise le contexte du dernier échange pour personnaliser la conversation.\n- Si nouveau client → accueil standard.\n\nRÈGLES ABSOLUES — NE JAMAIS ENFREINDRE :\n1. INTERDICTION ABSOLUE de confirmer ou refuser un RDV sans avoir appelé check_availability.\n2. INTERDICTION ABSOLUE d'inventer des créneaux disponibles.\n3. SÉQUENCE OBLIGATOIRE pour tout RDV :\n   → Appeler check_availability (obtenir date du patient)\n   → Annoncer UNIQUEMENT les créneaux retournés par le tool\n   → Appeler create_appointment UNIQUEMENT après confirmation explicite du patient\n   → Confirmer UNIQUEMENT après succès de create_appointment\n4. Si un tool échoue → dire "Je vérifie, un instant..." et réessayer UNE fois.\n5. Ne JAMAIS dire "votre RDV est confirmé" sans avoir reçu une confirmation de create_appointment.\n6. ATTENDRE le résultat de chaque tool call AVANT de poursuivre la conversation.\n\nOUTILS DISPONIBLES :\n`;
 
-# Comportement général
-- Écoute avant de répondre
-- Pose une question à la fois
-- Si tu ne sais pas répondre, propose de transférer ou de rappeler
-- Termine toujours l'appel poliment
+  if (clientFields["Google Connected"]) {
+    toolInstructions += `- check_availability : OBLIGATOIRE avant de proposer tout créneau. Paramètre date au format YYYY-MM-DD.\n- create_appointment : appeler UNIQUEMENT après confirmation explicite du patient. Annoncer : "Votre RDV est confirmé le [date] à [heure]."\n`;
+  }
 
-# Tools
-- Exécute chaque tool directement et en silence.
-- ABSOLUMENT INTERDIT de prononcer 'un instant', 'une seconde', 'je vérifie', 'attends', 'laissez-moi chercher' ou toute phrase d'attente avant, pendant ou après un tool call.
-- Zéro annonce verbale. Le tool s'exécute, tu continues la conversation.
+  if (clientFields["Calendly Connected"] && clientFields["Calendly Link"]) {
+    toolInstructions += `- get_calendly_slots : appeler pour proposer des créneaux via Calendly.\n`;
+  }
 
-`;
-  const promptComplet = VOCAL_FORMAT + (promptSysteme || "") + toolInstructions;
+  toolInstructions += `- get_client_context : appeler EN PREMIER à chaque appel avec le numéro de l'appelant.\n- send_sms : appeler en fin d'appel pour envoyer une confirmation SMS au patient.\n- create_contact : appeler pour enregistrer nom, téléphone et résumé dans la base de données.\n`;
+
+  const promptComplet = (promptSysteme || "") + toolInstructions;
 
   /* Payload Vapi — structure officielle */
   const vapiPayload = {
@@ -206,10 +219,9 @@ Tu t'exprimes toujours à l'oral, en français, avec des phrases courtes et natu
     },
 
     transcriber: {
-      provider:    "deepgram",
-      model:       "nova-3",
-      language:    langue || "fr",
-      smartFormat: false,
+      provider: "deepgram",
+      model:    "nova-3",
+      language: langue || "fr",
     },
 
     model: {
@@ -221,18 +233,25 @@ Tu t'exprimes toujours à l'oral, en français, avec des phrases courtes et natu
     },
 
     voice: {
-      provider: "cartesia",
-      model:    "sonic-2",
-      voiceId:  "a167e0f3-df7e-4d52-a786-6f54de4e8a3c",
+      provider:                 "11labs",
+      model:                    "eleven_flash_v2_5",
+      voiceId:                  voiceId || "21m00Tcm4TlvDq8ikWAM",
+      stability:                0.4,
+      similarityBoost:          0.75,
+      speed:                    1.15,
+      style:                    0.3,
+      optimizeStreamingLatency: 4,
+      useSpeakerBoost:          false,
+      autoMode:                 true,
     },
 
     startSpeakingPlan: {
-      waitSeconds:          0.2,
+      waitSeconds:          0.4,
       smartEndpointingPlan: { provider: "vapi" },
     },
 
     stopSpeakingPlan: {
-      numWords:               1,
+      numWords:               3,
       voiceSeconds:           0.1,
       acknowledgementPhrases: [
         "hmm", "oui", "d'accord", "je vois",
@@ -240,7 +259,7 @@ Tu t'exprimes toujours à l'oral, en français, avec des phrases courtes et natu
       ],
     },
 
-    firstMessage: firstMessage || "Bonjour, un instant...",
+    firstMessage: firstMessage || undefined,
 
     analysisPlan: {
       summaryPrompt: "Rédige un résumé concis de cet appel en français. Mentionne l'objet de l'appel, les informations clés échangées et l'issue (RDV pris, question résolue, rappel demandé, etc.). Maximum 3 phrases.",
@@ -390,8 +409,8 @@ Tu t'exprimes toujours à l'oral, en français, avec des phrases courtes et natu
             method:  "PATCH",
             headers: vapiHeaders,
             body:    JSON.stringify({
-              assistantId: null,
-              serverUrl:   webhookUrl,
+              assistantId,
+              serverUrl: webhookUrl,
               metadata: {
                 userId:   clientEmail,
                 clientId: clientId || "",

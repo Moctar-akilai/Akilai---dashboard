@@ -2298,6 +2298,129 @@
       .login-card { padding: 36px 24px 32px; margin: 0 16px; border-radius: 14px; }
       .login-logo { font-size: 24px; }
     }
+
+    /* ── Agenda RDV ─────────────────────────────────────────────── */
+    .rdv-stats-row { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px; }
+    .rdv-stat-chip {
+      flex:1; min-width:130px;
+      background:var(--card); border:1px solid var(--border);
+      border-radius:10px; padding:14px 16px;
+      display:flex; flex-direction:column; gap:4px;
+    }
+    .rdv-stat-chip .chip-count { font-size:24px; font-weight:700; color:var(--text); }
+    .rdv-stat-chip .chip-label { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; }
+    .rdv-stat-chip.chip-confirme .chip-count { color:#7c3aed; }
+    .rdv-stat-chip.chip-termine  .chip-count { color:#10b981; }
+    .rdv-stat-chip.chip-annule   .chip-count { color:#ef4444; }
+    .rdv-stat-chip.chip-noshow   .chip-count { color:#f59e0b; }
+
+    .rdv-day-group { margin-bottom:20px; }
+    .rdv-day-label {
+      font-size:12px; font-weight:600; color:var(--text-muted);
+      text-transform:uppercase; letter-spacing:.06em;
+      padding-bottom:8px; border-bottom:1px solid var(--border); margin-bottom:8px;
+    }
+    .rdv-day-label.is-today { color:#7c3aed; }
+
+    .rdv-card {
+      display:flex; align-items:center; gap:12px;
+      background:var(--card); border:1px solid var(--border);
+      border-radius:10px; padding:12px 14px; margin-bottom:6px;
+      transition:border-color 0.15s;
+    }
+    .rdv-card:hover { border-color:rgba(124,58,237,.4); }
+    .rdv-time { min-width:48px; text-align:center; font-size:15px; font-weight:700; color:var(--text); }
+    .rdv-info { flex:1; min-width:0; }
+    .rdv-client-name { font-size:14px; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .rdv-client-phone { font-size:12px; color:var(--text-muted); }
+    .rdv-prestation-chip {
+      display:inline-block; font-size:11px; padding:2px 8px;
+      background:rgba(124,58,237,.1); color:#7c3aed;
+      border-radius:20px; margin-top:3px;
+    }
+    .rdv-status-badge { font-size:11px; font-weight:600; padding:3px 9px; border-radius:20px; white-space:nowrap; }
+    .rdv-status-badge.s-confirme { background:rgba(124,58,237,.1); color:#7c3aed; }
+    .rdv-status-badge.s-termine  { background:rgba(16,185,129,.1);  color:#10b981; }
+    .rdv-status-badge.s-annule   { background:rgba(239,68,68,.1);   color:#ef4444; }
+    .rdv-status-badge.s-noshow   { background:rgba(245,158,11,.1);  color:#f59e0b; }
+
+    .rdv-actions { display:flex; gap:6px; flex-shrink:0; }
+    .rdv-btn {
+      font-size:11px; font-weight:600; padding:5px 10px;
+      border-radius:6px; border:1px solid var(--border);
+      background:var(--card); color:var(--text-muted);
+      cursor:pointer; transition:all 0.15s; white-space:nowrap;
+    }
+    .rdv-btn.btn-done   { color:#10b981; }
+    .rdv-btn.btn-done:hover:not(:disabled)   { background:rgba(16,185,129,.08); border-color:#10b981; }
+    .rdv-btn.btn-cancel { color:#ef4444; }
+    .rdv-btn.btn-cancel:hover:not(:disabled) { background:rgba(239,68,68,.08); border-color:#ef4444; }
+    .rdv-btn.btn-noshow { color:#f59e0b; }
+    .rdv-btn.btn-noshow:hover:not(:disabled) { background:rgba(245,158,11,.08); border-color:#f59e0b; }
+    .rdv-btn:disabled   { opacity:0.4; cursor:not-allowed; }
+
+    .rdv-locked-banner {
+      border:2px dashed var(--border); border-radius:12px;
+      padding:48px 20px; text-align:center; color:var(--text-muted);
+      display:flex; flex-direction:column; align-items:center; gap:12px;
+    }
+    .rdv-locked-banner svg { opacity:.35; }
+    .rdv-locked-banner strong { color:var(--text); font-size:15px; }
+    .rdv-locked-banner p { font-size:13px; margin:0; }
+
+    #rdvAgendaEmpty { padding:40px; text-align:center; color:var(--text-muted); font-size:13px; }
+    #rdvAgendaLoading { padding:40px; text-align:center; color:var(--text-muted); font-size:13px; }
+
+    @media (max-width:640px) {
+      .rdv-card { flex-wrap:wrap; }
+      .rdv-actions { width:100%; justify-content:flex-end; }
+      .rdv-stat-chip { min-width:120px; }
+    }
+
+    /* ── Config RDV ──────────────────────────────────────────────── */
+    .config-rdv-tabs { display:flex; gap:4px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:4px; margin-bottom:20px; }
+    .config-rdv-tab  { flex:1; padding:8px 12px; border-radius:7px; border:none; background:transparent; font-size:13px; font-weight:500; color:var(--text-muted); cursor:pointer; transition:all .15s; }
+    .config-rdv-tab.active { background:var(--card); color:var(--text); box-shadow:0 1px 3px rgba(0,0,0,.1); }
+
+    .config-horaires-table { width:100%; border-collapse:collapse; }
+    .config-horaires-table td { padding:6px 8px; vertical-align:middle; }
+    .config-horaires-table td:first-child { font-size:13px; font-weight:500; color:var(--text); width:90px; }
+    .config-horaires-table td:last-child  { color:var(--text-muted); font-size:12px; text-align:right; }
+    .h-toggle { display:inline-flex; align-items:center; gap:6px; }
+    .h-toggle input[type=checkbox] { width:16px; height:16px; accent-color:#7c3aed; cursor:pointer; }
+    .h-time { border:1px solid var(--border); border-radius:6px; padding:5px 8px; font-size:13px; background:var(--card); color:var(--text); width:80px; }
+    .h-time:disabled { opacity:.35; }
+    .h-sep { font-size:12px; color:var(--text-muted); margin:0 4px; }
+
+    .prest-config-table { width:100%; border-collapse:collapse; font-size:13px; }
+    .prest-config-table th { padding:8px 10px; text-align:left; font-size:11px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; border-bottom:1px solid var(--border); }
+    .prest-config-table td { padding:10px 10px; border-bottom:1px solid var(--border); vertical-align:middle; }
+    .prest-config-table tr:last-child td { border-bottom:none; }
+    .prest-config-table tr:hover td { background:rgba(124,58,237,.03); }
+    .prest-reservable-dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:5px; }
+    .prest-reservable-dot.yes { background:#10b981; }
+    .prest-reservable-dot.no  { background:#9ca3af; }
+    .prest-action-btn { font-size:11px; font-weight:600; padding:4px 9px; border-radius:6px; border:1px solid var(--border); background:var(--card); cursor:pointer; transition:all .12s; color:var(--text-muted); }
+    .prest-action-btn:hover { border-color:currentColor; }
+    .prest-action-btn.edit   { color:#7c3aed; }
+    .prest-action-btn.edit:hover   { background:rgba(124,58,237,.08); }
+    .prest-action-btn.delete { color:#ef4444; }
+    .prest-action-btn.delete:hover { background:rgba(239,68,68,.08); }
+
+    /* Prest modal */
+    #prestModal { display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,.45); align-items:center; justify-content:center; padding:16px; }
+    #prestModal.open { display:flex; }
+    #prestModalBox { background:var(--card); border-radius:14px; width:100%; max-width:480px; padding:24px; box-shadow:0 20px 60px rgba(0,0,0,.2); max-height:90vh; overflow-y:auto; }
+    #prestModalBox .modal-title { font-size:16px; font-weight:700; margin-bottom:18px; }
+    #prestModalBox .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    #prestModalMsg { font-size:13px; margin-top:12px; min-height:18px; }
+    #prestModalMsg.error { color:#ef4444; }
+    #prestModalMsg.ok    { color:#10b981; }
+
+    .config-save-bar { display:flex; align-items:center; gap:12px; margin-top:16px; }
+    #salonSaveMsg { font-size:13px; }
+    #salonSaveMsg.ok    { color:#10b981; }
+    #salonSaveMsg.error { color:#ef4444; }
   </style>
 <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css' rel='stylesheet' />
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js' defer></script>
@@ -2451,51 +2574,22 @@
         <span class="nav-label">Mes factures</span>
       </div>
 
-      <div class="nav-section-label" style="margin-top:8px">Outils</div>
-
-      <div class="nav-item" data-section="crm" onclick="navigate('crm')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-          <circle cx="9" cy="7" r="4"/>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-        </svg>
-        <span class="nav-label">CRM</span>
-      </div>
-
-      <div class="nav-item" data-section="integrations" onclick="navigate('integrations')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-        </svg>
-        <span class="nav-label">Intégrations</span>
-      </div>
-
-      <!-- AGENDA -->
-      <div class="nav-section-label" id="nav-agenda-label" style="margin-top:8px;display:none">Agenda</div>
-
-      <div class="nav-item" id="nav-google-calendar" data-section="google-calendar" onclick="navigate('google-calendar')" style="display:none">
+      <div class="nav-item" id="navAgendaRdv" data-section="agenda-rdv" onclick="navigate('agenda-rdv')" style="display:none">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-          <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
           <line x1="3" y1="10" x2="21" y2="10"/>
         </svg>
-        <span class="nav-label">Google Calendar</span>
+        <span class="nav-label">Agenda RDV</span>
       </div>
 
-      <div class="nav-item" id="nav-calendly" data-section="calendly" onclick="navigate('calendly')" style="display:none">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#006BFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-          <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
-          <line x1="3" y1="10" x2="21" y2="10"/>
-          <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>
+      <div class="nav-item" id="navConfigRdv" data-section="config-rdv" onclick="navigate('config-rdv')" style="display:none">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
         </svg>
-        <span class="nav-label">Calendly</span>
-      </div>
-
-      <!-- Message si aucune intégration agenda -->
-      <div id="nav-agenda-hint" style="display:none;padding:6px 12px 6px 14px;font-size:11px;color:var(--text-muted);line-height:1.4;cursor:pointer" onclick="navigate('integrations')">
-        💡 Connectez votre agenda dans Intégrations
+        <span class="nav-label">Config RDV</span>
       </div>
 
     </nav>
@@ -3542,673 +3636,157 @@
         </div>
       </div>
 
-      <!-- ====================================================
-           CRM
-      ==================================================== -->
-      <div class="page" id="page-crm">
+      <!-- ── Agenda RDV ─────────────────────────────────────────── -->
+      <div class="page" id="page-agenda-rdv">
         <div class="page-header">
           <div>
-            <div class="breadcrumb">Outils <span>/ CRM</span></div>
-            <h1 class="page-title">Mon CRM</h1>
-            <p class="page-subtitle">Gérez vos contacts et l'historique de vos appels.</p>
+            <div class="breadcrumb">Prise de RDV <span>/ Agenda</span></div>
+            <h1 class="page-title">Agenda RDV</h1>
+            <p class="page-subtitle" id="rdvAgendaSalonNom">Rendez-vous de votre salon</p>
           </div>
-          <div style="display:flex;gap:10px;align-items:center">
-            <div style="position:relative">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted)"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <input id="crm-search" type="text" class="input" placeholder="Rechercher un contact…"
-                style="padding:8px 12px 8px 32px;font-size:13px;width:220px"
-                oninput="filterCRM()" />
+          <button class="btn-secondary" onclick="loadAgendaRdv()" style="display:flex;align-items:center;gap:6px;font-size:13px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.07-8.59"/></svg>
+            Actualiser
+          </button>
+        </div>
+
+        <!-- Zone verrouillée (non-souscrit) -->
+        <div id="rdvLockedBanner" class="rdv-locked-banner" style="display:none">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          <strong>Disponible avec l'offre RDV</strong>
+          <p>Activez l'offre Prise de RDV pour accéder à votre agenda et gérer vos rendez-vous en ligne.</p>
+        </div>
+
+        <!-- Contenu agenda (souscrit) -->
+        <div id="rdvAgendaContent" style="display:none">
+          <!-- Stats -->
+          <div class="rdv-stats-row">
+            <div class="rdv-stat-chip chip-confirme">
+              <span class="chip-count" id="rdvStatConfirme">—</span>
+              <span class="chip-label">Confirmés</span>
             </div>
-            <select id="crm-filter-statut" class="input" style="padding:8px 12px;font-size:13px;width:140px" onchange="filterCRM()">
-              <option value="">Tous les statuts</option>
-              <option value="Prospect">Prospect</option>
-              <option value="Contacté">Contacté</option>
-              <option value="Client">Client</option>
-              <option value="Inactif">Inactif</option>
-            </select>
-            <button class="btn btn-primary btn-sm" onclick="openNewContactModal()">+ Nouveau contact</button>
+            <div class="rdv-stat-chip chip-termine">
+              <span class="chip-count" id="rdvStatTermine">—</span>
+              <span class="chip-label">Terminés</span>
+            </div>
+            <div class="rdv-stat-chip chip-annule">
+              <span class="chip-count" id="rdvStatAnnule">—</span>
+              <span class="chip-label">Annulés</span>
+            </div>
+            <div class="rdv-stat-chip chip-noshow">
+              <span class="chip-count" id="rdvStatNoshow">—</span>
+              <span class="chip-label">No-shows</span>
+            </div>
           </div>
-        </div>
 
-        <!-- KPI Cards -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px;margin-bottom:24px">
-          <div class="card" style="padding:20px;text-align:center">
-            <div style="font-size:26px;font-weight:700;color:var(--accent)" id="crm-kpi-total">—</div>
-            <div style="font-size:12px;color:var(--text-muted);margin-top:4px">Total contacts</div>
-          </div>
-          <div class="card" style="padding:20px;text-align:center">
-            <div style="font-size:26px;font-weight:700;color:#3b82f6" id="crm-kpi-appels">—</div>
-            <div style="font-size:12px;color:var(--text-muted);margin-top:4px">Appels ce mois</div>
-          </div>
-          <div class="card" style="padding:20px;text-align:center">
-            <div style="font-size:26px;font-weight:700;color:#8b5cf6" id="crm-kpi-nouveaux">—</div>
-            <div style="font-size:12px;color:var(--text-muted);margin-top:4px">Nouveaux ce mois</div>
-          </div>
-          <div class="card" style="padding:20px;text-align:center">
-            <div style="font-size:26px;font-weight:700;color:#22c55e" id="crm-kpi-clients">—</div>
-            <div style="font-size:12px;color:var(--text-muted);margin-top:4px">Clients actifs</div>
-          </div>
-        </div>
-
-        <!-- Tableau contacts -->
-        <div class="card" style="overflow:hidden">
-          <div id="crm-loading" style="padding:40px;text-align:center;color:var(--text-muted);font-size:13px">Chargement…</div>
-          <div id="crm-empty" style="display:none;padding:40px;text-align:center;color:var(--text-muted);font-size:13px">
-            Aucun contact pour le moment.<br>
-            <button class="btn btn-primary btn-sm" style="margin-top:12px" onclick="openNewContactModal()">Créer mon premier contact</button>
-          </div>
-          <table id="crm-table" style="display:none;width:100%;border-collapse:collapse">
-            <thead>
-              <tr style="border-bottom:1px solid var(--border);font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em">
-                <th style="padding:10px 16px;text-align:left;font-weight:600">Nom</th>
-                <th style="padding:10px 16px;text-align:left;font-weight:600">Numéro</th>
-                <th style="padding:10px 16px;text-align:left;font-weight:600">Statut</th>
-                <th style="padding:10px 16px;text-align:center;font-weight:600">Appels</th>
-                <th style="padding:10px 16px;text-align:left;font-weight:600">Dernier appel</th>
-                <th style="padding:10px 16px;text-align:left;font-weight:600">Source</th>
-                <th style="padding:10px 16px;text-align:center;font-weight:600">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="crm-tbody"></tbody>
-          </table>
+          <!-- Liste RDV -->
+          <div id="rdvAgendaLoading">Chargement des rendez-vous…</div>
+          <div id="rdvAgendaEmpty" style="display:none">Aucun rendez-vous sur cette période.</div>
+          <div id="rdvAgendaList" style="display:none"></div>
         </div>
       </div>
 
-      <!-- ====================================================
-           INTÉGRATIONS
-      ==================================================== -->
-      <div class="page" id="page-integrations">
+      <!-- ── Config RDV ──────────────────────────────────────────── -->
+      <div class="page" id="page-config-rdv">
         <div class="page-header">
           <div>
-            <div class="breadcrumb">Outils <span>/ Intégrations</span></div>
-            <h1 class="page-title">Mes intégrations</h1>
-            <p class="page-subtitle">Connectez vos outils à votre assistant AkilAI.</p>
+            <div class="breadcrumb">Prise de RDV <span>/ Configuration</span></div>
+            <h1 class="page-title">Configuration RDV</h1>
+            <p class="page-subtitle">Personnalisez votre fiche de réservation en ligne.</p>
           </div>
         </div>
 
-        <!-- ── Agenda & RDV ── -->
-        <div>
-          <div class="section-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px;vertical-align:-2px"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Agenda &amp; RDV</div>
-          <div class="integration-grid">
-
-          <!-- Google Calendar -->
-          <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px">
-            <div style="display:flex;align-items:center;gap:12px">
-              <img src="/logos/Google-calendar.png" width="36" height="36" style="object-fit:contain;border-radius:6px;flex-shrink:0" alt="Google Calendar"/>
-              <div>
-                <div style="font-weight:600;font-size:15px">Google Calendar</div>
-                <div id="gcal-badge" style="font-size:11px;margin-top:2px"></div>
-              </div>
-            </div>
-            <p style="font-size:13px;color:var(--text-muted);margin:0">
-              Créez des RDV automatiquement dans votre agenda après chaque appel.
-            </p>
-            <div id="gcal-actions"></div>
-          </div>
-
-          <!-- Calendly -->
-          <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px">
-            <div style="display:flex;align-items:center;gap:12px">
-              <img src="/logos/Calendly.png" width="36" height="36" style="object-fit:contain;border-radius:6px;flex-shrink:0" alt="Calendly"/>
-              <div>
-                <div style="font-weight:600;font-size:15px">Calendly</div>
-                <div id="calendly-badge" style="font-size:11px;margin-top:2px"></div>
-              </div>
-            </div>
-            <p style="font-size:13px;color:var(--text-muted);margin:0">
-              Partagez votre lien de prise de rendez-vous avec vos prospects après chaque appel.
-            </p>
-            <div id="calendly-form" style="display:flex;flex-direction:column;gap:8px">
-              <input id="calendly-input" type="url" class="input" placeholder="https://calendly.com/votre-lien"
-                style="font-size:13px;padding:8px 12px" />
-              <button class="btn btn-primary btn-sm" onclick="saveCalendlyLink()">Sauvegarder</button>
-            </div>
-            <div id="calendly-connected-view" style="display:none;flex-direction:column;gap:8px">
-              <div id="calendly-link-display" style="font-size:12px;color:var(--text-muted);word-break:break-all"></div>
-              <button class="btn btn-secondary btn-sm" onclick="disconnectCalendly()" style="color:#ef4444;border-color:rgba(239,68,68,0.3)">Déconnecter</button>
-            </div>
-          </div>
-
-          </div><!-- end Agenda grid -->
-        </div><!-- end Agenda section -->
-
-        <!-- ── CRM & Données ── -->
-        <div>
-          <div class="section-label">📊 CRM &amp; Données</div>
-          <div class="integration-grid">
-
-          <!-- CRM -->
-          <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px;grid-column:span 2">
-            <div style="display:flex;align-items:center;gap:12px">
-              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--accent);flex-shrink:0">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-              </svg>
-              <div>
-                <div style="font-weight:600;font-size:15px">CRM — Gestion des contacts</div>
-                <div id="crm-type-badge" style="font-size:11px;margin-top:2px"></div>
-              </div>
-            </div>
-            <p style="font-size:13px;color:var(--text-muted);margin:0">Choisissez où stocker vos contacts après chaque appel.</p>
-
-            <!-- Vue : CRM actif (affiché quand CRM déjà configuré) -->
-            <div id="crm-active-view" style="display:none;flex-direction:column;gap:12px">
-              <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.2);border-radius:10px">
-                <div style="display:flex;align-items:center;gap:10px">
-                  <span style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block;flex-shrink:0"></span>
-                  <span style="font-size:13px;font-weight:600" id="crm-active-label">CRM AkilAI actif</span>
-                </div>
-                <button class="btn btn-secondary btn-sm" onclick="showCRMEditMode()" style="font-size:12px">Changer de CRM</button>
-              </div>
-            </div>
-
-            <!-- Vue : Formulaire de choix (affiché au premier choix ou après "Changer") -->
-            <div id="crm-edit-view" style="display:flex;flex-direction:column;gap:12px">
-
-              <!-- Avertissement changement -->
-              <div id="crm-change-warning" style="display:none;padding:12px 14px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:10px;font-size:12px;color:#f59e0b;line-height:1.5">
-                ⚠️ <strong>Attention :</strong> vos contacts existants dans <span id="crm-prev-name">AkilAI CRM</span> resteront disponibles.
-                Les nouveaux appels seront synchronisés vers <span id="crm-next-name">le nouveau CRM</span> uniquement.
-              </div>
-
-              <!-- AkilAI -->
-              <label style="display:flex;align-items:flex-start;gap:12px;padding:14px;border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:border-color .15s" id="crm-opt-akilai"
-                onclick="selectCRMOption('AkilAI')">
-                <input type="radio" name="crm-type" value="AkilAI" style="margin-top:3px;accent-color:var(--accent)">
-                <div>
-                  <div style="font-weight:600;font-size:13px">CRM AkilAI <span style="background:rgba(99,102,241,0.15);color:var(--accent);font-size:10px;padding:2px 6px;border-radius:20px;font-weight:500;margin-left:4px">Recommandé — Inclus</span></div>
-                  <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Gérez vos contacts directement dans votre dashboard AkilAI.</div>
-                </div>
-              </label>
-
-              <!-- Notion -->
-              <label style="display:flex;align-items:flex-start;gap:12px;padding:14px;border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:border-color .15s" id="crm-opt-notion"
-                onclick="selectCRMOption('Notion')">
-                <input type="radio" name="crm-type" value="Notion" style="margin-top:3px;accent-color:var(--accent)">
-                <div style="flex:1">
-                  <div style="font-weight:600;font-size:13px">Notion</div>
-                  <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Synchronisez avec votre workspace Notion.</div>
-                  <div id="crm-notion-fields" style="display:none;margin-top:10px;flex-direction:column;gap:8px">
-                    <input id="crm-notion-key" type="text" class="input" placeholder="Clé d'intégration (secret_…)" style="font-size:13px;padding:8px 12px" onclick="event.stopPropagation()" />
-                    <div style="position:relative">
-                      <input id="crm-notion-db" type="text" class="input" placeholder="Database ID Notion" style="font-size:13px;padding:8px 12px;padding-right:28px" onclick="event.stopPropagation()" />
-                      <span title="Trouvez l'ID dans l'URL Notion : notion.so/xxx/{DATABASE_ID}" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);cursor:help;color:var(--text-muted);font-size:13px">ⓘ</span>
-                    </div>
-                    <a href="#" style="font-size:12px;color:var(--accent)">Dupliquer le template Notion →</a>
-                  </div>
-                </div>
-              </label>
-
-              <!-- Airtable -->
-              <label style="display:flex;align-items:flex-start;gap:12px;padding:14px;border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:border-color .15s" id="crm-opt-airtable"
-                onclick="selectCRMOption('Airtable')">
-                <input type="radio" name="crm-type" value="Airtable" style="margin-top:3px;accent-color:var(--accent)">
-                <div style="flex:1">
-                  <div style="font-weight:600;font-size:13px">Airtable</div>
-                  <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Synchronisez avec votre base Airtable externe.</div>
-                  <div id="crm-airtable-fields" style="display:none;margin-top:10px;flex-direction:column;gap:8px">
-                    <input id="crm-at-key"   type="text" class="input" placeholder="Clé API Airtable (patXXX…)" style="font-size:13px;padding:8px 12px" onclick="event.stopPropagation()" />
-                    <input id="crm-at-base"  type="text" class="input" placeholder="Base ID (appXXXXX)" style="font-size:13px;padding:8px 12px" onclick="event.stopPropagation()" />
-                    <input id="crm-at-table" type="text" class="input" placeholder="Table ID (tblXXXXX)" style="font-size:13px;padding:8px 12px" onclick="event.stopPropagation()" />
-                  </div>
-                </div>
-              </label>
-
-              <!-- Boutons action -->
-              <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-                <button id="crm-save-btn" class="btn btn-primary btn-sm" onclick="saveCRMChoice()">Sauvegarder mon choix CRM</button>
-                <button id="crm-cancel-btn" class="btn btn-secondary btn-sm" onclick="cancelCRMEdit()" style="display:none">Annuler</button>
-              </div>
-
-            </div>
-          </div>
-
-          <!-- HubSpot -->
-          <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px">
-            <div style="display:flex;align-items:center;gap:12px">
-              <img src="/logos/Hubspot.png" width="36" height="36" style="object-fit:contain;border-radius:6px;flex-shrink:0" alt="HubSpot"/>
-              <div>
-                <div style="font-weight:600;font-size:15px">HubSpot</div>
-                <div id="hubspot-badge" style="font-size:11px;margin-top:2px"></div>
-              </div>
-            </div>
-            <p style="font-size:13px;color:var(--text-muted);margin:0">
-              Créez et mettez à jour vos contacts HubSpot automatiquement après chaque appel.
-            </p>
-            <div id="hubspot-disconnected-view" style="display:flex;flex-direction:column;gap:8px">
-              <input id="hubspot-api-input" type="text" class="input" placeholder="Clé API HubSpot (pat-…)" style="font-size:13px;padding:8px 12px" />
-              <button class="btn btn-primary btn-sm" style="width:100%" onclick="saveHubspot()">Connecter HubSpot</button>
-            </div>
-            <div id="hubspot-connected-view" style="display:none;flex-direction:column;gap:8px">
-              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#22c55e"><span style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block"></span>HubSpot connecté</div>
-              <button class="btn btn-secondary btn-sm" onclick="disconnectHubspot()" style="color:#ef4444;border-color:rgba(239,68,68,0.3)">Déconnecter</button>
-            </div>
-          </div>
-
-          </div><!-- end CRM grid -->
-        </div><!-- end CRM section -->
-
-        <!-- ── Tableurs ── -->
-        <div>
-          <div class="section-label">📋 Tableurs</div>
-          <div class="integration-grid">
-
-          <!-- Google Sheets -->
-          <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px">
-            <div style="display:flex;align-items:center;gap:12px">
-              <img src="/logos/Google-sheet.png" width="36" height="36" style="object-fit:contain;border-radius:6px;flex-shrink:0" alt="Google Sheets"/>
-              <div>
-                <div style="font-weight:600;font-size:15px">Google Sheets</div>
-                <div id="gsheets-badge" style="font-size:11px;margin-top:2px"></div>
-              </div>
-            </div>
-            <p style="font-size:13px;color:var(--text-muted);margin:0">
-              Enregistrez chaque appel dans une feuille Google Sheets automatiquement.
-            </p>
-            <!-- Déconnecté -->
-            <div id="gsheets-disconnected-view">
-              <button class="btn btn-secondary btn-sm" style="width:100%" onclick="connectGoogleSheets()">
-                Connecter Google (Sheets + Calendar)
-              </button>
-            </div>
-            <!-- Connecté -->
-            <div id="gsheets-connected-view" style="display:none;flex-direction:column;gap:8px">
-              <input id="gsheets-id-input" type="text" class="input" placeholder="ID de la Google Sheets" style="font-size:13px;padding:8px 12px" />
-              <div style="font-size:11px;color:var(--text-muted)">Copiez l'ID depuis l'URL : docs.google.com/spreadsheets/d/<strong>ID</strong>/edit</div>
-              <button class="btn btn-primary btn-sm" onclick="saveGoogleSheetsId()">Sauvegarder</button>
-            </div>
-          </div>
-
-          <!-- Excel / Microsoft -->
-          <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px">
-            <div style="display:flex;align-items:center;gap:12px">
-              <img src="/logos/Excel.png" width="36" height="36" style="object-fit:contain;border-radius:6px;flex-shrink:0" alt="Excel"/>
-              <div>
-                <div style="font-weight:600;font-size:15px">Excel / OneDrive</div>
-                <div id="excel-badge" style="font-size:11px;margin-top:2px"></div>
-              </div>
-            </div>
-            <p style="font-size:13px;color:var(--text-muted);margin:0">
-              Enregistrez chaque appel dans un fichier Excel sur OneDrive.
-            </p>
-            <!-- Déconnecté -->
-            <div id="excel-disconnected-view">
-              <button class="btn btn-secondary btn-sm" style="width:100%" onclick="connectMicrosoft()">
-                Connecter Microsoft
-              </button>
-            </div>
-            <!-- Connecté -->
-            <div id="excel-connected-view" style="display:none;flex-direction:column;gap:8px">
-              <select id="excel-file-select" class="input" style="font-size:13px;padding:8px 12px">
-                <option value="">Chargement des fichiers…</option>
-              </select>
-              <button class="btn btn-primary btn-sm" onclick="saveExcelFile()">Sauvegarder</button>
-              <button class="btn btn-secondary btn-sm" onclick="disconnectMicrosoft()" style="color:#ef4444;border-color:rgba(239,68,68,0.3)">Déconnecter Microsoft</button>
-            </div>
-          </div>
-
-          <!-- Shopify -->
-          <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px">
-            <div style="display:flex;align-items:center;gap:12px">
-              <img src="/logos/Shopify.png" width="36" height="36" style="object-fit:contain;border-radius:6px;flex-shrink:0" alt="Shopify"/>
-              <div>
-                <div style="font-weight:600;font-size:15px">Shopify</div>
-                <div id="shopify-badge" style="font-size:11px;margin-top:2px"></div>
-              </div>
-            </div>
-            <p style="font-size:13px;color:var(--text-muted);margin:0">
-              Ajoutez une note client dans Shopify automatiquement après chaque appel.
-            </p>
-            <div id="shopify-disconnected-view" style="display:flex;flex-direction:column;gap:8px">
-              <input id="shopify-api-input" type="text" class="input" placeholder="Clé API Shopify (shpat_…)" style="font-size:13px;padding:8px 12px" />
-              <input id="shopify-store-input" type="text" class="input" placeholder="URL boutique (votre-shop.myshopify.com)" style="font-size:13px;padding:8px 12px" />
-              <button class="btn btn-primary btn-sm" onclick="saveShopify()">Connecter Shopify</button>
-            </div>
-            <div id="shopify-connected-view" style="display:none;flex-direction:column;gap:8px">
-              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#22c55e"><span style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block"></span>Shopify connecté</div>
-              <button class="btn btn-secondary btn-sm" onclick="disconnectShopify()" style="color:#ef4444;border-color:rgba(239,68,68,0.3)">Déconnecter</button>
-            </div>
-          </div>
-
-          </div><!-- end Tableurs grid -->
-        </div><!-- end Tableurs section -->
-
-        <!-- ── Communication ── -->
-        <div>
-          <div class="section-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px;vertical-align:-2px"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Communication</div>
-          <div class="integration-grid">
-
-          <!-- Outlook -->
-          <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px">
-            <div style="display:flex;align-items:center;gap:12px">
-              <img src="/logos/Outlook.png" width="36" height="36" style="object-fit:contain;border-radius:6px;flex-shrink:0" alt="Outlook"/>
-              <div>
-                <div style="font-weight:600;font-size:15px">Outlook</div>
-                <div id="outlook-badge" style="font-size:11px;margin-top:2px"></div>
-              </div>
-            </div>
-            <p style="font-size:13px;color:var(--text-muted);margin:0">
-              Envoyez des emails de suivi via Outlook après chaque appel.
-            </p>
-            <div id="outlook-disconnected-view">
-              <button class="btn btn-secondary btn-sm" style="width:100%" onclick="connectOutlook()">Connecter Outlook</button>
-            </div>
-            <div id="outlook-connected-view" style="display:none;flex-direction:column;gap:8px">
-              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#22c55e"><span style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block"></span>Outlook connecté</div>
-              <button class="btn btn-secondary btn-sm" onclick="disconnectOutlook()" style="color:#ef4444;border-color:rgba(239,68,68,0.3)">Déconnecter</button>
-            </div>
-          </div>
-
-          <!-- Slack -->
-          <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px">
-            <div style="display:flex;align-items:center;gap:12px">
-              <img src="/logos/Slack.png" width="36" height="36" style="object-fit:contain;border-radius:6px;flex-shrink:0" alt="Slack"/>
-              <div>
-                <div style="font-weight:600;font-size:15px">Slack</div>
-                <div id="slack-badge" style="font-size:11px;margin-top:2px"></div>
-              </div>
-            </div>
-            <p style="font-size:13px;color:var(--text-muted);margin:0">
-              Recevez une notification Slack après chaque appel de votre assistant.
-            </p>
-            <div id="slack-disconnected-view" style="display:flex;flex-direction:column;gap:8px">
-              <input id="slack-webhook-input" type="url" class="input" placeholder="https://hooks.slack.com/services/…" style="font-size:13px;padding:8px 12px" />
-              <button class="btn btn-primary btn-sm" onclick="saveSlack()">Connecter Slack</button>
-            </div>
-            <div id="slack-connected-view" style="display:none;flex-direction:column;gap:8px">
-              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#22c55e"><span style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block"></span>Slack connecté</div>
-              <button class="btn btn-secondary btn-sm" onclick="disconnectSlack()" style="color:#ef4444;border-color:rgba(239,68,68,0.3)">Déconnecter</button>
-            </div>
-          </div>
-
-          <!-- Teams -->
-          <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px">
-            <div style="display:flex;align-items:center;gap:12px">
-              <img src="/logos/Microsoft-teams.png" width="36" height="36" style="object-fit:contain;border-radius:6px;flex-shrink:0" alt="Microsoft Teams"/>
-              <div>
-                <div style="font-weight:600;font-size:15px">Microsoft Teams</div>
-                <div id="teams-badge" style="font-size:11px;margin-top:2px"></div>
-              </div>
-            </div>
-            <p style="font-size:13px;color:var(--text-muted);margin:0">
-              Recevez une notification Teams après chaque appel de votre assistant.
-            </p>
-            <div id="teams-disconnected-view" style="display:flex;flex-direction:column;gap:8px">
-              <input id="teams-webhook-input" type="url" class="input" placeholder="URL du webhook Teams" style="font-size:13px;padding:8px 12px" />
-              <button class="btn btn-primary btn-sm" onclick="saveTeams()">Connecter Teams</button>
-            </div>
-            <div id="teams-connected-view" style="display:none;flex-direction:column;gap:8px">
-              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#22c55e"><span style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block"></span>Teams connecté</div>
-              <button class="btn btn-secondary btn-sm" onclick="disconnectTeams()" style="color:#ef4444;border-color:rgba(239,68,68,0.3)">Déconnecter</button>
-            </div>
-          </div>
-
-          <!-- Gmail -->
-          <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px">
-            <div style="display:flex;align-items:center;gap:12px">
-              <img src="/logos/Gmail.png" width="36" height="36" style="object-fit:contain;border-radius:6px;flex-shrink:0" alt="Gmail"/>
-              <div>
-                <div style="font-weight:600;font-size:15px">Gmail</div>
-                <span style="font-size:11px;background:rgba(100,100,100,0.15);color:var(--text-muted);padding:2px 8px;border-radius:20px">Bientôt disponible</span>
-              </div>
-            </div>
-            <p style="font-size:13px;color:var(--text-muted);margin:0">
-              Envoyez des confirmations par email après chaque appel.
-            </p>
-            <button class="btn btn-secondary btn-sm" disabled style="opacity:0.5;cursor:not-allowed">Connecter</button>
-          </div>
-
-          <!-- WhatsApp -->
-          <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px">
-            <div style="display:flex;align-items:center;gap:12px">
-              <img src="/logos/WhatsApp.png" width="36" height="36" style="object-fit:contain;border-radius:6px;flex-shrink:0" alt="WhatsApp"/>
-              <div>
-                <div style="font-weight:600;font-size:15px">WhatsApp</div>
-                <div id="whatsapp-badge" style="font-size:11px;margin-top:2px"></div>
-              </div>
-            </div>
-            <p style="font-size:13px;color:var(--text-muted);margin:0">
-              Votre assistant WhatsApp est configuré et géré par AkilAI.
-            </p>
-          </div>
-
-          </div><!-- end Communication grid -->
-        </div><!-- end Communication section -->
-
-        <!-- ── Email Marketing ── -->
-        <div>
-          <div class="section-label">✉️ Email Marketing</div>
-          <div class="integration-grid">
-
-          <!-- Brevo -->
-          <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px">
-            <div style="display:flex;align-items:center;gap:12px">
-              <svg width="36" height="36" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="48" height="48" rx="8" fill="#0B996E"/>
-                <path d="M12 16h24v4l-12 8-12-8v-4z" fill="#fff" opacity=".9"/>
-                <path d="M12 20l12 8 12-8v12H12V20z" fill="#fff" opacity=".7"/>
-              </svg>
-              <div>
-                <div style="font-weight:600;font-size:15px">Brevo</div>
-                <div id="brevo-badge" style="font-size:11px;margin-top:2px"></div>
-              </div>
-            </div>
-            <p style="font-size:13px;color:var(--text-muted);margin:0">
-              Ajoutez automatiquement vos prospects à votre liste Brevo après chaque appel.
-            </p>
-            <div id="brevo-disconnected-view" style="display:flex;flex-direction:column;gap:8px">
-              <input id="brevo-api-input" type="text" class="input" placeholder="Clé API Brevo (xkeysib-…)" style="font-size:13px;padding:8px 12px" />
-              <button class="btn btn-primary btn-sm" onclick="saveBrevo()">Connecter Brevo</button>
-            </div>
-            <div id="brevo-connected-view" style="display:none;flex-direction:column;gap:8px">
-              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#22c55e"><span style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block"></span>Brevo connecté</div>
-              <button class="btn btn-secondary btn-sm" onclick="disconnectBrevo()" style="color:#ef4444;border-color:rgba(239,68,68,0.3)">Déconnecter</button>
-            </div>
-          </div>
-
-          <!-- Resend -->
-          <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:16px">
-            <div style="display:flex;align-items:center;gap:12px">
-              <svg width="36" height="36" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="48" height="48" rx="8" fill="#000"/>
-                <path d="M14 16h20l-10 9-10-9z" fill="#fff" opacity=".9"/>
-                <path d="M14 16v16h20V16" stroke="#fff" stroke-width="2" fill="none"/>
-                <path d="M14 32l8-7m12 7l-8-7" stroke="#fff" stroke-width="1.5"/>
-              </svg>
-              <div>
-                <div style="font-weight:600;font-size:15px">Resend</div>
-                <div id="resend-badge" style="font-size:11px;margin-top:2px"></div>
-              </div>
-            </div>
-            <p style="font-size:13px;color:var(--text-muted);margin:0">
-              Envoyez des emails transactionnels via Resend après chaque appel.
-            </p>
-            <div id="resend-disconnected-view" style="display:flex;flex-direction:column;gap:8px">
-              <input id="resend-api-input" type="text" class="input" placeholder="Clé API Resend (re_…)" style="font-size:13px;padding:8px 12px" />
-              <button class="btn btn-primary btn-sm" onclick="saveResend()">Connecter Resend</button>
-            </div>
-            <div id="resend-connected-view" style="display:none;flex-direction:column;gap:8px">
-              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#22c55e"><span style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block"></span>Resend connecté</div>
-              <button class="btn btn-secondary btn-sm" onclick="disconnectResend()" style="color:#ef4444;border-color:rgba(239,68,68,0.3)">Déconnecter</button>
-            </div>
-          </div>
-
-          </div><!-- end Email Marketing grid -->
-        </div><!-- end Email Marketing section -->
-
-      </div>
-
-      <!-- ====================================================
-           PAGE GOOGLE CALENDAR
-      ==================================================== -->
-      <div class="page" id="page-google-calendar">
-        <div class="page-header">
-          <div>
-            <div class="breadcrumb">Agenda <span>/ Google Calendar</span></div>
-            <h1 class="page-title">Mon agenda</h1>
-          </div>
-          <div style="display:flex;gap:10px;align-items:center">
-            <!-- Toggle Calendrier / Liste -->
-            <div style="display:flex;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;padding:3px;gap:3px">
-              <button id="btn-view-calendar" onclick="switchAgendaView('calendar')" style="background:#70B2DE;color:#000;border:none;border-radius:7px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s;font-family:'Space Grotesk',sans-serif"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:4px;vertical-align:-1px"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Calendrier</button>
-              <button id="btn-view-list"     onclick="switchAgendaView('list')"     style="background:none;color:var(--text-muted);border:none;border-radius:7px;padding:6px 14px;font-size:12px;font-weight:500;cursor:pointer;transition:all 0.15s;font-family:'Space Grotesk',sans-serif">📋 Liste</button>
-            </div>
-            <div id="gcal-loading-spinner" style="display:none;width:18px;height:18px">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;animation:spin 0.8s linear infinite">
-                <circle cx="12" cy="12" r="10" stroke="#70B2DE" stroke-width="3" stroke-dasharray="31.4" stroke-dashoffset="10" stroke-linecap="round"/>
-              </svg>
-            </div>
-            <button class="btn btn-primary btn-sm" onclick="openNewEventModal()">+ Nouveau RDV</button>
-          </div>
+        <!-- Zone verrouillée -->
+        <div id="configRdvLocked" class="rdv-locked-banner" style="display:none">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <strong>Disponible avec l'offre RDV</strong>
+          <p>Activez l'offre Prise de RDV pour configurer votre fiche salon.</p>
         </div>
-        <div class="card" style="padding:20px">
-          <style>
-            @keyframes spin { to { transform: rotate(360deg); } }
-            #fullcalendar-container { background: transparent; }
-            .fc .fc-toolbar { background: transparent; padding: 8px 0; margin-bottom: 20px; }
-            .fc .fc-toolbar-title { font-size: 20px; font-weight: 700; color: #ffffff; font-family: 'Space Grotesk',sans-serif; letter-spacing: -0.3px; }
-            .fc .fc-button { background: #1e1e1e !important; border: 1px solid #2a2a2a !important; color: #ffffff !important; border-radius: 10px !important; font-family: 'Space Grotesk',sans-serif !important; font-size: 13px !important; font-weight: 500 !important; padding: 8px 16px !important; transition: all 0.2s ease !important; box-shadow: none !important; }
-            .fc .fc-button:hover { background: #252525 !important; border-color: #70B2DE !important; color: #70B2DE !important; }
-            .fc .fc-button-active, .fc .fc-button-primary:not(:disabled).fc-button-active { background: #70B2DE !important; border-color: #70B2DE !important; color: #000000 !important; font-weight: 600 !important; }
-            .fc .fc-col-header { background: #0f0f0f !important; }
-            .fc .fc-col-header-cell { border-color: #1e1e1e !important; padding: 12px 0 !important; }
-            .fc .fc-col-header-cell-cushion { color: #888888 !important; font-size: 11px !important; font-weight: 600 !important; text-transform: uppercase !important; letter-spacing: 1px !important; text-decoration: none !important; }
-            .fc .fc-scrollgrid { border: 1px solid #1e1e1e !important; border-radius: 12px !important; overflow: hidden !important; }
-            .fc .fc-scrollgrid td, .fc .fc-scrollgrid th { border-color: #1a1a1a !important; }
-            .fc .fc-daygrid-day, .fc .fc-timegrid-col { background: #111111 !important; }
-            .fc .fc-timegrid-col.fc-day-today, .fc .fc-daygrid-day.fc-day-today { background: rgba(112,178,222,0.05) !important; }
-            .fc .fc-daygrid-day-number { color: #666666 !important; font-size: 12px !important; font-weight: 500 !important; padding: 8px !important; text-decoration: none !important; }
-            .fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number { color: #70B2DE !important; font-weight: 700 !important; }
-            .fc .fc-col-header-cell.fc-day-today .fc-col-header-cell-cushion { color: #70B2DE !important; }
-            .fc .fc-timegrid-slot-label-cushion { color: #444444 !important; font-size: 11px !important; font-weight: 500 !important; }
-            .fc .fc-timegrid-slot { border-color: #161616 !important; height: 44px !important; }
-            .fc .fc-timegrid-slot-minor { border-color: #131313 !important; border-style: dashed !important; }
-            .fc .fc-timegrid-now-indicator-line { border-color: #70B2DE !important; border-width: 2px !important; }
-            .fc .fc-timegrid-now-indicator-arrow { border-top-color: #70B2DE !important; border-bottom-color: #70B2DE !important; }
-            .fc .fc-event { border: none !important; border-radius: 8px !important; padding: 4px 8px !important; cursor: pointer !important; transition: transform 0.15s ease, opacity 0.15s ease !important; background: linear-gradient(135deg,#70B2DE,#5a9bc9) !important; }
-            .fc .fc-event:hover { transform: scale(1.02) !important; opacity: 0.9 !important; }
-            .fc .fc-event-title { font-size: 12px !important; font-weight: 600 !important; font-family: 'Space Grotesk',sans-serif !important; color: #000 !important; }
-            .fc .fc-event-time { font-size: 11px !important; opacity: 0.8 !important; color: #000 !important; }
-            .fc .fc-timegrid-divider { background: #1a1a1a !important; }
-            .fc .fc-scroller::-webkit-scrollbar { width: 4px; height: 4px; }
-            .fc .fc-scroller::-webkit-scrollbar-track { background: transparent; }
-            .fc .fc-scroller::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 4px; }
-            /* Vue liste */
-            .agenda-date-group { margin-bottom: 24px; }
-            .agenda-date-header { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #1e1e1e; margin-bottom:12px; }
-            .agenda-date-label { font-size:14px; font-weight:700; color:#70B2DE; text-transform:capitalize; }
-            .agenda-date-count { font-size:11px; color:#666; background:#1a1a1a; padding:2px 8px; border-radius:10px; }
-            .agenda-event-item { display:flex; align-items:center; gap:16px; padding:14px 16px; background:#111111; border:1px solid #1a1a1a; border-radius:12px; margin-bottom:8px; cursor:pointer; transition:all 0.2s ease; }
-            .agenda-event-item:hover { border-color:#70B2DE; background:#141414; transform:translateX(4px); }
-            .agenda-event-time { font-size:12px; color:#888; font-weight:500; min-width:110px; font-variant-numeric:tabular-nums; }
-            .agenda-event-title { font-size:14px; font-weight:600; color:#ffffff; }
-            .agenda-event-location { font-size:12px; color:#666; margin-top:2px; }
-            .agenda-event-dot { width:8px; height:8px; border-radius:50%; margin-left:auto; flex-shrink:0; }
-            .agenda-empty { text-align:center; padding:60px 20px; color:#444; }
-          </style>
-          <!-- Skeleton loader -->
-          <div id="gcal-skeleton" style="position:relative;border-radius:8px;overflow:hidden">
-            <style>
-              @keyframes gcal-shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-              .gcal-skel { background:linear-gradient(90deg,rgba(255,255,255,0.03) 25%,rgba(255,255,255,0.07) 50%,rgba(255,255,255,0.03) 75%); background-size:200% 100%; animation:gcal-shimmer 1.5s infinite; border-radius:6px; }
-            </style>
-            <!-- toolbar skeleton -->
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:12px">
-              <div class="gcal-skel" style="height:32px;width:160px"></div>
-              <div class="gcal-skel" style="height:32px;width:220px"></div>
-              <div class="gcal-skel" style="height:32px;width:180px"></div>
-            </div>
-            <!-- day headers -->
-            <div style="display:grid;grid-template-columns:52px repeat(7,1fr);gap:4px;margin-bottom:4px">
-              <div></div>
-              <div class="gcal-skel" style="height:40px"></div>
-              <div class="gcal-skel" style="height:40px"></div>
-              <div class="gcal-skel" style="height:40px"></div>
-              <div class="gcal-skel" style="height:40px"></div>
-              <div class="gcal-skel" style="height:40px"></div>
-              <div class="gcal-skel" style="height:40px"></div>
-              <div class="gcal-skel" style="height:40px"></div>
-            </div>
-            <!-- time grid rows -->
-            <div style="display:grid;grid-template-columns:52px repeat(7,1fr);gap:4px;margin-bottom:4px">
-              <div class="gcal-skel" style="height:36px;opacity:.4"></div>
-              <div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div>
-            </div>
-            <div style="display:grid;grid-template-columns:52px repeat(7,1fr);gap:4px;margin-bottom:4px">
-              <div class="gcal-skel" style="height:36px;opacity:.4"></div>
-              <div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div>
-            </div>
-            <div style="display:grid;grid-template-columns:52px repeat(7,1fr);gap:4px;margin-bottom:4px">
-              <div class="gcal-skel" style="height:36px;opacity:.4"></div>
-              <div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div>
-            </div>
-            <div style="display:grid;grid-template-columns:52px repeat(7,1fr);gap:4px;margin-bottom:4px">
-              <div class="gcal-skel" style="height:36px;opacity:.4"></div>
-              <div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div>
-            </div>
-            <div style="display:grid;grid-template-columns:52px repeat(7,1fr);gap:4px;margin-bottom:4px">
-              <div class="gcal-skel" style="height:36px;opacity:.4"></div>
-              <div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div>
-            </div>
-            <div style="display:grid;grid-template-columns:52px repeat(7,1fr);gap:4px;margin-bottom:4px">
-              <div class="gcal-skel" style="height:36px;opacity:.4"></div>
-              <div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div><div class="gcal-skel" style="height:36px"></div>
+
+        <!-- Contenu config -->
+        <div id="configRdvContent" style="display:none">
+          <!-- Tabs -->
+          <div class="config-rdv-tabs">
+            <button class="config-rdv-tab active" id="tabSalon"    onclick="switchConfigTab('salon')">Infos salon</button>
+            <button class="config-rdv-tab"         id="tabPrest"   onclick="switchConfigTab('prest')">Prestations</button>
+          </div>
+
+          <!-- ── Tab : Infos salon ── -->
+          <div id="configTabSalon">
+            <div class="card" id="salonConfigForm">
+              <div style="padding:40px;text-align:center;color:var(--text-muted);font-size:13px" id="salonConfigLoading">Chargement…</div>
             </div>
           </div>
-          <!-- Calendrier — invisible jusqu'à ce qu'il soit prêt -->
-          <div id="fullcalendar-container" style="visibility:hidden;opacity:0;transition:opacity 0.3s ease"></div>
-          <!-- Vue liste -->
-          <div id="agenda-list-view" style="display:none"></div>
+
+          <!-- ── Tab : Prestations ── -->
+          <div id="configTabPrest" style="display:none">
+            <div class="card" style="overflow:hidden">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border)">
+                <span style="font-size:13px;font-weight:600;color:var(--text)">Mes prestations</span>
+                <button class="btn-primary" style="font-size:12px;padding:7px 14px" onclick="openPrestModal()">+ Ajouter</button>
+              </div>
+              <div id="prestConfigLoading" style="padding:32px;text-align:center;color:var(--text-muted);font-size:13px">Chargement…</div>
+              <div id="prestConfigEmpty" style="display:none;padding:32px;text-align:center;color:var(--text-muted);font-size:13px">Aucune prestation. Ajoutez-en une pour commencer.</div>
+              <table class="prest-config-table" id="prestConfigTable" style="display:none">
+                <thead>
+                  <tr>
+                    <th>Prestation</th>
+                    <th>Catégorie</th>
+                    <th>Durée</th>
+                    <th>Prix</th>
+                    <th>Réservable</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="prestConfigTbody"></tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- ====================================================
-           PAGE CALENDLY
-      ==================================================== -->
-      <div class="page" id="page-calendly">
-        <div class="page-header">
-          <div>
-            <div class="breadcrumb">Agenda <span>/ Calendly</span></div>
-            <h1 class="page-title">Calendly</h1>
+      <!-- ── Modale prestation ──────────────────────────────────── -->
+      <div id="prestModal">
+        <div id="prestModalBox">
+          <div class="modal-title" id="prestModalTitle">Ajouter une prestation</div>
+          <input type="hidden" id="pmId" value="">
+          <div class="form-group">
+            <label>Nom *</label>
+            <input type="text" id="pmNom" placeholder="Ex : Coupe femme" />
           </div>
-        </div>
-
-        <!-- Onglets -->
-        <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:20px">
-          <button id="calendly-tab-rdv" class="btn btn-secondary btn-sm" onclick="switchCalendlyTab('rdv')" style="border-radius:8px 8px 0 0;border-bottom:none;background:var(--accent);color:#fff">Mes RDV</button>
-          <button id="calendly-tab-book" class="btn btn-secondary btn-sm" onclick="switchCalendlyTab('book')" style="border-radius:8px 8px 0 0;border-bottom:none;margin-left:4px">Prendre un RDV</button>
-          <button id="calendly-tab-stats" class="btn btn-secondary btn-sm" onclick="switchCalendlyTab('stats')" style="border-radius:8px 8px 0 0;border-bottom:none;margin-left:4px">Stats</button>
-        </div>
-
-        <!-- Onglet Mes RDV -->
-        <div id="calendly-panel-rdv">
-          <div class="card" style="padding:0;overflow:hidden">
-            <div id="calendly-events-table" style="padding:20px;font-size:13px;color:var(--text-muted)">Chargement…</div>
+          <div class="form-group">
+            <label>Description</label>
+            <input type="text" id="pmDescription" placeholder="Courte description (optionnel)" />
           </div>
-        </div>
-
-        <!-- Onglet Prendre un RDV -->
-        <div id="calendly-panel-book" style="display:none">
-          <div class="card" style="padding:20px">
-            <div id="calendly-widget-container"></div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Catégorie</label>
+              <input type="text" id="pmCategorie" placeholder="Ex : Coupe, Soin…" />
+            </div>
+            <div class="form-group">
+              <label>Durée (min) *</label>
+              <input type="number" id="pmDuree" min="5" step="5" placeholder="30" />
+            </div>
           </div>
-        </div>
-
-        <!-- Onglet Stats -->
-        <div id="calendly-panel-stats" style="display:none">
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px">
-            <div class="card" style="padding:20px;text-align:center">
-              <div style="font-size:28px;font-weight:700" id="cal-stat-month">—</div>
-              <div style="font-size:12px;color:var(--text-muted);margin-top:4px">RDV ce mois</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Prix (€)</label>
+              <input type="number" id="pmPrix" min="0" step="0.5" placeholder="Optionnel" />
             </div>
-            <div class="card" style="padding:20px;text-align:center">
-              <div style="font-size:28px;font-weight:700" id="cal-stat-upcoming">—</div>
-              <div style="font-size:12px;color:var(--text-muted);margin-top:4px">RDV à venir (7j)</div>
+            <div class="form-group" style="display:flex;align-items:flex-end;padding-bottom:4px">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:0">
+                <input type="checkbox" id="pmReservable" style="width:16px;height:16px;accent-color:#7c3aed">
+                <span style="font-size:13px;font-weight:500;color:var(--text)">Réservable en ligne</span>
+              </label>
             </div>
-            <div class="card" style="padding:20px;text-align:center">
-              <div style="font-size:28px;font-weight:700" id="cal-stat-rate">—</div>
-              <div style="font-size:12px;color:var(--text-muted);margin-top:4px">Taux de présence</div>
-            </div>
+          </div>
+          <div id="prestModalMsg"></div>
+          <div style="display:flex;gap:10px;margin-top:16px">
+            <button class="btn-primary" style="flex:1;padding:11px" onclick="submitPrestModal()">Enregistrer</button>
+            <button class="btn-secondary" style="padding:11px 18px" onclick="closePrestModal()">Annuler</button>
           </div>
         </div>
       </div>
@@ -5002,16 +4580,10 @@ function navigate(sectionId) {
   if (sectionId === 'automations') { loadAutomationsFromAirtable(); }
   if (sectionId === 'appels')      { loadHistoriqueFromAirtable(); }
   if (sectionId === 'whatsapp')    { loadHistoriqueFromAirtable(); }
-  /* Ne charger les configs que si clients[0] est déjà disponible.
-     Sinon loadClientsFromAirtable() les appellera après le fetch. */
-  if (sectionId === 'voix-ia')     { if (clients.length) { loadVoixConfig(); renderVapiToolsFromClient(); } }
-  if (sectionId === 'whatsapp-ia') { if (clients.length) { loadWhatsappConfig(); renderWaToolsFromClient(); } }
-  if (sectionId === 'overview')        { setTimeout(updateOverviewKPIs, 50); }
-  if (sectionId === 'factures')      { loadFactures(); }
-  if (sectionId === 'crm')           { loadCRM(); }
-  if (sectionId === 'integrations')  { renderIntegrations(); }
-  if (sectionId === 'google-calendar') { initGoogleCalendar(); }
-  if (sectionId === 'calendly')        { loadCalendlyPage(); }
+  if (sectionId === 'voix-ia')     { loadVoixConfig(); }
+  if (sectionId === 'factures')    { loadFactures(); }
+  if (sectionId === 'agenda-rdv')  { loadAgendaRdv(); }
+  if (sectionId === 'config-rdv')  { loadRdvConfig(); }
 
   currentSection = sectionId;
   try { localStorage.setItem('akilai_section', sectionId); } catch(e) {}
@@ -5543,6 +5115,7 @@ async function loadClientsFromAirtable() {
 
   applyPlanFilter();
   updateSidebarUser();
+  updateAgendaNavVisibility();
   if (clients.length) checkSuspensionState(clients[0]);
   updateAgendaSidebarVisibility();
 
@@ -10318,6 +9891,820 @@ function renderRecommandations(alerts) {
       </button>` : ""}
     </div>`;
   }).join("");
+}
+
+/* ══════════════════════════════════════════════════════════════
+   GUIDED TOUR — premier chargement uniquement
+   ══════════════════════════════════════════════════════════════ */
+(function () {
+  /* ── Définition des étapes ── */
+  const TOUR_STEPS = [
+    {
+      selector: '#kpiGrid1',
+      navigateTo: 'overview',
+      title: 'Vue d\'ensemble',
+      text: 'Suivez ici vos indicateurs clés : appels traités, rendez-vous, tickets ouverts et usage WhatsApp en temps réel.'
+    },
+    {
+      selector: '[data-section="automations"]',
+      navigateTo: 'automations',
+      title: 'Automatisations',
+      text: 'Activez ou désactivez vos automatisations IA en un clic. Chaque carte indique le statut et les déclencheurs configurés.'
+    },
+    {
+      selector: '[data-section="programmation"]',
+      navigateTo: 'programmation',
+      title: 'Programmation',
+      text: 'Gérez votre agenda, définissez vos disponibilités et visualisez les rendez-vous planifiés par votre assistant vocal.'
+    },
+    {
+      selector: '[data-section="voix-ia"]',
+      navigateTo: 'voix-ia',
+      title: 'Voix & IA',
+      text: 'Configurez et testez votre assistant vocal IA : voix, script, numéro de téléphone et comportement en appel.'
+    },
+    {
+      selector: '[data-section="whatsapp"]',
+      navigateTo: 'whatsapp',
+      title: 'WhatsApp & IA',
+      text: 'Paramétrez votre assistant WhatsApp et consultez l\'historique complet des conversations avec vos clients.'
+    },
+    {
+      selector: '#page-integrations, [data-section="integrations"]',
+      navigateTo: null,
+      title: 'Intégrations',
+      text: 'Connectez vos outils favoris : Notion, Google Calendar, CRM et bien d\'autres pour automatiser vos workflows.'
+    },
+    {
+      selector: '[data-section="tickets"]',
+      navigateTo: 'tickets',
+      title: 'Support & Tickets',
+      text: 'Ouvrez des demandes d\'assistance, suivez leur avancement et communiquez directement avec l\'équipe AkilAI.'
+    },
+    {
+      selector: '[data-section="factures"]',
+      navigateTo: 'factures',
+      title: 'Mes Factures',
+      text: 'Consultez et téléchargez vos factures mensuelles. L\'historique complet de votre abonnement est disponible ici.'
+    },
+    {
+      selector: '[data-section="appels"]',
+      navigateTo: 'appels',
+      title: 'Historique Appels Vocaux',
+      text: 'Retrouvez la transcription et le résumé de chaque appel traité par votre assistant IA pour un suivi optimal.'
+    },
+    {
+      selector: '#page-whatsapp-history, [data-section="whatsapp-history"]',
+      navigateTo: null,
+      title: 'Historique Conversations WhatsApp',
+      text: 'Revoyez l\'intégralité des échanges WhatsApp entre votre assistant et vos clients, filtrés par date ou contact.'
+    },
+    {
+      selector: '#page-crm, [data-section="crm"]',
+      navigateTo: null,
+      title: 'CRM',
+      text: 'Gérez vos contacts, suivez votre pipeline commercial et centralisez toutes les informations de vos prospects.'
+    },
+    {
+      selector: 'button.sidebar-user-actions[title="Se déconnecter"]',
+      navigateTo: null,
+      title: 'Déconnexion',
+      text: 'Ce bouton vous permet de vous déconnecter en toute sécurité de votre espace AkilAI.'
+    }
+  ];
+
+  /* ── État du tour ── */
+  let tourSteps = [];   // étapes valides après filtrage DOM
+  let currentStep = 0;
+  let tourActive = false;
+  let overlay, spotlight, bubble, stepLabel;
+  let tourKey = 'akilai_tour_done'; // sera affiné par clientId
+
+  /* ── Entrée principale — appelée par _startDashboard(session) ── */
+  function initTour(session) {
+    // Clé unique par compte pour que chaque nouvel utilisateur voie le tour
+    const uid = (session && (session.clientId || session.email)) || 'global';
+    tourKey = 'akilai_tour_done_' + uid;
+    console.log('[AkilAI Tour] initTour uid=' + uid + ' done=' + localStorage.getItem(tourKey));
+    if (localStorage.getItem(tourKey) === 'true') return;
+    // Délai pour que le dashboard soit rendu
+    setTimeout(startTour, 900);
+  }
+
+  function startTour() {
+    // Filtrer les étapes dont l'élément existe dans le DOM
+    tourSteps = TOUR_STEPS.filter(s => !!resolveEl(s.selector));
+    console.log('[AkilAI Tour] startTour steps=' + tourSteps.length);
+    if (tourSteps.length === 0) return; // pas de markDone ici
+    tourActive = true;
+    currentStep = 0;
+    buildDOM();
+    showStep(0);
+  }
+
+  /* ── Résolution de sélecteur multi ── */
+  function resolveEl(selector) {
+    if (!selector) return null;
+    const parts = selector.split(',').map(s => s.trim());
+    for (const p of parts) {
+      const el = document.querySelector(p);
+      if (el) return el;
+    }
+    return null;
+  }
+
+  /* ── Construction du DOM du tour ── */
+  function buildDOM() {
+    // Overlay + découpe spotlight via clip-path
+    overlay = document.createElement('div');
+    overlay.id = 'tour-overlay';
+    overlay.style.cssText = `
+      position:fixed;inset:0;z-index:99998;pointer-events:none;
+      transition:all 0.35s ease;
+    `;
+
+    spotlight = document.createElement('div');
+    spotlight.id = 'tour-spotlight';
+    spotlight.style.cssText = `
+      position:fixed;z-index:99999;pointer-events:none;
+      border-radius:10px;
+      box-shadow:0 0 0 9999px rgba(0,0,0,0.62);
+      transition:all 0.35s cubic-bezier(.4,0,.2,1);
+    `;
+
+    bubble = document.createElement('div');
+    bubble.id = 'tour-bubble';
+    bubble.style.cssText = `
+      position:fixed;z-index:100000;
+      background:#13111c;
+      border:1px solid rgba(124,58,237,0.45);
+      border-radius:14px;
+      padding:20px 22px 18px;
+      width:clamp(260px,88vw,340px);
+      box-shadow:0 8px 40px rgba(0,0,0,0.6),0 0 0 1px rgba(124,58,237,0.15);
+      transition:opacity 0.25s ease,transform 0.25s ease;
+      opacity:0;
+      font-family:inherit;
+    `;
+    bubble.innerHTML = `
+      <div id="tour-arrow" style="
+        position:absolute;width:12px;height:12px;
+        background:#13111c;border:1px solid rgba(124,58,237,0.45);
+        transform:rotate(45deg);
+      "></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <span id="tour-step-label" style="font-size:11px;font-weight:600;color:#7c3aed;letter-spacing:0.08em;text-transform:uppercase;"></span>
+        <button id="tour-skip" style="
+          background:none;border:none;color:rgba(255,255,255,0.35);
+          font-size:11px;cursor:pointer;padding:2px 6px;border-radius:6px;
+          transition:color 0.15s;
+        " onmouseover="this.style.color='rgba(255,255,255,0.7)'"
+           onmouseout="this.style.color='rgba(255,255,255,0.35)'">
+          Passer le tour ✕
+        </button>
+      </div>
+      <div id="tour-title" style="font-size:15px;font-weight:700;color:#fff;margin-bottom:8px;"></div>
+      <div id="tour-text" style="font-size:13px;color:rgba(255,255,255,0.65);line-height:1.55;margin-bottom:16px;"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <div id="tour-dots" style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;max-width:140px;"></div>
+        <button id="tour-next" style="
+          background:#7c3aed;color:#fff;border:none;
+          padding:8px 18px;border-radius:8px;font-size:13px;
+          font-weight:600;cursor:pointer;
+          transition:background 0.15s,transform 0.1s;
+        " onmouseover="this.style.background='#6d28d9'"
+           onmouseout="this.style.background='#7c3aed'"
+           onmousedown="this.style.transform='scale(0.96)'"
+           onmouseup="this.style.transform='scale(1)'">
+          Suivant →
+        </button>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+    document.body.appendChild(spotlight);
+    document.body.appendChild(bubble);
+
+    stepLabel  = bubble.querySelector('#tour-step-label');
+    document.getElementById('tour-next').addEventListener('click', nextStep);
+    document.getElementById('tour-skip').addEventListener('click', endTour);
+  }
+
+  /* ── Affichage d'une étape ── */
+  function showStep(idx) {
+    const step = tourSteps[idx];
+    const el   = resolveEl(step.selector);
+
+    // Naviguer vers la section si besoin
+    if (step.navigateTo && typeof navigate === 'function') {
+      navigate(step.navigateTo);
+    }
+
+    // Laisser le temps à la page de se mettre à jour
+    setTimeout(() => {
+      const target = resolveEl(step.selector);
+      if (!target) { nextStep(); return; }
+
+      // Scroll vers l'élément
+      target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+
+      setTimeout(() => positionBubble(target, step, idx), 180);
+    }, step.navigateTo ? 200 : 0);
+  }
+
+  function positionBubble(target, step, idx) {
+    const r  = target.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    // Spotlight
+    const pad = 8;
+    spotlight.style.left   = (r.left   - pad) + 'px';
+    spotlight.style.top    = (r.top    - pad) + 'px';
+    spotlight.style.width  = (r.width  + pad * 2) + 'px';
+    spotlight.style.height = (r.height + pad * 2) + 'px';
+
+    // Contenu bulle
+    bubble.querySelector('#tour-title').textContent = step.title;
+    bubble.querySelector('#tour-text').textContent  = step.text;
+    stepLabel.textContent = `Étape ${idx + 1} / ${tourSteps.length}`;
+
+    // Points de progression
+    const dots = bubble.querySelector('#tour-dots');
+    dots.innerHTML = '';
+    tourSteps.forEach((_, i) => {
+      const d = document.createElement('div');
+      d.style.cssText = `
+        width:${i === idx ? 16 : 6}px;height:6px;border-radius:3px;
+        background:${i === idx ? '#7c3aed' : 'rgba(255,255,255,0.2)'};
+        transition:all 0.3s;
+      `;
+      dots.appendChild(d);
+    });
+
+    // Bouton "Suivant" → "Terminer" à la dernière étape
+    const btn = document.getElementById('tour-next');
+    btn.textContent = (idx === tourSteps.length - 1) ? 'Terminer ✓' : 'Suivant →';
+
+    // Position de la bulle (préférence : dessous, sinon dessus, sinon à droite)
+    bubble.style.opacity = '0';
+    bubble.style.transform = 'translateY(6px)';
+    bubble.style.display = 'block';
+
+    const bw = 340, bh = 180;
+    const arrow = bubble.querySelector('#tour-arrow');
+    let bLeft, bTop, arrowStyle = '';
+
+    const spaceBelow = vh - r.bottom;
+    const spaceAbove = r.top;
+    const spaceRight = vw - r.right;
+
+    if (spaceBelow >= bh + 20 || spaceBelow >= spaceAbove) {
+      // Bulle dessous
+      bTop  = r.bottom + pad + 10;
+      bLeft = Math.min(Math.max(r.left + r.width / 2 - bw / 2, 8), vw - bw - 8);
+      const ax = (r.left + r.width / 2) - bLeft - 6;
+      arrowStyle = `left:${Math.max(12, Math.min(ax, bw - 24))}px;top:-6px;border-right:none;border-bottom:none;`;
+    } else if (spaceAbove >= bh + 20) {
+      // Bulle dessus
+      bTop  = r.top - bh - pad - 10;
+      bLeft = Math.min(Math.max(r.left + r.width / 2 - bw / 2, 8), vw - bw - 8);
+      const ax = (r.left + r.width / 2) - bLeft - 6;
+      arrowStyle = `left:${Math.max(12, Math.min(ax, bw - 24))}px;bottom:-6px;border-left:none;border-top:none;`;
+    } else {
+      // Bulle à droite
+      bLeft = r.right + pad + 10;
+      bTop  = Math.min(Math.max(r.top + r.height / 2 - bh / 2, 8), vh - bh - 8);
+      const ay = (r.top + r.height / 2) - bTop - 6;
+      arrowStyle = `top:${Math.max(12, Math.min(ay, bh - 24))}px;left:-6px;border-right:none;border-top:none;`;
+    }
+
+    // Fallback mobile : centrer en bas
+    if (bLeft < 0 || bLeft + bw > vw) {
+      bLeft = Math.max(8, (vw - Math.min(bw, vw - 16)) / 2);
+      arrowStyle = 'display:none;';
+    }
+
+    bubble.style.left = bLeft + 'px';
+    bubble.style.top  = Math.max(8, bTop) + 'px';
+    arrow.style.cssText += arrowStyle;
+
+    // Fade-in
+    requestAnimationFrame(() => {
+      bubble.style.opacity   = '1';
+      bubble.style.transform = 'translateY(0)';
+    });
+  }
+
+  /* ── Navigation ── */
+  function nextStep() {
+    // Fade-out
+    bubble.style.opacity   = '0';
+    bubble.style.transform = 'translateY(-6px)';
+
+    if (currentStep < tourSteps.length - 1) {
+      currentStep++;
+      setTimeout(() => showStep(currentStep), 260);
+    } else {
+      setTimeout(endTour, 260);
+    }
+  }
+
+  function endTour() {
+    tourActive = false;
+    markDone();
+    cleanupDOM();
+  }
+
+  function markDone() {
+    localStorage.setItem(tourKey, 'true');
+    console.log('[AkilAI Tour] markDone key=' + tourKey);
+  }
+
+  function cleanupDOM() {
+    [overlay, spotlight, bubble].forEach(el => {
+      if (el && el.parentNode) el.parentNode.removeChild(el);
+    });
+    overlay = spotlight = bubble = null;
+  }
+
+  /* ── Recalcul position sur resize ── */
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    if (!tourActive || !bubble) return;
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      const step = tourSteps[currentStep];
+      const el   = resolveEl(step.selector);
+      if (el) positionBubble(el, step, currentStep);
+    }, 120);
+  });
+
+  /* ── Exposer initTour globalement ── */
+  /* Appelé par _startDashboard(session) après login réussi */
+  window.initTour = initTour;
+  console.log('[AkilAI Tour] script loaded, window.initTour ready');
+})();
+
+/* ============================================================
+   AGENDA RDV
+============================================================ */
+
+const PARIS_TZ_AGD = "Europe/Paris";
+const DAY_LABELS_AGD = ["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"];
+const MONTHS_AGD = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+
+function updateAgendaNavVisibility() {
+  const active = clients[0]?.offreRdvActive || false;
+  const nav = document.getElementById("navAgendaRdv");
+  if (nav) nav.style.display = active ? "" : "none";
+  const navC = document.getElementById("navConfigRdv");
+  if (navC) navC.style.display = active ? "" : "none";
+}
+
+async function loadAgendaRdv() {
+  const email = _getActiveEmail();
+  if (!email) return;
+
+  const offreActive = clients[0]?.offreRdvActive || false;
+  document.getElementById("rdvLockedBanner").style.display    = offreActive ? "none" : "";
+  document.getElementById("rdvAgendaContent").style.display   = offreActive ? ""     : "none";
+  if (!offreActive) return;
+
+  document.getElementById("rdvAgendaLoading").style.display = "";
+  document.getElementById("rdvAgendaEmpty").style.display   = "none";
+  document.getElementById("rdvAgendaList").style.display    = "none";
+
+  try {
+    const data = await apiFetch(`/.netlify/functions/get-rdv-agenda?email=${encodeURIComponent(email)}`);
+
+    if (data.salonNom) {
+      document.getElementById("rdvAgendaSalonNom").textContent = data.salonNom;
+    }
+
+    // Stats
+    const s = data.stats || {};
+    document.getElementById("rdvStatConfirme").textContent = s["Confirmé"]  ?? 0;
+    document.getElementById("rdvStatTermine").textContent  = s["Terminé"]   ?? 0;
+    document.getElementById("rdvStatAnnule").textContent   = s["Annulé"]    ?? 0;
+    document.getElementById("rdvStatNoshow").textContent   = s["No-show"]   ?? 0;
+
+    // RDV list
+    document.getElementById("rdvAgendaLoading").style.display = "none";
+    const rdvs = data.rdvs || [];
+    if (!rdvs.length) {
+      document.getElementById("rdvAgendaEmpty").style.display = "";
+      return;
+    }
+    document.getElementById("rdvAgendaList").style.display = "";
+    renderAgendaList(rdvs, email);
+  } catch (e) {
+    document.getElementById("rdvAgendaLoading").style.display = "none";
+    document.getElementById("rdvAgendaEmpty").textContent = "Erreur de chargement : " + e.message;
+    document.getElementById("rdvAgendaEmpty").style.display = "";
+    console.error("[Agenda RDV]", e.message);
+  }
+}
+
+function _rdvParisTime(iso) {
+  if (!iso) return { dateStr: "", timeStr: "", wd: 0, dateKey: "" };
+  const d = new Date(iso);
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: PARIS_TZ_AGD,
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", hour12: false,
+  }).formatToParts(d);
+  const g = t => parts.find(p => p.type === t)?.value ?? "00";
+  const h = g("hour") === "24" ? "00" : g("hour");
+  const dateKey = `${g("year")}-${g("month")}-${g("day")}`;
+  const wd = new Date(`${dateKey}T12:00:00Z`).getDay();
+  const day = parseInt(g("day"), 10);
+  const month = parseInt(g("month"), 10) - 1;
+  const dateStr = `${DAY_LABELS_AGD[wd]} ${day} ${MONTHS_AGD[month]}`;
+  return { dateKey, dateStr, timeStr: `${h}:${g("minute")}`, wd };
+}
+
+function _rdvStatusClass(statut) {
+  if (statut === "Terminé")  return "s-termine";
+  if (statut === "Annulé")   return "s-annule";
+  if (statut === "No-show")  return "s-noshow";
+  return "s-confirme";
+}
+
+function _escHtmlAgd(s) {
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+function renderAgendaList(rdvs, email) {
+  const container = document.getElementById("rdvAgendaList");
+  const now = new Date();
+
+  // Groupe par date
+  const groups = {};
+  const order  = [];
+  for (const r of rdvs) {
+    const { dateKey, dateStr, wd } = _rdvParisTime(r.dateHeure);
+    if (!dateKey) continue;
+    if (!groups[dateKey]) { groups[dateKey] = { dateStr, wd, items: [] }; order.push(dateKey); }
+    groups[dateKey].items.push(r);
+  }
+
+  const todayKey = _rdvParisTime(now.toISOString()).dateKey;
+  let html = "";
+  for (const key of order) {
+    const g = groups[key];
+    const isToday = key === todayKey;
+    html += `<div class="rdv-day-group">
+      <div class="rdv-day-label${isToday ? " is-today" : ""}">${_escHtmlAgd(g.dateStr)}${isToday ? " — Aujourd'hui" : ""}</div>`;
+
+    for (const r of g.items) {
+      const { timeStr } = _rdvParisTime(r.dateHeure);
+      const scls  = _rdvStatusClass(r.statut);
+      const isFuture = new Date(r.dateHeure) > now;
+      const canAct = r.statut === "Confirmé";
+
+      const actionBtns = canAct ? `
+        <div class="rdv-actions">
+          <button class="rdv-btn btn-done"   onclick="updateRdvStatus('${_escHtmlAgd(r.id)}','Terminé',this,'${_escHtmlAgd(email)}')" title="Marquer Terminé">✓ Terminé</button>
+          <button class="rdv-btn btn-cancel" onclick="updateRdvStatus('${_escHtmlAgd(r.id)}','Annulé',this,'${_escHtmlAgd(email)}')" title="Annuler">✕ Annulé</button>
+          <button class="rdv-btn btn-noshow" onclick="updateRdvStatus('${_escHtmlAgd(r.id)}','No-show',this,'${_escHtmlAgd(email)}')" title="Client non présenté">⊘ No-show</button>
+        </div>` : "";
+
+      html += `
+      <div class="rdv-card" id="rdv-card-${_escHtmlAgd(r.id)}">
+        <div class="rdv-time">${_escHtmlAgd(timeStr)}</div>
+        <div class="rdv-info">
+          <div class="rdv-client-name">${_escHtmlAgd(r.nom || "—")}</div>
+          <div class="rdv-client-phone">${_escHtmlAgd(r.telephone || "")}</div>
+          ${r.prestation ? `<span class="rdv-prestation-chip">${_escHtmlAgd(r.prestation)}</span>` : ""}
+        </div>
+        <span class="rdv-status-badge ${scls}">${_escHtmlAgd(r.statut)}</span>
+        ${actionBtns}
+      </div>`;
+    }
+    html += `</div>`;
+  }
+  container.innerHTML = html;
+}
+
+async function updateRdvStatus(rdvId, statut, btn, email) {
+  const card = document.getElementById("rdv-card-" + rdvId);
+  const btns = card ? card.querySelectorAll(".rdv-btn") : [];
+  btns.forEach(b => { b.disabled = true; });
+  const orig = btn.textContent;
+  btn.textContent = "…";
+
+  try {
+    await apiFetch("/.netlify/functions/update-rdv-status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ rdvId, statut, email }),
+    });
+    // Refresh the agenda to reflect new status
+    await loadAgendaRdv();
+  } catch (e) {
+    btns.forEach(b => { b.disabled = false; });
+    btn.textContent = orig;
+    alert("Erreur : " + e.message);
+  }
+}
+
+/* ============================================================
+   CONFIGURATION RDV
+   ============================================================ */
+
+const JOURS = ["lun","mar","mer","jeu","ven","sam","dim"];
+const JOURS_LABELS = { lun:"Lun",mar:"Mar",mer:"Mer",jeu:"Jeu",ven:"Ven",sam:"Sam",dim:"Dim" };
+
+let _rdvConfig = null; // cache { salon, prestations }
+
+function switchConfigTab(tab) {
+  const tabs = ["salon","prest"];
+  tabs.forEach(t => {
+    const id = t === "salon" ? "configTabSalon" : "configTabPrest";
+    document.getElementById(id).style.display = t === tab ? "" : "none";
+    const btnId = "tab" + t.charAt(0).toUpperCase() + t.slice(1);
+    const btn = document.getElementById(btnId);
+    if (btn) btn.classList.toggle("active", t === tab);
+  });
+}
+
+async function loadRdvConfig() {
+  const email = _getActiveEmail();
+  if (!email) return;
+
+  const offreActive = clients[0]?.offreRdvActive || false;
+  const locked = document.getElementById("configRdvLocked");
+  const content = document.getElementById("configRdvContent");
+  if (locked)  locked.style.display  = offreActive ? "none" : "";
+  if (content) content.style.display = offreActive ? "" : "none";
+  if (!offreActive) return;
+
+  try {
+    const res = await fetch(`/.netlify/functions/get-rdv-config?email=${encodeURIComponent(email)}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Erreur chargement config");
+    _rdvConfig = data;
+    renderSalonForm(data.salon);
+    renderPrestTable(data.prestations || []);
+  } catch (e) {
+    alert("Erreur : " + e.message);
+  }
+}
+
+function renderSalonForm(salon) {
+  const el = document.getElementById("salonConfigForm");
+  if (!el) return;
+  const h = salon.horaires || {};
+
+  const horaireRows = JOURS.map(j => {
+    const ouvert = !!h[j];
+    const debut  = h[j]?.debut || "09:00";
+    const fin    = h[j]?.fin   || "19:00";
+    return `<tr>
+      <td style="padding:6px 8px;font-weight:500;width:50px">${JOURS_LABELS[j]}</td>
+      <td style="padding:6px 8px">
+        <label class="h-toggle">
+          <input type="checkbox" id="hOpen_${j}" ${ouvert ? "checked" : ""} onchange="toggleHoraire('${j}')">
+          <span style="font-size:12px;margin-left:6px">${ouvert ? "Ouvert" : "Fermé"}</span>
+        </label>
+      </td>
+      <td style="padding:6px 8px" id="hTimes_${j}" ${ouvert ? "" : 'style="display:none"'}>
+        <input type="time" class="h-time" id="hDebut_${j}" value="${debut}">
+        <span style="margin:0 6px;color:var(--muted)">–</span>
+        <input type="time" class="h-time" id="hFin_${j}"   value="${fin}">
+      </td>
+      <td style="padding:6px 8px" id="hClosed_${j}" ${ouvert ? 'style="display:none"' : ""}>
+        <span style="font-size:12px;color:var(--muted)">Fermé</span>
+      </td>
+    </tr>`;
+  }).join("");
+
+  el.innerHTML = `
+    <div style="display:grid;gap:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div>
+          <label class="form-label">Nom du salon</label>
+          <input class="form-input" id="cfgNom" value="${_esc(salon.nom || '')}">
+        </div>
+        <div>
+          <label class="form-label">Adresse</label>
+          <input class="form-input" id="cfgAdresse" value="${_esc(salon.adresse || '')}">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div>
+          <label class="form-label">Numéro WhatsApp</label>
+          <input class="form-input" id="cfgWhatsapp" placeholder="+33612345678" value="${_esc(salon.whatsapp || '')}">
+        </div>
+        <div>
+          <label class="form-label">Lien avis Google</label>
+          <input class="form-input" id="cfgLienAvis" placeholder="https://g.page/..." value="${_esc(salon.lienAvis || '')}">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div>
+          <label class="form-label">Canal de contact client</label>
+          <select class="form-input" id="cfgCanal">
+            <option value="SMS"       ${salon.canal === "SMS"       ? "selected" : ""}>SMS</option>
+            <option value="WhatsApp"  ${salon.canal === "WhatsApp"  ? "selected" : ""}>WhatsApp</option>
+            <option value="Les deux"  ${salon.canal === "Les deux"  ? "selected" : ""}>SMS + WhatsApp</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Durée par défaut (min)</label>
+          <input class="form-input" type="number" id="cfgDuree" min="5" step="5" value="${salon.dureeDefaut || 30}">
+        </div>
+      </div>
+      <div>
+        <label class="form-label" style="margin-bottom:8px">Horaires d'ouverture</label>
+        <div style="overflow-x:auto">
+          <table class="config-horaires-table"><tbody>${horaireRows}</tbody></table>
+        </div>
+      </div>
+      <div class="config-save-bar">
+        <button class="btn-primary" onclick="saveRdvConfig(this)">Enregistrer les infos salon</button>
+        <span id="salonSaveMsg" style="font-size:13px;margin-left:12px"></span>
+      </div>
+    </div>`;
+}
+
+function _esc(str) {
+  return String(str).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
+}
+
+function toggleHoraire(j) {
+  const cb = document.getElementById("hOpen_" + j);
+  const open = cb.checked;
+  cb.nextElementSibling.textContent = open ? "Ouvert" : "Fermé";
+  document.getElementById("hTimes_"  + j).style.display = open ? "" : "none";
+  document.getElementById("hClosed_" + j).style.display = open ? "none" : "";
+}
+
+function collectHoraires() {
+  const h = {};
+  JOURS.forEach(j => {
+    const cb = document.getElementById("hOpen_" + j);
+    if (!cb) return;
+    if (cb.checked) {
+      h[j] = {
+        debut: document.getElementById("hDebut_" + j)?.value || "09:00",
+        fin:   document.getElementById("hFin_"   + j)?.value || "19:00",
+      };
+    } else {
+      h[j] = null;
+    }
+  });
+  return h;
+}
+
+async function saveRdvConfig(btn) {
+  const email = _getActiveEmail();
+  if (!email) return;
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Enregistrement…";
+  const msg = document.getElementById("salonSaveMsg");
+  if (msg) { msg.textContent = ""; msg.className = ""; }
+
+  const salonFields = {
+    "Nom salon":                   document.getElementById("cfgNom")?.value?.trim()     || "",
+    "Adresse":                     document.getElementById("cfgAdresse")?.value?.trim() || "",
+    "Numéro WhatsApp":             document.getElementById("cfgWhatsapp")?.value?.trim()|| "",
+    "Lien avis Google":            document.getElementById("cfgLienAvis")?.value?.trim()|| "",
+    "Canal feedback":              document.getElementById("cfgCanal")?.value            || "SMS",
+    "Durée par défaut prestation": Number(document.getElementById("cfgDuree")?.value)   || 30,
+    "Horaires ouverture":          JSON.stringify(collectHoraires()),
+  };
+
+  try {
+    const res = await fetch("/.netlify/functions/save-rdv-config", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, salonFields }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Erreur sauvegarde");
+    if (msg) { msg.textContent = "Enregistré ✓"; msg.style.color = "var(--green)"; }
+  } catch (e) {
+    if (msg) { msg.textContent = "Erreur : " + e.message; msg.style.color = "#ef4444"; }
+  } finally {
+    btn.disabled = false;
+    btn.textContent = orig;
+  }
+}
+
+function renderPrestTable(prestations) {
+  const tbody   = document.getElementById("prestConfigTbody");
+  const table   = document.getElementById("prestConfigTable");
+  const empty   = document.getElementById("prestConfigEmpty");
+  const loading = document.getElementById("prestConfigLoading");
+  if (loading) loading.style.display = "none";
+  if (!tbody) return;
+
+  if (!prestations.length) {
+    if (table) table.style.display = "none";
+    if (empty) empty.style.display = "";
+    return;
+  }
+  if (empty) empty.style.display = "none";
+  if (table) table.style.display = "";
+
+  tbody.innerHTML = prestations.map(p => `
+    <tr>
+      <td style="padding:10px 12px;font-weight:500">${_esc(p.nom)}</td>
+      <td style="padding:10px 12px;color:var(--muted);font-size:13px">${_esc(p.categorie || "—")}</td>
+      <td style="padding:10px 12px;font-size:13px">${p.duree} min</td>
+      <td style="padding:10px 12px;font-size:13px">${p.prix != null ? p.prix + " €" : "—"}</td>
+      <td style="padding:10px 12px;text-align:center">
+        <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.reservableEnLigne ? "var(--green,#10b981)" : "#d1d5db"}"></span>
+      </td>
+      <td style="padding:10px 12px;white-space:nowrap">
+        <button class="prest-action-btn" onclick='openPrestModal(${JSON.stringify(p)})'>Modifier</button>
+        <button class="prest-action-btn danger" onclick="confirmDeletePrest('${p.id}','${_esc(p.nom)}')">Supprimer</button>
+      </td>
+    </tr>`).join("");
+}
+
+function openPrestModal(prest) {
+  document.getElementById("prestModalTitle").textContent = prest ? "Modifier la prestation" : "Ajouter une prestation";
+  document.getElementById("pmId").value           = prest?.id          || "";
+  document.getElementById("pmNom").value          = prest?.nom         || "";
+  document.getElementById("pmDescription").value  = prest?.description || "";
+  document.getElementById("pmCategorie").value    = prest?.categorie   || "";
+  document.getElementById("pmDuree").value        = prest?.duree       || 30;
+  document.getElementById("pmPrix").value         = prest?.prix != null ? prest.prix : "";
+  document.getElementById("pmReservable").checked = prest?.reservableEnLigne || false;
+  document.getElementById("prestModalMsg").textContent = "";
+  document.getElementById("prestModalMsg").className   = "";
+  document.getElementById("prestModal").classList.add("open");
+}
+
+function closePrestModal() {
+  document.getElementById("prestModal").classList.remove("open");
+}
+
+async function submitPrestModal(btn) {
+  const email = _getActiveEmail();
+  if (!email) return;
+  const msg = document.getElementById("prestModalMsg");
+  msg.textContent = "";
+
+  const prestation = {
+    id:               document.getElementById("pmId").value.trim()          || undefined,
+    nom:              document.getElementById("pmNom").value.trim(),
+    description:      document.getElementById("pmDescription").value.trim(),
+    categorie:        document.getElementById("pmCategorie").value.trim(),
+    duree:            Number(document.getElementById("pmDuree").value) || 30,
+    prix:             document.getElementById("pmPrix").value.trim() !== "" ? Number(document.getElementById("pmPrix").value) : null,
+    reservableEnLigne: document.getElementById("pmReservable").checked,
+  };
+  if (!prestation.id) delete prestation.id;
+
+  if (!prestation.nom) { msg.textContent = "Le nom est requis."; msg.className = "error"; return; }
+  if (prestation.duree < 5) { msg.textContent = "La durée doit être ≥ 5 min."; msg.className = "error"; return; }
+
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Enregistrement…";
+
+  try {
+    const res = await fetch("/.netlify/functions/upsert-prestation", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, prestation }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Erreur");
+    closePrestModal();
+    await loadRdvConfig();
+    switchConfigTab("prest");
+  } catch (e) {
+    msg.textContent = "Erreur : " + e.message;
+    msg.className = "error";
+    btn.disabled = false;
+    btn.textContent = orig;
+  }
+}
+
+async function confirmDeletePrest(id, nom) {
+  if (!confirm(`Supprimer la prestation "${nom}" ?`)) return;
+  const email = _getActiveEmail();
+  if (!email) return;
+
+  try {
+    const res = await fetch("/.netlify/functions/delete-prestation", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, prestationId: id }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Erreur suppression");
+    await loadRdvConfig();
+    switchConfigTab("prest");
+  } catch (e) {
+    alert("Erreur : " + e.message);
+  }
 }
 
 </script>

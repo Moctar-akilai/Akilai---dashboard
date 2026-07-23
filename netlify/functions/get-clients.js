@@ -73,6 +73,7 @@ exports.handler = async function(event, context) {
         promptSysteme:    f.PromptSysteme              || "",
         firstMessage:     f.FirstMessage               || "",
         vitesseParole:    Number(f.VitesseParole)      || 1.0,
+        offreRdvActive:   f["Offre RDV active"]        || false,
         notes,
         googleConnected:  f["Google Connected"]        || false,
         googleCalendarId: f["Google Calendar ID"]      || "primary",

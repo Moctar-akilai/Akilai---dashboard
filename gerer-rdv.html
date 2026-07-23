@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gérer mon RDV</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #f5f5f7;
+      --card:     #ffffff;
+      --text:     #111827;
+      --muted:    #6b7280;
+      --border:   #e5e7eb;
+      --primary:  #6366f1;
+      --primary-h:#4f46e5;
+      --danger:   #ef4444;
+      --danger-h: #dc2626;
+      --green:    #10b981;
+      --radius:   14px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 48px;
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -.5px;
+      color: var(--primary);
+      margin-bottom: 28px;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: 0 2px 16px rgba(0,0,0,.08);
+      width: 100%;
+      max-width: 480px;
+      padding: 28px 24px;
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .card-sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+
+    /* RDV summary */
+    .rdv-summary {
+      background: #f9fafb;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 22px;
+      display: grid;
+      gap: 8px;
+    }
+    .rdv-row { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+    .rdv-row svg { flex-shrink: 0; color: var(--muted); }
+    .rdv-row strong { color: var(--text); }
+    .rdv-row span  { color: var(--muted); }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+    .badge-confirme  { background: #d1fae5; color: #065f46; }
+    .badge-annule    { background: #fee2e2; color: #991b1b; }
+    .badge-termine   { background: #e5e7eb; color: #374151; }
+    .badge-noshow    { background: #fef3c7; color: #92400e; }
+
+    /* Actions */
+    .actions { display: grid; gap: 10px; }
+
+    .btn {
+      width: 100%;
+      padding: 13px 18px;
+      border-radius: 10px;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s, opacity .15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn:disabled { opacity: .55; cursor: not-allowed; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: var(--primary-h); }
+    .btn-danger  { background: var(--danger);  color: #fff; }
+    .btn-danger:hover:not(:disabled)  { background: var(--danger-h);  }
+    .btn-ghost   { background: #f3f4f6; color: var(--text); }
+    .btn-ghost:hover:not(:disabled)   { background: #e5e7eb; }
+
+    /* States */
+    .state-msg {
+      text-align: center;
+      padding: 24px 0 8px;
+    }
+    .state-msg .icon { font-size: 40px; margin-bottom: 12px; }
+    .state-msg .title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .state-msg .sub   { font-size: 13px; color: var(--muted); }
+
+    /* Creneaux */
+    .slots-section { margin-top: 20px; }
+    .slots-section .section-label { font-size: 13px; font-weight: 600; margin-bottom: 10px; }
+    .date-group { margin-bottom: 14px; }
+    .date-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 6px; }
+    .slots-row  { display: flex; flex-wrap: wrap; gap: 6px; }
+    .slot-btn {
+      padding: 7px 13px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      background: #fff;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: border-color .12s, background .12s;
+    }
+    .slot-btn:hover    { border-color: var(--primary); background: #eef2ff; }
+    .slot-btn.selected { border-color: var(--primary); background: var(--primary); color: #fff; }
+
+    .loading-dots { color: var(--muted); font-size: 13px; text-align: center; padding: 20px 0; }
+
+    .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+    .error-msg { font-size: 13px; color: var(--danger); margin-top: 10px; text-align: center; }
+    .success-msg { font-size: 13px; color: var(--green); margin-top: 10px; text-align: center; }
+  </style>
+</head>
+<body>
+
+<div class="logo">AkilAI</div>
+
+<div class="card" id="mainCard">
+  <div class="loading-dots" id="loadingState">Chargement de votre rendez-vous…</div>
+
+  <!-- État principal : RDV chargé -->
+  <div id="rdvState" style="display:none">
+    <div class="card-title" id="rdvTitle">Mon rendez-vous</div>
+    <div class="card-sub" id="rdvSub"></div>
+
+    <div class="rdv-summary" id="rdvSummary"></div>
+
+    <!-- Actions normales -->
+    <div id="actionsNormal" class="actions" style="display:none">
+      <button class="btn btn-primary" id="btnModifier" onclick="startModifier()">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Modifier l'horaire
+      </button>
+      <button class="btn btn-danger" id="btnAnnuler" onclick="confirmAnnuler()">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        Annuler mon RDV
+      </button>
+    </div>
+
+    <!-- Message état non-modifiable -->
+    <div id="stateMsg" class="state-msg" style="display:none"></div>
+
+    <!-- Section modification -->
+    <div id="modifySection" style="display:none">
+      <div class="divider"></div>
+      <div class="slots-section">
+        <div class="section-label">Choisissez un nouveau créneau</div>
+        <div id="slotsContainer"><div class="loading-dots">Chargement des créneaux…</div></div>
+        <div id="modifyActions" class="actions" style="display:none;margin-top:14px">
+          <button class="btn btn-primary" id="btnConfirmModif" onclick="submitModifier()" disabled>Confirmer ce créneau</button>
+          <button class="btn btn-ghost" onclick="cancelModifier()">Annuler</button>
+        </div>
+        <div id="modifyMsg"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- État erreur chargement -->
+  <div id="errorState" style="display:none" class="state-msg">
+    <div class="icon">🔗</div>
+    <div class="title">Lien invalide</div>
+    <div class="sub" id="errorText">Ce lien est invalide ou a expiré.</div>
+  </div>
+</div>
+
+<script>
+const NETLIFY = "/.netlify/functions";
+const params  = new URLSearchParams(location.search);
+const TOKEN   = params.get("token") || "";
+
+let _rdv       = null;
+let _newSlot   = null;
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+
+(async () => {
+  if (!TOKEN) { showError("Aucun token fourni dans l'URL."); return; }
+
+  try {
+    const res  = await fetch(`${NETLIFY}/get-rdv-by-token?token=${encodeURIComponent(TOKEN)}`);
+    const data = await res.json();
+    if (!res.ok) { showError(data.error || "Impossible de charger votre rendez-vous."); return; }
+    _rdv = data.rdv;
+    renderRdv();
+  } catch (e) {
+    showError("Erreur réseau : " + e.message);
+  }
+})();
+
+// ── Render ────────────────────────────────────────────────────────────────────
+
+function renderRdv() {
+  document.getElementById("loadingState").style.display = "none";
+  document.getElementById("rdvState").style.display = "";
+
+  const f  = _rdv;
+  const dt = f.dateHeure ? new Date(f.dateHeure) : null;
+  const dateStr = dt ? dt.toLocaleDateString("fr-FR", { weekday:"long", day:"numeric", month:"long", year:"numeric", timeZone:"Europe/Paris" }) : "—";
+  const timeStr = dt ? dt.toLocaleTimeString("fr-FR", { hour:"2-digit", minute:"2-digit", hour12:false, timeZone:"Europe/Paris" }) : "";
+
+  document.getElementById("rdvTitle").textContent = "Mon rendez-vous";
+  document.getElementById("rdvSub").textContent   = `Chez ${f.salonNom || "votre salon"}`;
+
+  const badgeClass = { Confirmé:"badge-confirme", Annulé:"badge-annule", Terminé:"badge-termine", "No-show":"badge-noshow" }[f.statut] || "badge-confirme";
+
+  document.getElementById("rdvSummary").innerHTML = `
+    <div class="rdv-row">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><polyline points="16 3 16 7"/><polyline points="8 3 8 7"/></svg>
+      <span>${dateStr}${timeStr ? " à " + timeStr : ""}</span>
+    </div>
+    <div class="rdv-row">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      <strong>${esc(f.prestationNom || "Prestation")}</strong>
+    </div>
+    <div class="rdv-row">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span class="badge ${badgeClass}">${f.statut}</span>
+    </div>`;
+
+  // Détermine l'état
+  const isPast      = dt && dt < new Date();
+  const isAnnoule   = f.statut === "Annulé";
+  const isTermine   = f.statut === "Terminé" || f.statut === "No-show";
+
+  if (isAnnoule) {
+    showStateMsg("❌", "RDV annulé", "Ce rendez-vous a été annulé.");
+  } else if (isTermine) {
+    showStateMsg("✅", "RDV terminé", "Ce rendez-vous est terminé. Merci de votre visite !");
+  } else if (isPast) {
+    showStateMsg("🕐", "RDV passé", "Ce rendez-vous est déjà passé et ne peut plus être modifié.");
+  } else {
+    document.getElementById("actionsNormal").style.display = "";
+  }
+}
+
+function showStateMsg(icon, title, sub) {
+  const el = document.getElementById("stateMsg");
+  el.innerHTML = `<div class="icon">${icon}</div><div class="title">${esc(title)}</div><div class="sub">${esc(sub)}</div>`;
+  el.style.display = "";
+  document.getElementById("actionsNormal").style.display = "none";
+}
+
+function showError(msg) {
+  document.getElementById("loadingState").style.display = "none";
+  document.getElementById("errorState").style.display = "";
+  document.getElementById("errorText").textContent = msg;
+}
+
+// ── Annuler ───────────────────────────────────────────────────────────────────
+
+async function confirmAnnuler() {
+  if (!confirm("Êtes-vous sûr(e) de vouloir annuler ce rendez-vous ?")) return;
+
+  const btn = document.getElementById("btnAnnuler");
+  const btnM = document.getElementById("btnModifier");
+  btn.disabled  = true;
+  btnM.disabled = true;
+  btn.textContent = "Annulation…";
+
+  try {
+    const res  = await fetch(`${NETLIFY}/update-rdv-by-token`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: TOKEN, action: "annuler" }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Erreur");
+
+    _rdv.statut = "Annulé";
+    renderRdv();
+  } catch (e) {
+    btn.disabled  = false;
+    btnM.disabled = false;
+    btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Annuler mon RDV`;
+    alert("Erreur : " + e.message);
+  }
+}
+
+// ── Modifier ──────────────────────────────────────────────────────────────────
+
+async function startModifier() {
+  _newSlot = null;
+  document.getElementById("modifySection").style.display = "";
+  document.getElementById("btnModifier").disabled = true;
+  document.getElementById("btnAnnuler").disabled  = true;
+  document.getElementById("modifyActions").style.display = "none";
+  document.getElementById("btnConfirmModif").disabled = true;
+  document.getElementById("modifyMsg").innerHTML = "";
+  document.getElementById("slotsContainer").innerHTML = `<div class="loading-dots">Chargement des créneaux…</div>`;
+
+  try {
+    const res  = await fetch(`${NETLIFY}/get-available-slots?salonId=${encodeURIComponent(_rdv.salonId)}&prestationId=${encodeURIComponent(_rdv.prestationId)}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Erreur créneaux");
+    renderSlots(data.slots || {});
+  } catch (e) {
+    document.getElementById("slotsContainer").innerHTML = `<div class="error-msg">Erreur : ${esc(e.message)}</div>`;
+  }
+}
+
+function renderSlots(slotsByDate) {
+  const container = document.getElementById("slotsContainer");
+  const dates = Object.keys(slotsByDate).sort();
+
+  if (!dates.length) {
+    container.innerHTML = `<div class="loading-dots">Aucun créneau disponible pour le moment.</div>`;
+    return;
+  }
+
+  container.innerHTML = dates.map(date => {
+    const slots = slotsByDate[date];
+    const label = new Date(date + "T00:00:00").toLocaleDateString("fr-FR", { weekday:"long", day:"numeric", month:"long" });
+    const btns  = slots.map(iso => {
+      const t = new Date(iso).toLocaleTimeString("fr-FR", { hour:"2-digit", minute:"2-digit", hour12:false, timeZone:"Europe/Paris" });
+      return `<button class="slot-btn" data-iso="${esc(iso)}" onclick="selectSlot(this,'${esc(iso)}')">${t}</button>`;
+    }).join("");
+    return `<div class="date-group"><div class="date-label">${label}</div><div class="slots-row">${btns}</div></div>`;
+  }).join("");
+
+  document.getElementById("modifyActions").style.display = "";
+}
+
+function selectSlot(el, iso) {
+  document.querySelectorAll(".slot-btn").forEach(b => b.classList.remove("selected"));
+  el.classList.add("selected");
+  _newSlot = iso;
+  document.getElementById("btnConfirmModif").disabled = false;
+}
+
+async function submitModifier() {
+  if (!_newSlot) return;
+  const btn = document.getElementById("btnConfirmModif");
+  const msg = document.getElementById("modifyMsg");
+  btn.disabled = true;
+  btn.textContent = "Confirmation…";
+  msg.innerHTML = "";
+
+  try {
+    const res  = await fetch(`${NETLIFY}/update-rdv-by-token`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: TOKEN, action: "modifier", dateHeure: _newSlot }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Erreur");
+
+    _rdv.dateHeure = _newSlot;
+    document.getElementById("modifySection").style.display = "none";
+    renderRdv();
+    msg.innerHTML = `<div class="success-msg">Rendez-vous modifié avec succès ✓</div>`;
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = "Confirmer ce créneau";
+    msg.innerHTML = `<div class="error-msg">Erreur : ${esc(e.message)}</div>`;
+  }
+}
+
+function cancelModifier() {
+  document.getElementById("modifySection").style.display = "none";
+  document.getElementById("btnModifier").disabled = false;
+  document.getElementById("btnAnnuler").disabled  = false;
+  _newSlot = null;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function esc(str) {
+  return String(str || "").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+</script>
+</body>
+</html>

@@ -1,5 +1,5 @@
 [build]
-  command   = "mkdir -p dist && cp index.html dist/index.html && cp admin.html dist/admin.html && npm install --prefix netlify/functions/generate-invoice"
+  command   = "mkdir -p dist && cp index.html dist/index.html && cp admin.html dist/admin.html && cp booking.html dist/booking.html && npm install --prefix netlify/functions/generate-invoice"
   functions = "netlify/functions"
   publish   = "dist"
 
@@ -12,20 +12,14 @@
 [functions."cron-relances"]
   schedule = "0 9 * * *"
 
-[functions."sync-make-status"]
+[functions."cron-reminder-rdv"]
   schedule = "0 8 * * *"
 
-# [functions."agent-prospection-cron"]
-#   schedule = "0 7 * * *"
+[functions."cron-relance-inactifs"]
+  schedule = "0 9 * * 1"
 
-# [functions."agent-prospection-apify"]
-#   schedule = "0 7 * * 1,3,5"
-
-# [functions."agent-prospection-apify-collect"]
-#   schedule = "15 7 * * 1,3,5"
-
-[functions."cron-onboarding-followup"]
-  schedule = "0 9 * * *"
+[functions."cron-post-rdv-feedback"]
+  schedule = "0 */2 * * *"
 
 [functions."generate-invoice"]
   node_bundler = "esbuild"
@@ -45,3 +39,11 @@
 #   CLOUDINARY_API_KEY             — clé API Cloudinary
 #   CLOUDINARY_API_SECRET          — secret API Cloudinary
 #   Note : VAPI_ASSISTANT_ID n'est plus utilisé — chaque client a son propre ID dans Airtable (champ VapiAssistantId)
+#
+#   — Offre RDV (crons SMS/WhatsApp) —
+#   TWILIO_ACCOUNT_SID     — SID du compte Twilio (commence par AC...)
+#   TWILIO_AUTH_TOKEN      — Token d'auth Twilio
+#   TWILIO_FROM_NUMBER     — Numéro SMS Twilio (ex: +33XXXXXXXXX)
+#   TWILIO_WHATSAPP_NUMBER — Numéro WhatsApp Twilio (ex: +14155238886 pour sandbox)
+#   GOOGLE_CLIENT_ID       — OAuth2 client ID Google (pour Google Calendar)
+#   GOOGLE_CLIENT_SECRET   — OAuth2 client secret Google
