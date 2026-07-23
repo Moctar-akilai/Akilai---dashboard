@@ -11023,7 +11023,7 @@ async function loadAgendaRdv() {
       return;
     }
     document.getElementById("rdvAgendaList").style.display = "";
-    renderAgendaList(rdvs, email);
+    renderRdvAgendaList(rdvs, email);
   } catch (e) {
     document.getElementById("rdvAgendaLoading").style.display = "none";
     document.getElementById("rdvAgendaEmpty").textContent = "Erreur de chargement : " + e.message;
@@ -11061,7 +11061,7 @@ function _escHtmlAgd(s) {
   return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
 
-function renderAgendaList(rdvs, email) {
+function renderRdvAgendaList(rdvs, email) {
   const container = document.getElementById("rdvAgendaList");
   const now = new Date();
 
@@ -11140,7 +11140,7 @@ async function updateRdvStatus(rdvId, statut, btn, email) {
    ============================================================ */
 
 const JOURS = ["lun","mar","mer","jeu","ven","sam","dim"];
-const JOURS_LABELS = { lun:"Lun",mar:"Mar",mer:"Mer",jeu:"Jeu",ven:"Ven",sam:"Sam",dim:"Dim" };
+const RDV_JOURS_LABELS = { lun:"Lun",mar:"Mar",mer:"Mer",jeu:"Jeu",ven:"Ven",sam:"Sam",dim:"Dim" };
 
 let _rdvConfig = null; // cache { salon, prestations }
 
@@ -11188,7 +11188,7 @@ function renderSalonForm(salon) {
     const debut  = h[j]?.debut || "09:00";
     const fin    = h[j]?.fin   || "19:00";
     return `<tr>
-      <td style="padding:6px 8px;font-weight:500;width:50px">${JOURS_LABELS[j]}</td>
+      <td style="padding:6px 8px;font-weight:500;width:50px">${RDV_JOURS_LABELS[j]}</td>
       <td style="padding:6px 8px">
         <label class="h-toggle">
           <input type="checkbox" id="hOpen_${j}" ${ouvert ? "checked" : ""} onchange="toggleHoraire('${j}')">
