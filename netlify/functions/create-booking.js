@@ -62,7 +62,10 @@ exports.handler = async (event) => {
       });
     if (conflict) return err("Ce créneau vient d'être réservé. Veuillez en choisir un autre.", 409);
 
-    // 4. Crée le RDV dans Airtable
+    // 4. Génère un token unique pour la gestion autonome du RDV
+    const token = require("crypto").randomUUID();
+
+    // 5. Crée le RDV dans Airtable
     const createRes = await fetch(`${BASE_URL}/Rendez-vous`, {
       method: "POST",
       headers,
@@ -70,10 +73,11 @@ exports.handler = async (event) => {
         fields: {
           "Client final - Nom":       nomClient,
           "Client final - Téléphone": telephoneClient,
-          "Salon":      [salonId],
-          "Prestation": [prestationId],
-          "Date/Heure": slotStart.toISOString(),
-          "Statut":     "Confirmé",
+          "Salon":          [salonId],
+          "Prestation":     [prestationId],
+          "Date/Heure":     slotStart.toISOString(),
+          "Statut":         "Confirmé",
+          "Token gestion":  token,
         },
         typecast: true,
       }),
@@ -86,17 +90,21 @@ exports.handler = async (event) => {
     const rdv = await createRes.json();
     console.log("[create-booking] RDV créé:", rdv.id);
 
-    // 5. Google Calendar (fire-and-forget)
+    // Lien de gestion autonome
+    const baseUrl   = process.env.URL || "https://portal-akilai.netlify.app";
+    const gestionUrl = `${baseUrl}/gerer-rdv.html?token=${token}`;
+
+    // 6. Google Calendar (fire-and-forget)
     if (sf["Lien Google Calendar"] && sf["User ID"]) {
       createCalendarEvent(sf, pf, slotStart, slotEnd, nomClient, telephoneClient)
         .catch(e => console.error("[create-booking] Google Calendar:", e.message));
     }
 
-    // 6. SMS de confirmation (fire-and-forget)
-    sendConfirmationSMS(nomClient, pf.Nom || "votre RDV", slotStart, sf["Nom salon"] || "le salon", telephoneClient)
+    // 7. SMS de confirmation avec lien de gestion (fire-and-forget)
+    sendConfirmationSMS(nomClient, pf.Nom || "votre RDV", slotStart, sf["Nom salon"] || "le salon", telephoneClient, gestionUrl)
       .catch(e => console.error("[create-booking] SMS:", e.message));
 
-    return ok({ ok: true, rdvId: rdv.id });
+    return ok({ ok: true, rdvId: rdv.id, token });
   } catch (e) {
     console.error("[create-booking] Exception:", e.message);
     return err(e.message);
@@ -177,7 +185,7 @@ async function refreshGoogleToken(refreshToken) {
 
 // ── Twilio SMS ───────────────────────────────────────────────────────────────
 
-async function sendConfirmationSMS(nomClient, prestation, dateHeure, nomSalon, to) {
+async function sendConfirmationSMS(nomClient, prestation, dateHeure, nomSalon, to, gestionUrl) {
   const sid  = process.env.TWILIO_ACCOUNT_SID;
   const auth = process.env.TWILIO_AUTH_TOKEN;
   const from = process.env.TWILIO_FROM_NUMBER;
@@ -193,7 +201,8 @@ async function sendConfirmationSMS(nomClient, prestation, dateHeure, nomSalon, t
   const timeStr = dateHeure.toLocaleTimeString("fr-FR", {
     hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Europe/Paris",
   });
-  const message = `Bonjour ${prenom}, votre RDV "${prestation}" est confirmé le ${dateStr} à ${timeStr} chez ${nomSalon}. À bientôt !`;
+  const gestionLine = gestionUrl ? `\nAnnuler ou modifier : ${gestionUrl}` : "";
+  const message = `Bonjour ${prenom}, votre RDV "${prestation}" est confirmé le ${dateStr} à ${timeStr} chez ${nomSalon}. À bientôt !${gestionLine}`;
 
   const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
     method: "POST",
