@@ -31,17 +31,21 @@ exports.handler = async (event) => {
     const prestRes = await fetch(`${BASE_URL}/Prestations`, { headers });
     const pd = prestRes.ok ? await prestRes.json() : { records: [] };
     const prestations = (pd.records || [])
-      .filter(r => (r.fields.Salon || []).includes(salonId))
+      .filter(r => (r.fields.Salon || []).includes(salonId) && r.fields["Réservable en ligne"])
       .map(r => ({
-        id:    r.id,
-        nom:   r.fields.Nom    || "",
-        duree: r.fields["Durée"] || sf["Durée par défaut prestation"] || 30,
+        id:          r.id,
+        nom:         r.fields.Nom           || "",
+        description: r.fields.Description   || "",
+        duree:       r.fields["Durée"]      || sf["Durée par défaut prestation"] || 30,
+        prix:        r.fields.Prix          ?? null,
+        categorie:   r.fields["Catégorie"]  || "",
       }));
 
     return ok({
       salon: {
         id:          salonId,
-        nom:         sf["Nom salon"] || "",
+        nom:         sf["Nom salon"]                   || "",
+        adresse:     sf["Adresse"]                     || "",
         dureeDefaut: sf["Durée par défaut prestation"] || 30,
       },
       prestations,

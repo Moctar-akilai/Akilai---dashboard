@@ -2315,6 +2315,51 @@
       .rdv-actions { width:100%; justify-content:flex-end; }
       .rdv-stat-chip { min-width:120px; }
     }
+
+    /* ── Config RDV ──────────────────────────────────────────────── */
+    .config-rdv-tabs { display:flex; gap:4px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:4px; margin-bottom:20px; }
+    .config-rdv-tab  { flex:1; padding:8px 12px; border-radius:7px; border:none; background:transparent; font-size:13px; font-weight:500; color:var(--text-muted); cursor:pointer; transition:all .15s; }
+    .config-rdv-tab.active { background:var(--card); color:var(--text); box-shadow:0 1px 3px rgba(0,0,0,.1); }
+
+    .config-horaires-table { width:100%; border-collapse:collapse; }
+    .config-horaires-table td { padding:6px 8px; vertical-align:middle; }
+    .config-horaires-table td:first-child { font-size:13px; font-weight:500; color:var(--text); width:90px; }
+    .config-horaires-table td:last-child  { color:var(--text-muted); font-size:12px; text-align:right; }
+    .h-toggle { display:inline-flex; align-items:center; gap:6px; }
+    .h-toggle input[type=checkbox] { width:16px; height:16px; accent-color:#7c3aed; cursor:pointer; }
+    .h-time { border:1px solid var(--border); border-radius:6px; padding:5px 8px; font-size:13px; background:var(--card); color:var(--text); width:80px; }
+    .h-time:disabled { opacity:.35; }
+    .h-sep { font-size:12px; color:var(--text-muted); margin:0 4px; }
+
+    .prest-config-table { width:100%; border-collapse:collapse; font-size:13px; }
+    .prest-config-table th { padding:8px 10px; text-align:left; font-size:11px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; border-bottom:1px solid var(--border); }
+    .prest-config-table td { padding:10px 10px; border-bottom:1px solid var(--border); vertical-align:middle; }
+    .prest-config-table tr:last-child td { border-bottom:none; }
+    .prest-config-table tr:hover td { background:rgba(124,58,237,.03); }
+    .prest-reservable-dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:5px; }
+    .prest-reservable-dot.yes { background:#10b981; }
+    .prest-reservable-dot.no  { background:#9ca3af; }
+    .prest-action-btn { font-size:11px; font-weight:600; padding:4px 9px; border-radius:6px; border:1px solid var(--border); background:var(--card); cursor:pointer; transition:all .12s; color:var(--text-muted); }
+    .prest-action-btn:hover { border-color:currentColor; }
+    .prest-action-btn.edit   { color:#7c3aed; }
+    .prest-action-btn.edit:hover   { background:rgba(124,58,237,.08); }
+    .prest-action-btn.delete { color:#ef4444; }
+    .prest-action-btn.delete:hover { background:rgba(239,68,68,.08); }
+
+    /* Prest modal */
+    #prestModal { display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,.45); align-items:center; justify-content:center; padding:16px; }
+    #prestModal.open { display:flex; }
+    #prestModalBox { background:var(--card); border-radius:14px; width:100%; max-width:480px; padding:24px; box-shadow:0 20px 60px rgba(0,0,0,.2); max-height:90vh; overflow-y:auto; }
+    #prestModalBox .modal-title { font-size:16px; font-weight:700; margin-bottom:18px; }
+    #prestModalBox .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    #prestModalMsg { font-size:13px; margin-top:12px; min-height:18px; }
+    #prestModalMsg.error { color:#ef4444; }
+    #prestModalMsg.ok    { color:#10b981; }
+
+    .config-save-bar { display:flex; align-items:center; gap:12px; margin-top:16px; }
+    #salonSaveMsg { font-size:13px; }
+    #salonSaveMsg.ok    { color:#10b981; }
+    #salonSaveMsg.error { color:#ef4444; }
   </style>
 </head>
 <body>
@@ -2467,6 +2512,14 @@
           <line x1="3" y1="10" x2="21" y2="10"/>
         </svg>
         <span class="nav-label">Agenda RDV</span>
+      </div>
+
+      <div class="nav-item" id="navConfigRdv" data-section="config-rdv" onclick="navigate('config-rdv')" style="display:none">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        <span class="nav-label">Config RDV</span>
       </div>
 
     </nav>
@@ -3354,6 +3407,108 @@
         </div>
       </div>
 
+      <!-- ── Config RDV ──────────────────────────────────────────── -->
+      <div class="page" id="page-config-rdv">
+        <div class="page-header">
+          <div>
+            <div class="breadcrumb">Prise de RDV <span>/ Configuration</span></div>
+            <h1 class="page-title">Configuration RDV</h1>
+            <p class="page-subtitle">Personnalisez votre fiche de réservation en ligne.</p>
+          </div>
+        </div>
+
+        <!-- Zone verrouillée -->
+        <div id="configRdvLocked" class="rdv-locked-banner" style="display:none">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <strong>Disponible avec l'offre RDV</strong>
+          <p>Activez l'offre Prise de RDV pour configurer votre fiche salon.</p>
+        </div>
+
+        <!-- Contenu config -->
+        <div id="configRdvContent" style="display:none">
+          <!-- Tabs -->
+          <div class="config-rdv-tabs">
+            <button class="config-rdv-tab active" id="tabSalon"    onclick="switchConfigTab('salon')">Infos salon</button>
+            <button class="config-rdv-tab"         id="tabPrest"   onclick="switchConfigTab('prest')">Prestations</button>
+          </div>
+
+          <!-- ── Tab : Infos salon ── -->
+          <div id="configTabSalon">
+            <div class="card" id="salonConfigForm">
+              <div style="padding:40px;text-align:center;color:var(--text-muted);font-size:13px" id="salonConfigLoading">Chargement…</div>
+            </div>
+          </div>
+
+          <!-- ── Tab : Prestations ── -->
+          <div id="configTabPrest" style="display:none">
+            <div class="card" style="overflow:hidden">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border)">
+                <span style="font-size:13px;font-weight:600;color:var(--text)">Mes prestations</span>
+                <button class="btn-primary" style="font-size:12px;padding:7px 14px" onclick="openPrestModal()">+ Ajouter</button>
+              </div>
+              <div id="prestConfigLoading" style="padding:32px;text-align:center;color:var(--text-muted);font-size:13px">Chargement…</div>
+              <div id="prestConfigEmpty" style="display:none;padding:32px;text-align:center;color:var(--text-muted);font-size:13px">Aucune prestation. Ajoutez-en une pour commencer.</div>
+              <table class="prest-config-table" id="prestConfigTable" style="display:none">
+                <thead>
+                  <tr>
+                    <th>Prestation</th>
+                    <th>Catégorie</th>
+                    <th>Durée</th>
+                    <th>Prix</th>
+                    <th>Réservable</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="prestConfigTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Modale prestation ──────────────────────────────────── -->
+      <div id="prestModal">
+        <div id="prestModalBox">
+          <div class="modal-title" id="prestModalTitle">Ajouter une prestation</div>
+          <input type="hidden" id="pmId" value="">
+          <div class="form-group">
+            <label>Nom *</label>
+            <input type="text" id="pmNom" placeholder="Ex : Coupe femme" />
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <input type="text" id="pmDescription" placeholder="Courte description (optionnel)" />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Catégorie</label>
+              <input type="text" id="pmCategorie" placeholder="Ex : Coupe, Soin…" />
+            </div>
+            <div class="form-group">
+              <label>Durée (min) *</label>
+              <input type="number" id="pmDuree" min="5" step="5" placeholder="30" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Prix (€)</label>
+              <input type="number" id="pmPrix" min="0" step="0.5" placeholder="Optionnel" />
+            </div>
+            <div class="form-group" style="display:flex;align-items:flex-end;padding-bottom:4px">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:0">
+                <input type="checkbox" id="pmReservable" style="width:16px;height:16px;accent-color:#7c3aed">
+                <span style="font-size:13px;font-weight:500;color:var(--text)">Réservable en ligne</span>
+              </label>
+            </div>
+          </div>
+          <div id="prestModalMsg"></div>
+          <div style="display:flex;gap:10px;margin-top:16px">
+            <button class="btn-primary" style="flex:1;padding:11px" onclick="submitPrestModal()">Enregistrer</button>
+            <button class="btn-secondary" style="padding:11px 18px" onclick="closePrestModal()">Annuler</button>
+          </div>
+        </div>
+      </div>
+
     </div><!-- /content -->
   </div><!-- /main -->
 </div><!-- /app -->
@@ -3931,6 +4086,7 @@ function navigate(sectionId) {
   if (sectionId === 'voix-ia')     { loadVoixConfig(); }
   if (sectionId === 'factures')    { loadFactures(); }
   if (sectionId === 'agenda-rdv')  { loadAgendaRdv(); }
+  if (sectionId === 'config-rdv')  { loadRdvConfig(); }
 
   currentSection = sectionId;
   try { localStorage.setItem('akilai_section', sectionId); } catch(e) {}
@@ -7472,10 +7628,11 @@ const DAY_LABELS_AGD = ["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi"
 const MONTHS_AGD = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
 
 function updateAgendaNavVisibility() {
-  const nav = document.getElementById("navAgendaRdv");
-  if (!nav) return;
   const active = clients[0]?.offreRdvActive || false;
-  nav.style.display = active ? "" : "none";
+  const nav = document.getElementById("navAgendaRdv");
+  if (nav) nav.style.display = active ? "" : "none";
+  const navC = document.getElementById("navConfigRdv");
+  if (navC) navC.style.display = active ? "" : "none";
 }
 
 async function loadAgendaRdv() {
@@ -7621,6 +7778,304 @@ async function updateRdvStatus(rdvId, statut, btn, email) {
   } catch (e) {
     btns.forEach(b => { b.disabled = false; });
     btn.textContent = orig;
+    alert("Erreur : " + e.message);
+  }
+}
+
+/* ============================================================
+   CONFIGURATION RDV
+   ============================================================ */
+
+const JOURS = ["lun","mar","mer","jeu","ven","sam","dim"];
+const JOURS_LABELS = { lun:"Lun",mar:"Mar",mer:"Mer",jeu:"Jeu",ven:"Ven",sam:"Sam",dim:"Dim" };
+
+let _rdvConfig = null; // cache { salon, prestations }
+
+function switchConfigTab(tab) {
+  const tabs = ["salon","prest"];
+  tabs.forEach(t => {
+    const id = t === "salon" ? "configTabSalon" : "configTabPrest";
+    document.getElementById(id).style.display = t === tab ? "" : "none";
+    const btnId = "tab" + t.charAt(0).toUpperCase() + t.slice(1);
+    const btn = document.getElementById(btnId);
+    if (btn) btn.classList.toggle("active", t === tab);
+  });
+}
+
+async function loadRdvConfig() {
+  const email = _getActiveEmail();
+  if (!email) return;
+
+  const offreActive = clients[0]?.offreRdvActive || false;
+  const locked = document.getElementById("configRdvLocked");
+  const content = document.getElementById("configRdvContent");
+  if (locked)  locked.style.display  = offreActive ? "none" : "";
+  if (content) content.style.display = offreActive ? "" : "none";
+  if (!offreActive) return;
+
+  try {
+    const res = await fetch(`/.netlify/functions/get-rdv-config?email=${encodeURIComponent(email)}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Erreur chargement config");
+    _rdvConfig = data;
+    renderSalonForm(data.salon);
+    renderPrestTable(data.prestations || []);
+  } catch (e) {
+    alert("Erreur : " + e.message);
+  }
+}
+
+function renderSalonForm(salon) {
+  const el = document.getElementById("salonConfigForm");
+  if (!el) return;
+  const h = salon.horaires || {};
+
+  const horaireRows = JOURS.map(j => {
+    const ouvert = !!h[j];
+    const debut  = h[j]?.debut || "09:00";
+    const fin    = h[j]?.fin   || "19:00";
+    return `<tr>
+      <td style="padding:6px 8px;font-weight:500;width:50px">${JOURS_LABELS[j]}</td>
+      <td style="padding:6px 8px">
+        <label class="h-toggle">
+          <input type="checkbox" id="hOpen_${j}" ${ouvert ? "checked" : ""} onchange="toggleHoraire('${j}')">
+          <span style="font-size:12px;margin-left:6px">${ouvert ? "Ouvert" : "Fermé"}</span>
+        </label>
+      </td>
+      <td style="padding:6px 8px" id="hTimes_${j}" ${ouvert ? "" : 'style="display:none"'}>
+        <input type="time" class="h-time" id="hDebut_${j}" value="${debut}">
+        <span style="margin:0 6px;color:var(--muted)">–</span>
+        <input type="time" class="h-time" id="hFin_${j}"   value="${fin}">
+      </td>
+      <td style="padding:6px 8px" id="hClosed_${j}" ${ouvert ? 'style="display:none"' : ""}>
+        <span style="font-size:12px;color:var(--muted)">Fermé</span>
+      </td>
+    </tr>`;
+  }).join("");
+
+  el.innerHTML = `
+    <div style="display:grid;gap:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div>
+          <label class="form-label">Nom du salon</label>
+          <input class="form-input" id="cfgNom" value="${_esc(salon.nom || '')}">
+        </div>
+        <div>
+          <label class="form-label">Adresse</label>
+          <input class="form-input" id="cfgAdresse" value="${_esc(salon.adresse || '')}">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div>
+          <label class="form-label">Numéro WhatsApp</label>
+          <input class="form-input" id="cfgWhatsapp" placeholder="+33612345678" value="${_esc(salon.whatsapp || '')}">
+        </div>
+        <div>
+          <label class="form-label">Lien avis Google</label>
+          <input class="form-input" id="cfgLienAvis" placeholder="https://g.page/..." value="${_esc(salon.lienAvis || '')}">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div>
+          <label class="form-label">Canal de contact client</label>
+          <select class="form-input" id="cfgCanal">
+            <option value="SMS"       ${salon.canal === "SMS"       ? "selected" : ""}>SMS</option>
+            <option value="WhatsApp"  ${salon.canal === "WhatsApp"  ? "selected" : ""}>WhatsApp</option>
+            <option value="Les deux"  ${salon.canal === "Les deux"  ? "selected" : ""}>SMS + WhatsApp</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Durée par défaut (min)</label>
+          <input class="form-input" type="number" id="cfgDuree" min="5" step="5" value="${salon.dureeDefaut || 30}">
+        </div>
+      </div>
+      <div>
+        <label class="form-label" style="margin-bottom:8px">Horaires d'ouverture</label>
+        <div style="overflow-x:auto">
+          <table class="config-horaires-table"><tbody>${horaireRows}</tbody></table>
+        </div>
+      </div>
+      <div class="config-save-bar">
+        <button class="btn-primary" onclick="saveRdvConfig(this)">Enregistrer les infos salon</button>
+        <span id="salonSaveMsg" style="font-size:13px;margin-left:12px"></span>
+      </div>
+    </div>`;
+}
+
+function _esc(str) {
+  return String(str).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
+}
+
+function toggleHoraire(j) {
+  const cb = document.getElementById("hOpen_" + j);
+  const open = cb.checked;
+  cb.nextElementSibling.textContent = open ? "Ouvert" : "Fermé";
+  document.getElementById("hTimes_"  + j).style.display = open ? "" : "none";
+  document.getElementById("hClosed_" + j).style.display = open ? "none" : "";
+}
+
+function collectHoraires() {
+  const h = {};
+  JOURS.forEach(j => {
+    const cb = document.getElementById("hOpen_" + j);
+    if (!cb) return;
+    if (cb.checked) {
+      h[j] = {
+        debut: document.getElementById("hDebut_" + j)?.value || "09:00",
+        fin:   document.getElementById("hFin_"   + j)?.value || "19:00",
+      };
+    } else {
+      h[j] = null;
+    }
+  });
+  return h;
+}
+
+async function saveRdvConfig(btn) {
+  const email = _getActiveEmail();
+  if (!email) return;
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Enregistrement…";
+  const msg = document.getElementById("salonSaveMsg");
+  if (msg) { msg.textContent = ""; msg.className = ""; }
+
+  const salonFields = {
+    "Nom salon":                   document.getElementById("cfgNom")?.value?.trim()     || "",
+    "Adresse":                     document.getElementById("cfgAdresse")?.value?.trim() || "",
+    "Numéro WhatsApp":             document.getElementById("cfgWhatsapp")?.value?.trim()|| "",
+    "Lien avis Google":            document.getElementById("cfgLienAvis")?.value?.trim()|| "",
+    "Canal feedback":              document.getElementById("cfgCanal")?.value            || "SMS",
+    "Durée par défaut prestation": Number(document.getElementById("cfgDuree")?.value)   || 30,
+    "Horaires ouverture":          JSON.stringify(collectHoraires()),
+  };
+
+  try {
+    const res = await fetch("/.netlify/functions/save-rdv-config", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, salonFields }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Erreur sauvegarde");
+    if (msg) { msg.textContent = "Enregistré ✓"; msg.style.color = "var(--green)"; }
+  } catch (e) {
+    if (msg) { msg.textContent = "Erreur : " + e.message; msg.style.color = "#ef4444"; }
+  } finally {
+    btn.disabled = false;
+    btn.textContent = orig;
+  }
+}
+
+function renderPrestTable(prestations) {
+  const tbody   = document.getElementById("prestConfigTbody");
+  const table   = document.getElementById("prestConfigTable");
+  const empty   = document.getElementById("prestConfigEmpty");
+  const loading = document.getElementById("prestConfigLoading");
+  if (loading) loading.style.display = "none";
+  if (!tbody) return;
+
+  if (!prestations.length) {
+    if (table) table.style.display = "none";
+    if (empty) empty.style.display = "";
+    return;
+  }
+  if (empty) empty.style.display = "none";
+  if (table) table.style.display = "";
+
+  tbody.innerHTML = prestations.map(p => `
+    <tr>
+      <td style="padding:10px 12px;font-weight:500">${_esc(p.nom)}</td>
+      <td style="padding:10px 12px;color:var(--muted);font-size:13px">${_esc(p.categorie || "—")}</td>
+      <td style="padding:10px 12px;font-size:13px">${p.duree} min</td>
+      <td style="padding:10px 12px;font-size:13px">${p.prix != null ? p.prix + " €" : "—"}</td>
+      <td style="padding:10px 12px;text-align:center">
+        <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.reservableEnLigne ? "var(--green,#10b981)" : "#d1d5db"}"></span>
+      </td>
+      <td style="padding:10px 12px;white-space:nowrap">
+        <button class="prest-action-btn" onclick='openPrestModal(${JSON.stringify(p)})'>Modifier</button>
+        <button class="prest-action-btn danger" onclick="confirmDeletePrest('${p.id}','${_esc(p.nom)}')">Supprimer</button>
+      </td>
+    </tr>`).join("");
+}
+
+function openPrestModal(prest) {
+  document.getElementById("prestModalTitle").textContent = prest ? "Modifier la prestation" : "Ajouter une prestation";
+  document.getElementById("pmId").value           = prest?.id          || "";
+  document.getElementById("pmNom").value          = prest?.nom         || "";
+  document.getElementById("pmDescription").value  = prest?.description || "";
+  document.getElementById("pmCategorie").value    = prest?.categorie   || "";
+  document.getElementById("pmDuree").value        = prest?.duree       || 30;
+  document.getElementById("pmPrix").value         = prest?.prix != null ? prest.prix : "";
+  document.getElementById("pmReservable").checked = prest?.reservableEnLigne || false;
+  document.getElementById("prestModalMsg").textContent = "";
+  document.getElementById("prestModalMsg").className   = "";
+  document.getElementById("prestModal").classList.add("open");
+}
+
+function closePrestModal() {
+  document.getElementById("prestModal").classList.remove("open");
+}
+
+async function submitPrestModal(btn) {
+  const email = _getActiveEmail();
+  if (!email) return;
+  const msg = document.getElementById("prestModalMsg");
+  msg.textContent = "";
+
+  const prestation = {
+    id:               document.getElementById("pmId").value.trim()          || undefined,
+    nom:              document.getElementById("pmNom").value.trim(),
+    description:      document.getElementById("pmDescription").value.trim(),
+    categorie:        document.getElementById("pmCategorie").value.trim(),
+    duree:            Number(document.getElementById("pmDuree").value) || 30,
+    prix:             document.getElementById("pmPrix").value.trim() !== "" ? Number(document.getElementById("pmPrix").value) : null,
+    reservableEnLigne: document.getElementById("pmReservable").checked,
+  };
+  if (!prestation.id) delete prestation.id;
+
+  if (!prestation.nom) { msg.textContent = "Le nom est requis."; msg.className = "error"; return; }
+  if (prestation.duree < 5) { msg.textContent = "La durée doit être ≥ 5 min."; msg.className = "error"; return; }
+
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Enregistrement…";
+
+  try {
+    const res = await fetch("/.netlify/functions/upsert-prestation", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, prestation }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Erreur");
+    closePrestModal();
+    await loadRdvConfig();
+    switchConfigTab("prest");
+  } catch (e) {
+    msg.textContent = "Erreur : " + e.message;
+    msg.className = "error";
+    btn.disabled = false;
+    btn.textContent = orig;
+  }
+}
+
+async function confirmDeletePrest(id, nom) {
+  if (!confirm(`Supprimer la prestation "${nom}" ?`)) return;
+  const email = _getActiveEmail();
+  if (!email) return;
+
+  try {
+    const res = await fetch("/.netlify/functions/delete-prestation", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, prestationId: id }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Erreur suppression");
+    await loadRdvConfig();
+    switchConfigTab("prest");
+  } catch (e) {
     alert("Erreur : " + e.message);
   }
 }
