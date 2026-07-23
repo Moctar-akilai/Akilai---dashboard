@@ -1,5 +1,5 @@
 [build]
-  command   = "mkdir -p dist && cp index.html dist/index.html && cp admin.html dist/admin.html && cp booking.html dist/booking.html && npm install --prefix netlify/functions/generate-invoice"
+  command   = "mkdir -p dist && cp index.html dist/index.html && cp admin.html dist/admin.html && cp booking.html dist/booking.html && cp gerer-rdv.html dist/gerer-rdv.html && npm install --prefix netlify/functions/generate-invoice"
   functions = "netlify/functions"
   publish   = "dist"
 
@@ -35,9 +35,6 @@
 #   ELEVENLABS_API_KEY             — clé API ElevenLabs (depuis elevenlabs.io → Profile → API key)
 #   ADMIN_PASSWORD                 — mot de passe de la page admin /#admin
 #   NETLIFY_IDENTITY_SERVICE_ROLE  — JWT service role Netlify Identity (Netlify → Identity → Settings → Service role JWT)
-#   CLOUDINARY_CLOUD_NAME          — nom du cloud Cloudinary
-#   CLOUDINARY_API_KEY             — clé API Cloudinary
-#   CLOUDINARY_API_SECRET          — secret API Cloudinary
 #   Note : VAPI_ASSISTANT_ID n'est plus utilisé — chaque client a son propre ID dans Airtable (champ VapiAssistantId)
 #
 #   — Offre RDV (crons SMS/WhatsApp) —
@@ -47,3 +44,4 @@
 #   TWILIO_WHATSAPP_NUMBER — Numéro WhatsApp Twilio (ex: +14155238886 pour sandbox)
 #   GOOGLE_CLIENT_ID       — OAuth2 client ID Google (pour Google Calendar)
 #   GOOGLE_CLIENT_SECRET   — OAuth2 client secret Google
+#   RESEND_FROM            — Adresse expéditeur Resend vérifiée (ex: AkilAI <noreply@akilai.fr>)
