@@ -1,4 +1,5 @@
 const { BASE_URL, headers, ok, err, preflight } = require("./config");
+const CLIENTS_TABLE = "tble0g9eMTjAfw6OO";
 
 /**
  * POST — PATCH /Automatisations/{recordId}
@@ -62,9 +63,63 @@ exports.handler = async function(event, context) {
 
     const data = await res.json();
     console.log("[save-programmation] Airtable updated fields:", JSON.stringify(data.fields));
+
+    // Notification email admin (fire-and-forget)
+    sendAdminNotif(id, data.fields, joursActifs, heureDebut, heureFin).catch(e =>
+      console.error("[save-programmation] email admin error:", e.message)
+    );
+
     return ok({ ok: true });
   } catch (e) {
     console.error("[save-programmation] Exception:", e.message);
     return err(e.message);
   }
 };
+
+async function sendAdminNotif(autoId, autoFields, joursActifs, heureDebut, heureFin) {
+  const RESEND_API_KEY = process.env.RESEND_API_KEY || "";
+  const ADMIN_EMAIL    = process.env.ADMIN_EMAIL    || "";
+  if (!RESEND_API_KEY || !ADMIN_EMAIL) return;
+
+  const nomAuto = autoFields?.Nom || autoId;
+  const userId  = autoFields?.["User ID"] || "";
+
+  // Récupérer Entreprise du client
+  let entreprise = userId;
+  if (userId) {
+    try {
+      const clientRes = await fetch(
+        `${BASE_URL}/${CLIENTS_TABLE}?filterByFormula=${encodeURIComponent(`{User ID}="${userId}"`)}&maxRecords=1&fields[]=Entreprise`,
+        { headers }
+      );
+      const clientData = await clientRes.json();
+      entreprise = clientData.records?.[0]?.fields?.Entreprise || userId;
+    } catch (_) {}
+  }
+
+  const dateAujourdhui = new Date().toLocaleDateString("fr-FR");
+  const joursStr = joursActifs.length ? joursActifs.join(", ") : "—";
+
+  await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
+    body: JSON.stringify({
+      from: "AkilAI <noreply@akilai.fr>",
+      to: ADMIN_EMAIL,
+      subject: `📅 Nouvelle programmation — ${nomAuto}`,
+      html: `<div style="font-family:Arial,sans-serif;background:#0f0f0f;color:#e0e0e0;padding:32px;max-width:520px;margin:0 auto;border-radius:12px">
+        <p style="color:#70B2DE;font-size:18px;font-weight:700;margin:0 0 16px">📅 Programmation modifiée</p>
+        <p style="margin:0 0 20px;color:#a0a0a0">Un client vient de modifier sa programmation.</p>
+        <table style="width:100%;border-collapse:collapse;background:#1a1a1a;border-radius:8px;overflow:hidden">
+          <tr><td style="padding:10px 14px;color:#a0a0a0;font-size:13px;border-bottom:1px solid #2a2a2a">Client</td><td style="padding:10px 14px;font-weight:600;border-bottom:1px solid #2a2a2a">${entreprise}${userId && userId !== entreprise ? ` (${userId})` : ''}</td></tr>
+          <tr><td style="padding:10px 14px;color:#a0a0a0;font-size:13px;border-bottom:1px solid #2a2a2a">Automatisation</td><td style="padding:10px 14px;font-weight:600;border-bottom:1px solid #2a2a2a">${nomAuto}</td></tr>
+          <tr><td style="padding:10px 14px;color:#a0a0a0;font-size:13px;border-bottom:1px solid #2a2a2a">Jours actifs</td><td style="padding:10px 14px;border-bottom:1px solid #2a2a2a">${joursStr}</td></tr>
+          <tr><td style="padding:10px 14px;color:#a0a0a0;font-size:13px;border-bottom:1px solid #2a2a2a">Heure de début</td><td style="padding:10px 14px;border-bottom:1px solid #2a2a2a">${heureDebut}</td></tr>
+          <tr><td style="padding:10px 14px;color:#a0a0a0;font-size:13px;border-bottom:1px solid #2a2a2a">Heure de fin</td><td style="padding:10px 14px;border-bottom:1px solid #2a2a2a">${heureFin}</td></tr>
+          <tr><td style="padding:10px 14px;color:#a0a0a0;font-size:13px">Date</td><td style="padding:10px 14px">${dateAujourdhui}</td></tr>
+        </table>
+      </div>`,
+    }),
+  });
+  console.log("[save-programmation] email admin envoyé →", ADMIN_EMAIL);
+}

@@ -1,6 +1,8 @@
 const { BASE_URL, headers, ok, err, preflight, corsHeaders } = require("./config");
 const { verifyAdminToken, unauthorized } = require("./admin-utils");
 
+const MAKE_BASE = "https://eu1.make.com/api/v2";
+
 exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") return preflight();
   if (!verifyAdminToken(event)) return unauthorized();
@@ -10,25 +12,48 @@ exports.handler = async (event) => {
 
   try {
     const { id, statut } = JSON.parse(event.body || "{}");
-    console.log("[admin-update-automation] id:", id, "statut:", statut);
     if (!id || !statut) return err("id et statut requis", 400);
 
-    const res = await fetch(`${BASE_URL}/tble4KroqvA1JodJs/${id}`, {
+    // 1. GET record to fetch Make scenario ID
+    const getRes = await fetch(`${BASE_URL}/tble4KroqvA1JodJs/${id}`, { headers });
+    if (!getRes.ok) return err(`Airtable GET ${getRes.status}`, 502);
+    const record = await getRes.json();
+    if (record.error) return err(record.error.message || "Airtable error");
+    const scenarioId = record.fields?.["Make scenario ID"];
+
+    // 2. PATCH Airtable statut
+    const patchRes = await fetch(`${BASE_URL}/tble4KroqvA1JodJs/${id}`, {
       method: "PATCH",
       headers,
       body: JSON.stringify({ fields: { Statut: statut } }),
     });
-    console.log("[admin-update-automation] Statut Airtable:", res.status);
-
-    if (!res.ok) {
-      const text = await res.text();
-      console.error("[admin-update-automation] Erreur:", text);
-      return err(`Airtable ${res.status}: ${text}`, 502);
+    if (!patchRes.ok) {
+      const text = await patchRes.text();
+      return err(`Airtable PATCH ${patchRes.status}: ${text}`, 502);
     }
-    const data = await res.json();
-    if (data.error) return err(data.error.message || "Airtable error");
+    const patchData = await patchRes.json();
+    if (patchData.error) return err(patchData.error.message || "Airtable error");
+    console.log("[admin-update-automation] Airtable mis à jour:", id, "→", statut);
 
-    return ok({ ok: true, statut: data.fields?.Statut || statut });
+    // 3. Sync Make si scenarioId présent
+    let makeUpdated = false;
+    if (scenarioId) {
+      const MAKE_API_KEY = process.env.MAKE_API_KEY || "";
+      if (MAKE_API_KEY) {
+        const endpoint = statut === "Actif" ? "start" : "stop";
+        const makeRes = await fetch(`${MAKE_BASE}/scenarios/${scenarioId}/${endpoint}`, {
+          method: "POST",
+          headers: { Authorization: `Token ${MAKE_API_KEY}`, "Content-Type": "application/json" },
+        });
+        const makeText = await makeRes.text();
+        console.log(`[admin-update-automation] Make ${endpoint} scenarioId=${scenarioId} → ${makeRes.status}: ${makeText.substring(0, 200)}`);
+        makeUpdated = makeRes.ok;
+      }
+    } else {
+      console.warn("[admin-update-automation] Pas de 'Make scenario ID' pour", id);
+    }
+
+    return ok({ ok: true, statut: patchData.fields?.Statut || statut, makeUpdated });
   } catch (e) {
     console.error("[admin-update-automation] Exception:", e.message);
     return err(e.message);

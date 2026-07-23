@@ -40,6 +40,7 @@ exports.handler = async (event) => {
         vapiAssistantId: f.VapiAssistantId || "",
         numeroVapi: f["Numéro Vapi"] || "",
         numeroTwilio: f["Numéro Twilio"] || "",
+        whatsappNumeroTwilio: f["WhatsApp Numero Twilio"] || "",
         notes: f.Notes || "",
         montantMensuel: f["Montant mensuel"] || null,
         historiqueRelances: f["Historique relances"] || "",

@@ -279,14 +279,18 @@ exports.handler = async (event) => {
     const airtableFields = { "N° Facture": numFacture };
     if (pdfUrl) airtableFields["Facture URL"] = pdfUrl;
 
+    console.log("[invoice] PATCH paiementId:", paiementId);
+    console.log("[invoice] PATCH fields:", JSON.stringify(airtableFields));
     const patch = await fetch(`${BASE_URL}/${PAIEMENTS_TABLE}/${paiementId}`, {
       method: "PATCH",
       headers,
       body: JSON.stringify({ fields: airtableFields }),
     });
-    if (!patch.ok) {
-      const t = await patch.text();
-      console.error("[invoice] Airtable patch error:", t);
+    const patchData = await patch.json();
+    if (!patch.ok || patchData.error) {
+      console.error("[invoice] Airtable patch error:", JSON.stringify(patchData));
+    } else {
+      console.log("[invoice] PATCH ok, fields retournés:", JSON.stringify(Object.keys(patchData.fields || {})));
     }
 
     if (sendEmail && clientEmail) {

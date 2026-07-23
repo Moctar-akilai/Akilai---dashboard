@@ -31,6 +31,18 @@ exports.handler = async function(event, context) {
 
     if (records.length > 0) {
       console.log("[get-clients] Champs bruts :", JSON.stringify(records[0].fields));
+      const statut = records[0].fields["Statut"];
+      if (statut === "Résilié") {
+        console.log("[get-clients] Compte résilié — accès bloqué pour :", email);
+        return {
+          statusCode: 403,
+          headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+          body: JSON.stringify({
+            error: "COMPTE_RESILIE",
+            message: "Votre compte a été résilié. Pour toute question, contactez-nous : bonjour@akilai.fr"
+          })
+        };
+      }
     }
 
     const clients = records.map(function(r, i) {
@@ -59,9 +71,42 @@ exports.handler = async function(event, context) {
         langue:           f.Langue                     || "fr",
         tonalite:         f.Tonalite                   || "neutre",
         promptSysteme:    f.PromptSysteme              || "",
+        firstMessage:     f.FirstMessage               || "",
         vitesseParole:    Number(f.VitesseParole)      || 1.0,
         offreRdvActive:   f["Offre RDV active"]        || false,
         notes,
+        googleConnected:  f["Google Connected"]        || false,
+        googleCalendarId: f["Google Calendar ID"]      || "primary",
+        calendlyLink:          f["Calendly Link"]               || "",
+        calendlyConnected:     f["Calendly Connected"]           || false,
+        notionKey:             f["Notion Key"]                   || "",
+        notionDatabaseId:      f["Notion Database ID"]           || "",
+        notionConnected:       f["Notion Connected"]             || false,
+        crmType:               f["CRM Type"]                     || "AkilAI",
+        airtableExternalKey:   f["Airtable External Key"]        || "",
+        airtableExternalBaseId: f["Airtable External Base ID"]   || "",
+        airtableExternalTableId: f["Airtable External Table ID"] || "",
+        googleSheetsId:        f["Google Sheets ID"]            || "",
+        googleSheetsConnected: f["Google Sheets Connected"]     || false,
+        microsoftConnected:    f["Microsoft Connected"]         || false,
+        excelFileId:           f["Excel File ID"]               || "",
+        outlookConnected:      f["Outlook Connected"]           || false,
+        brevoConnected:        f["Brevo Connected"]             || false,
+        resendConnected:       f["Resend Connected"]            || false,
+        shopifyConnected:      f["Shopify Connected"]           || false,
+        slackConnected:        f["Slack Connected"]             || false,
+        hubspotConnected:      f["HubSpot Connected"]           || false,
+        teamsConnected:        f["Teams Connected"]             || false,
+        capaciteCreneau:       Number(f["Capacite Creneau"])    || 1,
+        dureeRDV:              Number(f["Duree RDV"])           || 30,
+        heureOuverture:        f["Heure Ouverture"]             || "08:00",
+        heureFermeture:        f["Heure Fermeture"]             || "19:00",
+        whatsappPrompt:        f["WhatsApp Prompt"]             || "",
+        whatsappNomAssistant:  f["WhatsApp Nom Assistant"]      || "",
+        whatsappNumeroTwilio:  f["WhatsApp Numero Twilio"]      || "",
+        whatsappLangue:        f["WhatsApp Langue"]             || "Français",
+        whatsappTonalite:      f["WhatsApp Tonalite"]           || "Professionnel",
+        whatsappTools:         (() => { try { return JSON.parse(f["WhatsApp Tools"] || "[]"); } catch(e) { return []; } })(),
       };
     });
 

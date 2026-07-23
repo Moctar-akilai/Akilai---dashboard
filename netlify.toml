@@ -35,6 +35,9 @@
 #   ELEVENLABS_API_KEY             — clé API ElevenLabs (depuis elevenlabs.io → Profile → API key)
 #   ADMIN_PASSWORD                 — mot de passe de la page admin /#admin
 #   NETLIFY_IDENTITY_SERVICE_ROLE  — JWT service role Netlify Identity (Netlify → Identity → Settings → Service role JWT)
+#   CLOUDINARY_CLOUD_NAME          — nom du cloud Cloudinary
+#   CLOUDINARY_API_KEY             — clé API Cloudinary
+#   CLOUDINARY_API_SECRET          — secret API Cloudinary
 #   Note : VAPI_ASSISTANT_ID n'est plus utilisé — chaque client a son propre ID dans Airtable (champ VapiAssistantId)
 #
 #   — Offre RDV (crons SMS/WhatsApp) —

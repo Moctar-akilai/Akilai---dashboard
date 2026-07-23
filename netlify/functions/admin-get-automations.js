@@ -41,6 +41,7 @@ exports.handler = async (event) => {
         messagesTraites: f["Messages traités"] || 0,
         rdvPris: f["RDV pris"] || 0,
         derniere_exec: f["Dernière exécution"] || f["DerniereExec"] || null,
+        modifieScheduling: f["Modifié scheduling"] || null,
         recordId: f["Record ID"] || r.id,
       };
     });

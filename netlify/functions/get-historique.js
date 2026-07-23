@@ -66,6 +66,7 @@ exports.handler = async function(event, context) {
           transcription,
           escalade:           !!f.Escalade,
           enregistrement:     f["Enregistrement audio"] || null,
+          vapiCallId:         f["Vapi Call ID"] || null,
           automatisationIds:  Array.isArray(f["Automatisation"]) ? f["Automatisation"] : [],
         });
       } else if (type === "whatsapp" || canal === "whatsapp") {

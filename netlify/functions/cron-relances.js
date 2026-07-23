@@ -13,11 +13,13 @@ const LIEN_PAIEMENT = process.env.LIEN_PAIEMENT || "";
 async function sendEmail(to, subject, html) {
   if (!RESEND_API_KEY) return;
   try {
-    await fetch("https://api.resend.com/emails", {
+    const _r = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
       body: JSON.stringify({ from: "AkilAI <noreply@akilai.fr>", to, subject, html }),
     });
+    const _d = await _r.json();
+    console.log('[email] cron-relances statut:', _d.id || _d.error || _d.message);
   } catch (e) {
     console.error("[cron-relances] sendEmail error:", e.message);
   }

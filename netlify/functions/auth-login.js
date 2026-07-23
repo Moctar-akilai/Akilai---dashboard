@@ -47,6 +47,18 @@ exports.handler = async function(event, context) {
 
     const f = record.fields;
 
+    if (f.Statut === "Résilié") {
+      console.log("[auth-login] Compte résilié — connexion refusée pour :", email);
+      return {
+        statusCode: 403,
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        body: JSON.stringify({
+          error: "COMPTE_RESILIE",
+          message: "Votre compte a été résilié. Pour toute question, contactez-nous : bonjour@akilai.fr"
+        })
+      };
+    }
+
     /* Nom du contact (personne) — fallback sur email si champ absent */
     const contact = f.Nom || f.Contact || f["Nom du contact"] || email;
 
