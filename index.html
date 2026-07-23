@@ -2237,6 +2237,84 @@
       .login-card { padding: 36px 24px 32px; margin: 0 16px; border-radius: 14px; }
       .login-logo { font-size: 24px; }
     }
+
+    /* ── Agenda RDV ─────────────────────────────────────────────── */
+    .rdv-stats-row { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px; }
+    .rdv-stat-chip {
+      flex:1; min-width:130px;
+      background:var(--card); border:1px solid var(--border);
+      border-radius:10px; padding:14px 16px;
+      display:flex; flex-direction:column; gap:4px;
+    }
+    .rdv-stat-chip .chip-count { font-size:24px; font-weight:700; color:var(--text); }
+    .rdv-stat-chip .chip-label { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; }
+    .rdv-stat-chip.chip-confirme .chip-count { color:#7c3aed; }
+    .rdv-stat-chip.chip-termine  .chip-count { color:#10b981; }
+    .rdv-stat-chip.chip-annule   .chip-count { color:#ef4444; }
+    .rdv-stat-chip.chip-noshow   .chip-count { color:#f59e0b; }
+
+    .rdv-day-group { margin-bottom:20px; }
+    .rdv-day-label {
+      font-size:12px; font-weight:600; color:var(--text-muted);
+      text-transform:uppercase; letter-spacing:.06em;
+      padding-bottom:8px; border-bottom:1px solid var(--border); margin-bottom:8px;
+    }
+    .rdv-day-label.is-today { color:#7c3aed; }
+
+    .rdv-card {
+      display:flex; align-items:center; gap:12px;
+      background:var(--card); border:1px solid var(--border);
+      border-radius:10px; padding:12px 14px; margin-bottom:6px;
+      transition:border-color 0.15s;
+    }
+    .rdv-card:hover { border-color:rgba(124,58,237,.4); }
+    .rdv-time { min-width:48px; text-align:center; font-size:15px; font-weight:700; color:var(--text); }
+    .rdv-info { flex:1; min-width:0; }
+    .rdv-client-name { font-size:14px; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .rdv-client-phone { font-size:12px; color:var(--text-muted); }
+    .rdv-prestation-chip {
+      display:inline-block; font-size:11px; padding:2px 8px;
+      background:rgba(124,58,237,.1); color:#7c3aed;
+      border-radius:20px; margin-top:3px;
+    }
+    .rdv-status-badge { font-size:11px; font-weight:600; padding:3px 9px; border-radius:20px; white-space:nowrap; }
+    .rdv-status-badge.s-confirme { background:rgba(124,58,237,.1); color:#7c3aed; }
+    .rdv-status-badge.s-termine  { background:rgba(16,185,129,.1);  color:#10b981; }
+    .rdv-status-badge.s-annule   { background:rgba(239,68,68,.1);   color:#ef4444; }
+    .rdv-status-badge.s-noshow   { background:rgba(245,158,11,.1);  color:#f59e0b; }
+
+    .rdv-actions { display:flex; gap:6px; flex-shrink:0; }
+    .rdv-btn {
+      font-size:11px; font-weight:600; padding:5px 10px;
+      border-radius:6px; border:1px solid var(--border);
+      background:var(--card); color:var(--text-muted);
+      cursor:pointer; transition:all 0.15s; white-space:nowrap;
+    }
+    .rdv-btn.btn-done   { color:#10b981; }
+    .rdv-btn.btn-done:hover:not(:disabled)   { background:rgba(16,185,129,.08); border-color:#10b981; }
+    .rdv-btn.btn-cancel { color:#ef4444; }
+    .rdv-btn.btn-cancel:hover:not(:disabled) { background:rgba(239,68,68,.08); border-color:#ef4444; }
+    .rdv-btn.btn-noshow { color:#f59e0b; }
+    .rdv-btn.btn-noshow:hover:not(:disabled) { background:rgba(245,158,11,.08); border-color:#f59e0b; }
+    .rdv-btn:disabled   { opacity:0.4; cursor:not-allowed; }
+
+    .rdv-locked-banner {
+      border:2px dashed var(--border); border-radius:12px;
+      padding:48px 20px; text-align:center; color:var(--text-muted);
+      display:flex; flex-direction:column; align-items:center; gap:12px;
+    }
+    .rdv-locked-banner svg { opacity:.35; }
+    .rdv-locked-banner strong { color:var(--text); font-size:15px; }
+    .rdv-locked-banner p { font-size:13px; margin:0; }
+
+    #rdvAgendaEmpty { padding:40px; text-align:center; color:var(--text-muted); font-size:13px; }
+    #rdvAgendaLoading { padding:40px; text-align:center; color:var(--text-muted); font-size:13px; }
+
+    @media (max-width:640px) {
+      .rdv-card { flex-wrap:wrap; }
+      .rdv-actions { width:100%; justify-content:flex-end; }
+      .rdv-stat-chip { min-width:120px; }
+    }
   </style>
 </head>
 <body>
@@ -2379,6 +2457,16 @@
           <polyline points="10 9 9 9 8 9"/>
         </svg>
         <span class="nav-label">Mes factures</span>
+      </div>
+
+      <div class="nav-item" id="navAgendaRdv" data-section="agenda-rdv" onclick="navigate('agenda-rdv')" style="display:none">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        <span class="nav-label">Agenda RDV</span>
       </div>
 
     </nav>
@@ -3213,6 +3301,59 @@
         </div>
       </div>
 
+      <!-- ── Agenda RDV ─────────────────────────────────────────── -->
+      <div class="page" id="page-agenda-rdv">
+        <div class="page-header">
+          <div>
+            <div class="breadcrumb">Prise de RDV <span>/ Agenda</span></div>
+            <h1 class="page-title">Agenda RDV</h1>
+            <p class="page-subtitle" id="rdvAgendaSalonNom">Rendez-vous de votre salon</p>
+          </div>
+          <button class="btn-secondary" onclick="loadAgendaRdv()" style="display:flex;align-items:center;gap:6px;font-size:13px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.07-8.59"/></svg>
+            Actualiser
+          </button>
+        </div>
+
+        <!-- Zone verrouillée (non-souscrit) -->
+        <div id="rdvLockedBanner" class="rdv-locked-banner" style="display:none">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          <strong>Disponible avec l'offre RDV</strong>
+          <p>Activez l'offre Prise de RDV pour accéder à votre agenda et gérer vos rendez-vous en ligne.</p>
+        </div>
+
+        <!-- Contenu agenda (souscrit) -->
+        <div id="rdvAgendaContent" style="display:none">
+          <!-- Stats -->
+          <div class="rdv-stats-row">
+            <div class="rdv-stat-chip chip-confirme">
+              <span class="chip-count" id="rdvStatConfirme">—</span>
+              <span class="chip-label">Confirmés</span>
+            </div>
+            <div class="rdv-stat-chip chip-termine">
+              <span class="chip-count" id="rdvStatTermine">—</span>
+              <span class="chip-label">Terminés</span>
+            </div>
+            <div class="rdv-stat-chip chip-annule">
+              <span class="chip-count" id="rdvStatAnnule">—</span>
+              <span class="chip-label">Annulés</span>
+            </div>
+            <div class="rdv-stat-chip chip-noshow">
+              <span class="chip-count" id="rdvStatNoshow">—</span>
+              <span class="chip-label">No-shows</span>
+            </div>
+          </div>
+
+          <!-- Liste RDV -->
+          <div id="rdvAgendaLoading">Chargement des rendez-vous…</div>
+          <div id="rdvAgendaEmpty" style="display:none">Aucun rendez-vous sur cette période.</div>
+          <div id="rdvAgendaList" style="display:none"></div>
+        </div>
+      </div>
+
     </div><!-- /content -->
   </div><!-- /main -->
 </div><!-- /app -->
@@ -3789,6 +3930,7 @@ function navigate(sectionId) {
   if (sectionId === 'whatsapp')    { loadHistoriqueFromAirtable(); }
   if (sectionId === 'voix-ia')     { loadVoixConfig(); }
   if (sectionId === 'factures')    { loadFactures(); }
+  if (sectionId === 'agenda-rdv')  { loadAgendaRdv(); }
 
   currentSection = sectionId;
   try { localStorage.setItem('akilai_section', sectionId); } catch(e) {}
@@ -4276,6 +4418,7 @@ async function loadClientsFromAirtable() {
   }
   applyPlanFilter();
   updateSidebarUser();
+  updateAgendaNavVisibility();
   if (clients.length) checkSuspensionState(clients[0]);
 }
 
@@ -7319,6 +7462,168 @@ function renderRecommandations(alerts) {
   window.initTour = initTour;
   console.log('[AkilAI Tour] script loaded, window.initTour ready');
 })();
+
+/* ============================================================
+   AGENDA RDV
+============================================================ */
+
+const PARIS_TZ_AGD = "Europe/Paris";
+const DAY_LABELS_AGD = ["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"];
+const MONTHS_AGD = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+
+function updateAgendaNavVisibility() {
+  const nav = document.getElementById("navAgendaRdv");
+  if (!nav) return;
+  const active = clients[0]?.offreRdvActive || false;
+  nav.style.display = active ? "" : "none";
+}
+
+async function loadAgendaRdv() {
+  const email = _getActiveEmail();
+  if (!email) return;
+
+  const offreActive = clients[0]?.offreRdvActive || false;
+  document.getElementById("rdvLockedBanner").style.display    = offreActive ? "none" : "";
+  document.getElementById("rdvAgendaContent").style.display   = offreActive ? ""     : "none";
+  if (!offreActive) return;
+
+  document.getElementById("rdvAgendaLoading").style.display = "";
+  document.getElementById("rdvAgendaEmpty").style.display   = "none";
+  document.getElementById("rdvAgendaList").style.display    = "none";
+
+  try {
+    const data = await apiFetch(`/.netlify/functions/get-rdv-agenda?email=${encodeURIComponent(email)}`);
+
+    if (data.salonNom) {
+      document.getElementById("rdvAgendaSalonNom").textContent = data.salonNom;
+    }
+
+    // Stats
+    const s = data.stats || {};
+    document.getElementById("rdvStatConfirme").textContent = s["Confirmé"]  ?? 0;
+    document.getElementById("rdvStatTermine").textContent  = s["Terminé"]   ?? 0;
+    document.getElementById("rdvStatAnnule").textContent   = s["Annulé"]    ?? 0;
+    document.getElementById("rdvStatNoshow").textContent   = s["No-show"]   ?? 0;
+
+    // RDV list
+    document.getElementById("rdvAgendaLoading").style.display = "none";
+    const rdvs = data.rdvs || [];
+    if (!rdvs.length) {
+      document.getElementById("rdvAgendaEmpty").style.display = "";
+      return;
+    }
+    document.getElementById("rdvAgendaList").style.display = "";
+    renderAgendaList(rdvs, email);
+  } catch (e) {
+    document.getElementById("rdvAgendaLoading").style.display = "none";
+    document.getElementById("rdvAgendaEmpty").textContent = "Erreur de chargement : " + e.message;
+    document.getElementById("rdvAgendaEmpty").style.display = "";
+    console.error("[Agenda RDV]", e.message);
+  }
+}
+
+function _rdvParisTime(iso) {
+  if (!iso) return { dateStr: "", timeStr: "", wd: 0, dateKey: "" };
+  const d = new Date(iso);
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: PARIS_TZ_AGD,
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", hour12: false,
+  }).formatToParts(d);
+  const g = t => parts.find(p => p.type === t)?.value ?? "00";
+  const h = g("hour") === "24" ? "00" : g("hour");
+  const dateKey = `${g("year")}-${g("month")}-${g("day")}`;
+  const wd = new Date(`${dateKey}T12:00:00Z`).getDay();
+  const day = parseInt(g("day"), 10);
+  const month = parseInt(g("month"), 10) - 1;
+  const dateStr = `${DAY_LABELS_AGD[wd]} ${day} ${MONTHS_AGD[month]}`;
+  return { dateKey, dateStr, timeStr: `${h}:${g("minute")}`, wd };
+}
+
+function _rdvStatusClass(statut) {
+  if (statut === "Terminé")  return "s-termine";
+  if (statut === "Annulé")   return "s-annule";
+  if (statut === "No-show")  return "s-noshow";
+  return "s-confirme";
+}
+
+function _escHtmlAgd(s) {
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+function renderAgendaList(rdvs, email) {
+  const container = document.getElementById("rdvAgendaList");
+  const now = new Date();
+
+  // Groupe par date
+  const groups = {};
+  const order  = [];
+  for (const r of rdvs) {
+    const { dateKey, dateStr, wd } = _rdvParisTime(r.dateHeure);
+    if (!dateKey) continue;
+    if (!groups[dateKey]) { groups[dateKey] = { dateStr, wd, items: [] }; order.push(dateKey); }
+    groups[dateKey].items.push(r);
+  }
+
+  const todayKey = _rdvParisTime(now.toISOString()).dateKey;
+  let html = "";
+  for (const key of order) {
+    const g = groups[key];
+    const isToday = key === todayKey;
+    html += `<div class="rdv-day-group">
+      <div class="rdv-day-label${isToday ? " is-today" : ""}">${_escHtmlAgd(g.dateStr)}${isToday ? " — Aujourd'hui" : ""}</div>`;
+
+    for (const r of g.items) {
+      const { timeStr } = _rdvParisTime(r.dateHeure);
+      const scls  = _rdvStatusClass(r.statut);
+      const isFuture = new Date(r.dateHeure) > now;
+      const canAct = r.statut === "Confirmé";
+
+      const actionBtns = canAct ? `
+        <div class="rdv-actions">
+          <button class="rdv-btn btn-done"   onclick="updateRdvStatus('${_escHtmlAgd(r.id)}','Terminé',this,'${_escHtmlAgd(email)}')" title="Marquer Terminé">✓ Terminé</button>
+          <button class="rdv-btn btn-cancel" onclick="updateRdvStatus('${_escHtmlAgd(r.id)}','Annulé',this,'${_escHtmlAgd(email)}')" title="Annuler">✕ Annulé</button>
+          <button class="rdv-btn btn-noshow" onclick="updateRdvStatus('${_escHtmlAgd(r.id)}','No-show',this,'${_escHtmlAgd(email)}')" title="Client non présenté">⊘ No-show</button>
+        </div>` : "";
+
+      html += `
+      <div class="rdv-card" id="rdv-card-${_escHtmlAgd(r.id)}">
+        <div class="rdv-time">${_escHtmlAgd(timeStr)}</div>
+        <div class="rdv-info">
+          <div class="rdv-client-name">${_escHtmlAgd(r.nom || "—")}</div>
+          <div class="rdv-client-phone">${_escHtmlAgd(r.telephone || "")}</div>
+          ${r.prestation ? `<span class="rdv-prestation-chip">${_escHtmlAgd(r.prestation)}</span>` : ""}
+        </div>
+        <span class="rdv-status-badge ${scls}">${_escHtmlAgd(r.statut)}</span>
+        ${actionBtns}
+      </div>`;
+    }
+    html += `</div>`;
+  }
+  container.innerHTML = html;
+}
+
+async function updateRdvStatus(rdvId, statut, btn, email) {
+  const card = document.getElementById("rdv-card-" + rdvId);
+  const btns = card ? card.querySelectorAll(".rdv-btn") : [];
+  btns.forEach(b => { b.disabled = true; });
+  const orig = btn.textContent;
+  btn.textContent = "…";
+
+  try {
+    await apiFetch("/.netlify/functions/update-rdv-status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ rdvId, statut, email }),
+    });
+    // Refresh the agenda to reflect new status
+    await loadAgendaRdv();
+  } catch (e) {
+    btns.forEach(b => { b.disabled = false; });
+    btn.textContent = orig;
+    alert("Erreur : " + e.message);
+  }
+}
 
 </script>
 </body>

@@ -60,6 +60,7 @@ exports.handler = async function(event, context) {
         tonalite:         f.Tonalite                   || "neutre",
         promptSysteme:    f.PromptSysteme              || "",
         vitesseParole:    Number(f.VitesseParole)      || 1.0,
+        offreRdvActive:   f["Offre RDV active"]        || false,
         notes,
       };
     });
